@@ -29,6 +29,8 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-next-day-assignment-1440.png',
   'WIREFRAME/QA/screenshots/admin-next-day-assignment-390.png',
   'WIREFRAME/QA/screenshots/maid-weekly-availability-390.png',
+  'WIREFRAME/QA/screenshots/maid-room-issue-multi-photo-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-issue-gallery-1440.png',
   'WIREFRAME/reference/redesign-concepts/admin-inspection.png',
   'WIREFRAME/reference/redesign-concepts/admin-next-day-assignment.png',
   'WIREFRAME/reference/redesign-concepts/maid-weekly-availability.png',
