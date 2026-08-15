@@ -5,12 +5,13 @@
 ## 맥북에서 바로 시작
 
 ```bash
-git clone https://github.com/makee-ham/room-management-system.git
+gh auth login  # 이 Mac에서 처음 한 번만
+gh repo clone makee-ham/room-management-system
 cd room-management-system
 python3 scripts/serve.py
 ```
 
-브라우저에서 `http://127.0.0.1:4173/index.html`을 엽니다. 빌드·패키지 설치·외부 CDN은 필요하지 않습니다. Python이 없으면 [`WIREFRAME/index.html`](WIREFRAME/index.html)을 직접 열어도 되지만, 브라우저 뒤로가기와 URL 상태 검증에는 로컬 서버를 권장합니다.
+저장소는 비공개이므로 GitHub 계정 인증이 필요합니다. 인증된 HTTPS 또는 SSH를 사용한다면 일반 `git clone`도 가능합니다. 브라우저에서 `http://127.0.0.1:4173/index.html`을 엽니다. 빌드·패키지 설치·외부 CDN은 필요하지 않습니다. Python이 없으면 [`WIREFRAME/index.html`](WIREFRAME/index.html)을 직접 열어도 되지만, 브라우저 뒤로가기와 URL 상태 검증에는 로컬 서버를 권장합니다.
 
 Windows에서는 다음 명령을 사용합니다.
 
