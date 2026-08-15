@@ -1,0 +1,58 @@
+#!/usr/bin/env node
+
+import { createHash } from 'node:crypto';
+import { readFileSync, existsSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const required = [
+  'AGENTS.md',
+  'DOCS/FINAL_UX_AUDIT.md',
+  'DOCS/14_CLICKABLE_WIREFRAME_HANDOFF.md',
+  'DOCS/WIREFRAME_TASK_PROMPT.md',
+  'WIREFRAME/index.html',
+  'WIREFRAME/README.md',
+  'WIREFRAME/QA.md',
+  'WIREFRAME/QA/screenshots/admin-mobile-rooms-unified.png',
+  'WIREFRAME/QA/screenshots/admin-mobile-inspection-gallery.png',
+  'WIREFRAME/QA/screenshots/admin-mobile-pay-calendar.png',
+];
+
+const missing = required.filter((file) => !existsSync(resolve(root, file)));
+if (missing.length) {
+  throw new Error(`Required files missing:\n${missing.join('\n')}`);
+}
+
+const portableDocs = [
+  'README.md',
+  'AGENTS.md',
+  'DOCS/00_START_HERE.md',
+  'DOCS/CODEX_PROMPT.md',
+  'DOCS/14_CLICKABLE_WIREFRAME_HANDOFF.md',
+  'DOCS/WIREFRAME_TASK_PROMPT.md',
+  'WIREFRAME/README.md',
+  'WIREFRAME/QA.md',
+];
+const windowsPath = /(?:^|[\s(`])(?:[A-Za-z]:[\\/])/m;
+const nonPortable = portableDocs.filter((file) => windowsPath.test(readFileSync(resolve(root, file), 'utf8')));
+if (nonPortable.length) {
+  throw new Error(`Windows absolute paths remain in portable docs:\n${nonPortable.join('\n')}`);
+}
+
+const html = readFileSync(resolve(root, 'WIREFRAME/index.html'), 'utf8');
+const inlineScripts = [...html.matchAll(/<script\b(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)].map((match) => match[1]);
+if (!inlineScripts.length) throw new Error('No inline application script found.');
+for (const script of inlineScripts) new Function(script);
+if (/<(?:script|link)\b[^>]*(?:src|href)=["']https?:\/\//i.test(html)) {
+  throw new Error('External script or stylesheet dependency found in WIREFRAME/index.html.');
+}
+
+const audit = readFileSync(resolve(root, 'DOCS/FINAL_UX_AUDIT.md'));
+const auditHash = createHash('sha256').update(audit).digest('hex');
+
+console.log(`Required files: ${required.length}/${required.length}`);
+console.log(`Inline scripts parsed: ${inlineScripts.length}`);
+console.log('Portable path scan: passed');
+console.log(`Final UX audit SHA-256: ${auditHash}`);
+console.log('Workspace check: passed');

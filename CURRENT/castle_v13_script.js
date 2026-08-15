@@ -1,0 +1,2222 @@
+const icon = (name) => {
+      const icons = {
+        rooms: '<svg viewBox="0 0 24 24"><path d="M4 21V4h16v17"/><path d="M8 8h3v3H8zM13 8h3v3h-3zM8 13h3v3H8zM13 13h3v3h-3z"/><path d="M2 21h20"/></svg>',
+        unlock: '<svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 7.5-2"/></svg>',
+        check: '<svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>',
+        clipboard: '<svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5V3h6v1.5M8 10h8M8 14h8M8 18h5"/></svg>',
+        money: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 9v6M17 9v6"/><circle cx="12" cy="12" r="2.5"/></svg>',
+        user: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c.5-5 3.5-7 8-7s7.5 2 8 7"/></svg>',
+        more: '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1" fill="currentColor" stroke="none"/></svg>',
+        bell: '<svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>',
+        back: '<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>',
+        eye: '<svg viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg>',
+        edit: '<svg viewBox="0 0 24 24"><path d="m4 20 4.5-1 10-10-3.5-3.5-10 10L4 20Z"/><path d="m13.5 7 3.5 3.5"/></svg>',
+        refresh: '<svg viewBox="0 0 24 24"><path d="M20 7v5h-5"/><path d="M19 12a7 7 0 1 1-2-5"/></svg>',
+        search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>',
+        chevron: '<svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>',
+        camera: '<svg viewBox="0 0 24 24"><path d="M4 7h4l1.5-2h5L16 7h4v12H4V7Z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+        candle: '<svg viewBox="0 0 24 24"><path d="M9 10h6v10H9z"/><path d="M12 10V7"/><path d="M12 7c-2-1.7-.5-3.5.6-4.5.3 1.8 2.7 2.6-.6 4.5Z"/><path d="M7 21h10"/></svg>',
+        lock: '<svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>',
+        users: '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-4.3 2.7-6.2 6.5-6.2s6 1.9 6.5 6.2"/><path d="M15 5.3a3.2 3.2 0 0 1 0 5.4M17 14c2.5.6 3.9 2.4 4.3 6"/></svg>',
+        plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+        trash: '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6"/></svg>',
+        pause: '<svg viewBox="0 0 24 24"><rect x="5" y="4" width="5" height="16" rx="1"/><rect x="14" y="4" width="5" height="16" rx="1"/></svg>',
+        expand: '<svg viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>',
+        archive: '<svg viewBox="0 0 24 24"><path d="M4 7h16v14H4zM3 3h18v4H3zM9 11h6"/></svg>',
+        calendar: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',
+        clock: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+        history: '<svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l4 2"/></svg>',
+        flag: '<svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 5h11l-2 4 2 4H5"/></svg>',
+        undo: '<svg viewBox="0 0 24 24"><path d="M9 8 4 12l5 4"/><path d="M5 12h8a6 6 0 0 1 6 6"/></svg>'
+      };
+      return icons[name] || '';
+    };
+
+    const defaultRooms = [
+      { id:'1502', type:'오션 스위트', stayStatus:'오늘 입실', stayTone:'blue', cleaningStatus:'청소 가능', color:'red', available:'11:20', deadline:'13:20', checkin:'14:00', checkout:'11:00', password:'4718', candleCount:2, candleLocations:'거실 창가 1 · 욕실 선반 1', assignmentEnabled:true, assignmentHistory:[], openForClaim:true, assignee:'', cleaningFee:9500, task:'퇴실 청소', canEnter:true, inspection:false, badges:['얼리 체크인','급한 객실'], notes:'객실 냄새 제거용 촛불 2개가 있습니다. 관리자 전량 회수 완료 처리 전까지 고객 배정·입실이 잠깁니다.' },
+      { id:'1208', type:'디럭스 더블', stayStatus:'오늘 퇴실', stayTone:'purple', cleaningStatus:'입실 대기', color:'gray', available:'13:00', deadline:'14:30', checkin:'16:00', checkout:'13:00', password:'0256', candleCount:0, candleLocations:'', assignmentEnabled:true, assignmentHistory:[], openForClaim:true, assignee:'', cleaningFee:7500, task:'퇴실 청소', canEnter:false, inspection:false, badges:['레이트 체크아웃'], notes:'고객 퇴실 확인 전 출입 금지. 13시 이후 입실 가능합니다.' },
+      { id:'1004', type:'패밀리 트윈', stayStatus:'오늘 입실', stayTone:'blue', cleaningStatus:'청소 중', color:'orange', available:'10:50', deadline:'14:40', checkin:'16:00', checkout:'11:00', password:'8642', candleCount:1, candleLocations:'주방 창가 1', assignmentEnabled:true, assignmentHistory:[{at:'11:04',from:'미배정',to:'박미정',by:'메이드 선택',reason:'직접 선택'}], openForClaim:false, assignee:'박미정', cleaningFee:8500, task:'퇴실 청소', canEnter:true, inspection:false, badges:['장기투숙 후'], notes:'냉장고 내부와 주방 수납장 전체 확인. 주방 창가 촛불 1개는 관리자 회수 완료 전 고객 입실이 잠깁니다.' },
+      { id:'903', type:'스탠다드', stayStatus:'공실', stayTone:'gray', cleaningStatus:'검수 대기', color:'orange', available:'10:30', deadline:'14:20', checkin:'16:00', checkout:'11:00', password:'3810', candleCount:0, candleLocations:'', assignmentEnabled:false, assignmentHistory:[{at:'11:20',from:'미배정',to:'김하나',by:'메이드 선택',reason:'직접 선택'}], openForClaim:false, assignee:'김하나', cleaningFee:7000, task:'퇴실 청소', canEnter:true, inspection:true, badges:['사진 8장'], notes:'욕실 배수구 냄새 확인 요청.', workStartedAt:'11:54', workFinishedAt:'12:42', submittedAt:'12:48', cleanerNote:'욕실 배수구 냄새가 남아 10분 환기한 뒤 사진을 촬영했습니다.' },
+      { id:'802', type:'디럭스 더블', stayStatus:'오늘 입실', stayTone:'blue', cleaningStatus:'입실 준비 완료', color:'green', available:'완료', deadline:'15:00', checkin:'16:00', checkout:'11:00', password:'1193', candleCount:0, candleLocations:'', assignmentEnabled:false, assignmentHistory:[{at:'09:40',from:'미배정',to:'박미정',by:'관리자',reason:'직접 배정'}], openForClaim:false, assignee:'박미정', cleaningFee:7500, task:'퇴실 청소', canEnter:true, inspection:false, badges:['검수 승인'], notes:'특이사항 없음.' },
+      { id:'709', type:'스탠다드', stayStatus:'투숙 중', stayTone:'purple', cleaningStatus:'연박 청소', color:'blue', available:'12:00', deadline:'13:00', checkin:'투숙 중', checkout:'내일 11:00', password:'6407', candleCount:0, candleLocations:'', assignmentEnabled:true, assignmentHistory:[], openForClaim:false, assignee:'', cleaningFee:4000, task:'연박 부분 청소', canEnter:true, inspection:false, badges:['연박','수건·쓰레기'], notes:'고객 소지품 이동 금지. 수건 교체와 쓰레기 수거만 진행.' },
+      { id:'608', type:'스탠다드', stayStatus:'공실', stayTone:'gray', cleaningStatus:'작업 없음', color:'gray', available:'-', deadline:'-', checkin:'예약 없음', checkout:'-', password:'7284', candleCount:3, candleLocations:'거실 2 · 욕실 1', operationalStatus:'out-of-service', operationalReason:'냄새 원인 확인 전 객실 운영 중지', cleaningSuppressed:true, assignmentEnabled:false, assignmentBlockReason:'운영 중지 객실은 청소 담당 배정 불가', assignmentHistory:[{at:'10:58',from:'배정 가능',to:'운영 중지 · 청소 제외',by:'관리자',reason:'냄새 원인 확인 전 운영 중지'}], openForClaim:false, assignee:'', cleaningFee:7000, task:'작업 없음', canEnter:false, inspection:false, badges:['운영 중지','촛불 있음'], notes:'냄새 원인 확인을 위해 객실 운영을 중지했습니다. 고객 배정과 메이드 청소를 모두 진행하지 않으며, 촛불 3개도 전량 회수되어야 향후 고객 배정 조건을 충족할 수 있습니다.' },
+      { id:'507', type:'오션 스위트', stayStatus:'장기투숙', stayTone:'purple', cleaningStatus:'작업 없음', color:'gray', available:'-', deadline:'-', checkin:'투숙 중', checkout:'8월 28일', password:'5521', candleCount:0, candleLocations:'', assignmentEnabled:false, assignmentHistory:[], openForClaim:false, assignee:'', cleaningFee:9500, task:'작업 없음', canEnter:false, inspection:false, badges:['장기투숙'], notes:'금요일 정기 청소 예정.' },
+      { id:'412', type:'디럭스 더블', stayStatus:'공실', stayTone:'gray', cleaningStatus:'입실 준비 완료', color:'green', available:'완료', deadline:'-', checkin:'예약 없음', checkout:'-', password:'3370', candleCount:0, candleLocations:'', assignmentEnabled:false, assignmentHistory:[{at:'08:45',from:'미배정',to:'이소라',by:'관리자',reason:'직접 배정'}], openForClaim:false, assignee:'이소라', cleaningFee:7500, task:'퇴실 청소', canEnter:true, inspection:false, badges:['공실'], notes:'특이사항 없음.' },
+      { id:'311', type:'패밀리 트윈', stayStatus:'오늘 입실', stayTone:'blue', cleaningStatus:'청소 가능', color:'orange', available:'11:10', deadline:'14:20', checkin:'16:00', checkout:'11:00', password:'9084', candleCount:0, candleLocations:'', assignmentEnabled:true, assignmentHistory:[{at:'11:08',from:'미배정',to:'박미정',by:'메이드 선택',reason:'직접 선택'}], openForClaim:false, assignee:'박미정', cleaningFee:8500, task:'퇴실 청소', canEnter:true, inspection:false, badges:[], notes:'아기 침대 회수 확인.' },
+      { id:'210', type:'스탠다드', stayStatus:'투숙 중', stayTone:'purple', cleaningStatus:'작업 없음', color:'gray', available:'-', deadline:'-', checkin:'투숙 중', checkout:'내일 11:00', password:'1846', candleCount:0, candleLocations:'', assignmentEnabled:false, assignmentHistory:[], openForClaim:false, assignee:'', cleaningFee:7000, task:'작업 없음', canEnter:false, inspection:false, badges:['연박'], notes:'오늘 객실 출입 없음.' },
+      { id:'108', type:'스탠다드', stayStatus:'오늘 입실', stayTone:'blue', cleaningStatus:'재청소 필요', color:'red', available:'지금', deadline:'13:50', checkin:'14:30', checkout:'11:00', password:'6612', candleCount:1, candleLocations:'현관 선반 1', assignmentEnabled:true, assignmentHistory:[{at:'12:22',from:'미배정',to:'김하나',by:'관리자',reason:'긴급 객실 직접 배정'}], openForClaim:false, assignee:'김하나', cleaningFee:7000, task:'재청소', canEnter:true, inspection:true, badges:['재청소','급한 객실'], notes:'현관 거울 얼룩 재확인. 현관 선반 촛불 1개는 관리자 회수 전 고객 배정·입실 차단.', workStartedAt:'12:26', workFinishedAt:'12:58', submittedAt:'13:03', cleanerNote:'현관 거울을 닦았으나 빛 반사로 얼룩처럼 보일 수 있어 각도를 바꿔 촬영했습니다.', rejectionReason:'현관 거울 하단 얼룩이 남아 있습니다.', rejectedPhotoLabel:'현관·도어락', rejectedAt:'13:08', maidUnreadRejection:true },
+      { id:'614', type:'패밀리 트윈', stayStatus:'공실', stayTone:'gray', cleaningStatus:'입실 준비 완료', color:'green', available:'완료', deadline:'-', checkin:'예약 없음', checkout:'-', password:'2468', candleCount:0, candleLocations:'', assignmentEnabled:false, assignmentHistory:[{at:'09:12',from:'미배정',to:'이소라',by:'관리자',reason:'직접 배정'}], openForClaim:false, assignee:'이소라', cleaningFee:8500, task:'퇴실 청소', canEnter:true, inspection:false, badges:['검수 승인','공실'], notes:'특이사항 없음.' }
+    ];
+
+    const guestAllocationSeed = {
+      '1502': { reservationAssigned:true, reservationLabel:'YN-260814-042', entryBlockIssue:'' },
+      '1208': { reservationAssigned:true, reservationLabel:'YN-260814-058', entryBlockIssue:'' },
+      '1004': { reservationAssigned:true, reservationLabel:'YN-260814-061', entryBlockIssue:'' },
+      '903':  { reservationAssigned:false, reservationLabel:'', entryBlockIssue:'욕실 배수구 냄새 원인 확인 필요' },
+      '802':  { reservationAssigned:true, reservationLabel:'YN-260814-017', entryBlockIssue:'' },
+      '709':  { reservationAssigned:true, reservationLabel:'장기·연박 투숙', entryBlockIssue:'' },
+      '608':  { reservationAssigned:false, reservationLabel:'', entryBlockIssue:'' },
+      '507':  { reservationAssigned:true, reservationLabel:'장기투숙', entryBlockIssue:'' },
+      '412':  { reservationAssigned:false, reservationLabel:'', entryBlockIssue:'' },
+      '311':  { reservationAssigned:true, reservationLabel:'YN-260814-071', entryBlockIssue:'' },
+      '210':  { reservationAssigned:true, reservationLabel:'연박 투숙', entryBlockIssue:'' },
+      '108':  { reservationAssigned:true, reservationLabel:'YN-260814-078', entryBlockIssue:'현관 거울 얼룩 재청소 미완료' },
+      '614':  { reservationAssigned:false, reservationLabel:'', entryBlockIssue:'' }
+    };
+    defaultRooms.forEach(room => Object.assign(room, guestAllocationSeed[room.id] || { reservationAssigned:false, reservationLabel:'', entryBlockIssue:'' }));
+
+    const scheduleSeed = {
+      '1502': { earlyCheckinTime:'14:00', lateCheckoutTime:'', standardCheckinTime:'16:00', standardCheckoutTime:'11:00' },
+      '1208': { earlyCheckinTime:'', lateCheckoutTime:'13:00', standardCheckinTime:'16:00', standardCheckoutTime:'11:00' },
+      '108':  { earlyCheckinTime:'14:30', lateCheckoutTime:'', standardCheckinTime:'16:00', standardCheckoutTime:'11:00' }
+    };
+    const dailyEventSeed = {
+      '1502': [
+        { time:'08:35', title:'예약 시간 변경', detail:'얼리 체크인 14:00 등록' },
+        { time:'10:42', title:'퇴실 확인', detail:'객실 청소 가능 상태로 전환' },
+        { time:'11:12', title:'촛불 현황 기록', detail:'관리자가 객실에 촛불 2개를 두었다고 기록' }
+      ],
+      '1208': [
+        { time:'09:05', title:'레이트 체크아웃 등록', detail:'체크아웃 시각을 13:00으로 변경' },
+        { time:'09:06', title:'청소 일감 오픈', detail:'13:00부터 입실 가능한 퇴실 청소' }
+      ],
+      '1004': [
+        { time:'11:04', title:'청소 담당 선택', detail:'박미정 메이드가 8,500원 일감 선택' },
+        { time:'11:18', title:'청소 시작', detail:'객실 비밀번호 확인 후 작업 시작' },
+        { time:'12:02', title:'촛불 현황 기록', detail:'청소 후 주방 창가에 촛불 1개를 두었다고 기록' }
+      ],
+      '903': [
+        { time:'11:20', title:'청소 담당 선택', detail:'김하나 메이드 담당 확정' },
+        { time:'12:48', title:'검수 요청', detail:'인증사진 8장 업로드 완료' }
+      ],
+      '608': [
+        { time:'10:58', title:'객실 운영 중지', detail:'냄새 원인 확인 전 고객 배정·청소 모두 중지' },
+        { time:'11:00', title:'예약 충돌 확인 완료', detail:'오늘 입실 예약 없음 · 고객 배정 미등록 확인' },
+        { time:'11:14', title:'촛불 현황 기록', detail:'거실 2개·욕실 1개, 총 3개 기록' }
+      ]
+    };
+    defaultRooms.forEach(room => {
+      Object.assign(room, {
+        earlyCheckinTime:'', lateCheckoutTime:'', standardCheckinTime:'16:00', standardCheckoutTime:'11:00',
+        dailyEvents: JSON.parse(JSON.stringify(dailyEventSeed[room.id] || []))
+      }, scheduleSeed[room.id] || {});
+      room.operationalStatus = room.operationalStatus || 'active';
+      room.operationalReason = room.operationalReason || '';
+      room.cleaningSuppressed = !!room.cleaningSuppressed;
+    });
+
+
+    const defaultMaids = [
+      { id:'maid01', name:'김하나', phone:'010-****-4821', loginId:'maid01', status:'active', joined:'2026.06.15', weeklyConfirmed:58500, weeklyExpected:74500, weeklyPaid:0, completed:8, approval:'97.4%', note:'평일 오전 중심 근무' },
+      { id:'maid02', name:'박미정', phone:'010-****-7713', loginId:'maid02', status:'active', joined:'2025.11.03', weeklyConfirmed:66500, weeklyExpected:74500, weeklyPaid:66500, completed:9, approval:'98.8%', note:'대형 객실 우선 가능' },
+      { id:'maid03', name:'이소라', phone:'010-****-2038', loginId:'maid03', status:'active', joined:'2026.02.20', weeklyConfirmed:42000, weeklyExpected:49000, weeklyPaid:0, completed:6, approval:'96.9%', note:'오후 근무 가능' },
+      { id:'maid04', name:'최은주', phone:'010-****-9954', loginId:'maid04', status:'inactive', joined:'2025.08.12', weeklyConfirmed:0, weeklyExpected:0, weeklyPaid:0, completed:0, approval:'95.1%', note:'일시 휴무 중' },
+      { id:'maid05', name:'정수진', phone:'010-****-1480', loginId:'maid05', status:'retired', joined:'2025.04.02', retiredAt:'2026.07.31', retiredReason:'계약 종료', weeklyConfirmed:31500, weeklyExpected:31500, weeklyPaid:31500, completed:124, approval:'97.9%', note:'퇴사 처리 · 과거 작업과 정산 이력 보존' }
+    ];
+
+    const defaultPenalties = [
+      { id:'pen001', maidId:'maid01', date:'2026-08-11', roomId:'903', task:'퇴실 청소', category:'청소 상태 미흡', points:2, reason:'욕실 배수구와 바닥의 머리카락이 남아 재청소가 발생했습니다.', evidence:'검수 사진 · 욕실', status:'active', createdAt:'2026-08-11 14:05', createdBy:'임지연 관리자', maidAcknowledged:false },
+      { id:'pen002', maidId:'maid02', date:'2026-08-13', roomId:'1208', task:'퇴실 청소', category:'필수 비품 누락', points:1, reason:'수건 2장이 누락되어 고객 입실 전 관리자가 보충했습니다.', evidence:'관리자 현장 확인', status:'active', createdAt:'2026-08-13 15:12', createdBy:'임지연 관리자', maidAcknowledged:true },
+      { id:'pen003', maidId:'maid01', date:'2026-08-04', roomId:'608', task:'퇴실 청소', category:'인증사진 누락', points:1, reason:'현관 인증사진이 제출 목록에서 확인되지 않아 벌점을 부여했습니다.', evidence:'사진 업로드 로그', status:'deleted', createdAt:'2026-08-04 12:20', createdBy:'임지연 관리자', deletedAt:'2026-08-04 13:02', deletedBy:'임지연 관리자', deleteReason:'서버 업로드 지연으로 확인되어 메이드 귀책이 아님', maidAcknowledged:true }
+    ];
+
+    const requiredPhotoItems = (room) => [
+      { label:'객실 전경', scene:'overview' },
+      { label:'침대·침구', scene:'bed' },
+      { label:'욕실', scene:'bath' },
+      { label:'세면대·거울', scene:'sink' },
+      { label:'주방', scene:'kitchen' },
+      { label:'냉장고 내부', scene:'fridge' },
+      { label:'수건·비품', scene:'amenities' },
+      { label:'현관·도어락', scene:'entry' },
+    ];
+
+    function buildInspectionPhotos(room, startHour = 12, startMinute = 35) {
+      return requiredPhotoItems(room).map((item, index) => {
+        const total = startHour * 60 + startMinute + index;
+        const hh = String(Math.floor(total / 60)).padStart(2, '0');
+        const mm = String(total % 60).padStart(2, '0');
+        return { id:`${room.id}-${index}`, ...item, capturedAt:`${hh}:${mm}`, uploaded:true };
+      });
+    }
+
+    const defaultInspectionPhotos = {
+      '903': buildInspectionPhotos(defaultRooms.find(r => r.id === '903'), 12, 36),
+      '108': buildInspectionPhotos(defaultRooms.find(r => r.id === '108'), 12, 50)
+    };
+
+    const cloneMaids = () => JSON.parse(JSON.stringify(defaultMaids));
+    const clonePenalties = () => JSON.parse(JSON.stringify(defaultPenalties));
+    const cloneInspectionPhotos = () => JSON.parse(JSON.stringify(defaultInspectionPhotos));
+    const cloneRooms = () => JSON.parse(JSON.stringify(defaultRooms));
+    const APP_TODAY = '2026-08-14';
+    const DEFAULT_CHECKIN_TIME = '16:00';
+    const DEFAULT_CHECKOUT_TIME = '11:00';
+    const deepClone = (value) => JSON.parse(JSON.stringify(value));
+    const patchRoomList = (rooms, patches) => rooms.map(room => Object.assign(room, deepClone(patches[room.id] || {})));
+    const buildRoomSnapshots = () => {
+      const today = cloneRooms();
+      const day13 = patchRoomList(cloneRooms(), {
+        '1502': { stayStatus:'공실', stayTone:'gray', cleaningStatus:'입실 준비 완료', color:'green', reservationAssigned:false, reservationLabel:'', checkin:'예약 없음', checkout:'11:00', earlyCheckinTime:'', candleCount:1, candleLocations:'거실 창가 1', assignee:'이소라', openForClaim:false, dailyEvents:[{time:'09:10',title:'퇴실 청소 배정',detail:'이소라 메이드에게 직접 배정'},{time:'10:05',title:'검수 승인',detail:'입실 준비 완료 처리'},{time:'10:12',title:'촛불 현황 기록',detail:'거실 창가에 촛불 1개 기록'}] },
+        '1208': { stayStatus:'오늘 입실', stayTone:'blue', cleaningStatus:'입실 준비 완료', color:'green', reservationAssigned:true, reservationLabel:'BK-260813-018', checkin:'14:30', earlyCheckinTime:'14:30', lateCheckoutTime:'', checkout:'11:00', candleCount:0, assignee:'박미정', openForClaim:false, dailyEvents:[{time:'08:50',title:'얼리 체크인 등록',detail:'입실 시각 14:30'},{time:'11:46',title:'검수 승인',detail:'퇴실 청소 완료'}] },
+        '1004': { stayStatus:'투숙 중', stayTone:'purple', cleaningStatus:'입실 준비 완료', color:'green', task:'연박 부분 청소', reservationAssigned:true, reservationLabel:'연박 투숙', checkin:'투숙 중', checkout:'내일 11:00', candleCount:0, assignee:'김하나', dailyEvents:[{time:'12:00',title:'연박 청소 시작',detail:'수건 교체·쓰레기 수거'},{time:'12:32',title:'연박 청소 완료',detail:'관리자 확인 완료'}] },
+        '903': { stayStatus:'공실', stayTone:'gray', cleaningStatus:'입실 준비 완료', color:'green', reservationAssigned:false, entryBlockIssue:'', candleCount:0, inspection:false, dailyEvents:[{time:'09:02',title:'퇴실 청소 완료',detail:'인증사진 8장 제출'},{time:'09:18',title:'검수 승인',detail:'고객 배정 가능 상태로 전환'}] },
+        '709': { stayStatus:'투숙 중', stayTone:'purple', cleaningStatus:'작업 없음', color:'gray', task:'작업 없음', assignee:'', assignmentEnabled:false, dailyEvents:[{time:'09:30',title:'연박 청소 미실시',detail:'투숙객 요청으로 오늘 청소 생략'}] },
+        '608': { stayStatus:'공실', stayTone:'gray', cleaningStatus:'입실 준비 완료', color:'green', operationalStatus:'active', operationalReason:'', cleaningSuppressed:false, reservationAssigned:false, entryBlockIssue:'', candleCount:2, candleLocations:'거실 2', assignee:'박미정', dailyEvents:[{time:'10:01',title:'검수 승인',detail:'입실 차단 특이사항 없음'},{time:'10:15',title:'촛불 현황 기록',detail:'거실에 촛불 2개를 두었다고 기록'}] }
+      });
+      const day12 = patchRoomList(cloneRooms(), {
+        '1502': { stayStatus:'오늘 입실', cleaningStatus:'입실 준비 완료', color:'green', reservationAssigned:true, reservationLabel:'YN-260812-029', checkin:'16:00', earlyCheckinTime:'', candleCount:0, assignee:'김하나', dailyEvents:[{time:'09:20',title:'청소 담당 선택',detail:'김하나 메이드 담당 확정'},{time:'11:08',title:'검수 승인',detail:'입실 준비 완료'}] },
+        '1208': { stayStatus:'투숙 중', stayTone:'purple', cleaningStatus:'작업 없음', color:'gray', task:'작업 없음', reservationAssigned:true, reservationLabel:'투숙 중', checkin:'투숙 중', checkout:'내일 11:00', lateCheckoutTime:'', assignee:'', dailyEvents:[{time:'15:02',title:'고객 입실',detail:'객실 배정 완료'}] },
+        '1004': { stayStatus:'공실', stayTone:'gray', cleaningStatus:'입실 준비 완료', color:'green', reservationAssigned:false, candleCount:0, assignee:'이소라', dailyEvents:[{time:'08:42',title:'퇴실 확인',detail:'청소 가능 상태 전환'},{time:'10:34',title:'검수 승인',detail:'고객 배정 가능'}] },
+        '903': { stayStatus:'오늘 퇴실', stayTone:'purple', cleaningStatus:'입실 대기', color:'gray', reservationAssigned:false, checkout:'12:30', lateCheckoutTime:'12:30', checkin:'예약 없음', assignee:'', openForClaim:true, dailyEvents:[{time:'09:12',title:'레이트 체크아웃 등록',detail:'퇴실 시각 12:30'},{time:'09:13',title:'청소 일감 오픈',detail:'12:30부터 청소 가능'}] },
+        '608': { stayStatus:'공실', stayTone:'gray', cleaningStatus:'입실 준비 완료', color:'green', operationalStatus:'active', operationalReason:'', cleaningSuppressed:false, reservationAssigned:false, entryBlockIssue:'', candleCount:0, assignee:'김하나', dailyEvents:[{time:'11:22',title:'청소 완료',detail:'특이사항 없음'}] }
+      });
+      const day15 = patchRoomList(cloneRooms(), {
+        '1502': { stayStatus:'입실 예정', stayTone:'blue', cleaningStatus:'작업 없음', color:'gray', reservationAssigned:true, reservationLabel:'사전 배정 예약', checkin:'13:30', earlyCheckinTime:'13:30', checkout:'-', candleCount:0, task:'작업 없음', assignee:'', openForClaim:false, dailyEvents:[{time:'-',title:'예정',detail:'얼리 체크인 13:30 예약'}] },
+        '1208': { stayStatus:'퇴실 예정', stayTone:'purple', cleaningStatus:'입실 대기', color:'gray', reservationAssigned:false, checkin:'16:00', checkout:'12:00', lateCheckoutTime:'12:00', task:'퇴실 청소', assignee:'', openForClaim:false, dailyEvents:[{time:'-',title:'예정',detail:'레이트 체크아웃 12:00 후 퇴실 청소'}] }
+      });
+      return { '2026-08-12':day12, '2026-08-13':day13, '2026-08-14':today, '2026-08-15':day15 };
+    };
+    const defaultState = () => {
+      const roomSnapshots = buildRoomSnapshots();
+      return {
+        role: null,
+        loginRole: 'admin',
+        screen: 'login',
+        previousScreen: null,
+        selectedRoomId: '1502',
+        selectedDate: APP_TODAY,
+        roomSnapshots,
+        roomFilter: 'all',
+        cleaningSubFilter: 'all',
+        roomTypeFilter: 'all',
+        roomSearch: '',
+        assignmentFilter: 'all',
+        rooms: deepClone(roomSnapshots[APP_TODAY]),
+        maids: cloneMaids(),
+        maidFilter: 'all',
+        selectedMaidId: 'maid01',
+        penalties: clonePenalties(),
+        penaltyFilter: 'active',
+        penaltyMaidFilter: 'all',
+        selectedPenaltyId: 'pen001',
+        passwordVisible: false,
+        taskChecks: { '1004':[0,1] },
+        taskPhotos: { '1004':[0] },
+        taskCandleCounts: { '1004':1 },
+        taskNotes: { '1004':'침구 정리까지 완료, 욕실 작업 전 담당 변경 대기' },
+        taskStarted: { '1004':true },
+        taskArchives: {},
+        completedTasks: [],
+        inspectionPhotos: cloneInspectionPhotos(),
+        photoReviews: { '108':[0,1,2] },
+        selectedInspectionPhoto: {},
+        pendingAction: null,
+        calendarMonth: APP_TODAY.slice(0,7),
+        weeklyPaymentLogs: {},
+        toastTimer: null
+      };
+    };
+
+    let state = defaultState();
+    const app = document.getElementById('app');
+    const sheet = document.getElementById('sheet');
+    const sheetBackdrop = document.getElementById('sheetBackdrop');
+    const toast = document.getElementById('toast');
+
+    const statusTone = (status) => {
+      if (['재청소 필요'].includes(status)) return 'red';
+      if (['청소 가능','청소 중','검수 대기'].includes(status)) return 'orange';
+      if (['입실 준비 완료'].includes(status)) return 'green';
+      if (['연박 청소'].includes(status)) return 'blue';
+      return 'gray';
+    };
+
+    const isOutOfService = (room) => room.operationalStatus === 'out-of-service';
+    const operationLabel = (room) => isOutOfService(room) ? '운영 중지 · 청소 제외' : '정상 운영';
+    const operationReason = (room) => isOutOfService(room) ? (room.operationalReason || '관리자 운영 중지') : '고객 배정·청소 작업을 상태에 따라 운영';
+    const roomHasReservationOrGuest = (room) => !!room.reservationAssigned || ['오늘 입실','입실 예정','투숙 중','장기투숙'].includes(room.stayStatus);
+    const candleBlocksGuest = (room) => Number(room.candleCount || 0) > 0;
+    const candleBlockReason = (room) => candleBlocksGuest(room) ? `촛불 ${room.candleCount}개 · 관리자 전량 회수 완료 처리 필요` : '';
+    const hardGuestBlockReasons = (room) => [isOutOfService(room) ? `운영 중지 · ${operationReason(room)}` : '', room.entryBlockIssue ? `입실 차단 특이사항 · ${room.entryBlockIssue}` : '', candleBlockReason(room)].filter(Boolean);
+    const hardGuestBlock = (room) => hardGuestBlockReasons(room).length > 0;
+    const reservationConflict = (room) => !!room.reservationAssigned && hardGuestBlock(room);
+    const claimEligible = (room) => !isOutOfService(room) && !room.cleaningSuppressed && ['청소 가능','입실 대기','연박 청소','재청소 필요'].includes(room.cleaningStatus);
+    const assignmentLifecycleEligible = (room) => !isOutOfService(room) && !room.cleaningSuppressed && ['청소 가능','입실 대기','연박 청소','청소 중','재청소 필요'].includes(room.cleaningStatus);
+    const assignmentState = (room) => {
+      if (!assignmentLifecycleEligible(room)) return 'unavailable';
+      if (room.assignee) return 'assigned';
+      if (room.assignmentEnabled === false) return 'unavailable';
+      return 'available';
+    };
+    const canOpenForClaim = (room) => assignmentState(room) === 'available' && claimEligible(room);
+    const canManageAssignee = (room) => assignmentLifecycleEligible(room) && (room.assignee || room.assignmentEnabled !== false);
+    const assignmentReason = (room) => {
+      if (isOutOfService(room) || room.cleaningSuppressed) return `운영 중지 · 청소 작업 제외 · ${operationReason(room)}`;
+      if (!assignmentLifecycleEligible(room)) {
+        if (room.cleaningStatus === '검수 대기') return '청소 제출 완료 · 인증사진 검수 단계';
+        if (room.cleaningStatus === '입실 준비 완료') return '검수 승인 완료 · 추가 배정 불필요';
+        if (room.cleaningStatus === '작업 없음') return '오늘 생성된 청소 작업 없음';
+        return `${room.cleaningStatus} 상태에서는 담당 배정 불가`;
+      }
+      if (room.assignmentEnabled === false && !room.assignee) return room.assignmentBlockReason || '관리자가 배정을 보류한 객실';
+      if (room.assignee) return `${room.assignee} 담당 확정 · 관리자가 변경하거나 회수 가능`;
+      if (room.openForClaim) return '메이드가 금액을 보고 자유 선택 가능';
+      return '배정 가능 · 메이드에게는 클로즈, 관리자가 직접 배정 가능';
+    };
+    const assignmentBadge = (room) => {
+      const status = assignmentState(room);
+      if (status === 'assigned') return `<span class="assignment-badge assigned">청소 담당 · ${room.assignee}</span>`;
+      if (status === 'available' && room.openForClaim) return '<span class="assignment-badge open">청소 담당 가능 · 선택 오픈</span>';
+      if (status === 'available') return '<span class="assignment-badge available">청소 담당 가능 · 선택 클로즈</span>';
+      return '<span class="assignment-badge unavailable">청소 담당 배정 불가</span>';
+    };
+    const roomTypes = () => [...new Set(state.rooms.map(room => room.type))].sort((a,b) => a.localeCompare(b, 'ko'));
+    const matchesRoomType = (room) => state.roomTypeFilter === 'all' || room.type === state.roomTypeFilter;
+    const isHistoricalView = () => state.selectedDate < APP_TODAY;
+    const isTodayView = () => state.selectedDate === APP_TODAY;
+    const formatSelectedDate = (dateString = state.selectedDate) => {
+      const d = new Date(`${dateString}T12:00:00+09:00`);
+      const weekdays = ['일','월','화','수','목','금','토'];
+      return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${weekdays[d.getDay()]}요일`;
+    };
+    const persistDateSnapshot = () => { state.roomSnapshots[state.selectedDate] = deepClone(state.rooms); };
+    const makeEmptyDateSnapshot = (dateString) => cloneRooms().map(room => Object.assign(room, {
+      stayStatus:'공실', stayTone:'gray', cleaningStatus:'작업 없음', color:'gray', available:'-', deadline:'-', checkin:'예약 없음', checkout:'-',
+      earlyCheckinTime:'', lateCheckoutTime:'', candleCount:0, candleLocations:'', assignmentEnabled:false, openForClaim:false, assignee:'', task:'작업 없음',
+      reservationAssigned:false, reservationLabel:'', entryBlockIssue:'', operationalStatus:'active', operationalReason:'', cleaningSuppressed:false, inspection:false, dailyEvents:[{time:'-',title:'기록 없음',detail:`${dateString}에 등록된 객실 운영 이력이 없습니다.`}]
+    }));
+    const switchSelectedDate = (dateString) => {
+      if (!dateString || dateString === state.selectedDate) return;
+      persistDateSnapshot();
+      if (!state.roomSnapshots[dateString]) state.roomSnapshots[dateString] = makeEmptyDateSnapshot(dateString);
+      state.selectedDate = dateString;
+      state.rooms = deepClone(state.roomSnapshots[dateString]);
+      state.selectedRoomId = state.rooms[0]?.id || '1502';
+      state.passwordVisible = false;
+    };
+    const shiftSelectedDate = (days) => {
+      const d = new Date(`${state.selectedDate}T12:00:00+09:00`);
+      d.setDate(d.getDate() + days);
+      const next = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      switchSelectedDate(next);
+    };
+    const dateKeyFromParts = (year, monthIndex, day) => `${year}-${String(monthIndex + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const shiftMonthKey = (monthKey, delta) => {
+      const [year, month] = monthKey.split('-').map(Number);
+      const d = new Date(year, month - 1 + delta, 1);
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    };
+    const monthLabel = (monthKey) => {
+      const [year, month] = monthKey.split('-').map(Number);
+      return `${year}년 ${month}월`;
+    };
+    const dateHasHistory = (dateKey) => !!state.roomSnapshots[dateKey] && state.roomSnapshots[dateKey].some(room => (room.dailyEvents || []).length > 0);
+    function renderCalendarSheet() {
+      const [year, month] = state.calendarMonth.split('-').map(Number);
+      const first = new Date(year, month - 1, 1);
+      const startOffset = first.getDay();
+      const start = new Date(year, month - 1, 1 - startOffset);
+      const weekdays = ['일','월','화','수','목','금','토'];
+      const days = Array.from({length:42}, (_, index) => {
+        const d = new Date(start);
+        d.setDate(start.getDate() + index);
+        const key = dateKeyFromParts(d.getFullYear(), d.getMonth(), d.getDate());
+        const outside = d.getMonth() !== month - 1;
+        return `<button class="calendar-day ${outside ? 'outside':''} ${key === APP_TODAY ? 'today':''} ${key === state.selectedDate ? 'selected':''} ${dateHasHistory(key) ? 'has-history':''}" data-action="select-calendar-date" data-date="${key}" aria-label="${key}">${d.getDate()}</button>`;
+      }).join('');
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">조회 날짜 선택</h3><p>날짜를 누르면 해당 일자의 전체 객실 상태와 변경 이력을 조회합니다. 파란 점은 저장된 운영 이력이 있는 날짜입니다.</p><div class="calendar-shell"><div class="calendar-head"><button class="date-nav-btn" data-action="calendar-month-shift" data-months="-1" aria-label="이전 달">${icon('back')}</button><strong>${monthLabel(state.calendarMonth)}</strong><button class="date-nav-btn" data-action="calendar-month-shift" data-months="1" aria-label="다음 달"><span style="transform:rotate(180deg);display:block;">${icon('back')}</span></button></div><div class="calendar-grid">${weekdays.map(day => `<div class="calendar-weekday">${day}</div>`).join('')}${days}</div><div class="calendar-legend"><span><i class="calendar-dot"></i> 운영 이력 있음</span><button class="btn small soft" data-action="select-calendar-date" data-date="${APP_TODAY}">오늘 선택</button></div></div></div>`;
+      sheet.classList.add('open');
+      sheetBackdrop.classList.add('open');
+    }
+    function openCalendarSheet() {
+      state.calendarMonth = state.selectedDate.slice(0,7);
+      renderCalendarSheet();
+    }
+    const dateHistoryCount = () => state.rooms.reduce((sum, room) => sum + (room.dailyEvents?.length || 0), 0);
+    const dateToolbarMarkup = () => `<div class="date-toolbar">
+      <button class="date-nav-btn" data-action="shift-date" data-days="-1" aria-label="이전 날짜">${icon('back')}</button>
+      <button class="date-picker-wrap" data-action="open-calendar" aria-label="달력에서 조회 날짜 선택">${icon('calendar')}<span class="date-display">${formatSelectedDate()}</span></button>
+      <button class="date-nav-btn" data-action="shift-date" data-days="1" aria-label="다음 날짜"><span style="transform:rotate(180deg);display:block;">${icon('back')}</span></button>
+      <button class="today-btn ${isTodayView() ? 'active':''}" data-action="go-today">오늘</button>
+    </div><div class="date-caption">${formatSelectedDate()} · 객실 이력 ${dateHistoryCount()}건 ${isHistoricalView() ? '· 과거 기록':'· 실시간 운영 현황'} · 날짜 영역을 누르면 월 달력이 열립니다.</div>`;
+    const historyBannerMarkup = () => isHistoricalView() ? `<div class="history-banner"><div><strong>과거 일자 이력 · 읽기 전용</strong><span>당시 예약·입퇴실 시각·청소 담당·특이사항·촛불 수량을 그대로 조회합니다. 정정은 기존 기록을 덮어쓰지 않고 정정 이력을 추가해야 합니다.</span></div><button class="btn small" data-action="history-correction">정정</button></div>` : '';
+    const guestAllocationState = (room) => {
+      if (reservationConflict(room)) return 'conflict';
+      if (isOutOfService(room)) return 'unavailable';
+      if (['투숙 중','장기투숙'].includes(room.stayStatus)) return 'unavailable';
+      if (room.reservationAssigned) return 'assigned';
+      if (room.entryBlockIssue) return 'unavailable';
+      if (candleBlocksGuest(room)) return 'unavailable';
+      if (room.cleaningStatus !== '입실 준비 완료') return 'unavailable';
+      return 'available';
+    };
+    const guestAllocationReason = (room) => {
+      if (reservationConflict(room)) {
+        return `예약 충돌 · ${room.reservationLabel || '기존 예약'} 배정 중 · ${hardGuestBlockReasons(room).join(' · ')} · 입실 전 차단 원인 해결, 다른 객실 이동 또는 배정 해제 필요`;
+      }
+      if (isOutOfService(room)) return `운영 중지 · 고객 배정과 청소 모두 차단 · ${operationReason(room)}`;
+      if (['투숙 중','장기투숙'].includes(room.stayStatus)) return `${room.stayStatus} · 현재 고객이 객실 사용 중`;
+      if (room.reservationAssigned) return `${room.reservationLabel || '기존 예약'}에 배정 완료 · 신규 고객 배정 불가`;
+      if (room.entryBlockIssue) return `고객 배정 차단 특이사항 · ${room.entryBlockIssue}`;
+      if (candleBlocksGuest(room)) return `${candleBlockReason(room)} · 촛불이 0개가 되어야 고객 배정 가능`;
+      if (room.cleaningStatus !== '입실 준비 완료') return `${room.cleaningStatus} · 청소 및 검수 완료 전`;
+      return '청소·검수 완료 · 촛불 0개 · 고객 배정 차단 특이사항 없음 · 미배정 객실';
+    };
+    const guestAllocationBadge = (room) => {
+      const status = guestAllocationState(room);
+      if (status === 'available') return '<span class="guest-allocation-badge available">고객 배정 가능</span>';
+      if (status === 'assigned') return '<span class="guest-allocation-badge assigned">예약 배정 완료</span>';
+      if (status === 'conflict') return '<span class="guest-allocation-badge conflict">예약 충돌</span>';
+      return '<span class="guest-allocation-badge unavailable">고객 배정 불가</span>';
+    };
+    const guestAllocationHeadline = (room) => {
+      const status = guestAllocationState(room);
+      if (status === 'available') return '고객에게 배정 가능';
+      if (status === 'assigned') return '예약 배정 완료 · 신규 배정 불가';
+      if (status === 'conflict') return candleBlocksGuest(room) ? '예약 충돌 · 촛불 회수 전 입실 불가' : '예약 충돌 · 입실 전 조치 필요';
+      if (candleBlocksGuest(room)) return '촛불 회수 전 고객 배정 불가';
+      return '고객에게 배정 불가';
+    };
+    const guestAllocationActionLabel = (room) => {
+      if (reservationConflict(room)) return candleBlocksGuest(room) ? '촛불 회수·충돌 해결' : '예약 충돌 해결';
+      if (['투숙 중','장기투숙'].includes(room.stayStatus)) return '입·퇴실 상태 관리';
+      if (room.reservationAssigned) return '예약 변경·해제';
+      if (guestAllocationState(room) === 'available') return '고객에게 배정';
+      if (isOutOfService(room)) return '운영 중지 확인';
+      if (candleBlocksGuest(room)) return '촛불 회수 처리';
+      return '배정 불가 사유';
+    };
+    const guestUnavailable = (room) => guestAllocationState(room) !== 'available';
+    const needsCleaning = (room) => !isOutOfService(room) && !room.cleaningSuppressed && ['입실 대기','청소 가능','청소 중','연박 청소','재청소 필요'].includes(room.cleaningStatus);
+    const cleaningKind = (room) => String(room.task || '').includes('연박') ? 'stayover' : room.task === '재청소' || room.cleaningStatus === '재청소 필요' ? 'reclean' : 'checkout';
+    const unavailableBucket = (room) => {
+      if (reservationConflict(room)) return 'conflict';
+      if (isOutOfService(room)) return 'out-of-service';
+      if (['투숙 중','장기투숙'].includes(room.stayStatus)) return 'occupied';
+      if (candleBlocksGuest(room)) return 'candle';
+      if (room.entryBlockIssue) return 'issue';
+      if (room.cleaningStatus !== '입실 준비 완료') return 'cleaning';
+      if (room.reservationAssigned) return 'reserved';
+      return 'other';
+    };
+    const timingBadges = (room) => `${room.earlyCheckinTime ? `<span class="timing-badge">얼리 체크인 ${room.earlyCheckinTime}</span>` : ''}${room.lateCheckoutTime ? `<span class="timing-badge late">레이트 체크아웃 ${room.lateCheckoutTime}</span>` : ''}`;
+    const scheduleSummary = (room) => isOutOfService(room) ? `<span><b>운영 중지</b></span><span class="schedule-arrow">·</span><span>청소 제외 · 예약 없음</span>` : `<span>퇴실 <b>${room.checkout}</b></span><span class="schedule-arrow">→</span><span>입실 <b>${room.checkin}</b></span>${timingBadges(room)}`;
+    const dailyEventsFor = (room) => room.dailyEvents || [];
+    const addDailyEvent = (room, title, detail, time = '13:24') => {
+      if (!room.dailyEvents) room.dailyEvents = [];
+      room.dailyEvents.unshift({ time, title, detail });
+    };
+    const assignmentHistoryFor = (room) => room.assignmentHistory || (room.assignmentHistory = []);
+    const addAssignmentHistory = (room, from, to, reason, by = '관리자') => {
+      const detail = `${from} → ${to} · ${by} · ${reason || '사유 미입력'}`;
+      assignmentHistoryFor(room).unshift({ at:'13:24', from, to, by, reason:reason || '사유 미입력' });
+      addDailyEvent(room, '청소 담당 배정 변경', detail, '13:24');
+    };
+    const archiveTaskProgress = (room, previousAssignee, reason, actionLabel) => {
+      const checks = state.taskChecks[room.id] || [];
+      const photos = state.taskPhotos[room.id] || [];
+      const note = state.taskNotes[room.id] || '';
+      const started = !!state.taskStarted[room.id];
+      if (!started && !checks.length && !photos.length && !note) return false;
+      if (!state.taskArchives[room.id]) state.taskArchives[room.id] = [];
+      state.taskArchives[room.id].unshift({
+        at:'13:24', assignee:previousAssignee || '미배정', action:actionLabel,
+        reason:reason || '관리자 처리', started, checks:[...checks], photos:[...photos], note
+      });
+      delete state.taskStarted[room.id];
+      delete state.taskChecks[room.id];
+      delete state.taskPhotos[room.id];
+      delete state.taskNotes[room.id];
+      return true;
+    };
+    const ownActive = (room) => room.assignee === '김하나' && !['입실 준비 완료','검수 대기','작업 없음'].includes(room.cleaningStatus);
+    const candleLabel = (room) => room.candleCount > 0 ? `촛불 ${room.candleCount}개` : '촛불 없음';
+    const staffInitial = (name) => name.length > 1 ? `${name[0]}${name[name.length - 1]}` : name;
+    const maidStatusLabel = (status) => status === 'active' ? '활동 중' : status === 'inactive' ? '비활성' : '퇴사 처리';
+    const maidStatusClass = (status) => status === 'active' ? '' : status;
+    const reclaimableAssignment = (room) => assignmentLifecycleEligible(room);
+
+    function photoSceneSvg(scene = 'overview') {
+      const common = '<rect width="320" height="210" fill="#e8edf0"/><rect y="143" width="320" height="67" fill="#d7dde1"/><path d="M0 143h320" stroke="#aab5bd" stroke-width="2"/>';
+      const scenes = {
+        overview: '<rect x="24" y="24" width="104" height="78" rx="4" fill="#bcd0da"/><path d="M76 24v78M24 63h104" stroke="#fff" stroke-width="3"/><rect x="159" y="72" width="126" height="72" rx="7" fill="#f8f8f4" stroke="#72828d" stroke-width="3"/><rect x="169" y="61" width="51" height="25" rx="7" fill="#fff" stroke="#72828d" stroke-width="3"/><path d="M155 144v18M289 144v18" stroke="#72828d" stroke-width="5"/><rect x="34" y="119" width="88" height="28" rx="8" fill="#8399a7"/><path d="M45 147v15M111 147v15" stroke="#61737f" stroke-width="5"/>',
+        bed: '<rect x="48" y="69" width="226" height="82" rx="9" fill="#fbfbf7" stroke="#6f808b" stroke-width="3"/><rect x="64" y="54" width="80" height="40" rx="9" fill="#fff" stroke="#6f808b" stroke-width="3"/><rect x="152" y="54" width="80" height="40" rx="9" fill="#fff" stroke="#6f808b" stroke-width="3"/><path d="M48 116h226M75 151v20M247 151v20" stroke="#6f808b" stroke-width="4"/><rect x="21" y="28" width="60" height="46" rx="3" fill="#bdccd5"/><rect x="247" y="29" width="48" height="32" rx="3" fill="#ceb991"/>',
+        bath: '<rect x="24" y="21" width="126" height="122" rx="5" fill="#c9dbe2" stroke="#71838e" stroke-width="3"/><path d="M87 21v122M24 81h126" stroke="#f8fbfc" stroke-width="3"/><path d="M58 47c12 0 17 8 17 18" stroke="#71838e" stroke-width="5" fill="none"/><circle cx="75" cy="66" r="5" fill="#71838e"/><ellipse cx="230" cy="131" rx="49" ry="21" fill="#f9faf8" stroke="#71838e" stroke-width="3"/><rect x="205" y="62" width="51" height="62" rx="8" fill="#f9faf8" stroke="#71838e" stroke-width="3"/><path d="M181 154h98" stroke="#71838e" stroke-width="4"/>',
+        sink: '<rect x="70" y="22" width="180" height="85" rx="7" fill="#c7d6dd" stroke="#71838e" stroke-width="3"/><rect x="54" y="119" width="212" height="42" rx="9" fill="#f9faf8" stroke="#71838e" stroke-width="3"/><ellipse cx="160" cy="127" rx="52" ry="19" fill="#dbe5e8" stroke="#71838e" stroke-width="3"/><path d="M160 107V89c0-13 22-13 22 0" stroke="#71838e" stroke-width="5" fill="none"/><rect x="72" y="161" width="176" height="32" fill="#899da9"/>',
+        kitchen: '<rect x="25" y="35" width="270" height="42" rx="4" fill="#e9e2d5" stroke="#73838d" stroke-width="3"/><path d="M92 35v42M159 35v42M226 35v42" stroke="#73838d" stroke-width="3"/><rect x="25" y="105" width="270" height="51" rx="4" fill="#f7f5ef" stroke="#73838d" stroke-width="3"/><path d="M91 105v51M159 105v51M227 105v51" stroke="#73838d" stroke-width="3"/><rect x="42" y="83" width="236" height="23" rx="5" fill="#8599a5"/><circle cx="214" cy="94" r="6" fill="#dbe4e8"/><path d="M124 84v-18c0-16 27-16 27 0" stroke="#657985" stroke-width="5" fill="none"/>',
+        fridge: '<rect x="83" y="18" width="154" height="174" rx="7" fill="#f8faf8" stroke="#6f808b" stroke-width="3"/><path d="M83 78h154M160 18v174" stroke="#6f808b" stroke-width="3"/><path d="M102 42h39M179 42h39M103 104h38M179 104h39M103 139h38M179 139h39" stroke="#9aaab3" stroke-width="4"/><rect x="112" y="49" width="20" height="21" rx="3" fill="#bfcf9b"/><rect x="187" y="47" width="22" height="23" rx="3" fill="#dfbd8c"/><circle cx="124" cy="123" r="9" fill="#cbb3a3"/><rect x="184" y="115" width="28" height="15" rx="3" fill="#a9c7d3"/>',
+        amenities: '<rect x="42" y="128" width="236" height="31" rx="6" fill="#8ba0ac"/><rect x="60" y="94" width="100" height="34" rx="6" fill="#f9faf7" stroke="#71838e" stroke-width="3"/><rect x="70" y="64" width="89" height="30" rx="6" fill="#f9faf7" stroke="#71838e" stroke-width="3"/><rect x="188" y="69" width="24" height="59" rx="5" fill="#c9d9df" stroke="#71838e" stroke-width="3"/><rect x="220" y="81" width="24" height="47" rx="5" fill="#e4cda5" stroke="#71838e" stroke-width="3"/><path d="M200 69V54M232 81V62" stroke="#71838e" stroke-width="4"/>',
+        entry: '<rect x="64" y="19" width="137" height="174" rx="4" fill="#b7a791" stroke="#637681" stroke-width="3"/><circle cx="178" cy="109" r="7" fill="#4d606c"/><rect x="213" y="72" width="48" height="82" rx="6" fill="#c7d5db" stroke="#637681" stroke-width="3"/><rect x="225" y="88" width="24" height="33" rx="4" fill="#425763"/><circle cx="237" cy="134" r="5" fill="#637681"/><rect x="20" y="38" width="31" height="121" rx="3" fill="#d6e0e3" stroke="#83939c" stroke-width="3"/>',
+        candle: '<rect x="38" y="125" width="244" height="24" rx="7" fill="#879ba7"/><rect x="79" y="73" width="40" height="52" rx="5" fill="#f4e6c8" stroke="#7c7160" stroke-width="3"/><rect x="141" y="53" width="40" height="72" rx="5" fill="#f4e6c8" stroke="#7c7160" stroke-width="3"/><rect x="203" y="83" width="40" height="42" rx="5" fill="#f4e6c8" stroke="#7c7160" stroke-width="3"/><path d="M99 72c-11-12 5-21 2-33 14 12 9 23-2 33ZM161 52c-11-12 5-21 2-33 14 12 9 23-2 33ZM223 82c-11-12 5-21 2-33 14 12 9 23-2 33Z" fill="#d9964e"/><path d="M54 172h212" stroke="#697c87" stroke-width="4" stroke-linecap="round"/>'
+      };
+      return `<svg class="photo-art" viewBox="0 0 320 210" aria-hidden="true">${common}${scenes[scene] || scenes.overview}<rect x="5" y="5" width="310" height="200" rx="10" fill="none" stroke="rgba(53,72,85,.18)" stroke-width="2"/></svg>`;
+    }
+
+    function initializeFromQuery() {
+      const view = new URLSearchParams(location.search).get('view');
+      if (view === 'admin-rooms' || view === 'admin') { state.role = 'admin'; state.screen = 'admin-rooms'; }
+      if (view === 'admin-history') { state.role = 'admin'; state.screen = 'admin-rooms'; switchSelectedDate('2026-08-13'); state.roomFilter = 'all'; }
+      if (view === 'cleaning-needed') { state.role = 'admin'; state.screen = 'admin-rooms'; state.roomFilter = 'cleaning-needed'; }
+      if (view === 'admin-open') { state.role = 'admin'; state.screen = 'admin-open'; }
+      if (view === 'assignment-sheet') { state.role = 'admin'; state.screen = 'admin-open'; state.selectedRoomId = '1004'; setTimeout(() => openAssignmentSheet('1004'), 80); }
+      if (view === 'admin-inspection') { state.role = 'admin'; state.screen = 'admin-inspection'; }
+      if (view === 'inspection-detail') { state.role = 'admin'; state.screen = 'admin-inspection-detail'; state.selectedRoomId = '903'; }
+      if (view === 'admin-maids') { state.role = 'admin'; state.screen = 'admin-maids'; }
+      if (view === 'admin-settlement') { state.role = 'admin'; state.screen = 'admin-settlement'; }
+      if (view === 'admin-penalties') { state.role = 'admin'; state.screen = 'admin-penalties'; }
+      if (view === 'maid-market' || view === 'maid') { state.role = 'maid'; state.screen = 'maid-market'; }
+      if (view === 'maid-tasks') { state.role = 'maid'; state.screen = 'maid-tasks'; }
+      if (view === 'maid-penalties') { state.role = 'maid'; state.screen = 'maid-penalties'; }
+      if (view === 'password') { state.role = 'admin'; state.screen = 'admin-room-detail'; state.selectedRoomId = '1502'; setTimeout(() => openPasswordSheet('1502'), 80); }
+      if (view === 'room-detail') { state.role = 'admin'; state.screen = 'admin-room-detail'; state.selectedRoomId = '1502'; }
+      if (view === 'room-issue') { state.role = 'admin'; state.screen = 'admin-room-detail'; state.selectedRoomId = '608'; }
+      if (view === 'room-operation') { state.role = 'admin'; state.screen = 'admin-room-detail'; state.selectedRoomId = '608'; setTimeout(() => openRoomOperationSheet('608'), 80); }
+      if (view === 'reservation-conflict') { state.role = 'admin'; state.screen = 'admin-room-detail'; state.selectedRoomId = '108'; setTimeout(() => openGuestAllocationSheet('108'), 80); }
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(state.toastTimer);
+      state.toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function topbar(title, subtitle = '', back = false) {
+      return `<header class="topbar ${back ? 'compact' : ''}">
+        ${back ? `<button class="back-btn" data-action="back" aria-label="뒤로 가기">${icon('back')}</button>` : ''}
+        <div class="topbar-title-wrap">
+          ${back ? '' : '<div class="brandline">CASTLE THE ART</div>'}
+          <div class="topbar-title">${title}</div>
+          ${subtitle ? `<div class="topbar-subtitle">${subtitle}</div>` : ''}
+        </div>
+        ${back ? '' : `<button class="icon-btn" data-action="open-alerts" aria-label="알림">${icon('bell')}</button>`}
+      </header>`;
+    }
+
+    const adminNavItems = [
+      ['admin-rooms','rooms','객실'], ['admin-open','unlock','청소 배정'], ['admin-inspection','clipboard','검수'], ['admin-settlement','money','주급'], ['admin-more','more','더보기']
+    ];
+    const maidNavItems = [
+      ['maid-market','unlock','일감 찾기'], ['maid-tasks','clipboard','내 업무'], ['maid-completed','check','완료'], ['maid-settlement','money','주급'], ['maid-profile','user','내 정보']
+    ];
+
+    function bottomNav(role) {
+      const items = role === 'admin' ? adminNavItems : maidNavItems;
+      const maidHasUnreadRejection = state.rooms.some(room => room.assignee === '김하나' && room.cleaningStatus === '재청소 필요' && room.maidUnreadRejection !== false);
+      const maidHasUnreadPenalty = unreadPenaltyCount('maid01') > 0;
+      return `<nav class="bottom-nav" aria-label="주요 메뉴">${items.map(([screen, iconName, label]) => {
+        const dot = screen === 'admin-inspection' || (screen === 'maid-tasks' && maidHasUnreadRejection) || (screen === 'maid-profile' && maidHasUnreadPenalty);
+        return `<button class="nav-item ${state.screen === screen ? 'active' : ''}" data-screen="${screen}"><span class="nav-icon">${icon(iconName)}${dot ? '<i class="nav-dot"></i>' : ''}</span><span>${label}</span></button>`;
+      }).join('')}</nav>`;
+    }
+
+    function stayChip(room) {
+      return `<span class="status-chip tone-${room.stayTone}">${room.stayStatus}</span>`;
+    }
+
+    function cleaningChip(room) {
+      return `<span class="status-chip tone-${statusTone(room.cleaningStatus)}">${room.cleaningStatus}</span>`;
+    }
+
+    function badgeMarkup(room) {
+      const items = [...room.badges];
+      if (room.candleCount > 0 && !items.some(x => x.includes('촛불'))) items.push(candleLabel(room));
+      return items.map(label => {
+        const cls = label.includes('급한') || label.includes('재청소') ? 'red' : label.includes('얼리') || label.includes('연박') ? 'blue' : label.includes('레이트') ? 'orange' : '';
+        return `<span class="badge ${cls}">${label}</span>`;
+      }).join('');
+    }
+
+    const penaltyMaid = (penalty) => state.maids.find(maid => maid.id === penalty.maidId);
+    const penaltiesForMaid = (maidId) => state.penalties.filter(penalty => penalty.maidId === maidId);
+    const activePenaltiesForMaid = (maidId) => penaltiesForMaid(maidId).filter(penalty => penalty.status === 'active');
+    const activePenaltyPoints = (maidId) => activePenaltiesForMaid(maidId).reduce((sum, penalty) => sum + Number(penalty.points || 0), 0);
+    const deletedPenaltiesForMaid = (maidId) => penaltiesForMaid(maidId).filter(penalty => penalty.status === 'deleted');
+    const unreadPenaltyCount = (maidId) => activePenaltiesForMaid(maidId).filter(penalty => !penalty.maidAcknowledged).length;
+    const penaltyRoomLabel = (penalty) => penalty.roomId ? `${penalty.roomId}호 · ${penalty.task || '청소 작업'}` : '객실 연결 없음';
+    const penaltyStatusLabel = (penalty) => penalty.status === 'active' ? '유효 벌점' : '삭제됨 · 점수 미반영';
+
+    function renderLogin() {
+      const isAdmin = state.loginRole === 'admin';
+      return `<section class="login-screen">
+        <div class="login-mark">CTA</div>
+        <div class="login-brand">CASTLE THE ART</div>
+        <h1 class="login-title">객실 운영</h1>
+        <p class="login-copy">전체 객실 상태부터 청소 일감 선택과<br>검수·주급까지 한곳에서 관리합니다.</p>
+        <div class="role-tabs" aria-label="로그인 역할 선택">
+          <button class="role-tab ${isAdmin ? 'active' : ''}" data-login-role="admin">관리자</button>
+          <button class="role-tab ${!isAdmin ? 'active' : ''}" data-login-role="maid">메이드</button>
+        </div>
+        <div class="field"><label>아이디</label><input class="input" autocomplete="username" value="${isAdmin ? 'manager01' : 'maid01'}" /></div>
+        <div class="field"><label>비밀번호</label><input class="input" type="password" autocomplete="current-password" value="1234" /></div>
+        <div class="login-actions"><button class="btn primary full" data-action="login">${isAdmin ? '관리자' : '메이드'}로 로그인</button><div class="login-hint">클릭형 와이어프레임이라 별도 인증 없이 이동합니다.</div></div>
+      </section>`;
+    }
+
+    function filteredAdminRooms() {
+      const search = state.roomSearch.trim().toLowerCase();
+      return state.rooms.filter(room => {
+        const searchable = [room.id, room.type, room.stayStatus, room.cleaningStatus, room.task, room.assignee || '', room.entryBlockIssue || '', room.operationalReason || '', room.operationalStatus || '', reservationConflict(room) ? '예약 충돌' : '', room.earlyCheckinTime || '', room.lateCheckoutTime || '', guestAllocationReason(room)].join(' ').toLowerCase();
+        if (search && !searchable.includes(search)) return false;
+        if (!matchesRoomType(room)) return false;
+        if (state.roomFilter === 'all') return true;
+        if (state.roomFilter === 'guest-available') return guestAllocationState(room) === 'available';
+        if (state.roomFilter === 'cleaning-needed') {
+          if (!needsCleaning(room)) return false;
+          if (state.cleaningSubFilter === 'checkout') return cleaningKind(room) === 'checkout';
+          if (state.cleaningSubFilter === 'stayover') return cleaningKind(room) === 'stayover';
+          if (state.cleaningSubFilter === 'reclean') return cleaningKind(room) === 'reclean';
+          if (state.cleaningSubFilter === 'assigned') return !!room.assignee;
+          if (state.cleaningSubFilter === 'unassigned') return !room.assignee;
+          return true;
+        }
+        if (state.roomFilter === 'guest-unavailable') return guestUnavailable(room);
+        if (state.roomFilter === 'candle') return room.candleCount > 0;
+        if (state.roomFilter === 'reservation-conflict') return reservationConflict(room);
+        if (state.roomFilter === 'out-of-service') return isOutOfService(room);
+        return true;
+      });
+    }
+
+    function adminRoomRow(room) {
+      const aState = assignmentState(room);
+      const guestState = guestAllocationState(room);
+      const switchVisible = !isHistoricalView() && canOpenForClaim(room);
+      const cleaningNeeded = needsCleaning(room);
+      return `<article class="room-row ${room.color}">
+        <div class="room-row-head">
+          <div class="room-ident"><strong>${room.id}호</strong><span>${room.type}</span></div>
+          <div class="status-stack">${stayChip(room)}${cleaningChip(room)}</div>
+        </div>
+        <div class="room-schedule">${scheduleSummary(room)}</div>
+        ${(isOutOfService(room) || reservationConflict(room)) ? `<div class="operation-band ${isOutOfService(room) ? 'stopped':''}"><div><strong>${isOutOfService(room) ? operationLabel(room) : '예약 충돌 감지'}</strong><span>${isOutOfService(room) ? operationReason(room) : guestAllocationReason(room)}</span></div><span class="operation-badge ${isOutOfService(room) ? 'stopped':''}">${isOutOfService(room) ? '운영 중지':'즉시 조치'}</span></div>` : ''}
+        <div class="guest-allocation-band ${guestState}">
+          <div class="guest-allocation-copy"><strong>${guestAllocationHeadline(room)}</strong><span>${guestAllocationReason(room)}</span></div>${guestAllocationBadge(room)}
+        </div>
+        <div class="room-row-grid operational">
+          <div class="room-data password"><label>객실 비밀번호</label><strong>${room.password}</strong></div>
+          <div class="room-data candle"><label>촛불 현황</label><strong>${room.candleCount > 0 ? `${room.candleCount}개 있음` : '없음'}</strong></div>
+          <div class="room-data"><label>체크아웃</label><strong>${room.checkout}</strong></div>
+          <div class="room-data"><label>체크인</label><strong>${room.checkin}</strong></div>
+        </div>
+        <div class="room-task-line"><div><strong>${isOutOfService(room) ? '운영 중지 · 청소 제외' : cleaningNeeded ? room.task : room.cleaningStatus === '검수 대기' ? '청소 완료 · 검수 대기' : '현재 청소 작업 없음'}</strong><span>${isOutOfService(room) ? operationReason(room) : cleaningNeeded ? `${room.available}부터 · ${room.deadline} 마감` : room.cleaningStatus}</span></div>${cleaningNeeded ? `<span class="assignee-mini ${room.assignee ? '':'unassigned'}">${room.assignee ? `담당 ${room.assignee}`:'담당 미지정'}</span>` : ''}</div>
+        ${cleaningNeeded ? `<div class="assignment-band ${aState}"><div class="assignment-copy"><div class="assignment-title-line">${assignmentBadge(room)}</div><div class="assignment-detail">${assignmentReason(room)}</div></div>${switchVisible ? `<button class="switch ${room.openForClaim ? 'on' : ''}" data-action="toggle-open" data-id="${room.id}" aria-label="${room.id}호 메이드 선택 ${room.openForClaim ? '클로즈' : '오픈'}"></button>` : ''}</div>` : ''}
+        <div class="assignment-button-row">${isHistoricalView() ? `<button class="btn small full" style="grid-column:1/-1;" data-action="go-admin-room" data-id="${room.id}">${icon('history')} 일자 이력 상세</button>` : `<button class="btn small ${guestAllocationState(room) === 'available' ? 'green' : reservationConflict(room) ? 'red' : 'soft'}" data-action="open-guest-allocation" data-id="${room.id}">${guestAllocationActionLabel(room)}</button><button class="btn small ${isOutOfService(room) ? 'red':'soft'}" data-action="open-room-operation" data-id="${room.id}">운영 상태</button><button class="btn small ${aState === 'assigned' ? 'soft' : ''}" data-action="open-assignment" data-id="${room.id}">${cleaningNeeded ? (aState === 'assigned' ? '담당 변경·회수' : aState === 'available' ? '청소 담당 배정' : '청소 배정 정보') : '배정 이력'}</button><button class="btn small" data-action="edit-password" data-id="${room.id}">${icon('edit')} 비밀번호</button>${room.candleCount > 0 ? `<button class="btn small red" data-action="open-candle-management" data-id="${room.id}">촛불 회수</button>` : ``}<button class="btn small soft full" style="grid-column:1/-1;" data-action="go-admin-room" data-id="${room.id}">전체 상세</button>`}</div>
+      </article>`;
+    }
+
+    function renderAdminRooms() {
+      const rooms = filteredAdminRooms();
+      const guestAvailable = state.rooms.filter(r => guestAllocationState(r) === 'available').length;
+      const cleaningRooms = state.rooms.filter(needsCleaning);
+      const guestUnavailableCount = state.rooms.filter(guestUnavailable).length;
+      const candleRooms = state.rooms.filter(r => r.candleCount > 0);
+      const conflictRooms = state.rooms.filter(reservationConflict);
+      const stoppedRooms = state.rooms.filter(isOutOfService);
+      const checkoutCount = cleaningRooms.filter(r => cleaningKind(r) === 'checkout').length;
+      const stayoverCount = cleaningRooms.filter(r => cleaningKind(r) === 'stayover').length;
+      const assignedCleaning = cleaningRooms.filter(r => !!r.assignee).length;
+      const unassignedCleaning = cleaningRooms.length - assignedCleaning;
+      const typeOptions = `<option value="all">전체 객실 유형</option>${roomTypes().map(type => `<option value="${type}" ${state.roomTypeFilter === type ? 'selected':''}>${type}</option>`).join('')}`;
+      const subFilters = [['all','전체'],['checkout','퇴실 청소'],['stayover','연박 청소'],['reclean','재청소'],['assigned','담당 지정'],['unassigned','담당 미지정']];
+      const group = (title, rows, meta) => rows.length ? `<div class="room-group"><div class="room-group-head"><strong>${title}</strong><span>${meta || `${rows.length}개`}</span></div><div class="room-board">${rows.map(adminRoomRow).join('')}</div></div>` : '';
+      let listMarkup = '';
+      if (state.roomFilter === 'cleaning-needed') {
+        const checkoutRows = rooms.filter(r => cleaningKind(r) === 'checkout');
+        const stayoverRows = rooms.filter(r => cleaningKind(r) === 'stayover');
+        const recleanRows = rooms.filter(r => cleaningKind(r) === 'reclean');
+        listMarkup = `${group('퇴실 청소', checkoutRows, `${checkoutRows.length}개 · 담당 ${checkoutRows.filter(r=>r.assignee).length} / 미지정 ${checkoutRows.filter(r=>!r.assignee).length}`)}${group('연박 청소', stayoverRows, `${stayoverRows.length}개 · 투숙객 시간대 확인`)}${group('재청소', recleanRows, `${recleanRows.length}개 · 우선 처리`)}`;
+      } else if (state.roomFilter === 'guest-unavailable') {
+        const conflicts = rooms.filter(r => unavailableBucket(r) === 'conflict');
+        const stopped = rooms.filter(r => unavailableBucket(r) === 'out-of-service');
+        const occupied = rooms.filter(r => unavailableBucket(r) === 'occupied');
+        const candle = rooms.filter(candleBlocksGuest);
+        const issue = rooms.filter(r => unavailableBucket(r) === 'issue');
+        const cleaning = rooms.filter(r => unavailableBucket(r) === 'cleaning');
+        const reserved = rooms.filter(r => unavailableBucket(r) === 'reserved');
+        listMarkup = `${group('예약 충돌 · 즉시 조치', conflicts)}${group('운영 중지 · 청소 제외', stopped)}${group('청소·검수 필요', cleaning)}${group('고객 입실 중', occupied)}${group('촛불 회수 필요 · 다른 사유와 중복 표시', candle, `${candle.length}개 · 전량 회수 전 배정·입실 불가`)}${group('고객 배정 차단 특이사항', issue)}${group('기존 예약 배정 완료', reserved)}`;
+      } else {
+        const title = state.roomFilter === 'guest-available' ? '고객에게 배정 가능한 객실' : state.roomFilter === 'candle' ? '촛불이 있는 객실' : state.roomFilter === 'reservation-conflict' ? '예약 충돌 객실' : state.roomFilter === 'out-of-service' ? '운영 중지 객실' : '선택 일자 전체 객실';
+        listMarkup = group(title, rooms, `${rooms.length}개`);
+      }
+      return `${topbar('객실 운영 현황', `${formatSelectedDate()} · 객실 상태 중심 관리`)}
+        <section class="screen">
+          ${dateToolbarMarkup()}${historyBannerMarkup()}
+          <div class="ops-grid">
+            <button class="ops-card available ${state.roomFilter === 'guest-available' ? 'active':''}" data-room-filter="guest-available"><label>고객 배정 가능 객실</label><strong>${guestAvailable}</strong><span>청소·검수 완료, 촛불 0개, 차단 특이사항 없음</span></button>
+            <button class="ops-card cleaning ${state.roomFilter === 'cleaning-needed' ? 'active':''}" data-room-filter="cleaning-needed"><label>청소 필요 객실</label><strong>${cleaningRooms.length}</strong><span>퇴실 ${checkoutCount} · 연박 ${stayoverCount}<br>담당 ${assignedCleaning} · 미지정 ${unassignedCleaning}</span></button>
+            <button class="ops-card unavailable ${state.roomFilter === 'guest-unavailable' ? 'active':''}" data-room-filter="guest-unavailable"><label>고객 배정 불가 객실</label><strong>${guestUnavailableCount}</strong><span>청소·검수, 촛불, 차단 특이사항, 입실·예약</span></button>
+            <button class="ops-card candle ${state.roomFilter === 'candle' ? 'active':''}" data-room-filter="candle"><label>촛불 있는 객실</label><strong>${candleRooms.length}</strong><span>전량 회수 전 고객 배정·입실 불가</span></button>
+          </div>
+          ${conflictRooms.length ? `<div class="conflict-alert"><strong>예약 충돌 ${conflictRooms.length}건 · 입실 전 조치 필요</strong><span>${conflictRooms.map(room => `${room.id}호 ${room.reservationLabel || '예약'} · ${hardGuestBlockReasons(room).join(' · ')}`).join('<br>')}</span><button class="btn red small full" data-action="view-reservation-conflicts">예약 충돌만 보기</button></div>` : ''}
+          <div class="search-wrap"><span class="search-icon">${icon('search')}</span><input id="roomSearch" class="input" placeholder="객실·유형·상태·메이드·시간 검색" value="${state.roomSearch}" /></div>
+          <div class="type-filter-bar"><label for="roomTypeFilter">객실 유형</label><select id="roomTypeFilter" class="select">${typeOptions}</select></div>
+          <div class="filter-rail"><button class="chip ${state.roomFilter === 'all' ? 'active':''}" data-room-filter="all">전체 객실</button><button class="chip ${state.roomFilter === 'guest-available' ? 'active':''}" data-room-filter="guest-available">배정 가능</button><button class="chip ${state.roomFilter === 'cleaning-needed' ? 'active':''}" data-room-filter="cleaning-needed">청소 필요</button><button class="chip ${state.roomFilter === 'guest-unavailable' ? 'active':''}" data-room-filter="guest-unavailable">배정 불가</button><button class="chip ${state.roomFilter === 'candle' ? 'active':''}" data-room-filter="candle">촛불 있음</button><button class="chip ${state.roomFilter === 'reservation-conflict' ? 'active':''}" data-room-filter="reservation-conflict">예약 충돌 ${conflictRooms.length}</button><button class="chip ${state.roomFilter === 'out-of-service' ? 'active':''}" data-room-filter="out-of-service">운영 중지 ${stoppedRooms.length}</button></div>
+          ${state.roomFilter === 'cleaning-needed' ? `<div class="filter-rail" style="padding-top:5px;">${subFilters.map(([key,label]) => `<button class="chip ${state.cleaningSubFilter === key ? 'active':''}" data-cleaning-filter="${key}">${label}</button>`).join('')}</div>` : ''}
+          <div class="notice"><span class="notice-mark">i</span><span>네 가지 운영 목록은 서로 겹칠 수 있습니다. 투숙 중 연박 청소 객실은 ‘청소 필요’와 ‘고객 배정 불가’에 함께 표시됩니다. <strong>촛불이 1개라도 있으면 고객 배정과 입실이 차단되며, 관리자가 현장에서 전량 회수한 뒤 0개로 확정해야 차단이 풀립니다.</strong></span></div>
+          ${listMarkup}
+          ${!rooms.length ? `<div class="empty-state"><strong>조건에 맞는 객실이 없습니다</strong><span>조회 날짜·객실 유형·상태 필터를 바꿔 주세요.</span></div>` : ''}
+        </section>${bottomNav('admin')}`;
+    }
+
+    function renderAdminOpen() {
+      const scopedRooms = state.rooms.filter(matchesRoomType);
+      const available = scopedRooms.filter(r => assignmentState(r) === 'available');
+      const assigned = scopedRooms.filter(r => assignmentState(r) === 'assigned');
+      const unavailable = scopedRooms.filter(r => assignmentState(r) === 'unavailable');
+      const openCount = available.filter(r => r.openForClaim).length;
+      const filterItems = [['all','전체'],['available','배정 가능'],['assigned','담당 확정'],['unavailable','배정 불가'],['open','선택 오픈']];
+      const matchesFilter = (room) => {
+        if (state.assignmentFilter === 'all') return true;
+        if (state.assignmentFilter === 'open') return room.openForClaim;
+        return assignmentState(room) === state.assignmentFilter;
+      };
+      const assignmentCard = (room) => {
+        const aState = assignmentState(room);
+        const manualBlocked = assignmentLifecycleEligible(room) && !room.assignee && room.assignmentEnabled === false;
+        return `<article class="job-row assignment-card ${aState}">
+          <div class="job-head"><div><div class="job-room">${room.id}호</div><div class="job-type">${room.type} · ${room.task}</div></div><div class="job-price">${room.task === '작업 없음' ? '-' : `${room.cleaningFee.toLocaleString()}원`}<span>${room.task === '작업 없음' ? '오늘 작업 없음' : '메이드 표시 금액'}</span></div></div>
+          <div class="badge-row" style="margin-top:9px;margin-bottom:0;">${assignmentBadge(room)}${cleaningChip(room)}</div>
+          <div class="job-meta"><div><label>청소 가능</label><strong>${room.available}</strong></div><div><label>완료 마감</label><strong>${room.deadline}</strong></div><div><label>촛불</label><strong>${room.candleCount ? `${room.candleCount}개` : '없음'}</strong></div></div>
+          <div class="job-footer"><div class="job-assignee"><strong>${assignmentReason(room)}</strong>${aState === 'assigned' ? `<br>메이드 선택 후에도 관리자 변경 가능` : aState === 'unavailable' && room.assignee ? `<br>기존 담당자는 검수·주급 이력으로 보존` : ''}</div><div class="assignment-actions">
+            ${!isHistoricalView() && aState === 'available' && canOpenForClaim(room) ? `<span class="open-state ${room.openForClaim ? 'on':'off'}">${room.openForClaim ? '오픈':'클로즈'}</span><button class="switch ${room.openForClaim ? 'on':''}" data-action="toggle-open" data-id="${room.id}" aria-label="일감 공개 상태 변경"></button>` : ''}
+            ${!isHistoricalView() && aState === 'available' ? `<button class="btn small soft" data-action="open-assignment" data-id="${room.id}">직접 배정</button>` : ''}
+            ${!isHistoricalView() && aState === 'assigned' ? `<button class="btn small soft" data-action="open-assignment" data-id="${room.id}">담당 변경·회수</button>` : ''}
+            ${!isHistoricalView() && manualBlocked ? `<button class="btn small" data-action="toggle-assignment-enabled" data-id="${room.id}">배정 가능 전환</button>` : ''}
+            ${aState === 'unavailable' && !manualBlocked ? `<button class="btn small" data-action="open-assignment" data-id="${room.id}">배정 이력</button>` : ''}
+          </div></div>
+        </article>`;
+      };
+      const activeRows = [...available, ...assigned].filter(matchesFilter);
+      const unavailableRows = unavailable.filter(matchesFilter);
+      const typeOptions = `<option value="all">전체 객실 유형</option>${roomTypes().map(type => `<option value="${type}" ${state.roomTypeFilter === type ? 'selected':''}>${type}</option>`).join('')}`;
+      return `${topbar('청소 담당 배정', `${formatSelectedDate()} · ${available.length}건 가능 · ${assigned.length}건 확정`)}
+        <section class="screen">
+          ${dateToolbarMarkup()}${historyBannerMarkup()}
+          <div class="summary-strip"><div class="summary-cell green"><strong>${available.length}</strong><span>담당 배정 가능</span></div><div class="summary-cell"><strong>${assigned.length}</strong><span>담당 확정</span></div><div class="summary-cell red"><strong>${unavailable.length}</strong><span>담당 배정 불가</span></div><div class="summary-cell blue"><strong>${openCount}</strong><span>메이드 선택 오픈</span></div></div>
+          <div class="notice"><span class="notice-mark">!</span><span>메이드가 일감을 선택하면 중복 선택 방지를 위해 자동 클로즈되고 담당이 확정됩니다. <strong>고정되는 것은 아니며 관리자는 언제든 담당 변경·회수·재오픈할 수 있고 이력이 남습니다.</strong></span></div><div class="type-filter-bar"><label for="assignmentTypeFilter">객실 유형</label><select id="assignmentTypeFilter" class="select">${typeOptions}</select></div>
+          <div class="assignment-legend"><div><strong>담당 배정 가능</strong><span>직접 배정 가능</span></div><div><strong>담당 확정</strong><span>변경·회수 가능</span></div><div><strong>담당 배정 불가</strong><span>완료·검수·작업 없음</span></div></div>
+          <div class="filter-rail">${filterItems.map(([key,label]) => `<button class="chip ${state.assignmentFilter === key ? 'active':''}" data-assignment-filter="${key}">${label}</button>`).join('')}</div>
+          ${isHistoricalView() ? `<div class="readonly-note">선택한 과거 일자의 담당 배정 이력을 조회 중입니다. 변경·회수·오픈은 오늘 날짜에서만 가능합니다.</div>` : `<div class="job-toolbar"><button class="btn soft" data-action="open-all">담당 미배정 전체 오픈</button><button class="btn" data-action="close-all">선택 오픈 전체 클로즈</button></div>`}
+          ${state.assignmentFilter !== 'unavailable' && state.assignmentFilter !== 'open' ? `<div class="assignment-section"><div class="assignment-section-head"><strong>청소 담당 배정 가능·담당 확정</strong><span>${activeRows.length}개</span></div><div class="job-list">${activeRows.length ? activeRows.map(assignmentCard).join('') : `<div class="empty-state"><strong>해당 상태의 객실이 없습니다</strong></div>`}</div></div>` : ''}
+          ${state.assignmentFilter === 'open' ? `<div class="assignment-section"><div class="assignment-section-head"><strong>메이드 선택 오픈</strong><span>${activeRows.length}개</span></div><div class="job-list">${activeRows.length ? activeRows.map(assignmentCard).join('') : `<div class="empty-state"><strong>현재 오픈된 일감이 없습니다</strong></div>`}</div></div>` : ''}
+          ${state.assignmentFilter === 'available' || state.assignmentFilter === 'assigned' ? '' : `<div class="assignment-section"><div class="assignment-section-head"><strong>청소 담당 배정 불가 객실</strong><span>${unavailableRows.length}개</span></div><div class="job-list">${unavailableRows.length ? unavailableRows.map(assignmentCard).join('') : `<div class="empty-state"><strong>청소 담당 배정 불가 객실이 없습니다</strong></div>`}</div></div>`}
+        </section>${bottomNav('admin')}`;
+    }
+
+    function renderAdminRoomDetail() {
+      const room = state.rooms.find(r => r.id === state.selectedRoomId) || state.rooms[0];
+      const aState = assignmentState(room);
+      const history = assignmentHistoryFor(room).slice(0,3);
+      const events = dailyEventsFor(room);
+      const manualToggleAllowed = !isHistoricalView() && assignmentLifecycleEligible(room) && !room.assignee;
+      return `${topbar(`${room.id}호`, `${formatSelectedDate()} · ${room.type}`, true)}
+        <section class="screen no-nav">
+          ${historyBannerMarkup()}
+          <div class="detail-hero">
+            <div class="detail-head"><div><div class="detail-room">${room.id}호</div><div class="detail-type">${room.type} · ${room.task}</div></div><div class="detail-price">${room.cleaningFee.toLocaleString()}원<span>객실 청소 요금</span></div></div>
+            <div class="detail-statuses">${stayChip(room)}${cleaningChip(room)}${isOutOfService(room) ? `<span class="status-chip tone-red">운영 중지</span>`:''}${assignmentBadge(room)}${room.candleCount ? `<span class="candle-badge">${icon('candle')} 촛불 ${room.candleCount}개</span>` : ''}${timingBadges(room)}</div>
+          </div>
+
+          <div class="panel"><div class="panel-header"><div><div class="panel-title">객실 운영 상태</div><div class="panel-subtitle">정상 운영 또는 운영 중지·청소 제외를 별도로 관리</div></div>${!isHistoricalView() ? `<button class="btn small ${isOutOfService(room) ? 'red':'soft'}" data-action="open-room-operation" data-id="${room.id}">운영 상태 변경</button>` : ''}</div><div class="panel-body">
+            <div class="operation-band ${isOutOfService(room) ? 'stopped':''}" style="margin-top:0;"><div><strong>${operationLabel(room)}</strong><span>${operationReason(room)}</span></div><span class="operation-badge ${isOutOfService(room) ? 'stopped':''}">${isOutOfService(room) ? '판매·청소 중지':'정상'}</span></div>
+            <div class="info-row"><span class="info-label">고객 배정</span><span class="info-value">${isOutOfService(room) ? '불가':'객실 조건에 따라 자동 판정'}</span></div>
+            <div class="info-row"><span class="info-label">메이드 청소</span><span class="info-value">${isOutOfService(room) ? '작업 생성·선택·배정 모두 제외':'청소 상태에 따라 운영'}</span></div>
+            ${reservationConflict(room) ? `<div class="conflict-alert"><strong>현재 예약과 객실 차단 상태가 충돌합니다</strong><span>${guestAllocationReason(room)}</span><button class="btn red small full" data-action="open-guest-allocation" data-id="${room.id}">충돌 해결</button></div>`:''}
+          </div></div>
+
+          <div class="panel"><div class="panel-header"><div><div class="panel-title">고객 객실 배정 상태</div><div class="panel-subtitle">고객에게 배정하면 신규 배정 불가로 잠기며, 관리자가 변경·해제·입실·퇴실 처리</div></div>${!isHistoricalView() ? `<button class="btn small ${guestAllocationState(room) === 'available' ? 'green':reservationConflict(room) ? 'red':'soft'}" data-action="open-guest-allocation" data-id="${room.id}">${guestAllocationActionLabel(room)}</button>` : ''}</div><div class="panel-body">
+            <div class="guest-allocation-band ${guestAllocationState(room)}" style="margin-top:0;"><div class="guest-allocation-copy"><strong>${guestAllocationHeadline(room)}</strong><span>${guestAllocationReason(room)}</span></div>${guestAllocationBadge(room)}</div>
+            <div class="info-row"><span class="info-label">예약·투숙 상태</span><span class="info-value">${room.stayStatus}</span></div>
+            <div class="info-row"><span class="info-label">배정된 예약</span><span class="info-value">${room.reservationAssigned ? (room.reservationLabel || '예약 정보 미입력') : '미배정'}</span></div>
+            <div class="info-row"><span class="info-label">청소·검수</span><span class="info-value">${room.cleaningStatus}</span></div>
+            <div class="info-row"><span class="info-label">고객 배정 차단 특이사항</span><span class="info-value">${room.entryBlockIssue || '없음'}</span></div>
+            <div class="info-row"><span class="info-label">촛불 현황</span><span class="info-value">${room.candleCount > 0 ? `${room.candleCount}개 · 전량 회수 전 배정·입실 불가` : '없음 · 촛불 조건 충족'}</span></div>
+            <div class="guest-action-hint">고객 객실 배정은 청소 담당 배정과 별개입니다. 촛불이 1개 이상이면 신규 배정과 입실이 잠기며, 관리자가 실제 전량 회수 후 촛불 수량을 0개로 확정하면 다른 조건과 함께 다시 계산합니다.</div>
+            ${!isHistoricalView() ? (room.entryBlockIssue ? `<div class="button-row" style="margin-top:9px;"><button class="btn soft" data-action="open-entry-issue" data-id="${room.id}">차단 사유 수정</button><button class="btn green" data-action="resolve-entry-issue" data-id="${room.id}">차단 사유 해결</button></div>` : `<button class="btn soft full" style="margin-top:9px;" data-action="open-entry-issue" data-id="${room.id}">고객 배정 차단 특이사항 등록</button>`) : ''}
+          </div></div>
+
+          <div class="panel"><div class="panel-header"><div><div class="panel-title">입·퇴실 시간</div><div class="panel-subtitle">얼리 체크인과 레이트 체크아웃은 정확한 시각으로 기록</div></div>${!isHistoricalView() ? `<button class="btn small soft" data-action="open-stay-time" data-id="${room.id}">시간 수정</button>` : ''}</div><div class="panel-body">
+            <div class="info-row"><span class="info-label">체크아웃</span><span class="info-value">${room.checkout}${room.lateCheckoutTime ? ` · 레이트 ${room.lateCheckoutTime}`:''}</span></div>
+            <div class="info-row"><span class="info-label">체크인</span><span class="info-value">${room.checkin}${room.earlyCheckinTime ? ` · 얼리 ${room.earlyCheckinTime}`:''}</span></div>
+            <div class="badge-row" style="margin-top:9px;">${timingBadges(room) || '<span class="status-chip tone-gray">얼리·레이트 없음</span>'}</div>
+          </div></div>
+
+          <div class="panel"><div class="panel-header"><div><div class="panel-title">객실 상태</div><div class="panel-subtitle">예약 상태와 청소 상태를 별도로 관리</div></div></div><div class="panel-body">
+            <div class="info-row"><span class="info-label">예약 상태</span><span class="info-value">${room.stayStatus}</span></div>
+            <div class="info-row"><span class="info-label">청소 상태</span><span class="info-value">${room.cleaningStatus}</span></div>
+            <div class="info-row"><span class="info-label">청소 유형</span><span class="info-value">${room.task}</span></div>
+            <div class="info-row"><span class="info-label">담당 메이드</span><span class="info-value">${room.assignee || '미지정'}</span></div>
+          </div></div>
+
+          <div class="panel"><div class="panel-header"><div><div class="panel-title">청소 담당 배정</div><div class="panel-subtitle">메이드가 선택해도 관리자는 담당 변경·회수 가능</div></div>${!isHistoricalView() ? `<button class="btn small soft" data-action="open-assignment" data-id="${room.id}">${aState === 'assigned' ? '담당 변경·회수' : aState === 'available' ? '직접 배정' : '배정 이력'}</button>` : ''}</div><div class="panel-body">
+            <div class="assignment-band ${aState}" style="margin-top:0;"><div class="assignment-copy"><div class="assignment-title-line">${assignmentBadge(room)}</div><div class="assignment-detail">${assignmentReason(room)}</div></div></div>
+            ${manualToggleAllowed ? `<div class="info-row"><span class="info-label">관리자 배정 허용</span><span class="info-value" style="display:flex;align-items:center;gap:8px;">${room.assignmentEnabled === false ? '배정 불가':'배정 가능'} <button class="switch ${room.assignmentEnabled === false ? '':'on'}" data-action="toggle-assignment-enabled" data-id="${room.id}" aria-label="배정 가능 여부 변경"></button></span></div>` : ''}
+            ${!isHistoricalView() && aState === 'available' && canOpenForClaim(room) ? `<div class="info-row"><span class="info-label">메이드 자유 선택</span><span class="info-value" style="display:flex;align-items:center;gap:8px;">${room.openForClaim ? '오픈':'클로즈'} <button class="switch ${room.openForClaim ? 'on':''}" data-action="toggle-open" data-id="${room.id}" aria-label="메이드 자유 선택 공개 변경"></button></span></div>` : ''}
+            <div class="section-title-row" style="margin-top:13px;"><h3 class="section-title">배정 이력</h3><span class="section-meta">${assignmentHistoryFor(room).length}건</span></div>
+            ${history.length ? `<div class="assignment-history">${history.map(item => `<div class="assignment-history-row"><time>${item.at}</time><div><strong>${item.from} → ${item.to}</strong><span>${item.by} · ${item.reason}</span></div></div>`).join('')}</div>` : `<div class="mini-label">아직 배정 이력이 없습니다.</div>`}
+          </div></div>
+
+          <div class="panel"><div class="panel-header"><div><div class="panel-title">객실 비밀번호</div><div class="panel-subtitle">선택 일자에 사용한 4자리 비밀번호</div></div></div><div class="panel-body">
+            <div class="password-box"><div class="password-display"><small>${isHistoricalView() ? '당시 비밀번호':'현재 비밀번호'}</small><strong>${room.password}</strong></div>${!isHistoricalView() ? `<button class="icon-btn" data-action="edit-password" data-id="${room.id}" aria-label="비밀번호 수정">${icon('edit')}</button>` : ''}</div>
+          </div></div>
+
+          <div class="panel"><div class="panel-header"><div><div class="panel-title">촛불 현황</div><div class="panel-subtitle">메이드는 청소 후 둔 수량을 기록하고, 관리자는 실제 회수 후 상태를 확정</div></div>${!isHistoricalView() ? `<button class="btn small ${room.candleCount > 0 ? 'red':'soft'}" data-action="open-candle-management" data-id="${room.id}">${room.candleCount > 0 ? '회수·수량 관리':'촛불 기록'}</button>` : ''}</div><div class="panel-body">
+            <div class="candle-control"><div class="candle-title">${icon('candle')}<div><strong>${room.candleCount > 0 ? `촛불 ${room.candleCount}개 있음 · 고객 배정 불가` : '촛불 없음 · 고객 배정 조건 충족'}</strong><span>${room.candleLocations || '위치 정보 없음'}</span></div></div><span class="guest-allocation-badge ${room.candleCount > 0 ? 'unavailable':'available'}">${room.candleCount > 0 ? '회수 필요':'0개 확인'}</span></div>
+            <div class="callout gold" style="margin-top:9px;">촛불이 1개 이상이면 고객 객실 배정과 입실 처리를 모두 잠급니다. 메이드는 청소 후 둔 개수를 기록하고, 관리자는 현장에서 전량 회수한 뒤 0개로 변경해야 합니다. 수량 변경은 영향 확인 모달과 감사 이력을 남깁니다.</div>
+          </div></div>
+
+          <div class="panel"><div class="panel-header"><div><div class="panel-title">${formatSelectedDate()} 일자 이력</div><div class="panel-subtitle">예약·입퇴실 시간·청소·특이사항·촛불 변경 기록</div></div></div><div class="panel-body">${events.length ? `<div class="history-list">${events.map(item => `<div class="history-item"><time>${item.time}</time><div><strong>${item.title}</strong><span>${item.detail}</span></div></div>`).join('')}</div>` : `<div class="history-empty">이 날짜에 등록된 객실 이력이 없습니다.</div>`}</div></div>
+
+          <div class="panel"><div class="panel-header"><div><div class="panel-title">작업 참고사항</div><div class="panel-subtitle">청소 담당자 참고용 · 고객 배정 차단 특이사항과 별도</div></div></div><div class="panel-body"><div class="callout orange">${room.notes}</div><div class="badge-row" style="margin-top:9px;margin-bottom:0;">${badgeMarkup(room)}</div></div></div>
+        </section>`;
+    }
+
+    function renderMaidMarket() {
+      const available = state.rooms.filter(r => r.openForClaim && !r.assignee && assignmentState(r) === 'available' && canOpenForClaim(r)).sort((a,b) => (a.color === 'red' ? -1 : 0) - (b.color === 'red' ? -1 : 0));
+      const closedAssignable = state.rooms.filter(r => assignmentState(r) === 'available' && !r.openForClaim).length;
+      const unavailableCount = state.rooms.filter(r => assignmentState(r) === 'unavailable').length;
+      const total = available.reduce((sum, r) => sum + r.cleaningFee, 0);
+      return `${topbar('일감 찾기', '청소 담당 가능·선택 오픈인 일감만 표시')}
+        <section class="screen">
+          <div class="maid-hero"><div class="maid-greeting">김하나 님이 선택할 수 있는 일감</div><h2>${available.length}개 객실</h2><div class="maid-stats"><div class="maid-stat"><span>지금 입실 가능</span><strong>${available.filter(r => r.canEnter).length}개</strong></div><div class="maid-stat"><span>선택 클로즈</span><strong>${closedAssignable}개</strong></div><div class="maid-stat"><span>전체 금액</span><strong>${total.toLocaleString()}원</strong></div></div></div>
+          <div class="notice"><span class="notice-mark">i</span><span>‘이 객실 맡기’를 누르면 확인 모달이 한 번 더 열립니다. 최종 확정 뒤에는 메이드가 직접 취소할 수 없고, 실수한 경우 관리자에게 담당 회수를 요청해야 합니다.</span></div>
+          <div class="assignment-legend"><div><strong>${available.length}개</strong><span>지금 선택 가능</span></div><div><strong>${closedAssignable}개</strong><span>관리자 클로즈</span></div><div><strong>${unavailableCount}개</strong><span>배정 불가</span></div></div>
+          <div class="section-title-row"><h2 class="section-title">선택 가능한 객실</h2><span class="section-meta">마감 임박순</span></div>
+          ${available.length ? available.map(room => `<article class="market-card ${room.color}">
+            <div class="market-top"><div><div class="market-room">${room.id}호</div><div class="job-type">${room.type} · ${room.task}</div></div><div class="market-price">${room.cleaningFee.toLocaleString()}원<span>승인 후 주급 반영</span></div></div>
+            <div class="badge-row" style="margin-top:9px;">${assignmentBadge(room)}</div>
+            <div class="market-info"><span>청소 가능 <b>${room.available}</b></span><span>완료 마감 <b>${room.deadline}</b></span><span>예상 <b>${room.task.includes('연박') ? '25분':'50분'}</b></span></div><div class="room-schedule" style="margin-bottom:8px;">${scheduleSummary(room)}</div>
+            <div class="badge-row">${badgeMarkup(room)}${room.candleCount ? `<span class="candle-badge">${icon('candle')} ${candleLabel(room)}</span>` : ''}</div>
+            <button class="btn ${room.color === 'red' ? 'red':'primary'} full" data-action="claim-job" data-id="${room.id}">${room.canEnter ? '이 객실 맡기' : `${room.available}부터 청소 · 미리 맡기`}</button>
+          </article>`).join('') : `<div class="empty-state"><strong>현재 선택 가능한 일감이 없습니다</strong><span>관리자가 청소 담당 미배정 일감을 ‘선택 오픈’하면 이곳에 표시됩니다.</span></div>`}
+        </section>${bottomNav('maid')}`;
+    }
+
+    function renderMaidTasks() {
+      const own = state.rooms.filter(ownActive).sort((a,b) => (a.color === 'red' ? -1 : 0) - (b.color === 'red' ? -1 : 0));
+      const rejected = own.filter(room => room.cleaningStatus === '재청소 필요');
+      const total = own.reduce((sum, r) => sum + r.cleaningFee, 0);
+      return `${topbar('내 담당 객실', `김하나 · 오늘${rejected.length ? ` · 검수 반려 ${rejected.length}건` : ''}`)}
+        <section class="screen">
+          ${rejected.length ? `<div class="rejection-alert"><strong>관리자 검수 반려 ${rejected.length}건</strong><span>반려된 객실은 담당 목록 최상단에 표시됩니다. 사진 항목과 사유를 확인한 뒤 재청소·재촬영해 주세요.</span><div class="rejection-meta">앱 알림과 내 업무 메뉴의 빨간 점으로 함께 안내</div></div>` : ''}
+          <div class="summary-strip"><div class="summary-cell blue"><strong>${own.length}</strong><span>담당 객실</span></div><div class="summary-cell orange"><strong>${own.filter(r => r.canEnter).length}</strong><span>지금 가능</span></div><div class="summary-cell red"><strong>${rejected.length}</strong><span>검수 반려</span></div><div class="summary-cell green"><strong>${Math.round(total/1000)}천</strong><span>예상 주급</span></div></div>
+          <div class="section-title-row"><h2 class="section-title">지금 할 일</h2><span class="section-meta">재청소·마감 임박순</span></div>
+          ${own.length ? own.map(room => `<article class="task-card">
+            <div class="task-card-top"><div><div class="task-number">${room.id}호</div><div class="job-type">${room.type} · ${room.task}</div></div><div class="task-deadline">${room.deadline} 마감<span>${room.canEnter ? '지금 입실 가능' : `${room.available}부터 가능`}</span></div></div>
+            ${room.cleaningStatus === '재청소 필요' ? `<div class="rejection-alert" style="margin:10px 0 0;"><strong>검수 반려 · ${room.rejectedPhotoLabel || '청소 상태'}</strong><span>${room.rejectionReason || '관리자가 재청소를 요청했습니다.'}</span><div class="rejection-meta">${room.rejectedAt || '방금'} 반려 · 확인 후 관리자에게 재제출</div></div>` : ''}
+            <div class="task-summary"><span>청소비 <b>${room.cleaningFee.toLocaleString()}원</b></span><span>${room.candleCount ? `현재 촛불 <b>${room.candleCount}개</b>` : '현재 촛불 없음'}</span></div><div class="room-schedule">${scheduleSummary(room)}</div>
+            <div class="badge-row">${badgeMarkup(room)}<span class="badge blue">담당 확정 · 관리자 변경 가능</span></div>
+            ${room.canEnter ? `<button class="btn ${room.cleaningStatus === '재청소 필요' ? 'red':'primary'} full" data-action="go-maid-task" data-id="${room.id}">${room.cleaningStatus === '재청소 필요' ? '반려 사유 확인·재청소' : state.taskStarted[room.id] ? '청소 계속하기' : '업무 상세 보기'}</button>` : `<div class="callout orange">${room.available}부터 비밀번호와 청소 시작 버튼이 열립니다.</div>`}
+          </article>`).join('') : `<div class="empty-state"><strong>아직 맡은 객실이 없습니다</strong><span>‘일감 찾기’에서 원하는 객실을 선택해 주세요.</span></div>`}
+        </section>${bottomNav('maid')}`;
+    }
+
+    function renderMaidTask() {
+      const room = state.rooms.find(r => r.id === state.selectedRoomId) || state.rooms[0];
+      const checks = state.taskChecks[room.id] || [];
+      const photos = state.taskPhotos[room.id] || [];
+      const candleFloor = Number(room.candleCount || 0);
+      const candleDraft = Math.max(candleFloor, Number(state.taskCandleCounts[room.id] ?? candleFloor));
+      const candleAddedByMaid = Math.max(0, candleDraft - candleFloor);
+      const checkItems = [
+        ['침대·침구','주름, 오염, 머리카락 확인'],
+        ['욕실','배수구·수전·거울 확인'],
+        ['주방·냉장고','음식물과 얼룩 확인'],
+        ['바닥·먼지','모서리와 가구 아래 확인'],
+        ['수건·비품','기준 수량에 맞게 보충'],
+        ['문 잠금','퇴실 전 도어락 확인']
+      ];
+      const photoItems = requiredPhotoItems(room);
+      const done = checks.length === checkItems.length && photos.length === photoItems.length;
+      const started = !!state.taskStarted[room.id];
+      return `${topbar(`${room.id}호 청소`, `${room.task} · ${room.cleaningFee.toLocaleString()}원`, true)}
+        <section class="screen no-nav">
+          <div class="detail-hero"><div class="detail-head"><div><div class="detail-room">${room.id}호</div><div class="detail-type">${room.type} · ${room.deadline} 완료 마감</div></div><div class="detail-price">${room.cleaningFee.toLocaleString()}원<span>검수 승인 후 주급 반영</span></div></div><div class="detail-statuses">${cleaningChip(room)}${room.candleCount ? `<span class="candle-badge">${icon('candle')} 현재 ${room.candleCount}개</span>` : ''}${timingBadges(room)}</div></div>
+
+          ${room.cleaningStatus === '재청소 필요' ? `<div class="rejection-alert"><strong>관리자 검수 반려 · ${room.rejectedPhotoLabel || '청소 상태'}</strong><span>${room.rejectionReason || '청소 상태를 다시 확인해 주세요.'}</span><div class="rejection-meta">${room.rejectedAt || '방금'} 반려 · 기존 제출 사진은 검수 이력에 보존 · 새 사진으로 재제출</div></div>` : ''}
+          ${room.candleCount > 0 ? `<div class="callout gold" style="margin-bottom:11px;"><strong>현재 기록상 촛불 ${room.candleCount}개</strong><br>${room.candleLocations || '위치 정보 없음'}. 청소 후 객실에 두고 나오는 최종 수량을 기록해 주세요. 1개 이상이면 관리자 전량 회수 전 고객 배정·입실이 잠깁니다.</div>` : ''}
+
+          <div class="panel"><div class="panel-header"><div><div class="panel-title">입실 정보</div><div class="panel-subtitle">내 담당 객실에만 비밀번호 표시</div></div></div><div class="panel-body">
+            ${room.canEnter ? `<div class="password-box"><div class="password-display"><small>객실 비밀번호</small><strong class="${state.passwordVisible ? '' : 'masked'}">${state.passwordVisible ? room.password : '••••'}</strong></div><button class="icon-btn" data-action="toggle-password" aria-label="비밀번호 보기">${icon('eye')}</button></div>` : `<div class="callout orange">${room.available}부터 객실 비밀번호를 확인할 수 있습니다.</div>`}
+            <div class="info-row"><span class="info-label">청소 가능</span><span class="info-value">${room.available}</span></div>
+            <div class="info-row"><span class="info-label">완료 마감</span><span class="info-value">${room.deadline}</span></div>
+            <div class="info-row"><span class="info-label">체크아웃 → 체크인</span><span class="info-value">${room.checkout} → ${room.checkin}</span></div>
+            <div class="badge-row" style="margin-top:8px;">${timingBadges(room)}</div>
+            <div class="info-row"><span class="info-label">특이사항</span><span class="info-value">${room.notes}</span></div>
+          </div></div>
+
+          ${!started ? `<button class="btn primary full" data-action="start-task" data-id="${room.id}" ${room.canEnter ? '' : 'disabled'}>${room.cleaningStatus === '재청소 필요' ? '재청소 시작' : '청소 시작'}</button>` : `
+            <div class="section-title-row"><h2 class="section-title">청소 체크리스트</h2><span class="section-meta">${checks.length}/${checkItems.length}</span></div>
+            <div class="checklist">${checkItems.map((item, i) => `<button class="check-item ${checks.includes(i) ? 'checked':''}" data-action="toggle-check" data-id="${room.id}" data-index="${i}"><span class="check-box">${checks.includes(i) ? '✓':''}</span><span><strong>${item[0]}</strong><span>${item[1]}</span></span></button>`).join('')}</div>
+            <div class="section-title-row"><h2 class="section-title">청소 후 촛불 기록</h2><span class="section-meta">0개도 가능</span></div>
+            <div class="candle-record"><div class="candle-record-copy"><strong>청소 후 객실에 둔 촛불</strong><span>${candleFloor > 0 ? `기존 기록 ${candleFloor}개는 관리자가 현장에서 회수 완료 처리해야 줄일 수 있습니다. ` : ''}메이드는 새로 둔 수량만 추가 기록하며, 총 ${candleDraft}개 중 이번 작업 추가분은 ${candleAddedByMaid}개입니다.</span></div><div class="stepper"><button data-action="task-candle-minus" data-id="${room.id}" aria-label="새로 둔 촛불 수량 줄이기" ${candleDraft <= candleFloor ? 'disabled':''}>−</button><strong>${candleDraft}</strong><button data-action="task-candle-plus" data-id="${room.id}" aria-label="새로 둔 촛불 수량 늘리기">+</button></div></div>
+            <div class="section-title-row"><h2 class="section-title">필수 사진</h2><span class="section-meta">${photos.length}/${photoItems.length}</span></div>
+            <div class="photo-grid">${photoItems.map((item, i) => `<button class="photo-slot ${photos.includes(i) ? 'done':''}" data-action="toggle-photo" data-id="${room.id}" data-index="${i}">${icon('camera')}<strong>${photos.includes(i) ? '등록 완료' : item.label}</strong><span>${photos.includes(i) ? `${item.label} · 다시 촬영` : '눌러서 촬영'}</span></button>`).join('')}</div>
+            <div class="section-title-row"><h2 class="section-title">특이사항</h2><span class="section-meta">선택 입력</span></div>
+            <textarea id="taskNote" data-room-id="${room.id}" class="textarea" placeholder="객실 상태나 추가 확인이 필요한 내용을 적어 주세요.">${state.taskNotes[room.id] || ''}</textarea>
+            <div class="sticky-action"><button class="btn green full" data-action="complete-task" data-id="${room.id}" ${done ? '' : 'disabled'}>청소 완료·검수 요청 ${done ? '' : `(${checks.length + photos.length}/${checkItems.length + photoItems.length})`}</button></div>
+          `}
+        </section>`;
+    }
+
+    function inspectionPhotosFor(room) {
+      if (!state.inspectionPhotos[room.id]) state.inspectionPhotos[room.id] = buildInspectionPhotos(room);
+      return state.inspectionPhotos[room.id];
+    }
+
+    function renderAdminInspection() {
+      const rooms = state.rooms.filter(r => r.inspection || r.cleaningStatus === '검수 대기' || r.cleaningStatus === '재청소 필요');
+      return `${topbar('청소 검수', `${rooms.length}개 객실 · 인증사진 확인`)}<section class="screen">
+        <div class="notice"><span class="notice-mark">${icon('camera')}</span><span>객실을 열면 메이드가 제출한 인증사진을 항목별로 크게 보고, 사진마다 확인 표시를 한 뒤 승인하거나 특정 사진에 재청소 사유를 연결할 수 있습니다.</span></div>
+        <div class="filter-rail"><button class="chip active">전체 ${rooms.length}</button><button class="chip">검수 대기</button><button class="chip">재청소</button></div>
+        <div class="section-title-row"><h2 class="section-title">확인할 객실</h2><span class="section-meta">제출 오래된 순</span></div>
+        <div>${rooms.map(room => {
+          const photos = inspectionPhotosFor(room);
+          const reviewed = state.photoReviews[room.id] || [];
+          const waitingReclean = room.cleaningStatus === '재청소 필요';
+          return `<article class="inspection-card"><div class="job-head"><div><div class="job-room">${room.id}호</div><div class="job-type">${room.assignee || '미정'} · ${room.task} · ${room.submittedAt || '방금'} 제출</div></div>${cleaningChip(room)}</div><div class="inspection-cover-strip">${photos.slice(0,2).map(photo => `<div class="inspection-cover">${photoSceneSvg(photo.scene)}</div>`).join('')}<div class="inspection-cover more">+${Math.max(0, photos.length - 2)}장</div></div><div class="inspection-meta-line"><span>인증사진 <strong>${photos.length}장 업로드 완료</strong></span><span>${waitingReclean ? `반려: ${room.rejectedPhotoLabel || '사진 확인'}` : `확인 ${reviewed.length}/${photos.length}`}</span></div>${waitingReclean && room.rejectionReason ? `<div class="reason-preview"><strong>재청소 요청</strong><br>${room.rejectionReason}</div>` : ''}<button class="btn ${waitingReclean ? 'soft' : 'primary'} full" style="margin-top:10px;" data-action="go-inspection-detail" data-id="${room.id}">${waitingReclean ? '반려 사진·사유 보기' : '인증사진 검수 시작'}</button></article>`;
+        }).join('')}</div>
+      </section>${bottomNav('admin')}`;
+    }
+
+    function renderAdminInspectionDetail() {
+      const room = state.rooms.find(r => r.id === state.selectedRoomId) || state.rooms.find(r => r.inspection) || state.rooms[0];
+      const photos = inspectionPhotosFor(room);
+      const selected = Math.min(state.selectedInspectionPhoto[room.id] || 0, Math.max(0, photos.length - 1));
+      const current = photos[selected] || photos[0];
+      const reviewed = state.photoReviews[room.id] || [];
+      const currentReviewed = reviewed.includes(selected);
+      const allReviewed = photos.length > 0 && reviewed.length === photos.length;
+      const waitingReclean = room.cleaningStatus === '재청소 필요';
+      const progress = photos.length ? Math.round(reviewed.length / photos.length * 100) : 0;
+      return `${topbar(`${room.id}호 사진 검수`, `${room.assignee || '담당자 미정'} · ${room.submittedAt || '방금'} 제출`, true)}<section class="screen no-nav">
+        <div class="detail-hero"><div class="detail-head"><div><div class="detail-room">${room.id}호</div><div class="detail-type">${room.type} · ${room.task}</div></div><div class="detail-price">${room.cleaningFee.toLocaleString()}원<span>승인 후 주급 확정</span></div></div><div class="detail-statuses">${cleaningChip(room)}<span class="status-chip tone-blue">사진 ${photos.length}장</span>${room.candleCount ? `<span class="candle-badge">${icon('candle')} 촛불 ${room.candleCount}개</span>` : ''}</div></div>
+        ${waitingReclean ? `<div class="callout" style="margin-bottom:11px;"><strong>재청소 요청 후 대기 중</strong><br>${room.rejectedPhotoLabel || '선택 사진'} · ${room.rejectionReason || '등록된 사유 없음'}<br>메이드가 다시 제출하기 전까지 기존 사진은 이력으로 보존됩니다.<button class="btn small red" style="margin-top:9px;" data-action="open-add-penalty" data-maid-name="${room.assignee || ''}" data-room-id="${room.id}">${icon('flag')} 별도 벌점 부여</button></div>` : ''}
+        <div class="panel"><div class="panel-body"><div class="info-row"><span class="info-label">메이드</span><span class="info-value">${room.assignee || '미정'}</span></div><div class="info-row"><span class="info-label">작업 시간</span><span class="info-value">${room.workStartedAt || '11:40'}–${room.workFinishedAt || room.submittedAt || '12:30'}</span></div><div class="info-row"><span class="info-label">사진 업로드</span><span class="info-value">${photos.length}/${photos.length}장 완료</span></div><div class="info-row"><span class="info-label">청소 후 촛불 기록</span><span class="info-value">${room.candleCount ? `${room.candleCount}개 두고 나옴` : '0개'}</span></div></div></div>
+        <div class="review-progress"><div class="review-progress-head"><div><strong>사진 확인 진행률</strong><span> ${reviewed.length}/${photos.length}</span></div>${!waitingReclean && !allReviewed ? `<button class="text-action" data-action="review-all-photos" data-id="${room.id}">모두 확인</button>` : allReviewed ? `<span class="reviewed-note">${icon('check')} 전체 확인 완료</span>` : ''}</div><div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div></div>
+        <div class="inspection-viewer"><button class="inspection-main-photo" data-action="zoom-inspection-photo" data-id="${room.id}" data-index="${selected}" aria-label="${current?.label || '인증사진'} 확대">${photoSceneSvg(current?.scene)}<span class="zoom-mark">${icon('expand')} 확대</span><span class="photo-overlay"><span><strong>${current?.label || '인증사진'}</strong><span>${current?.capturedAt || '-'} 촬영 · 업로드 완료</span></span><span>${selected + 1}/${photos.length}</span></span></button><div class="review-current"><div class="review-current-copy"><strong>${current?.label || '인증사진'}</strong><span>${currentReviewed ? '관리자가 사진을 확인했습니다.' : '확대해서 상태를 확인해 주세요.'}</span></div>${waitingReclean ? `<span class="staff-status retired">이력 사진</span>` : `<button class="review-check ${currentReviewed ? 'done' : ''}" data-action="toggle-photo-reviewed" data-id="${room.id}" data-index="${selected}">${currentReviewed ? '✓ 확인 완료' : '이 사진 확인'}</button>`}</div></div>
+        <div class="photo-thumb-rail">${photos.map((photo, index) => `<button class="photo-thumb ${selected === index ? 'selected' : ''} ${reviewed.includes(index) ? 'reviewed' : ''}" data-action="select-inspection-photo" data-id="${room.id}" data-index="${index}" aria-label="${photo.label}">${photoSceneSvg(photo.scene)}<span>${photo.label}</span></button>`).join('')}</div>
+        <div class="section-title-row"><h2 class="section-title">메이드 작업 메모</h2><span class="section-meta">검수 참고</span></div><div class="callout orange">${room.cleanerNote || room.notes || '특이사항 없음.'}</div>
+        ${!waitingReclean ? `<div class="sticky-action"><div class="button-row"><button class="btn red" data-action="confirm-reject-inspection" data-id="${room.id}">선택 사진 재청소</button><button class="btn green" data-action="approve-inspection" data-id="${room.id}" ${allReviewed ? '' : 'disabled'}>${allReviewed ? '검수 승인' : `사진 ${photos.length - reviewed.length}장 더 확인`}</button></div></div>` : `<div class="sticky-action"><button class="btn full" disabled>메이드 재제출 대기 중</button></div>`}
+      </section>`;
+    }
+
+    function renderAdminSettlement() {
+      const activeMaids = state.maids.filter(m => m.status === 'active' || m.weeklyExpected > 0 || m.weeklyConfirmed > 0 || m.weeklyPaid > 0);
+      const confirmed = activeMaids.reduce((sum, m) => sum + m.weeklyConfirmed, 0);
+      const expected = activeMaids.reduce((sum, m) => sum + m.weeklyExpected, 0);
+      const paid = activeMaids.reduce((sum, m) => sum + m.weeklyPaid, 0);
+      return `${topbar('주급 정산', '이번 주 · 8월 10일–16일')}<section class="screen">
+        <div class="money-summary"><small>이번 주 지급 확정</small><strong>${confirmed.toLocaleString()}원</strong><div class="money-split"><div><span>검수 전 예상 포함</span><b>${expected.toLocaleString()}원</b></div><div><span>지급 완료</span><b>${paid.toLocaleString()}원</b></div></div></div>
+        <div class="notice"><span class="notice-mark">₩</span><span>지급 상태는 토글로 다시 미지급으로 되돌릴 수 있습니다. 지급·취소 모두 확인 모달을 거치고 변경 사유와 시각을 이력에 남깁니다.</span></div>
+        <div class="week-tabs"><button class="week-tab">지난주</button><button class="week-tab active">이번 주</button><button class="week-tab">다음 주</button></div>
+        <div class="section-title-row"><h2 class="section-title">메이드별 주급</h2><button class="text-action" data-action="export-weekly">엑셀 내보내기</button></div>
+        <div>${activeMaids.map(maid => {
+          const assigned = state.rooms.filter(r => r.assignee === maid.name && !['입실 준비 완료','작업 없음'].includes(r.cleaningStatus)).length;
+          const paidDone = maid.weeklyPaid >= maid.weeklyConfirmed && maid.weeklyConfirmed > 0;
+          const latestLog = (state.weeklyPaymentLogs[maid.id] || [])[0];
+          return `<article class="pay-card"><div class="pay-head"><div class="pay-name"><strong>${maid.name}</strong><span>완료 ${maid.completed}건 · 현재 담당 ${assigned}객실</span></div><div class="pay-total"><strong>${maid.weeklyConfirmed.toLocaleString()}원</strong><span>${paidDone ? '지급 완료' : '지급 확정액'}</span></div></div><div class="pay-grid"><div><label>예상 포함</label><strong>${maid.weeklyExpected.toLocaleString()}원</strong></div><div><label>검수 대기</label><strong>${Math.max(0, maid.weeklyExpected - maid.weeklyConfirmed).toLocaleString()}원</strong></div><div><label>지급액</label><strong>${maid.weeklyPaid.toLocaleString()}원</strong></div></div><div class="payment-toggle-row"><div class="payment-toggle-copy"><strong>이번 주 지급 상태</strong><span>${paidDone ? '지급 완료로 기록됨 · 필요 시 미지급으로 복구 가능' : '아직 지급하지 않은 상태'}</span></div><div class="payment-toggle-control"><span>${paidDone ? '지급 완료':'미지급'}</span><button class="switch ${paidDone ? 'on':''}" data-action="toggle-weekly-payment" data-id="${maid.id}" ${maid.weeklyConfirmed <= 0 ? 'disabled':''} aria-label="${maid.name} 주급 지급 상태 변경"></button></div></div>${latestLog ? `<div class="audit-note">최근 변경 ${latestLog.at} · ${latestLog.action} · ${latestLog.reason}</div>` : ''}</article>`;
+        }).join('')}</div>
+        <div class="section-title-row"><h2 class="section-title">이전 주급</h2><span class="section-meta">최근 2주</span></div>
+        <div class="panel"><div class="panel-body">${[['8.3–8.9','4명','472,000원','지급 완료'],['7.27–8.2','4명','451,500원','지급 완료']].map(r => `<div class="settlement-row"><div class="settlement-date"><strong>${r[0].split('–')[0]}</strong><span>주차</span></div><div class="settlement-main"><strong>${r[0]}</strong><span>${r[1]}</span></div><div class="settlement-amount"><strong>${r[2]}</strong><span>${r[3]}</span></div></div>`).join('')}</div></div>
+      </section>${bottomNav('admin')}`;
+    }
+
+    function renderAdminMaids() {
+      const active = state.maids.filter(m => m.status === 'active').length;
+      const inactive = state.maids.filter(m => m.status === 'inactive').length;
+      const retired = state.maids.filter(m => m.status === 'retired').length;
+      const visible = state.maids.filter(m => state.maidFilter === 'all' || m.status === state.maidFilter);
+      const filters = [['all','전체 이력'],['active','활동 중'],['inactive','비활성'],['retired','퇴사자']];
+      const activePenaltyCases = state.penalties.filter(p => p.status === 'active').length;
+      return `${topbar('메이드 관리', `${active}명 근무 · 유효 벌점 ${activePenaltyCases}건`)}<section class="screen">
+        <div class="summary-strip"><div class="summary-cell blue"><strong>${state.maids.length}</strong><span>전체 이력</span></div><div class="summary-cell green"><strong>${active}</strong><span>활동 중</span></div><div class="summary-cell"><strong>${inactive}</strong><span>비활성</span></div><div class="summary-cell red"><strong>${activePenaltyCases}</strong><span>유효 벌점</span></div></div>
+        <div class="notice"><span class="notice-mark">${icon('archive')}</span><span>메이드는 영구 삭제하지 않습니다. 퇴사 처리 후에도 과거 작업·인증사진·주급·벌점 이력을 그대로 보존합니다.</span></div>
+        <div class="button-row" style="margin-top:12px;"><button class="btn primary" data-action="add-maid">${icon('plus')} 메이드 추가</button><button class="btn red" data-action="go-admin-penalties">${icon('flag')} 벌점 관리</button></div>
+        <div class="filter-rail">${filters.map(([key,label]) => `<button class="chip ${state.maidFilter === key ? 'active' : ''}" data-maid-filter="${key}">${label} ${key === 'all' ? state.maids.length : state.maids.filter(m => m.status === key).length}</button>`).join('')}</div>
+        <div class="section-title-row"><h2 class="section-title">근무자·퇴사 이력</h2><span class="section-meta">벌점은 주급과 별도</span></div>
+        <div class="staff-list">${visible.map(maid => {
+          const assigned = state.rooms.filter(r => r.assignee === maid.name && reclaimableAssignment(r)).length;
+          const statusClass = maidStatusClass(maid.status);
+          const penaltyPoints = activePenaltyPoints(maid.id);
+          return `<article class="staff-card"><div class="staff-head"><div class="staff-avatar ${statusClass}">${staffInitial(maid.name)}</div><div class="staff-main"><strong>${maid.name}</strong><span>${maid.loginId} · ${maid.phone}</span></div><span class="staff-status ${statusClass}">${maidStatusLabel(maid.status)}</span></div><div class="staff-metrics"><div class="staff-metric"><label>${maid.status === 'retired' ? '퇴사일' : '현재 담당'}</label><strong>${maid.status === 'retired' ? maid.retiredAt : `${assigned}객실`}</strong></div><div class="staff-metric"><label>이번 주 확정</label><strong>${maid.weeklyConfirmed.toLocaleString()}원</strong></div><div class="staff-metric"><label>유효 벌점</label><strong style="color:${penaltyPoints ? 'var(--red)':'inherit'}">${penaltyPoints}점</strong></div><div class="staff-metric"><label>누적 완료</label><strong>${maid.completed}건</strong></div></div><div class="staff-actions"><span>${maid.status === 'retired' ? `사유: ${maid.retiredReason || '미등록'}` : maid.note}</span><button class="btn small soft" data-action="go-maid-detail" data-id="${maid.id}">${maid.status === 'retired' ? '이력 보기' : '관리'}</button></div></article>`;
+        }).join('')}</div>
+      </section>${bottomNav('admin')}`;
+    }
+
+    function renderAdminMaidDetail() {
+      const maid = state.maids.find(m => m.id === state.selectedMaidId) || state.maids[0];
+      const retired = maid.status === 'retired';
+      const statusClass = maidStatusClass(maid.status);
+      const assignedRooms = state.rooms.filter(r => r.assignee === maid.name && reclaimableAssignment(r));
+      const subtitle = maid.status === 'active' ? '현재 로그인과 일감 선택 가능' : maid.status === 'inactive' ? '로그인과 신규 일감 선택 차단' : '계정은 보존되고 로그인만 영구 차단';
+      const activePenalties = activePenaltiesForMaid(maid.id);
+      const deletedPenalties = deletedPenaltiesForMaid(maid.id);
+      const points = activePenaltyPoints(maid.id);
+      const recentPenalty = activePenalties[0] || deletedPenalties[0];
+      return `${topbar(maid.name, retired ? '퇴사자 이력' : '메이드 계정 관리', true)}<section class="screen no-nav">
+        <div class="panel"><div class="panel-header"><div><div class="panel-title">계정 정보</div><div class="panel-subtitle">${subtitle}</div></div><span class="staff-status ${statusClass}">${maidStatusLabel(maid.status)}</span></div><div class="panel-body"><div class="info-row"><span class="info-label">로그인 아이디</span><span class="info-value">${maid.loginId}</span></div><div class="info-row"><span class="info-label">연락처</span><span class="info-value">${maid.phone}</span></div><div class="info-row"><span class="info-label">근무 시작일</span><span class="info-value">${maid.joined}</span></div>${retired ? `<div class="info-row"><span class="info-label">퇴사 처리일</span><span class="info-value">${maid.retiredAt || '-'}</span></div><div class="info-row"><span class="info-label">퇴사 사유</span><span class="info-value">${maid.retiredReason || '미등록'}</span></div>` : ''}<div class="info-row"><span class="info-label">정산 주기</span><span class="info-value">주급</span></div><div class="info-row"><span class="info-label">관리 메모</span><span class="info-value">${maid.note}</span></div></div></div>
+        ${retired ? `<div class="callout gold" style="margin-bottom:10px;"><strong>소프트 삭제된 계정</strong><br>과거 담당 객실, 인증사진, 검수 결과, 주급과 벌점 이력을 계속 조회할 수 있습니다.</div><button class="btn green full" data-action="restore-maid" data-id="${maid.id}">${icon('refresh')} 퇴사 취소·계정 복구</button>` : `<div class="button-row"><button class="btn" data-action="edit-maid" data-id="${maid.id}">${icon('edit')} 정보 수정</button><button class="btn ${maid.status === 'active' ? 'gold' : 'green'}" data-action="toggle-maid-status" data-id="${maid.id}">${maid.status === 'active' ? icon('pause') + ' 비활성화' : icon('check') + ' 다시 활성화'}</button></div>`}
+        <div class="section-title-row"><h2 class="section-title">벌점 관리</h2><span class="section-meta">유효 ${activePenalties.length}건 · 삭제 ${deletedPenalties.length}건</span></div>
+        <div class="penalty-score-band"><div><span>현재 점수에 반영되는 벌점</span><strong>${points ? `${activePenalties.length}건의 사유가 등록되어 있습니다.` : '유효 벌점이 없습니다.'}</strong></div><b>${points}점</b></div>
+        ${recentPenalty ? `<div class="penalty-deleted-log" style="margin-bottom:9px;">최근 기록 · ${recentPenalty.date} · ${penaltyRoomLabel(recentPenalty)} · ${recentPenalty.category} · ${recentPenalty.status === 'active' ? `${recentPenalty.points}점` : '삭제됨'}</div>` : ''}
+        <div class="button-row"><button class="btn" data-action="go-admin-penalties" data-id="${maid.id}">${icon('history')} 전체 이력</button><button class="btn red" data-action="open-add-penalty" data-maid-id="${maid.id}" ${retired ? 'disabled':''}>${icon('flag')} 벌점 부여</button></div>
+        <div class="callout" style="margin-top:9px;">검수 불합격이나 고객 컴플레인이 발생해도 벌점은 자동 부여되지 않습니다. 관리자가 근거와 사유를 확인한 뒤 별도로 등록하며, 주급 차감과도 자동 연결하지 않습니다.</div>
+        <div class="section-title-row"><h2 class="section-title">이번 주 주급</h2><span class="section-meta">8.10–8.16</span></div><div class="money-summary"><small>검수 승인 확정액</small><strong>${maid.weeklyConfirmed.toLocaleString()}원</strong><div class="money-split"><div><span>예상 포함</span><b>${maid.weeklyExpected.toLocaleString()}원</b></div><div><span>지급 완료</span><b>${maid.weeklyPaid.toLocaleString()}원</b></div></div></div>
+        <div class="section-title-row"><h2 class="section-title">${retired ? '보존된 작업 이력' : '현재 담당 객실'}</h2><span class="section-meta">${retired ? `${maid.completed}건 누적` : `${assignedRooms.length}개`}</span></div>${retired ? `<div class="panel"><div class="panel-body">${[['7월 31일','903호','퇴실 청소','검수 승인'],['7월 30일','608호','퇴실 청소','검수 승인'],['7월 29일','709호','연박 청소','검수 승인']].map(r => `<div class="settlement-row"><div class="settlement-date"><strong>${r[0].split(' ')[0]}</strong><span>${r[0].split(' ')[1]}</span></div><div class="settlement-main"><strong>${r[1]} · ${r[2]}</strong><span>인증사진·검수 기록 보존</span></div><div class="settlement-amount"><strong>${r[3]}</strong><span>완료</span></div></div>`).join('')}</div></div>` : assignedRooms.length ? `<div class="job-list">${assignedRooms.map(room => `<article class="job-row"><div class="job-head"><div><div class="job-room">${room.id}호</div><div class="job-type">${room.task}</div></div><div class="job-price">${room.cleaningFee.toLocaleString()}원<span>${room.cleaningStatus}</span></div></div></article>`).join('')}</div>` : `<div class="empty-state"><strong>현재 담당 중인 객실이 없습니다</strong><span>새 일감을 선택하면 이곳에 표시됩니다.</span></div>`}
+        ${!retired ? `<div class="archive-zone"><strong>퇴사 처리 · 소프트 삭제</strong><p>계정을 영구 삭제하지 않고 퇴사자로 전환합니다. 로그인과 신규 일감 선택은 차단되지만, 작업·사진·검수·주급·벌점 이력은 보존됩니다.${assignedRooms.length ? ' 진행 중인 담당 객실은 미배정·클로즈 상태로 회수됩니다.' : ''}</p><button class="btn gold full" data-action="confirm-retire-maid" data-id="${maid.id}">${icon('archive')} 메이드 퇴사 처리</button></div>` : ''}
+      </section>`;
+    }
+
+    function renderAdminPenalties() {
+      const active = state.penalties.filter(p => p.status === 'active');
+      const deleted = state.penalties.filter(p => p.status === 'deleted');
+      const activePoints = active.reduce((sum, penalty) => sum + Number(penalty.points || 0), 0);
+      const unread = active.filter(p => !p.maidAcknowledged).length;
+      const visible = state.penalties.filter(penalty => {
+        if (state.penaltyFilter !== 'all' && penalty.status !== state.penaltyFilter) return false;
+        if (state.penaltyMaidFilter !== 'all' && penalty.maidId !== state.penaltyMaidFilter) return false;
+        return true;
+      }).sort((a,b) => `${b.date}${b.createdAt}`.localeCompare(`${a.date}${a.createdAt}`));
+      const filters = [['active','유효 벌점'],['deleted','삭제 이력'],['all','전체']];
+      return `${topbar('벌점 관리', `유효 ${active.length}건 · ${activePoints}점`)}<section class="screen">
+        <div class="penalty-summary"><div class="danger"><strong>${activePoints}</strong><span>유효 벌점 점수</span></div><div><strong>${active.length}</strong><span>유효 벌점 건수</span></div><div class="muted"><strong>${deleted.length}</strong><span>삭제 이력</span></div></div>
+        <div class="notice"><span class="notice-mark">${icon('flag')}</span><span>검수 반려와 고객 컴플레인은 벌점으로 자동 전환되지 않습니다. 관리자가 근거를 확인해 별도로 부여하며, 벌점은 주급 차감과 자동 연결하지 않습니다.</span></div>
+        <button class="btn red full" style="margin-top:12px;" data-action="open-add-penalty">${icon('plus')} 벌점 부여</button>
+        <div class="field" style="margin-top:12px;"><label>메이드별 조회</label><select id="penaltyMaidFilter" class="select"><option value="all">전체 메이드</option>${state.maids.map(maid => `<option value="${maid.id}" ${state.penaltyMaidFilter === maid.id ? 'selected':''}>${maid.name} · ${maidStatusLabel(maid.status)}</option>`).join('')}</select></div>
+        <div class="filter-rail">${filters.map(([key,label]) => `<button class="chip ${state.penaltyFilter === key ? 'active':''}" data-penalty-filter="${key}">${label} ${key === 'active' ? active.length : key === 'deleted' ? deleted.length : state.penalties.length}</button>`).join('')}</div>
+        ${unread ? `<div class="penalty-alert"><strong>메이드 미확인 벌점 ${unread}건</strong><span>벌점이 부여되면 메이드의 ‘내 정보’에 빨간 점이 표시되고, 사유·점수·연결 객실을 직접 확인하게 됩니다.</span></div>` : ''}
+        <div class="section-title-row"><h2 class="section-title">벌점·삭제 이력</h2><span class="section-meta">${visible.length}건</span></div>
+        <div class="penalty-list">${visible.length ? visible.map(penalty => {
+          const maid = penaltyMaid(penalty);
+          const deletedState = penalty.status === 'deleted';
+          return `<article class="penalty-card ${deletedState ? 'deleted':''}"><div class="penalty-card-head"><div class="penalty-person"><strong>${maid?.name || '알 수 없는 메이드'}</strong><span>${penalty.date} · ${penaltyRoomLabel(penalty)}</span></div><div class="penalty-points"><strong>${penalty.points}</strong><span>점</span></div></div><div class="penalty-body"><span class="penalty-category ${deletedState ? 'deleted':''}">${penaltyStatusLabel(penalty)} · ${penalty.category}</span><div class="penalty-reason">${penalty.reason}</div><div class="penalty-evidence">근거: ${penalty.evidence || '관리자 확인 기록'} · 등록 ${penalty.createdAt} · ${penalty.createdBy}</div><div class="penalty-meta-grid"><div><label>메이드 확인</label><strong>${penalty.maidAcknowledged ? '확인 완료':'아직 확인 안 함'}</strong></div><div><label>주급 영향</label><strong>자동 차감 없음</strong></div></div>${deletedState ? `<div class="penalty-deleted-log"><strong>삭제 처리 ${penalty.deletedAt || '-'}</strong><br>${penalty.deleteReason || '삭제 사유 미등록'} · ${penalty.deletedBy || '관리자'}</div>` : ''}</div><div class="penalty-actions"><button class="btn small" data-action="go-maid-detail" data-id="${penalty.maidId}">메이드 상세</button>${deletedState ? `<button class="btn small green" data-action="open-restore-penalty" data-id="${penalty.id}">${icon('undo')} 삭제 취소·복구</button>` : `<button class="btn small red" data-action="open-delete-penalty" data-id="${penalty.id}">${icon('trash')} 벌점 삭제</button>`}</div></article>`;
+        }).join('') : `<div class="empty-state"><strong>조건에 맞는 벌점 기록이 없습니다</strong><span>필터를 바꾸거나 새 벌점을 등록해 주세요.</span></div>`}</div>
+      </section>${bottomNav('admin')}`;
+    }
+
+    function renderAdminMore() {
+      const managedMaidCount = state.maids.filter(m => m.status !== 'retired').length;
+      const retiredMaidCount = state.maids.filter(m => m.status === 'retired').length;
+      const activePenaltyCount = state.penalties.filter(p => p.status === 'active').length;
+      return `${topbar('더보기', '관리자 계정')}<section class="screen"><div class="section-title-row first"><h2 class="section-title">운영 설정</h2></div><div class="menu-list"><button class="menu-row"><strong>객실·객실 타입 관리</strong><span>${state.rooms.length}개 ${icon('chevron')}</span></button><button class="menu-row"><strong>객실별 청소 요금</strong><span>${icon('chevron')}</span></button><button class="menu-row"><strong>청소 체크리스트</strong><span>${icon('chevron')}</span></button><button class="menu-row" data-action="go-admin-maids"><strong>메이드 계정 관리</strong><span>${managedMaidCount}명 · 퇴사 ${retiredMaidCount}명 ${icon('chevron')}</span></button><button class="menu-row" data-action="go-admin-penalties"><strong>벌점·컴플레인 관리</strong><span>유효 ${activePenaltyCount}건 ${icon('chevron')}</span></button><button class="menu-row" data-screen="admin-settlement"><strong>주급 정산 설정</strong><span>매주 ${icon('chevron')}</span></button><button class="menu-row"><strong>알림 설정</strong><span>${icon('chevron')}</span></button></div><div class="section-title-row"><h2 class="section-title">프로토타입</h2></div><div class="menu-list"><button class="menu-row" data-action="switch-to-maid"><strong>메이드 화면으로 보기</strong><span>${icon('chevron')}</span></button><button class="menu-row" data-action="logout"><strong>로그아웃</strong><span>${icon('chevron')}</span></button></div></section>${bottomNav('admin')}`;
+    }
+
+    function renderMaidCompleted() {
+      const completedIds = state.completedTasks.length ? state.completedTasks : ['903','802'];
+      const rooms = completedIds.map(id => state.rooms.find(r => r.id === id)).filter(Boolean);
+      return `${topbar('완료 업무', '김하나 · 오늘')}<section class="screen"><div class="filter-rail"><button class="chip active">오늘</button><button class="chip">검수 대기</button><button class="chip">승인</button></div><div class="section-title-row"><h2 class="section-title">오늘 완료</h2><span class="section-meta">${rooms.length}개</span></div><div class="job-list">${rooms.map(room => `<article class="job-row"><div class="job-head"><div><div class="job-room">${room.id}호</div><div class="job-type">${room.task}</div></div><div class="job-price">${room.cleaningFee.toLocaleString()}원<span>${room.cleaningStatus}</span></div></div><div class="job-footer"><div class="job-assignee">촛불 <strong>${room.candleCount ? `${room.candleCount}개 확인` : '없음'}</strong></div>${cleaningChip(room)}</div></article>`).join('')}</div></section>${bottomNav('maid')}`;
+    }
+
+    function renderMaidSettlement() {
+      const maid = state.maids.find(m => m.name === '김하나') || state.maids[0];
+      return `${topbar('내 주급', '이번 주 · 8월 10일–16일')}<section class="screen">
+        <div class="money-summary"><small>이번 주 확정 주급</small><strong>${maid.weeklyConfirmed.toLocaleString()}원</strong><div class="money-split"><div><span>검수 전 예상 포함</span><b>${maid.weeklyExpected.toLocaleString()}원</b></div><div><span>지급 완료</span><b>${maid.weeklyPaid.toLocaleString()}원</b></div></div></div>
+        <div class="notice"><span class="notice-mark">₩</span><span>청소 완료 후 관리자 검수 승인을 받은 금액만 이번 주 주급으로 확정됩니다.</span></div>
+        <div class="section-title-row"><h2 class="section-title">이번 주 작업 내역</h2><span class="section-meta">예상·확정 구분</span></div><div class="panel"><div class="panel-body">${[['1502','퇴실 청소','9,500원','담당'],['903','퇴실 청소','7,000원','검수 전'],['108','재청소','7,000원','진행'],['709','연박 부분 청소','4,000원','승인']].map(r => `<div class="settlement-row"><div class="settlement-date"><strong>${r[0]}</strong><span>호</span></div><div class="settlement-main"><strong>${r[1]}</strong><span>8월 14일</span></div><div class="settlement-amount"><strong>${r[2]}</strong><span>${r[3]}</span></div></div>`).join('')}</div></div>
+        <div class="section-title-row"><h2 class="section-title">이전 주급</h2><span class="section-meta">지급 완료</span></div><div class="panel"><div class="panel-body">${[['8.3–8.9','132,500원','지급 완료'],['7.27–8.2','119,000원','지급 완료']].map(r => `<div class="settlement-row"><div class="settlement-date"><strong>${r[0].split('–')[0]}</strong><span>주차</span></div><div class="settlement-main"><strong>${r[0]}</strong><span>주급 정산</span></div><div class="settlement-amount"><strong>${r[1]}</strong><span>${r[2]}</span></div></div>`).join('')}</div></div>
+      </section>${bottomNav('maid')}`;
+    }
+
+    function renderMaidPenalties() {
+      const maid = state.maids.find(m => m.id === 'maid01') || state.maids[0];
+      const active = activePenaltiesForMaid(maid.id);
+      const deleted = deletedPenaltiesForMaid(maid.id);
+      const points = activePenaltyPoints(maid.id);
+      const unread = unreadPenaltyCount(maid.id);
+      return `${topbar('내 벌점·컴플레인', `${maid.name} · 유효 ${points}점`, true)}<section class="screen no-nav">
+        ${unread ? `<div class="penalty-alert"><strong>새 벌점 ${unread}건을 확인해 주세요</strong><span>벌점 사유와 연결 객실, 근거를 확인한 뒤 ‘내용 확인’을 누르면 관리자에게 확인 상태가 표시됩니다.</span></div>` : ''}
+        <div class="penalty-score-band"><div><span>현재 점수에 반영되는 벌점</span><strong>${active.length ? `${active.length}건의 벌점이 유효합니다.` : '유효 벌점이 없습니다.'}</strong></div><b>${points}점</b></div>
+        <div class="callout" style="margin-top:10px;">벌점은 주급에서 자동 차감되지 않습니다. 사실관계가 다르면 관리자에게 이의 내용을 전달하고, 관리자가 잘못 부여한 벌점을 삭제 처리하면 점수에서 제외됩니다.</div>
+        <div class="section-title-row"><h2 class="section-title">유효 벌점</h2><span class="section-meta">${active.length}건</span></div>
+        <div class="penalty-list">${active.length ? active.map(penalty => `<article class="penalty-card"><div class="penalty-card-head"><div class="penalty-person"><strong>${penalty.category}</strong><span>${penalty.date} · ${penaltyRoomLabel(penalty)}</span></div><div class="penalty-points"><strong>${penalty.points}</strong><span>점</span></div></div><div class="penalty-body"><div class="penalty-reason">${penalty.reason}</div><div class="penalty-evidence">근거: ${penalty.evidence || '관리자 확인 기록'}<br>관리자 등록: ${penalty.createdAt}</div><div class="penalty-meta-grid"><div><label>현재 상태</label><strong>유효 · 점수 반영</strong></div><div><label>주급 영향</label><strong>자동 차감 없음</strong></div></div></div><div class="penalty-actions"><button class="btn small" data-action="penalty-dispute" data-id="${penalty.id}">관리자에게 이의 전달</button><button class="btn small ${penalty.maidAcknowledged ? 'green':'primary'}" data-action="acknowledge-penalty" data-id="${penalty.id}" ${penalty.maidAcknowledged ? 'disabled':''}>${penalty.maidAcknowledged ? '확인 완료':'내용 확인'}</button></div></article>`).join('') : `<div class="empty-state"><strong>유효 벌점이 없습니다</strong><span>관리자가 삭제 처리한 기록은 아래 이력에만 남습니다.</span></div>`}</div>
+        <div class="section-title-row"><h2 class="section-title">삭제된 벌점 이력</h2><span class="section-meta">점수 미반영 · ${deleted.length}건</span></div>
+        <div class="penalty-list">${deleted.length ? deleted.map(penalty => `<article class="penalty-card deleted"><div class="penalty-card-head"><div class="penalty-person"><strong>${penalty.category}</strong><span>${penalty.date} · ${penaltyRoomLabel(penalty)}</span></div><div class="penalty-points"><strong>${penalty.points}</strong><span>점</span></div></div><div class="penalty-body"><span class="penalty-category deleted">삭제됨 · 점수 미반영</span><div class="penalty-reason">${penalty.reason}</div><div class="penalty-deleted-log">삭제 사유: ${penalty.deleteReason || '미등록'}<br>${penalty.deletedAt || '-'} · ${penalty.deletedBy || '관리자'}</div></div></article>`).join('') : `<div class="empty-state"><strong>삭제된 벌점이 없습니다</strong><span>잘못 부여된 벌점은 원본을 없애지 않고 삭제 이력으로 보존됩니다.</span></div>`}</div>
+      </section>`;
+    }
+
+    function renderMaidProfile() {
+      const own = state.rooms.filter(r => r.assignee === '김하나').length;
+      const maid = state.maids.find(m => m.id === 'maid01') || state.maids[0];
+      const penaltyCount = activePenaltiesForMaid(maid.id).length;
+      const points = activePenaltyPoints(maid.id);
+      const unread = unreadPenaltyCount(maid.id);
+      return `${topbar('내 정보', '메이드 계정')}<section class="screen"><div class="panel"><div class="panel-body"><div class="info-row"><span class="info-label">이름</span><span class="info-value">김하나</span></div><div class="info-row"><span class="info-label">오늘 담당</span><span class="info-value">${own}객실</span></div><div class="info-row"><span class="info-label">정산 주기</span><span class="info-value">주급</span></div><div class="info-row"><span class="info-label">작업 승인율</span><span class="info-value">97.4%</span></div><div class="info-row"><span class="info-label">유효 벌점</span><span class="info-value" style="color:${points ? 'var(--red)':'inherit'}">${points}점 · ${penaltyCount}건</span></div></div></div>${unread ? `<div class="penalty-alert"><strong>새 벌점 ${unread}건이 있습니다</strong><span>사유와 연결 객실을 확인해 주세요.</span></div>` : ''}<div class="menu-list"><button class="menu-row"><strong>알림 설정</strong><span>${icon('chevron')}</span></button><button class="menu-row" data-action="go-maid-penalties"><strong>내 벌점·컴플레인</strong><span>${points}점 · ${penaltyCount}건 ${icon('chevron')}</span></button><button class="menu-row" data-action="switch-to-admin"><strong>관리자 화면으로 보기</strong><span>${icon('chevron')}</span></button><button class="menu-row" data-action="logout"><strong>로그아웃</strong><span>${icon('chevron')}</span></button></div></section>${bottomNav('maid')}`;
+    }
+
+    function render() {
+      let html = '';
+      switch (state.screen) {
+        case 'login': html = renderLogin(); break;
+        case 'admin-rooms': html = renderAdminRooms(); break;
+        case 'admin-open': html = renderAdminOpen(); break;
+        case 'admin-room-detail': html = renderAdminRoomDetail(); break;
+        case 'admin-inspection': html = renderAdminInspection(); break;
+        case 'admin-inspection-detail': html = renderAdminInspectionDetail(); break;
+        case 'admin-settlement': html = renderAdminSettlement(); break;
+        case 'admin-penalties': html = renderAdminPenalties(); break;
+        case 'admin-maids': html = renderAdminMaids(); break;
+        case 'admin-maid-detail': html = renderAdminMaidDetail(); break;
+        case 'admin-more': html = renderAdminMore(); break;
+        case 'maid-market': html = renderMaidMarket(); break;
+        case 'maid-tasks': html = renderMaidTasks(); break;
+        case 'maid-task': html = renderMaidTask(); break;
+        case 'maid-completed': html = renderMaidCompleted(); break;
+        case 'maid-settlement': html = renderMaidSettlement(); break;
+        case 'maid-penalties': html = renderMaidPenalties(); break;
+        case 'maid-profile': html = renderMaidProfile(); break;
+        default: html = renderLogin();
+      }
+      app.innerHTML = html;
+      document.querySelectorAll('[data-demo-view]').forEach(btn => {
+        const view = btn.dataset.demoView;
+        const active = (view === 'login' && state.screen === 'login') || view === state.screen || (view === 'password' && state.screen === 'admin-room-detail') || (view === 'admin-penalties' && state.screen === 'admin-penalties') || (view === 'maid-penalties' && state.screen === 'maid-penalties');
+        btn.classList.toggle('active', active);
+      });
+    }
+
+    function navigate(screen, role = state.role) {
+      state.previousScreen = state.screen;
+      state.screen = screen;
+      state.role = role;
+      state.passwordVisible = false;
+      closeSheet(false);
+      render();
+      const scroller = app.querySelector('.screen');
+      if (scroller) scroller.scrollTop = 0;
+    }
+
+    function openAssignmentSheet(roomId) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room) return;
+      state.selectedRoomId = roomId;
+      const aState = assignmentState(room);
+      const activeMaids = state.maids.filter(m => m.status === 'active');
+      const history = assignmentHistoryFor(room).slice(0,4);
+      const workArchives = (state.taskArchives[room.id] || []).slice(0,3);
+      const inProgress = room.cleaningStatus === '청소 중' || room.cleaningStatus === '재청소 필요' || !!state.taskStarted[room.id];
+      const readOnly = !assignmentLifecycleEligible(room);
+      const manualBlocked = assignmentLifecycleEligible(room) && !room.assignee && room.assignmentEnabled === false;
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${room.id}호 담당 관리</h3><p>메이드가 직접 선택한 객실도 관리자가 다른 담당자로 변경하거나 ‘미배정’으로 되돌릴 수 있습니다. 변경 전 확인 단계를 거치며 모든 이력은 보존됩니다.</p>
+        <div class="assignment-readonly"><strong>${aState === 'assigned' ? `현재 담당 · ${room.assignee}` : aState === 'available' ? '현재 미배정 · 배정 가능' : '현재 배정 불가'}</strong><span>${assignmentReason(room)}</span></div>
+        ${inProgress && !readOnly ? `<div class="assignment-warning"><strong>진행 중 작업</strong><br>담당 변경·회수 시 기존 체크리스트·사진은 중단 작업 이력으로 보존되고, 새 담당자는 청소 가능 상태에서 새로 시작합니다. 변경 사유 입력이 필수입니다.</div>` : ''}
+        ${manualBlocked ? `<div class="callout orange" style="margin-top:10px;">관리자가 배정 보류한 객실입니다. 먼저 배정 가능 상태로 전환해야 담당자를 지정할 수 있습니다.</div><button class="btn primary full" style="margin-top:10px;" data-action="toggle-assignment-enabled" data-id="${room.id}">배정 가능으로 전환</button>` : ''}
+        ${!readOnly && !manualBlocked ? `<div class="field"><label>${room.assignee ? '변경할 담당 메이드' : '직접 배정할 메이드'}</label><select id="assigneeSelect" class="select">${room.assignee ? '' : '<option value="">메이드를 선택하세요</option>'}${activeMaids.map(maid => `<option value="${maid.id}" ${maid.name === room.assignee ? 'selected':''}>${maid.name} · ${maid.note}</option>`).join('')}</select></div><div class="field"><label>변경·배정 사유 ${inProgress ? '(필수)':'(선택)'}</label><textarea id="assignmentReasonInput" class="textarea" placeholder="예: 마감 임박으로 담당 변경, 근무 종료로 회수"></textarea></div>${room.assignee ? `<div class="field"><label>담당 회수 후 상태</label><select id="releaseMode" class="select"><option value="closed">미배정 · 선택 클로즈</option><option value="open" ${canOpenForClaim({...room, assignee:''}) ? '':'disabled'}>미배정 · 메이드 선택 오픈</option></select></div><div class="button-row" style="margin-top:13px;"><button class="btn" data-action="release-assignee" data-id="${room.id}">미배정으로 돌리기</button><button class="btn primary" data-action="save-assignee" data-id="${room.id}">담당 변경 저장</button></div>` : `<div class="button-row" style="margin-top:13px;"><button class="btn" data-action="close-sheet">취소</button><button class="btn primary" data-action="save-assignee" data-id="${room.id}">직접 배정</button></div>`}` : ''}
+        ${readOnly ? `<div class="callout" style="margin-top:10px;">${assignmentReason(room)} 담당자를 수정하려면 해당 작업이 다시 청소 단계로 돌아가야 합니다.</div><button class="btn full" style="margin-top:10px;" data-action="close-sheet">닫기</button>` : ''}
+        <div class="section-title-row" style="margin-top:15px;"><h4 class="section-title">배정 이력</h4><span class="section-meta">${assignmentHistoryFor(room).length}건</span></div>${history.length ? `<div class="assignment-history">${history.map(item => `<div class="assignment-history-row"><time>${item.at}</time><div><strong>${item.from} → ${item.to}</strong><span>${item.by} · ${item.reason}</span></div></div>`).join('')}</div>` : `<div class="mini-label">아직 배정 이력이 없습니다.</div>`}
+        ${workArchives.length ? `<div class="section-title-row" style="margin-top:15px;"><h4 class="section-title">중단 작업 보존</h4><span class="section-meta">${state.taskArchives[room.id].length}건</span></div><div class="assignment-history">${workArchives.map(item => `<div class="assignment-history-row"><time>${item.at}</time><div><strong>${item.assignee} · ${item.action}</strong><span>체크 ${item.checks.length} · 사진 ${item.photos.length} · ${item.reason}</span></div></div>`).join('')}</div>` : ''}
+      </div>`;
+      sheet.classList.add('open');
+      sheetBackdrop.classList.add('open');
+    }
+
+    function openAssigneeChangeConfirm(roomId, maidId, reason) {
+      const room = state.rooms.find(r => r.id === roomId);
+      const maid = state.maids.find(m => m.id === maidId && m.status === 'active');
+      if (!room || !maid) return;
+      const old = room.assignee || '미배정';
+      const inProgress = room.cleaningStatus === '청소 중' || room.cleaningStatus === '재청소 필요' || !!state.taskStarted[room.id];
+      state.pendingAction = { type:'save-assignee', roomId, maidId, reason, inProgress };
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${room.id}호 담당자를 ${maid.name}님으로 ${old === '미배정' ? '배정':'변경'}할까요?</h3><p>담당 변경은 메이드의 내 업무와 책임 이력에 즉시 반영됩니다.${inProgress ? ' 진행 중 기록은 기존 담당자의 중단 작업 이력으로 보존됩니다.' : ''}</p><div class="safety-summary"><div><span>현재 담당</span><b>${old}</b></div><div><span>변경 후</span><b>${maid.name}</b></div><div><span>작업 상태</span><b>${room.cleaningStatus}</b></div><div><span>사유</span><b>${reason || (old === '미배정' ? '관리자 직접 배정':'관리자 담당 변경')}</b></div></div><div class="button-row"><button class="btn" data-action="open-assignment" data-id="${room.id}">돌아가기</button><button class="btn ${inProgress ? 'red':'primary'}" data-action="confirm-save-assignee">담당 ${old === '미배정' ? '배정':'변경'} 확정</button></div></div>`;
+      sheet.classList.add('open'); sheetBackdrop.classList.add('open');
+    }
+
+    function openTaskCompleteConfirm(roomId) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room) return;
+      const checks = state.taskChecks[roomId] || [];
+      const photos = state.taskPhotos[roomId] || [];
+      const candleFloor = Number(room.candleCount || 0);
+      const candleCount = Math.max(candleFloor, Number(state.taskCandleCounts[roomId] ?? candleFloor));
+      const candleAddedByMaid = Math.max(0, candleCount - candleFloor);
+      state.pendingAction = { type:'complete-task', roomId, candleFloor, candleCount };
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${room.id}호 청소를 완료 제출할까요?</h3><p>확정하면 검수 대기로 넘어가며 메이드가 직접 제출을 취소할 수 없습니다. 수정이 필요하면 관리자가 재청소로 반려해야 합니다.</p><div class="safety-summary"><div><span>체크리스트</span><b>${checks.length}개 완료</b></div><div><span>인증사진</span><b>${photos.length}장 선택</b></div><div><span>청소 후 촛불</span><b>총 ${candleCount}개 · 이번 작업 +${candleAddedByMaid}</b></div><div><span>고객 배정 영향</span><b>${candleCount > 0 ? '관리자 전량 회수 전 배정·입실 불가':'촛불 조건 충족'}</b></div><div><span>주급</span><b>검수 승인 후 확정</b></div></div>${candleCount > 0 ? `<div class="safety-card"><strong>기존 촛불 감소·회수는 관리자 전용</strong><span>메이드는 이번 청소에서 새로 둔 촛불만 추가 기록합니다. 기존 ${candleFloor}개를 포함해 총 ${candleCount}개가 남으며, 관리자가 현장에서 전량 회수해 0개로 확정하기 전 고객 배정과 입실이 잠깁니다.</span></div>` : ''}<div class="button-row" style="margin-top:13px;"><button class="btn" data-action="close-sheet">계속 수정</button><button class="btn green" data-action="confirm-complete-task">검수 요청 확정</button></div></div>`;
+      sheet.classList.add('open'); sheetBackdrop.classList.add('open');
+    }
+
+    function openClaimJobSheet(roomId) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room) return;
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${room.id}호 일감을 맡을까요?</h3><p>실수 선택을 막기 위한 최종 확인입니다. 확정 뒤에는 메이드 화면에서 직접 취소할 수 없습니다.</p><div class="safety-summary"><div><span>청소 유형</span><b>${room.task}</b></div><div><span>청소 금액</span><b>${room.cleaningFee.toLocaleString()}원</b></div><div><span>청소 가능</span><b>${room.available}</b></div><div><span>완료 마감</span><b>${room.deadline}</b></div></div><div class="safety-card"><strong>확정 후 취소 방법</strong><span>잘못 선택했거나 작업이 어려워진 경우 관리자에게 알려 담당을 ‘미배정’으로 회수하거나 다른 메이드로 변경해야 합니다.</span></div><div class="button-row" style="margin-top:13px;"><button class="btn" data-action="close-sheet">다시 보기</button><button class="btn primary" data-action="confirm-claim-job" data-id="${room.id}">확인하고 담당 확정</button></div></div>`;
+      sheet.classList.add('open');
+      sheetBackdrop.classList.add('open');
+    }
+
+    function openReleaseAssigneeConfirm(roomId, reason, mode) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room) return;
+      state.pendingAction = { type:'release-assignee', roomId, reason, mode };
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${room.id}호를 미배정으로 돌릴까요?</h3><p>${room.assignee}님의 담당을 회수합니다. 진행 중 기록이 있다면 중단 작업 이력으로 보존됩니다.</p><div class="safety-summary"><div><span>현재 담당</span><b>${room.assignee}</b></div><div><span>변경 후</span><b>${mode === 'open' ? '미배정 · 메이드 선택 오픈':'미배정 · 선택 클로즈'}</b></div><div><span>사유</span><b>${reason || '관리자 담당 회수'}</b></div></div><div class="button-row"><button class="btn" data-action="open-assignment" data-id="${room.id}">돌아가기</button><button class="btn red" data-action="confirm-release-assignee" data-id="${room.id}">미배정으로 확정</button></div></div>`;
+      sheet.classList.add('open');
+      sheetBackdrop.classList.add('open');
+    }
+
+    function openWeeklyPaymentSheet(maidId) {
+      const maid = state.maids.find(m => m.id === maidId);
+      if (!maid) return;
+      const paidDone = maid.weeklyPaid >= maid.weeklyConfirmed && maid.weeklyConfirmed > 0;
+      state.pendingAction = { type:'weekly-payment', maidId, markPaid:!paidDone };
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${maid.name}님 주급을 ${paidDone ? '미지급으로 되돌릴까요?' : '지급 완료 처리할까요?'}</h3><p>${paidDone ? '실제 송금 취소를 의미하지 않습니다. 앱의 지급 기록을 잘못 처리한 경우에만 미지급으로 복구하세요.' : '실제 송금을 확인한 뒤 지급 완료로 기록하세요.'}</p><div class="safety-summary"><div><span>정산 주차</span><b>8월 10일–16일</b></div><div><span>확정 주급</span><b>${maid.weeklyConfirmed.toLocaleString()}원</b></div><div><span>변경</span><b>${paidDone ? '지급 완료 → 미지급':'미지급 → 지급 완료'}</b></div></div><div class="field"><label>변경 사유 ${paidDone ? '(필수)':'(선택)'}</label><textarea id="paymentReason" class="textarea" placeholder="예: 지급 처리 버튼을 잘못 누름">${paidDone ? '' : '실제 송금 확인'}</textarea></div><div class="button-row" style="margin-top:13px;"><button class="btn" data-action="close-sheet">취소</button><button class="btn ${paidDone ? 'red':'green'}" data-action="confirm-weekly-payment">${paidDone ? '미지급으로 복구':'지급 완료 확정'}</button></div></div>`;
+      sheet.classList.add('open');
+      sheetBackdrop.classList.add('open');
+    }
+
+    const checkinBlockReason = (room) => {
+      if (isOutOfService(room)) return `객실 운영 중지 · ${operationReason(room)}`;
+      if (!room.reservationAssigned) return '고객 예약이 배정되지 않음';
+      if (['투숙 중','장기투숙'].includes(room.stayStatus)) return '이미 고객이 입실한 객실';
+      if (room.cleaningStatus !== '입실 준비 완료') return `${room.cleaningStatus} · 청소 및 검수 승인 필요`;
+      if (room.entryBlockIssue) return `입실 차단 특이사항 · ${room.entryBlockIssue}`;
+      if (candleBlocksGuest(room)) return `${candleBlockReason(room)} · 전량 회수 전 입실 불가`;
+      return '';
+    };
+    const canProcessCheckin = (room) => !checkinBlockReason(room);
+
+    function availableTransferRooms(sourceRoom) {
+      return state.rooms.filter(room => room.id !== sourceRoom.id && guestAllocationState(room) === 'available' && !isOutOfService(room));
+    }
+
+    function openRoomOperationSheet(roomId) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room) return;
+      state.selectedRoomId = roomId;
+      const current = isOutOfService(room) ? 'out-of-service' : 'active';
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${room.id}호 운영 상태 변경</h3><p>‘운영 중지’는 고객 배정과 메이드 청소를 모두 막습니다. 기존 예약·투숙이 있으면 먼저 예약을 이동하거나 해제해야 합니다.</p><div class="safety-summary"><div><span>현재 운영</span><b>${operationLabel(room)}</b></div><div><span>현재 예약</span><b>${room.reservationAssigned ? (room.reservationLabel || '예약 있음') : '없음'}</b></div><div><span>현재 청소</span><b>${room.cleaningStatus}</b></div></div><div class="field"><label>변경할 운영 상태</label><select id="operationStatusInput" class="select"><option value="active" ${current === 'active' ? 'selected':''}>정상 운영</option><option value="out-of-service" ${current === 'out-of-service' ? 'selected':''}>운영 중지 · 고객 배정 불가 · 청소 제외</option></select></div><div class="field"><label>변경 사유</label><textarea id="operationReasonInput" class="textarea" placeholder="예: 냄새 원인 확인 전 객실 운영 중지">${room.operationalReason || ''}</textarea></div><div class="safety-card"><strong>예약 충돌 자동 차단</strong><span>예약 배정 또는 투숙 정보가 남아 있으면 운영 중지 확정 버튼을 잠그고 예약 이동·해제 화면으로 안내합니다.</span></div><div class="button-row" style="margin-top:13px;"><button class="btn" data-action="close-sheet">취소</button><button class="btn ${current === 'out-of-service' ? 'green':'red'}" data-action="review-room-operation" data-id="${room.id}">변경 내용 확인</button></div></div>`;
+      sheet.classList.add('open');
+      sheetBackdrop.classList.add('open');
+    }
+
+    function reviewRoomOperation(roomId) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room) return;
+      const target = document.getElementById('operationStatusInput')?.value || 'active';
+      const reason = (document.getElementById('operationReasonInput')?.value || '').trim();
+      if (target === (isOutOfService(room) ? 'out-of-service':'active')) { showToast('현재 운영 상태와 같습니다.'); return; }
+      if (!reason) { showToast('운영 상태 변경 사유를 입력해 주세요.'); return; }
+      if (target === 'out-of-service' && roomHasReservationOrGuest(room)) {
+        const detail = room.reservationAssigned ? `${room.reservationLabel || '예약'}이 배정되어 있습니다.` : `${room.stayStatus} 상태가 남아 있습니다.`;
+        sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">운영 중지 전에 예약 충돌을 해결해 주세요</h3><p>${room.id}호를 청소 제외·고객 배정 불가로 바꿀 수 있지만, 현재 예약이나 투숙 상태를 남긴 채 확정할 수는 없습니다.</p><div class="conflict-alert"><strong>${room.id}호 예약 충돌</strong><span>${detail}<br>운영 중지 사유: ${reason}</span></div><div class="impact-list"><div class="impact-item"><strong>1.</strong> 예약을 다른 고객 배정 가능 객실로 이동하거나 배정을 해제합니다.</div><div class="impact-item"><strong>2.</strong> 예약이 없는 상태가 되면 운영 중지를 다시 확정합니다.</div></div><div class="button-row"><button class="btn" data-action="open-room-operation" data-id="${room.id}">돌아가기</button><button class="btn red" data-action="open-guest-allocation" data-id="${room.id}">예약 이동·해제</button></div></div>`;
+        sheet.classList.add('open'); sheetBackdrop.classList.add('open');
+        return;
+      }
+      state.pendingAction = { type:'room-operation', roomId, target, reason };
+      const stop = target === 'out-of-service';
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${room.id}호를 ${stop ? '운영 중지':'정상 운영 재개'}할까요?</h3><p>실수 방지를 위한 최종 확인입니다. 확정하면 일자 이력과 관리자 변경 기록에 남습니다.</p><div class="safety-summary"><div><span>현재</span><b>${operationLabel(room)}</b></div><div><span>변경 후</span><b>${stop ? '운영 중지 · 청소 제외':'정상 운영 · 점검 청소 생성'}</b></div><div><span>사유</span><b>${reason}</b></div></div><div class="impact-list">${stop ? `<div class="impact-item">고객 배정 버튼 잠금</div><div class="impact-item">기존 청소 담당 회수·일감 클로즈</div><div class="impact-item">메이드 일감 목록과 검수 대기에서 제외</div>` : `<div class="impact-item">고객 배정은 아직 잠금 상태</div><div class="impact-item">운영 재개 점검 청소를 ‘담당 미지정·선택 클로즈’로 생성</div><div class="impact-item">청소·검수 승인 후 고객 배정 가능 여부 재계산</div>`}</div><div class="button-row"><button class="btn" data-action="open-room-operation" data-id="${room.id}">돌아가기</button><button class="btn ${stop ? 'red':'green'}" data-action="confirm-room-operation">${stop ? '운영 중지 확정':'정상 운영 재개'}</button></div></div>`;
+      sheet.classList.add('open'); sheetBackdrop.classList.add('open');
+    }
+
+    function openReservationTransferSheet(sourceId) {
+      const source = state.rooms.find(r => r.id === sourceId);
+      if (!source || !source.reservationAssigned) return;
+      const candidates = availableTransferRooms(source);
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${source.id}호 예약을 다른 객실로 이동</h3><p>예약 충돌을 해소하기 위해 고객 배정 가능 객실로 예약을 옮깁니다. 청소 담당 배정에는 영향을 주지 않습니다.</p><div class="safety-summary"><div><span>이동할 예약</span><b>${source.reservationLabel || '예약 정보 미입력'}</b></div><div><span>현재 객실</span><b>${source.id}호 · ${guestAllocationReason(source)}</b></div><div><span>입실 시각</span><b>${source.checkin || DEFAULT_CHECKIN_TIME}</b></div></div>${candidates.length ? `<div class="field"><label>새 객실</label><select id="transferRoomSelect" class="select">${candidates.map(room => `<option value="${room.id}">${room.id}호 · ${room.type} · 고객 배정 가능</option>`).join('')}</select></div><div class="button-row" style="margin-top:13px;"><button class="btn" data-action="open-guest-allocation" data-id="${source.id}">돌아가기</button><button class="btn primary" data-action="review-reservation-transfer" data-id="${source.id}">이동 내용 확인</button></div>` : `<div class="conflict-alert"><strong>현재 이동 가능한 객실이 없습니다</strong><span>다른 객실의 청소·검수 또는 차단 특이사항을 먼저 해결하거나 예약 배정을 해제해 주세요.</span></div><button class="btn full" data-action="open-guest-allocation" data-id="${source.id}">돌아가기</button>`}</div>`;
+      sheet.classList.add('open'); sheetBackdrop.classList.add('open');
+    }
+
+    function reviewReservationTransfer(sourceId) {
+      const source = state.rooms.find(r => r.id === sourceId);
+      const targetId = document.getElementById('transferRoomSelect')?.value;
+      const target = state.rooms.find(r => r.id === targetId);
+      if (!source || !target || guestAllocationState(target) !== 'available') { showToast('이동할 수 있는 고객 배정 가능 객실을 선택해 주세요.'); return; }
+      state.pendingAction = { type:'reservation-transfer', sourceId, targetId };
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">예약 객실을 ${source.id}호에서 ${target.id}호로 이동할까요?</h3><p>확정하면 원래 객실은 예약 미배정으로 바뀌고 새 객실은 예약 배정 완료로 잠깁니다.</p><div class="safety-summary"><div><span>예약</span><b>${source.reservationLabel}</b></div><div><span>이전 객실</span><b>${source.id}호</b></div><div><span>새 객실</span><b>${target.id}호 · ${target.type}</b></div><div><span>입실</span><b>${source.checkin || DEFAULT_CHECKIN_TIME}</b></div></div><div class="button-row"><button class="btn" data-action="open-reservation-transfer" data-id="${source.id}">돌아가기</button><button class="btn red" data-action="confirm-reservation-transfer">예약 이동 확정</button></div></div>`;
+      sheet.classList.add('open'); sheetBackdrop.classList.add('open');
+    }
+
+    function openGuestAssignmentConfirm(roomId, label, checkinTime) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room) return;
+      state.pendingAction = { type:'guest-assignment', roomId, label, checkinTime };
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${room.id}호에 고객 예약을 배정할까요?</h3><p>확정하면 이 객실은 신규 고객에게 배정 불가로 잠기며, 이후 변경·해제도 관리자 확인 모달을 거칩니다.</p><div class="safety-summary"><div><span>예약</span><b>${label}</b></div><div><span>객실</span><b>${room.id}호 · ${room.type}</b></div><div><span>입실 시각</span><b>${checkinTime}</b></div><div><span>현재 상태</span><b>${guestAllocationHeadline(room)}</b></div></div><div class="button-row"><button class="btn" data-action="open-guest-allocation" data-id="${room.id}">돌아가기</button><button class="btn green" data-action="confirm-save-guest-assignment">고객 배정 확정</button></div></div>`;
+      sheet.classList.add('open'); sheetBackdrop.classList.add('open');
+    }
+
+    function openPasswordConfirm(roomId, value) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room) return;
+      state.pendingAction = { type:'password-change', roomId, value };
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${room.id}호 비밀번호를 변경할까요?</h3><p>메이드 출입과 현장 운영에 영향을 주는 정보이므로 한 번 더 확인합니다. 실제 도어락 변경과 앱 기록은 별도 연동이 필요합니다.</p><div class="safety-summary"><div><span>기존 비밀번호</span><b>${room.password}</b></div><div><span>새 비밀번호</span><b>${value}</b></div></div><div class="button-row"><button class="btn" data-action="edit-password" data-id="${room.id}">돌아가기</button><button class="btn red" data-action="confirm-save-password">비밀번호 변경 확정</button></div></div>`;
+      sheet.classList.add('open'); sheetBackdrop.classList.add('open');
+    }
+
+    function openAssignmentEnabledConfirm(roomId) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room) return;
+      const enable = room.assignmentEnabled === false;
+      state.pendingAction = { type:'assignment-enabled', roomId, enable };
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${room.id}호 청소 담당 배정을 ${enable ? '허용':'보류'}할까요?</h3><p>${enable ? '관리자가 직접 담당자를 지정할 수 있게 됩니다. 메이드 자유 선택은 별도로 오픈해야 합니다.' : '미배정 상태를 유지하고 메이드 선택 오픈도 자동으로 닫습니다.'}</p><div class="safety-summary"><div><span>현재</span><b>${enable ? '배정 불가':'배정 가능'}</b></div><div><span>변경 후</span><b>${enable ? '배정 가능 · 선택 클로즈':'배정 불가'}</b></div></div><div class="button-row"><button class="btn" data-action="open-assignment" data-id="${room.id}">돌아가기</button><button class="btn ${enable ? 'green':'red'}" data-action="confirm-toggle-assignment-enabled">${enable ? '배정 가능 확정':'배정 보류 확정'}</button></div></div>`;
+      sheet.classList.add('open'); sheetBackdrop.classList.add('open');
+    }
+
+    function openCandleManagementSheet(roomId) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room) return;
+      state.selectedRoomId = roomId;
+      const impact = room.candleCount > 0 ? '현재 고객 배정·입실 차단 중' : '현재 촛불 조건 충족';
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${room.id}호 촛불 현황 관리</h3><p>실제 객실에 있는 촛불 수량을 기록합니다. 1개 이상이면 고객 배정과 입실이 자동으로 잠기며, 0개는 관리자가 현장에서 전량 회수한 뒤에만 확정해야 합니다.</p><div class="safety-summary"><div><span>현재 수량</span><b>${room.candleCount}개</b></div><div><span>현재 영향</span><b>${impact}</b></div><div><span>현재 위치</span><b>${room.candleLocations || '미입력'}</b></div><div><span>현재 예약</span><b>${room.reservationAssigned ? (room.reservationLabel || '예약 있음') : '없음'}</b></div></div><div class="field-row"><div class="field"><label>변경 후 수량</label><input id="candleCountInput" class="input" type="number" inputmode="numeric" min="0" max="20" step="1" value="${room.candleCount}"></div><div class="field"><label>위치</label><input id="candleLocationsInput" class="input" value="${room.candleLocations || ''}" placeholder="예: 거실 창가 1 · 욕실 1"></div></div><div class="field"><label>변경·회수 사유</label><textarea id="candleChangeReason" class="textarea" placeholder="예: 현장에서 촛불 2개 전량 회수 확인"></textarea></div><div class="safety-card"><strong>0개로 변경할 때</strong><span>앱 수치만 낮추지 말고 실제 전량 회수를 확인해야 합니다. 다른 조건도 충족되면 고객 배정 또는 입실 잠금이 해제될 수 있습니다.</span></div><div class="button-row" style="margin-top:13px;"><button class="btn" data-action="close-sheet">취소</button><button class="btn ${room.candleCount > 0 ? 'green':'primary'}" data-action="review-candle-change" data-id="${room.id}">변경 내용 확인</button></div></div>`;
+      sheet.classList.add('open'); sheetBackdrop.classList.add('open');
+    }
+
+    function reviewCandleChange(roomId) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room) return;
+      const raw = document.getElementById('candleCountInput')?.value ?? '';
+      const nextCount = Number(raw);
+      const locations = (document.getElementById('candleLocationsInput')?.value || '').trim();
+      const reason = (document.getElementById('candleChangeReason')?.value || '').trim();
+      if (!Number.isInteger(nextCount) || nextCount < 0 || nextCount > 20) { showToast('촛불 수량은 0–20 사이 정수로 입력해 주세요.'); return; }
+      if (!reason) { showToast('변경·회수 사유를 입력해 주세요.'); return; }
+      if (nextCount > 0 && !locations) { showToast('촛불 위치를 입력해 주세요.'); return; }
+      if (nextCount === room.candleCount && locations === (room.candleLocations || '')) { showToast('변경된 내용이 없습니다.'); return; }
+      state.pendingAction = { type:'candle-change', roomId, nextCount, locations: nextCount > 0 ? locations : '', reason };
+      const beforeState = guestAllocationHeadline(room);
+      const previewRoom = { ...room, candleCount:nextCount, candleLocations:nextCount > 0 ? locations : '' };
+      const afterState = guestAllocationHeadline(previewRoom);
+      const title = nextCount === 0 && room.candleCount > 0 ? `${room.id}호 촛불 전량 회수를 확정할까요?` : `${room.id}호 촛불 수량을 변경할까요?`;
+      const impact = nextCount > 0 ? `고객 배정·입실 차단${room.reservationAssigned ? ' · 기존 예약 충돌 표시':''}` : '촛불 차단 해제 · 다른 조건으로 고객 배정 상태 재계산';
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${title}</h3><p>중요한 객실 가용 상태 변경입니다. 실제 현장 수량과 아래 내용을 다시 확인한 뒤 확정하세요.</p><div class="safety-summary"><div><span>촛불 수량</span><b>${room.candleCount}개 → ${nextCount}개</b></div><div><span>객실 위치</span><b>${nextCount > 0 ? locations : '전량 회수 · 없음'}</b></div><div><span>고객 배정 상태</span><b>${beforeState} → ${afterState}</b></div><div><span>변경 영향</span><b>${impact}</b></div><div><span>사유</span><b>${reason}</b></div></div><div class="button-row"><button class="btn" data-action="open-candle-management" data-id="${room.id}">돌아가기</button><button class="btn ${nextCount === 0 ? 'green':'red'}" data-action="confirm-candle-change">${nextCount === 0 ? '전량 회수 확정':'수량 변경 확정'}</button></div></div>`;
+      sheet.classList.add('open'); sheetBackdrop.classList.add('open');
+    }
+
+    function openInspectionApprovalConfirm(roomId) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room) return;
+      state.pendingAction = { type:'inspection-approval', roomId };
+      const allocationAfter = candleBlocksGuest(room) ? `촛불 ${room.candleCount}개 회수 전 고객 배정 불가` : room.entryBlockIssue ? '입실 차단 특이사항 해결 전 고객 배정 불가' : isOutOfService(room) ? '운영 중지로 고객 배정 불가' : '다른 조건에 따라 고객 배정 상태 재계산';
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${room.id}호 검수를 승인할까요?</h3><p>승인하면 청소 주급과 청소 품질만 확정됩니다. 촛불, 입실 차단 특이사항, 운영 중지는 별도 차단 조건으로 그대로 유지됩니다.</p><div class="safety-summary"><div><span>담당 메이드</span><b>${room.assignee || '미지정'}</b></div><div><span>청소 금액</span><b>${room.cleaningFee.toLocaleString()}원</b></div><div><span>촛불</span><b>${room.candleCount > 0 ? `${room.candleCount}개 · 회수 필요` : '0개'}</b></div><div><span>승인 후 고객 배정</span><b>${allocationAfter}</b></div><div><span>차단 특이사항</span><b>${room.entryBlockIssue || '없음'}</b></div><div><span>운영 상태</span><b>${operationLabel(room)}</b></div></div><div class="button-row"><button class="btn" data-action="close-sheet">취소</button><button class="btn green" data-action="confirm-approve-inspection">검수 승인 확정</button></div></div>`;
+      sheet.classList.add('open'); sheetBackdrop.classList.add('open');
+    }
+
+    function openGuestAllocationSheet(roomId) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room) return;
+      state.selectedRoomId = roomId;
+      const occupied = ['투숙 중','장기투숙'].includes(room.stayStatus);
+      const assigned = !!room.reservationAssigned;
+      const conflict = reservationConflict(room);
+      const canAssign = guestAllocationState(room) === 'available';
+      let controls = '';
+      if (conflict) {
+        const transferCount = availableTransferRooms(room).length;
+        const resolutionButtons = `${candleBlocksGuest(room) ? `<button class="btn green full" style="margin-top:8px;" data-action="open-candle-management" data-id="${room.id}">촛불 전량 회수 처리</button>` : ''}${isOutOfService(room) ? `<button class="btn soft full" style="margin-top:8px;" data-action="open-room-operation" data-id="${room.id}">운영 상태 확인</button>` : ''}${room.entryBlockIssue ? `<button class="btn soft full" style="margin-top:8px;" data-action="open-entry-issue" data-id="${room.id}">차단 특이사항 확인</button>` : ''}`;
+        controls = `<div class="conflict-alert"><strong>예약과 객실 상태가 충돌합니다</strong><span>${guestAllocationReason(room)}</span></div><div class="impact-list"><div class="impact-item">입실 처리는 잠김</div><div class="impact-item">촛불 회수·차단 사유 해결 또는 예약 이동·배정 해제로 충돌 해소</div><div class="impact-item">이동 가능한 객실 ${transferCount}개</div></div><div class="button-row"><button class="btn" data-action="confirm-guest-action" data-id="${room.id}" data-guest-action="release">배정 해제</button><button class="btn red" data-action="open-reservation-transfer" data-id="${room.id}" ${transferCount ? '' : 'disabled'}>다른 객실로 이동</button></div>${resolutionButtons}`;
+      } else if (occupied) {
+        controls = `<div class="safety-card"><strong>현재 고객 입실 중</strong><span>신규 고객에게는 자동으로 배정 불가입니다. 실제 퇴실을 확인한 뒤 퇴실 처리하면 퇴실 청소 작업이 생성됩니다.</span></div><button class="btn red full" style="margin-top:12px;" data-action="confirm-guest-action" data-id="${room.id}" data-guest-action="checkout">고객 퇴실 처리</button>`;
+      } else if (assigned || canAssign) {
+        controls = `<div class="field"><label>예약번호·예약자 식별</label><input id="guestReservationLabel" class="input" value="${assigned ? (room.reservationLabel || '') : ''}" placeholder="예: YN-260814-082"></div><div class="field-row"><div class="field"><label>입실 시각</label><input id="guestCheckinTime" class="input" type="time" value="${room.earlyCheckinTime || (room.checkin && room.checkin !== '예약 없음' && room.checkin !== '투숙 중' ? room.checkin : DEFAULT_CHECKIN_TIME)}"></div><div class="field"><label>기본 체크인</label><input class="input" value="${DEFAULT_CHECKIN_TIME}" disabled></div></div><div class="guest-action-hint">예약 저장 전 최종 확인 모달이 한 번 더 열립니다. 확정 후 이 객실은 ‘예약 배정 완료 · 신규 배정 불가’로 바뀝니다.</div>${assigned ? `<div class="button-row" style="margin-top:13px;"><button class="btn" data-action="confirm-guest-action" data-id="${room.id}" data-guest-action="release">배정 해제</button><button class="btn primary" data-action="save-guest-assignment" data-id="${room.id}">배정 정보 확인</button></div>${canProcessCheckin(room) ? `<button class="btn green full" style="margin-top:8px;" data-action="confirm-guest-action" data-id="${room.id}" data-guest-action="checkin">고객 입실 처리</button>` : `<div class="conflict-alert" style="margin-top:8px;"><strong>입실 처리 잠김</strong><span>${checkinBlockReason(room)}</span></div><button class="btn full" style="margin-top:8px;" disabled>입실 처리 불가</button>`}` : `<div class="button-row" style="margin-top:13px;"><button class="btn" data-action="close-sheet">취소</button><button class="btn green" data-action="save-guest-assignment" data-id="${room.id}">배정 내용 확인</button></div>`}`;
+      } else {
+        controls = `<div class="assignment-readonly"><strong>현재 고객 배정 불가</strong><span>${guestAllocationReason(room)}</span></div><div class="safety-card"><strong>강제 배정하지 않음</strong><span>운영 중지, 청소·검수 미완료, 촛불 1개 이상 또는 입실 차단 특이사항이 남아 있으면 고객 배정 버튼을 잠급니다. 원인을 해결하면 자동으로 다시 계산합니다.</span></div>${isOutOfService(room) ? `<button class="btn red full" style="margin-top:11px;" data-action="open-room-operation" data-id="${room.id}">운영 상태 관리</button>` : candleBlocksGuest(room) ? `<button class="btn green full" style="margin-top:11px;" data-action="open-candle-management" data-id="${room.id}">촛불 회수·수량 관리</button>` : room.entryBlockIssue ? `<button class="btn soft full" style="margin-top:11px;" data-action="open-entry-issue" data-id="${room.id}">입실 차단 특이사항 관리</button>` : ''}<button class="btn full" style="margin-top:8px;" data-action="close-sheet">닫기</button>`;
+      }
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${room.id}호 고객 객실 배정</h3><p>청소 담당자 배정과 별도의 객실 판매·입실 상태입니다. 현재: ${guestAllocationHeadline(room)}</p><div class="safety-summary"><div><span>운영 상태</span><b>${operationLabel(room)}</b></div><div><span>객실 상태</span><b>${room.stayStatus}</b></div><div><span>청소·검수</span><b>${room.cleaningStatus}</b></div><div><span>현재 예약</span><b>${room.reservationAssigned ? (room.reservationLabel || '정보 미입력') : '미배정'}</b></div></div>${controls}</div>`;
+      sheet.classList.add('open');
+      sheetBackdrop.classList.add('open');
+    }
+
+    function openGuestActionConfirm(roomId, actionType) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room) return;
+      if (actionType === 'checkin' && !canProcessCheckin(room)) { showToast(`입실 처리 불가 · ${checkinBlockReason(room)}`); return; }
+      const labels = {
+        release:['예약 배정을 해제할까요?','예약 배정 완료 상태를 미배정 공실로 되돌립니다. 다른 조건이 충족되면 다시 고객 배정 가능으로 전환됩니다.','배정 해제'],
+        checkin:['고객 입실 처리할까요?','객실을 투숙 중으로 전환하며 신규 고객 배정은 불가능해집니다.','입실 처리'],
+        checkout:['고객 퇴실 처리할까요?','객실을 청소 필요 상태로 전환하고 퇴실 청소 일감을 생성합니다.','퇴실 처리']
+      };
+      const [title, copy, button] = labels[actionType] || labels.release;
+      state.pendingAction = { type:'guest-action', roomId, actionType };
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${room.id}호 ${title}</h3><p>${copy}</p><div class="safety-summary"><div><span>현재 객실 상태</span><b>${room.stayStatus}</b></div><div><span>현재 예약</span><b>${room.reservationLabel || '미등록'}</b></div><div><span>처리 후</span><b>${actionType === 'release' ? '예약 미배정' : actionType === 'checkin' ? '투숙 중' : '청소 필요'}</b></div></div><div class="button-row"><button class="btn" data-action="open-guest-allocation" data-id="${room.id}">돌아가기</button><button class="btn ${actionType === 'checkin' ? 'green':'red'}" data-action="execute-guest-action">${button} 확정</button></div></div>`;
+      sheet.classList.add('open');
+      sheetBackdrop.classList.add('open');
+    }
+
+    function openPasswordSheet(roomId) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room) return;
+      state.selectedRoomId = roomId;
+      sheet.innerHTML = `<div class="sheet-handle"></div><h3 id="sheetTitle">${room.id}호 비밀번호 수정</h3><p>숫자 4자리를 직접 입력하거나 랜덤 생성한 뒤 저장하세요.</p><div class="password-input-row"><input id="passwordInput" class="input password-input" inputmode="numeric" maxlength="4" value="${room.password}" aria-label="4자리 객실 비밀번호"><button class="btn soft" data-action="random-password">${icon('refresh')} 랜덤</button></div><div class="button-row" style="margin-top:13px;"><button class="btn" data-action="close-sheet">취소</button><button class="btn primary" data-action="save-password">변경 내용 확인</button></div>`;
+      sheet.classList.add('open');
+      sheetBackdrop.classList.add('open');
+      requestAnimationFrame(() => document.getElementById('passwordInput')?.select());
+    }
+
+    function openClaimVisibilityConfirm(roomId) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room || room.assignee || !canOpenForClaim(room)) { showToast('현재 선택 공개를 변경할 수 없는 객실입니다.'); return; }
+      const open = !room.openForClaim;
+      state.pendingAction = { type:'claim-visibility', roomId, open };
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${room.id}호 일감을 ${open ? '오픈':'클로즈'}할까요?</h3><p>${open ? '메이드가 금액과 시간을 보고 직접 선택할 수 있게 됩니다.' : '메이드 일감 찾기 목록에서 즉시 숨겨집니다.'}</p><div class="safety-summary"><div><span>현재</span><b>${room.openForClaim ? '선택 오픈':'선택 클로즈'}</b></div><div><span>변경 후</span><b>${open ? '선택 오픈':'선택 클로즈'}</b></div><div><span>일감</span><b>${room.task} · ${room.cleaningFee.toLocaleString()}원</b></div></div><div class="button-row"><button class="btn" data-action="close-sheet">취소</button><button class="btn ${open ? 'green':'red'}" data-action="confirm-claim-visibility">${open ? '오픈':'클로즈'} 확정</button></div></div>`;
+      sheet.classList.add('open'); sheetBackdrop.classList.add('open');
+    }
+
+    function openInspectionRejectFinalConfirm(roomId, index, reason, detail) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room) return;
+      const photo = inspectionPhotosFor(room)[index];
+      state.pendingAction = { type:'inspection-reject', roomId, index, reason, detail };
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${room.id}호 검수를 반려할까요?</h3><p>확정하면 객실은 ‘재청소 필요’로 바뀌고 담당 메이드에게 사진·사유와 함께 즉시 알림이 갑니다.</p><div class="safety-summary"><div><span>대상 사진</span><b>${photo?.label || '인증사진'}</b></div><div><span>반려 사유</span><b>${reason} · ${detail}</b></div><div><span>담당</span><b>${room.assignee || '미지정'}</b></div><div><span>주급</span><b>검수 전 · 미확정</b></div></div><div class="button-row"><button class="btn" data-action="confirm-reject-inspection" data-id="${room.id}">돌아가기</button><button class="btn red" data-action="confirm-submit-reject-inspection">검수 반려 확정</button></div></div>`;
+      sheet.classList.add('open'); sheetBackdrop.classList.add('open');
+    }
+
+    function openTaskStartConfirm(roomId) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room || isOutOfService(room) || room.assignee !== '김하나') { showToast('현재 시작할 수 없는 작업입니다.'); return; }
+      state.pendingAction = { type:'task-start', roomId };
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${room.id}호 청소를 시작할까요?</h3><p>시작 시각이 기록되고 상태가 ‘청소 중’으로 변경됩니다.</p><div class="safety-summary"><div><span>유형</span><b>${room.task}</b></div><div><span>완료 마감</span><b>${room.deadline}</b></div><div><span>취소</span><b>관리자에게 담당 회수 요청</b></div></div><div class="button-row"><button class="btn" data-action="close-sheet">취소</button><button class="btn green" data-action="confirm-start-task">청소 시작 확정</button></div></div>`;
+      sheet.classList.add('open'); sheetBackdrop.classList.add('open');
+    }
+
+    function openRestoreMaidConfirm(maidId) {
+      const maid = state.maids.find(m => m.id === maidId && m.status === 'retired');
+      if (!maid) return;
+      state.pendingAction = { type:'restore-maid', maidId };
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${maid.name}님의 퇴사 처리를 취소할까요?</h3><p>복구 후 바로 활동 계정이 되지 않고 ‘비활성’ 상태가 됩니다. 정보 확인 후 별도로 활성화해야 합니다.</p><div class="safety-summary"><div><span>현재</span><b>퇴사 처리</b></div><div><span>복구 후</span><b>비활성 · 로그인 불가</b></div><div><span>과거 이력</span><b>그대로 보존</b></div></div><div class="button-row"><button class="btn" data-action="close-sheet">취소</button><button class="btn green" data-action="confirm-restore-maid">퇴사 취소 확정</button></div></div>`;
+      sheet.classList.add('open'); sheetBackdrop.classList.add('open');
+    }
+
+    function openMaidSaveConfirm(payload) {
+      const existing = payload.id ? state.maids.find(m => m.id === payload.id) : null;
+      state.pendingAction = { type:'maid-save', ...payload };
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">메이드 계정을 ${existing ? '수정':'추가'}할까요?</h3><p>로그인 권한과 담당 이력 연결에 영향을 주는 변경입니다.</p><div class="safety-summary"><div><span>이름</span><b>${existing ? `${existing.name} → ${payload.name}` : payload.name}</b></div><div><span>로그인 ID</span><b>${payload.loginId}</b></div><div><span>초기 상태</span><b>${existing ? maidStatusLabel(existing.status) : '활동 중'}</b></div></div><div class="button-row"><button class="btn" data-action="${existing ? 'edit-maid':'add-maid'}" data-id="${payload.id || ''}">돌아가기</button><button class="btn green" data-action="confirm-save-maid">${existing ? '정보 수정':'계정 추가'} 확정</button></div></div>`;
+      sheet.classList.add('open'); sheetBackdrop.classList.add('open');
+    }
+
+    function openHistoryCorrectionConfirm(payload) {
+      const room = state.rooms.find(r => r.id === payload.roomId);
+      if (!room) return;
+      state.pendingAction = { type:'history-correction', ...payload };
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${payload.roomId}호 과거 기록 정정을 추가할까요?</h3><p>원본 기록은 바꾸지 않고 정정 이벤트를 별도로 남깁니다.</p><div class="safety-summary"><div><span>대상 일자</span><b>${formatSelectedDate()}</b></div><div><span>정정 항목</span><b>${payload.category}</b></div><div><span>정정 내용</span><b>${payload.content}</b></div><div><span>사유</span><b>${payload.reason}</b></div></div><div class="button-row"><button class="btn" data-action="history-correction">돌아가기</button><button class="btn primary" data-action="confirm-history-correction">정정 이력 추가 확정</button></div></div>`;
+      sheet.classList.add('open'); sheetBackdrop.classList.add('open');
+    }
+
+    function openMaidSheet(maidId = null) {
+      const maid = maidId ? state.maids.find(m => m.id === maidId) : null;
+      if (maid) state.selectedMaidId = maid.id;
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${maid ? `${maid.name} 정보 수정` : '메이드 추가'}</h3><p>로그인 계정과 기본 정보를 등록합니다. 정산 방식은 주급으로 적용됩니다.</p><div class="field-row"><div class="field"><label>이름</label><input id="maidName" class="input" value="${maid?.name || ''}" placeholder="예: 김하나"></div><div class="field"><label>로그인 아이디</label><input id="maidLoginId" class="input" value="${maid?.loginId || ''}" placeholder="예: maid05"></div></div><div class="field"><label>연락처</label><input id="maidPhone" class="input" value="${maid?.phone || ''}" placeholder="010-0000-0000"></div><div class="field"><label>관리 메모</label><textarea id="maidNote" class="textarea" placeholder="근무 가능 시간, 선호 객실 등">${maid?.note || ''}</textarea></div><div class="info-row"><span class="info-label">정산 주기</span><span class="info-value">주급</span></div><div class="button-row" style="margin-top:13px;"><button class="btn" data-action="close-sheet">취소</button><button class="btn primary" data-action="save-maid" data-id="${maid?.id || ''}">${maid ? '수정 내용 확인' : '계정 추가 확인'}</button></div></div>`;
+      sheet.classList.add('open');
+      sheetBackdrop.classList.add('open');
+      requestAnimationFrame(() => document.getElementById('maidName')?.focus());
+    }
+
+    function openInspectionPhotoSheet(roomId, index) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room) return;
+      const photos = inspectionPhotosFor(room);
+      const photo = photos[index];
+      if (!photo) return;
+      sheet.classList.add('photo-sheet');
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${room.id}호 · ${photo.label}</h3><p>${photo.capturedAt} 촬영 · ${room.assignee || '메이드'} 제출 · 원본 확대 보기 위치입니다.</p><div class="photo-zoom">${photoSceneSvg(photo.scene)}</div><div class="info-row"><span class="info-label">업로드 상태</span><span class="info-value">원본 업로드 완료</span></div><div class="info-row"><span class="info-label">촬영 항목</span><span class="info-value">${photo.label}</span></div><button class="btn primary full" style="margin-top:12px;" data-action="close-sheet">확인하고 닫기</button></div>`;
+      sheet.classList.add('open');
+      sheetBackdrop.classList.add('open');
+    }
+
+
+
+    function openHistoryCorrectionSheet() {
+      const roomOptions = state.rooms.map(room => `<option value="${room.id}">${room.id}호 · ${room.type}</option>`).join('');
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${formatSelectedDate()} 기록 정정</h3><p>과거 원본을 덮어쓰지 않고, 어떤 내용을 왜 바로잡았는지 별도의 정정 이력으로 추가합니다.</p><div class="field"><label>객실</label><select id="correctionRoom" class="select">${roomOptions}</select></div><div class="field"><label>정정 항목</label><select id="correctionCategory" class="select"><option>예약·입퇴실 시간</option><option>청소 상태</option><option>청소 담당자</option><option>고객 배정 차단 특이사항</option><option>촛불 수량</option><option>객실 비밀번호 기록</option><option>기타</option></select></div><div class="field"><label>정정할 내용</label><textarea id="correctionContent" class="textarea" placeholder="예: 실제 레이트 체크아웃 시각은 12:30이었음"></textarea></div><div class="field"><label>정정 사유</label><textarea id="correctionReason" class="textarea" placeholder="예: 체크아웃 확인 문자와 대조하여 관리자 오기입 확인"></textarea></div><div class="button-row" style="margin-top:13px;"><button class="btn" data-action="close-sheet">취소</button><button class="btn primary" data-action="submit-history-correction">정정 내용 확인</button></div></div>`;
+      sheet.classList.add('open');
+      sheetBackdrop.classList.add('open');
+    }
+
+    function openStayTimeSheet(roomId) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room) return;
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${room.id}호 입·퇴실 시간</h3><p>얼리 체크인과 레이트 체크아웃은 ‘있음/없음’만 표시하지 않고 실제 시각을 저장합니다. 변경 내용은 ${formatSelectedDate()} 객실 이력에 남습니다.</p><div class="field-row"><div class="field"><label>얼리 체크인 시각</label><input id="earlyCheckinInput" class="input" type="time" value="${room.earlyCheckinTime || ''}"></div><div class="field"><label>레이트 체크아웃 시각</label><input id="lateCheckoutInput" class="input" type="time" value="${room.lateCheckoutTime || ''}"></div></div><div class="callout" style="margin-top:10px;">기본 체크인 ${room.standardCheckinTime || '16:00'} · 기본 체크아웃 ${room.standardCheckoutTime || '11:00'}. 빈칸으로 저장하면 얼리·레이트 표시를 해제합니다.</div><div class="button-row" style="margin-top:13px;"><button class="btn" data-action="close-sheet">취소</button><button class="btn primary" data-action="review-stay-time" data-id="${room.id}">변경 내용 확인</button></div></div>`;
+      sheet.classList.add('open');
+      sheetBackdrop.classList.add('open');
+    }
+
+    function openEntryIssueSheet(roomId) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room) return;
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${room.id}호 입실 차단 특이사항</h3><p>이 내용이 남아 있는 동안에는 청소가 완료되어도 고객 객실 배정이 불가능합니다. 촛불도 별도의 하드 차단 조건이며, 촛불 현황 관리에서 전량 회수를 확인해야 합니다.</p><div class="field"><label>입실 차단 사유</label><textarea id="entryIssueInput" class="textarea" placeholder="예: 욕실 배수구 냄새 원인 확인 필요">${room.entryBlockIssue || ''}</textarea></div><div class="button-row" style="margin-top:13px;"><button class="btn" data-action="close-sheet">취소</button><button class="btn primary" data-action="review-entry-issue" data-id="${room.id}">차단 등록 확인</button></div></div>`;
+      sheet.classList.add('open');
+      sheetBackdrop.classList.add('open');
+    }
+
+    function openRejectInspectionSheet(roomId) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room) return;
+      const photos = inspectionPhotosFor(room);
+      const index = state.selectedInspectionPhoto[room.id] || 0;
+      const photo = photos[index] || photos[0];
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${room.id}호 재청소 요청</h3><p>현재 선택한 ‘${photo?.label || '인증사진'}’과 아래 사유가 메이드에게 전달됩니다. 기존 사진은 검수 이력으로 남습니다.</p><div class="inspection-cover" style="height:118px;">${photoSceneSvg(photo?.scene)}</div><div class="field"><label>미흡 항목</label><select id="rejectReason" class="select"><option>청소 얼룩·먼지</option><option>머리카락·이물질</option><option>물때·배수구</option><option>침구 정리 미흡</option><option>비품·수건 누락</option><option>사진이 불명확함</option><option>기타</option></select></div><div class="field"><label>메이드에게 전달할 상세 사유</label><textarea id="rejectDetail" class="textarea" placeholder="예: 현관 거울 하단 얼룩을 다시 닦고 같은 각도로 재촬영해 주세요."></textarea></div><div class="button-row" style="margin-top:13px;"><button class="btn" data-action="close-sheet">취소</button><button class="btn red" data-action="submit-reject-inspection" data-id="${room.id}" data-index="${index}">재청소 요청 내용 확인</button></div></div>`;
+      sheet.classList.add('open');
+      sheetBackdrop.classList.add('open');
+    }
+
+    function openAddPenaltySheet(maidId = '', roomId = '') {
+      const activeMaids = state.maids.filter(maid => maid.status !== 'retired');
+      const selectedMaid = maidId || state.penaltyMaidFilter !== 'all' ? (maidId || state.penaltyMaidFilter) : activeMaids[0]?.id;
+      const roomOptions = state.rooms.map(room => `<option value="${room.id}" ${room.id === roomId ? 'selected':''}>${room.id}호 · ${room.type} · ${room.task}</option>`).join('');
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">메이드 벌점 부여</h3><p>검수 반려나 컴플레인만으로 자동 부여하지 않습니다. 연결 작업과 근거를 확인한 뒤 등록하세요.</p><div class="field-row"><div class="field"><label>메이드</label><select id="penaltyMaid" class="select">${activeMaids.map(maid => `<option value="${maid.id}" ${maid.id === selectedMaid ? 'selected':''}>${maid.name}</option>`).join('')}</select></div><div class="field"><label>발생일</label><input id="penaltyDate" class="input" type="date" value="${state.selectedDate || APP_TODAY}"></div></div><div class="field"><label>연결 객실·작업</label><select id="penaltyRoom" class="select"><option value="">객실 연결 없음</option>${roomOptions}</select></div><div class="field-row"><div class="field"><label>벌점 유형</label><select id="penaltyCategory" class="select"><option>청소 상태 미흡</option><option>필수 비품 누락</option><option>인증사진 누락</option><option>작업 지연</option><option>무단 작업 포기</option><option>고객 컴플레인 귀책 확정</option><option>기타</option></select></div><div class="field"><label>점수</label><select id="penaltyPoints" class="select"><option value="1">1점</option><option value="2">2점</option><option value="3">3점</option><option value="5">5점</option></select></div></div><div class="field"><label>구체적 사유</label><textarea id="penaltyReason" class="textarea" placeholder="예: 욕실 바닥 머리카락 미처리로 재청소 발생"></textarea></div><div class="field"><label>근거·증빙</label><textarea id="penaltyEvidence" class="textarea" placeholder="예: 903호 욕실 인증사진 3번, 관리자 현장 확인"></textarea></div><div class="safety-card"><strong>주급과 별도 관리</strong><span>벌점 등록만으로 주급을 차감하지 않습니다. 금액 조정이 필요하면 별도의 정산 조정 절차와 사유가 필요합니다.</span></div><div class="button-row" style="margin-top:13px;"><button class="btn" data-action="close-sheet">취소</button><button class="btn red" data-action="review-add-penalty">벌점 내용 확인</button></div></div>`;
+      sheet.classList.add('open');
+      sheetBackdrop.classList.add('open');
+    }
+
+    function openPenaltyConfirmSheet(payload) {
+      const maid = state.maids.find(item => item.id === payload.maidId);
+      state.pendingAction = { type:'add-penalty', ...payload };
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${maid?.name || '메이드'}님께 ${payload.points}점 벌점을 부여할까요?</h3><p>확정하면 메이드 화면에 즉시 알림이 표시되고, 메이드는 사유와 연결 객실을 확인할 수 있습니다.</p><div class="safety-summary"><div><span>발생일·객실</span><b>${payload.date} · ${payload.roomId ? `${payload.roomId}호` : '객실 연결 없음'}</b></div><div><span>유형</span><b>${payload.category}</b></div><div><span>벌점</span><b>${payload.points}점</b></div><div><span>주급</span><b>자동 차감 없음</b></div></div><div class="reason-preview">${payload.reason}<br><small>근거: ${payload.evidence}</small></div><div class="button-row" style="margin-top:13px;"><button class="btn" data-action="open-add-penalty" data-maid-id="${payload.maidId}" data-room-id="${payload.roomId || ''}">돌아가기</button><button class="btn red" data-action="confirm-add-penalty">벌점 부여 확정</button></div></div>`;
+      sheet.classList.add('open');
+      sheetBackdrop.classList.add('open');
+    }
+
+    function openDeletePenaltySheet(penaltyId) {
+      const penalty = state.penalties.find(item => item.id === penaltyId);
+      const maid = penalty ? penaltyMaid(penalty) : null;
+      if (!penalty || penalty.status !== 'active') return;
+      state.selectedPenaltyId = penaltyId;
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${maid?.name || '메이드'}님의 ${penalty.points}점 벌점을 삭제할까요?</h3><p>원본을 영구 제거하지 않고 ‘삭제됨’ 상태로 바꿉니다. 점수 합계에서 즉시 제외되며 삭제 사유와 처리자는 이력에 남습니다.</p><div class="safety-summary"><div><span>벌점 유형</span><b>${penalty.category}</b></div><div><span>연결 작업</span><b>${penaltyRoomLabel(penalty)}</b></div><div><span>현재 점수</span><b>${activePenaltyPoints(penalty.maidId)}점</b></div><div><span>삭제 후</span><b>${Math.max(0, activePenaltyPoints(penalty.maidId) - penalty.points)}점</b></div></div><div class="field"><label>삭제 사유 (필수)</label><textarea id="penaltyDeleteReason" class="textarea" placeholder="예: 인증사진 업로드 지연으로 메이드 귀책이 아님"></textarea></div><div class="button-row" style="margin-top:13px;"><button class="btn" data-action="close-sheet">취소</button><button class="btn red" data-action="confirm-delete-penalty" data-id="${penalty.id}">벌점 삭제 확정</button></div></div>`;
+      sheet.classList.add('open');
+      sheetBackdrop.classList.add('open');
+    }
+
+    function openRestorePenaltySheet(penaltyId) {
+      const penalty = state.penalties.find(item => item.id === penaltyId);
+      const maid = penalty ? penaltyMaid(penalty) : null;
+      if (!penalty || penalty.status !== 'deleted') return;
+      state.selectedPenaltyId = penaltyId;
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">삭제한 벌점을 다시 복구할까요?</h3><p>${maid?.name || '메이드'}님의 ${penalty.points}점이 다시 유효 벌점에 포함되고, 메이드에게 새 확인 알림이 표시됩니다.</p><div class="safety-summary"><div><span>벌점 유형</span><b>${penalty.category}</b></div><div><span>연결 작업</span><b>${penaltyRoomLabel(penalty)}</b></div><div><span>복구 후 점수</span><b>${activePenaltyPoints(penalty.maidId) + penalty.points}점</b></div></div><div class="field"><label>복구 사유 (필수)</label><textarea id="penaltyRestoreReason" class="textarea" placeholder="예: 추가 증빙 확인으로 원래 벌점이 타당함"></textarea></div><div class="button-row" style="margin-top:13px;"><button class="btn" data-action="close-sheet">취소</button><button class="btn green" data-action="confirm-restore-penalty" data-id="${penalty.id}">삭제 취소·복구</button></div></div>`;
+      sheet.classList.add('open');
+      sheetBackdrop.classList.add('open');
+    }
+
+    function openRetireMaidSheet(maidId) {
+      const maid = state.maids.find(m => m.id === maidId);
+      if (!maid) return;
+      const assigned = state.rooms.filter(room => room.assignee === maid.name && reclaimableAssignment(room)).length;
+      sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${maid.name}님을 퇴사 처리할까요?</h3><p>영구 삭제가 아니라 소프트 삭제입니다. 로그인과 신규 일감 선택은 차단하지만 작업·사진·검수·주급 이력은 계속 보존합니다.${assigned ? ` 진행 중인 담당 ${assigned}객실은 미배정·클로즈 상태로 회수됩니다.` : ''}</p><div class="field-row"><div class="field"><label>퇴사 처리일</label><input id="retireDate" class="input" type="date" value="2026-08-14"></div><div class="field"><label>사유</label><select id="retireReason" class="select"><option>자진 퇴사</option><option>계약 종료</option><option>근무 종료</option><option>장기 휴무 전환</option><option>기타</option></select></div></div><div class="field"><label>관리 메모</label><textarea id="retireMemo" class="textarea" placeholder="추후 확인할 내용을 적어 주세요."></textarea></div><div class="button-row" style="margin-top:13px;"><button class="btn" data-action="close-sheet">취소</button><button class="btn gold" data-action="retire-maid" data-id="${maid.id}">${icon('archive')} 퇴사 처리</button></div></div>`;
+      sheet.classList.add('open');
+      sheetBackdrop.classList.add('open');
+    }
+
+    function closeSheet(clear = true) {
+      sheet.classList.remove('open', 'photo-sheet');
+      sheetBackdrop.classList.remove('open');
+      if (clear) setTimeout(() => { if (!sheet.classList.contains('open')) sheet.innerHTML = ''; }, 220);
+    }
+
+    function randomPassword() {
+      return String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+    }
+
+    document.addEventListener('click', (event) => {
+      const demo = event.target.closest('[data-demo-view]');
+      if (demo) {
+        const view = demo.dataset.demoView;
+        if (view === 'login') { state = defaultState(); render(); closeSheet(); }
+        if (view === 'admin-rooms') { state.role = 'admin'; switchSelectedDate(APP_TODAY); state.roomFilter = 'all'; navigate('admin-rooms','admin'); }
+        if (view === 'admin-history') { state.role = 'admin'; switchSelectedDate('2026-08-13'); state.roomFilter = 'all'; navigate('admin-rooms','admin'); }
+        if (view === 'cleaning-needed') { state.role = 'admin'; switchSelectedDate(APP_TODAY); state.roomFilter = 'cleaning-needed'; navigate('admin-rooms','admin'); }
+        if (view === 'admin-open') { state.role = 'admin'; navigate('admin-open','admin'); }
+        if (view === 'assignment-sheet') { state.role = 'admin'; state.selectedRoomId = '1004'; navigate('admin-open','admin'); setTimeout(() => openAssignmentSheet('1004'), 50); }
+        if (view === 'admin-inspection') { state.role = 'admin'; navigate('admin-inspection','admin'); }
+        if (view === 'admin-maids') { state.role = 'admin'; navigate('admin-maids','admin'); }
+        if (view === 'admin-settlement') { state.role = 'admin'; navigate('admin-settlement','admin'); }
+        if (view === 'maid-market') { state.role = 'maid'; navigate('maid-market','maid'); }
+        if (view === 'password') { state.role = 'admin'; state.selectedRoomId = '1502'; navigate('admin-room-detail','admin'); setTimeout(() => openPasswordSheet('1502'), 50); }
+        if (view === 'calendar') { state.role = 'admin'; navigate('admin-rooms','admin'); setTimeout(() => openCalendarSheet(), 50); }
+        if (view === 'claim-confirm') { state.role = 'maid'; navigate('maid-market','maid'); setTimeout(() => openClaimJobSheet('1502'), 50); }
+        if (view === 'maid-rejection') { state.role = 'maid'; navigate('maid-tasks','maid'); }
+        if (view === 'guest-allocation') { state.role = 'admin'; state.selectedRoomId = '412'; navigate('admin-room-detail','admin'); setTimeout(() => openGuestAllocationSheet('412'), 50); }
+        if (view === 'payment-toggle') { state.role = 'admin'; navigate('admin-settlement','admin'); setTimeout(() => openWeeklyPaymentSheet('maid02'), 50); }
+        if (view === 'admin-penalties') { state.role = 'admin'; navigate('admin-penalties','admin'); }
+        if (view === 'penalty-add') { state.role = 'admin'; navigate('admin-penalties','admin'); setTimeout(() => openAddPenaltySheet('maid01','108'), 50); }
+        if (view === 'maid-penalties') { state.role = 'maid'; navigate('maid-penalties','maid'); }
+        if (view === 'room-operation') { state.role = 'admin'; state.selectedRoomId = '608'; navigate('admin-room-detail','admin'); setTimeout(() => openRoomOperationSheet('608'), 50); }
+        if (view === 'reservation-conflict') { state.role = 'admin'; state.selectedRoomId = '108'; navigate('admin-room-detail','admin'); setTimeout(() => openGuestAllocationSheet('108'), 50); }
+        return;
+      }
+
+      const roleTab = event.target.closest('[data-login-role]');
+      if (roleTab) { state.loginRole = roleTab.dataset.loginRole; render(); return; }
+
+      const nav = event.target.closest('[data-screen]');
+      if (nav) { navigate(nav.dataset.screen, nav.dataset.screen.startsWith('admin') ? 'admin' : 'maid'); return; }
+
+      const filter = event.target.closest('[data-room-filter]');
+      if (filter) { state.roomFilter = filter.dataset.roomFilter; render(); return; }
+
+      const cleaningFilter = event.target.closest('[data-cleaning-filter]');
+      if (cleaningFilter) { state.cleaningSubFilter = cleaningFilter.dataset.cleaningFilter; render(); return; }
+
+      const assignmentFilter = event.target.closest('[data-assignment-filter]');
+      if (assignmentFilter) { state.assignmentFilter = assignmentFilter.dataset.assignmentFilter; render(); return; }
+
+      const maidFilter = event.target.closest('[data-maid-filter]');
+      if (maidFilter) { state.maidFilter = maidFilter.dataset.maidFilter; render(); return; }
+
+      const penaltyFilter = event.target.closest('[data-penalty-filter]');
+      if (penaltyFilter) { state.penaltyFilter = penaltyFilter.dataset.penaltyFilter; render(); return; }
+
+      const actionEl = event.target.closest('[data-action]');
+      if (!actionEl) return;
+      const action = actionEl.dataset.action;
+      const id = actionEl.dataset.id;
+
+      if (action === 'open-calendar') { openCalendarSheet(); return; }
+      if (action === 'calendar-month-shift') { state.calendarMonth = shiftMonthKey(state.calendarMonth, Number(actionEl.dataset.months || 0)); renderCalendarSheet(); return; }
+      if (action === 'select-calendar-date') { const date = actionEl.dataset.date; switchSelectedDate(date); closeSheet(); render(); showToast(`${formatSelectedDate(date)} 객실 이력을 불러왔습니다.`); return; }
+      if (action === 'shift-date') { shiftSelectedDate(Number(actionEl.dataset.days || 0)); render(); return; }
+      if (action === 'go-today') { switchSelectedDate(APP_TODAY); render(); return; }
+      if (action === 'history-correction') { openHistoryCorrectionSheet(); return; }
+      if (action === 'submit-history-correction') {
+        const roomId = document.getElementById('correctionRoom')?.value;
+        const category = document.getElementById('correctionCategory')?.value || '기타';
+        const content = (document.getElementById('correctionContent')?.value || '').trim();
+        const reason = (document.getElementById('correctionReason')?.value || '').trim();
+        const room = state.rooms.find(r => r.id === roomId);
+        if (!room || !content || !reason) { showToast('정정할 내용과 사유를 모두 입력해 주세요.'); return; }
+        openHistoryCorrectionConfirm({ roomId, category, content, reason }); return;
+      }
+      if (action === 'confirm-history-correction') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'history-correction') return;
+        const room = state.rooms.find(r => r.id === pending.roomId); if (!room) return;
+        addDailyEvent(room, `기록 정정 · ${pending.category}`, `${pending.content} · 정정 사유: ${pending.reason} · 관리자 확인 모달 승인`, '정정');
+        persistDateSnapshot(); state.pendingAction = null; closeSheet(); render(); showToast(`${room.id}호에 정정 이력을 추가했습니다.`); return;
+      }
+      const historicalMutationActions = new Set(['edit-password','save-password','open-assignment','toggle-assignment-enabled','save-assignee','release-assignee','toggle-open','open-all','close-all','open-entry-issue','review-entry-issue','confirm-save-entry-issue','resolve-entry-issue','confirm-resolve-entry-issue','open-candle-management','review-candle-change','confirm-candle-change','open-stay-time','review-stay-time','confirm-stay-time','open-guest-allocation','save-guest-assignment','confirm-guest-action','execute-guest-action','open-room-operation','review-room-operation','confirm-room-operation','open-reservation-transfer','review-reservation-transfer','confirm-reservation-transfer','confirm-save-guest-assignment','confirm-save-password','confirm-toggle-assignment-enabled','confirm-approve-inspection','confirm-save-assignee','confirm-batch-claim-visibility','confirm-toggle-maid-status','confirm-complete-task','confirm-claim-visibility','confirm-submit-reject-inspection','confirm-start-task','confirm-restore-maid','confirm-save-maid','confirm-history-correction']);
+      if (isHistoricalView() && historicalMutationActions.has(action)) { showToast('과거 일자 이력은 직접 수정할 수 없습니다. 정정 이력을 추가해야 합니다.'); return; }
+
+      if (action === 'login') {
+        state.role = state.loginRole;
+        if (state.role === 'maid') switchSelectedDate(APP_TODAY);
+        navigate(state.role === 'admin' ? 'admin-rooms' : 'maid-market', state.role);
+        showToast(`${state.role === 'admin' ? '관리자' : '메이드'} 화면으로 로그인했습니다.`);
+      }
+      if (action === 'logout') { state = defaultState(); closeSheet(); render(); showToast('로그아웃했습니다.'); }
+      if (action === 'reset-demo') { state = defaultState(); closeSheet(); render(); showToast('시안을 초기 상태로 되돌렸습니다.'); }
+      if (action === 'back') {
+        const target = state.previousScreen || (state.role === 'admin' ? 'admin-rooms' : 'maid-tasks');
+        state.screen = target;
+        state.previousScreen = null;
+        state.passwordVisible = false;
+        render();
+      }
+      if (action === 'open-alerts') { showToast('알림 화면 위치입니다.'); }
+      if (action === 'go-admin-maids') { navigate('admin-maids','admin'); }
+      if (action === 'go-admin-penalties') { state.penaltyMaidFilter = id || 'all'; navigate('admin-penalties','admin'); }
+      if (action === 'go-maid-penalties') { navigate('maid-penalties','maid'); }
+      if (action === 'open-add-penalty') {
+        const maidName = actionEl.dataset.maidName;
+        const maidId = actionEl.dataset.maidId || state.maids.find(maid => maid.name === maidName)?.id || '';
+        openAddPenaltySheet(maidId, actionEl.dataset.roomId || '');
+      }
+      if (action === 'review-add-penalty') {
+        const maidId = document.getElementById('penaltyMaid')?.value || '';
+        const date = document.getElementById('penaltyDate')?.value || APP_TODAY;
+        const roomId = document.getElementById('penaltyRoom')?.value || '';
+        const category = document.getElementById('penaltyCategory')?.value || '기타';
+        const points = Number(document.getElementById('penaltyPoints')?.value || 1);
+        const reason = (document.getElementById('penaltyReason')?.value || '').trim();
+        const evidence = (document.getElementById('penaltyEvidence')?.value || '').trim();
+        if (!maidId || !reason || !evidence) { showToast('메이드, 구체적 사유와 근거를 모두 입력해 주세요.'); return; }
+        openPenaltyConfirmSheet({ maidId, date, roomId, category, points, reason, evidence });
+      }
+      if (action === 'confirm-add-penalty') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'add-penalty') return;
+        const room = state.rooms.find(item => item.id === pending.roomId);
+        const maid = state.maids.find(item => item.id === pending.maidId);
+        const penalty = { id:`pen${Date.now()}`, maidId:pending.maidId, date:pending.date, roomId:pending.roomId, task:room?.task || '', category:pending.category, points:pending.points, reason:pending.reason, evidence:pending.evidence, status:'active', createdAt:`${pending.date} 14:20`, createdBy:'임지연 관리자', maidAcknowledged:false };
+        state.penalties.unshift(penalty);
+        state.selectedPenaltyId = penalty.id;
+        state.penaltyMaidFilter = pending.maidId;
+        state.penaltyFilter = 'active';
+        state.pendingAction = null;
+        closeSheet(); navigate('admin-penalties','admin'); showToast(`${maid?.name || '메이드'}님께 ${penalty.points}점 벌점을 부여하고 알림을 보냈습니다.`);
+      }
+      if (action === 'open-delete-penalty') { openDeletePenaltySheet(id); }
+      if (action === 'confirm-delete-penalty') {
+        const penalty = state.penalties.find(item => item.id === id);
+        const reason = (document.getElementById('penaltyDeleteReason')?.value || '').trim();
+        if (!penalty || !reason) { showToast('벌점 삭제 사유를 입력해 주세요.'); return; }
+        penalty.status = 'deleted';
+        penalty.deletedAt = '2026-08-14 14:28';
+        penalty.deletedBy = '임지연 관리자';
+        penalty.deleteReason = reason;
+        penalty.maidAcknowledged = true;
+        closeSheet(); render(); showToast('벌점을 삭제 처리해 점수에서 제외했습니다. 삭제 이력은 보존됩니다.');
+      }
+      if (action === 'open-restore-penalty') { openRestorePenaltySheet(id); }
+      if (action === 'confirm-restore-penalty') {
+        const penalty = state.penalties.find(item => item.id === id);
+        const reason = (document.getElementById('penaltyRestoreReason')?.value || '').trim();
+        if (!penalty || !reason) { showToast('삭제 취소·복구 사유를 입력해 주세요.'); return; }
+        penalty.status = 'active';
+        penalty.restoredAt = '2026-08-14 14:35';
+        penalty.restoredBy = '임지연 관리자';
+        penalty.restoreReason = reason;
+        penalty.maidAcknowledged = false;
+        closeSheet(); render(); showToast('삭제한 벌점을 복구하고 메이드에게 다시 알렸습니다.');
+      }
+      if (action === 'acknowledge-penalty') {
+        const penalty = state.penalties.find(item => item.id === id);
+        if (!penalty) return;
+        penalty.maidAcknowledged = true;
+        penalty.acknowledgedAt = '2026-08-14 14:42';
+        render(); showToast('벌점 내용을 확인 처리했습니다.');
+      }
+      if (action === 'penalty-dispute') { showToast('관리자에게 이의 내용을 보내는 화면 위치입니다.'); }
+      if (action === 'go-inspection-detail') { state.selectedRoomId = id; navigate('admin-inspection-detail','admin'); }
+      if (action === 'go-maid-detail') { state.selectedMaidId = id; navigate('admin-maid-detail','admin'); }
+      if (action === 'add-maid') { openMaidSheet(); }
+      if (action === 'edit-maid') { openMaidSheet(id); }
+      if (action === 'save-maid') {
+        const name = (document.getElementById('maidName')?.value || '').trim();
+        const loginId = (document.getElementById('maidLoginId')?.value || '').trim();
+        const phone = (document.getElementById('maidPhone')?.value || '').trim();
+        const note = (document.getElementById('maidNote')?.value || '').trim();
+        if (!name || !loginId) { showToast('이름과 로그인 아이디를 입력해 주세요.'); return; }
+        const duplicate = state.maids.some(m => m.loginId === loginId && m.id !== id);
+        if (duplicate) { showToast('이미 사용 중인 로그인 아이디입니다.'); return; }
+        openMaidSaveConfirm({ id:id || '', name, loginId, phone:phone || '미등록', note:note || '메모 없음' }); return;
+      }
+      if (action === 'confirm-save-maid') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'maid-save') return;
+        if (pending.id) {
+          const maid = state.maids.find(m => m.id === pending.id); if (!maid) return;
+          const oldName = maid.name;
+          Object.assign(maid, { name:pending.name, loginId:pending.loginId, phone:pending.phone, note:pending.note });
+          state.rooms.forEach(room => { if (room.assignee === oldName) room.assignee = pending.name; });
+          state.pendingAction = null; closeSheet(); render(); showToast(`${pending.name}님의 정보를 수정했습니다.`); return;
+        }
+        const numbers = state.maids.map(m => Number(m.id.replace(/\D/g,''))).filter(Number.isFinite);
+        const nextNumber = numbers.length ? Math.max(...numbers) + 1 : 1;
+        const newId = `maid${String(nextNumber).padStart(2,'0')}`;
+        state.maids.push({ id:newId, name:pending.name, phone:pending.phone, loginId:pending.loginId, status:'active', joined:'2026.08.14', weeklyConfirmed:0, weeklyExpected:0, weeklyPaid:0, completed:0, approval:'-', note:pending.note });
+        state.pendingAction = null; closeSheet(); render(); showToast(`${pending.name} 메이드 계정을 추가했습니다.`); return;
+      }
+      if (action === 'toggle-maid-status') {
+        const maid = state.maids.find(m => m.id === id);
+        if (!maid || maid.status === 'retired') return;
+        const activate = maid.status !== 'active';
+        state.pendingAction = { type:'maid-status', maidId:id, activate };
+        sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${maid.name}님 계정을 ${activate ? '활성화':'비활성화'}할까요?</h3><p>${activate ? '로그인과 신규 일감 선택이 다시 허용됩니다.' : '로그인과 신규 일감 선택이 즉시 차단됩니다. 과거 기록과 주급은 그대로 보존됩니다.'}</p><div class="safety-summary"><div><span>현재</span><b>${maidStatusLabel(maid.status)}</b></div><div><span>변경 후</span><b>${activate ? '활동 중':'비활성'}</b></div></div><div class="button-row"><button class="btn" data-action="close-sheet">취소</button><button class="btn ${activate ? 'green':'red'}" data-action="confirm-toggle-maid-status">${activate ? '활성화':'비활성화'} 확정</button></div></div>`;
+        sheet.classList.add('open'); sheetBackdrop.classList.add('open'); return;
+      }
+      if (action === 'confirm-toggle-maid-status') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'maid-status') return;
+        const maid = state.maids.find(m => m.id === pending.maidId);
+        if (!maid || maid.status === 'retired') return;
+        maid.status = pending.activate ? 'active':'inactive';
+        state.pendingAction = null; closeSheet(); render(); showToast(`${maid.name} 계정을 ${pending.activate ? '활성화':'비활성화'}했습니다.`); return;
+      }
+      if (action === 'confirm-retire-maid') { openRetireMaidSheet(id); }
+      if (action === 'retire-maid') {
+        const maid = state.maids.find(m => m.id === id);
+        if (!maid) return;
+        const retireDate = document.getElementById('retireDate')?.value || '2026-08-14';
+        const reason = document.getElementById('retireReason')?.value || '근무 종료';
+        const memo = (document.getElementById('retireMemo')?.value || '').trim();
+        state.rooms.forEach(room => {
+          if (room.assignee === maid.name && reclaimableAssignment(room)) {
+            addAssignmentHistory(room, maid.name, '미배정 · 선택 클로즈', '메이드 퇴사 처리로 담당 회수');
+            room.assignee = '';
+            room.openForClaim = false;
+          }
+        });
+        maid.status = 'retired';
+        maid.retiredAt = retireDate.replaceAll('-', '.');
+        maid.retiredReason = reason;
+        maid.note = memo || `${reason} · 작업과 주급 이력 보존`;
+        closeSheet();
+        state.maidFilter = 'retired';
+        navigate('admin-maids','admin');
+        showToast(`${maid.name}님을 퇴사 처리했습니다. 기존 이력은 보존됩니다.`);
+      }
+      if (action === 'restore-maid') { openRestoreMaidConfirm(id); return; }
+      if (action === 'confirm-restore-maid') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'restore-maid') return;
+        const maid = state.maids.find(m => m.id === pending.maidId && m.status === 'retired'); if (!maid) return;
+        maid.status = 'inactive'; maid.note = `퇴사 취소 ${maid.retiredAt || ''} · 재활성화 전 정보 확인 필요`; maid.retiredAt = ''; maid.retiredReason = '';
+        state.pendingAction = null; closeSheet(); render(); showToast(`${maid.name} 계정을 비활성 상태로 복구했습니다.`); return;
+      }
+      if (action === 'toggle-weekly-payment') { openWeeklyPaymentSheet(id); return; }
+      if (action === 'confirm-weekly-payment') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'weekly-payment') return;
+        const maid = state.maids.find(m => m.id === pending.maidId);
+        if (!maid) return;
+        const reason = (document.getElementById('paymentReason')?.value || '').trim();
+        if (!pending.markPaid && !reason) { showToast('미지급으로 되돌리는 사유를 입력해 주세요.'); return; }
+        maid.weeklyPaid = pending.markPaid ? maid.weeklyConfirmed : 0;
+        if (!state.weeklyPaymentLogs[maid.id]) state.weeklyPaymentLogs[maid.id] = [];
+        state.weeklyPaymentLogs[maid.id].unshift({ at:'13:36', action:pending.markPaid ? '지급 완료 처리':'지급 완료 취소', reason:reason || '실제 송금 확인' });
+        state.pendingAction = null;
+        closeSheet(); render(); showToast(`${maid.name}님의 주급을 ${pending.markPaid ? '지급 완료':'미지급'} 상태로 변경했습니다.`);
+        return;
+      }
+      if (action === 'export-weekly') { showToast('이번 주 주급 내역을 엑셀로 내보냅니다.'); }
+      if (action === 'go-admin-room') { state.selectedRoomId = id; navigate('admin-room-detail','admin'); }
+      if (action === 'view-reservation-conflicts') { state.roomFilter = 'reservation-conflict'; render(); return; }
+      if (action === 'open-room-operation') { openRoomOperationSheet(id || state.selectedRoomId); return; }
+      if (action === 'review-room-operation') { reviewRoomOperation(id || state.selectedRoomId); return; }
+      if (action === 'confirm-room-operation') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'room-operation') return;
+        const room = state.rooms.find(r => r.id === pending.roomId);
+        if (!room) return;
+        if (pending.target === 'out-of-service') {
+          if (roomHasReservationOrGuest(room)) { state.pendingAction = null; openGuestAllocationSheet(room.id); showToast('예약 충돌을 먼저 해결해 주세요.'); return; }
+          if (room.assignee || state.taskStarted[room.id]) archiveTaskProgress(room, room.assignee || '미배정', pending.reason, '객실 운영 중지로 작업 중단');
+          room.operationalStatus = 'out-of-service'; room.operationalReason = pending.reason; room.cleaningSuppressed = true;
+          room.cleaningStatus = '작업 없음'; room.task = '작업 없음'; room.color = 'gray'; room.assignmentEnabled = false; room.assignmentBlockReason = '운영 중지 객실은 청소 담당 배정 불가'; room.openForClaim = false; room.assignee = ''; room.canEnter = false; room.available = '-'; room.deadline = '-'; room.inspection = false;
+          if (!room.reservationAssigned) { room.stayStatus = '공실'; room.stayTone = 'gray'; room.checkin = '예약 없음'; room.checkout = '-'; }
+          addDailyEvent(room, '객실 운영 중지', `${pending.reason} · 고객 배정·청소 모두 중지`);
+        } else {
+          room.operationalStatus = 'active'; room.operationalReason = ''; room.cleaningSuppressed = false;
+          room.stayStatus = room.reservationAssigned ? '오늘 입실' : '공실'; room.stayTone = room.reservationAssigned ? 'blue':'gray';
+          room.cleaningStatus = '청소 가능'; room.task = '운영 재개 점검 청소'; room.color = 'orange'; room.assignmentEnabled = true; room.assignmentBlockReason = ''; room.openForClaim = false; room.assignee = ''; room.canEnter = true; room.available = '지금'; room.deadline = '15:30'; room.inspection = false; room.checkout = DEFAULT_CHECKOUT_TIME; if (!room.reservationAssigned) room.checkin = '예약 없음';
+          addDailyEvent(room, '객실 정상 운영 재개', `${pending.reason} · 운영 재개 점검 청소 생성 · 담당 미지정`);
+        }
+        state.pendingAction = null; closeSheet(); render(); showToast(`${room.id}호를 ${isOutOfService(room) ? '운영 중지':'정상 운영 재개'} 상태로 변경했습니다.`); return;
+      }
+      if (action === 'open-reservation-transfer') { openReservationTransferSheet(id); return; }
+      if (action === 'review-reservation-transfer') { reviewReservationTransfer(id); return; }
+      if (action === 'confirm-reservation-transfer') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'reservation-transfer') return;
+        const source = state.rooms.find(r => r.id === pending.sourceId);
+        const target = state.rooms.find(r => r.id === pending.targetId);
+        if (!source || !target || !source.reservationAssigned || guestAllocationState(target) !== 'available') { closeSheet(); render(); showToast('예약 이동 조건이 바뀌었습니다. 다시 확인해 주세요.'); return; }
+        const label = source.reservationLabel; const checkin = source.checkin || DEFAULT_CHECKIN_TIME; const early = source.earlyCheckinTime || '';
+        target.reservationAssigned = true; target.reservationLabel = label; target.stayStatus = '오늘 입실'; target.stayTone = 'blue'; target.checkin = checkin; target.earlyCheckinTime = early;
+        source.reservationAssigned = false; source.reservationLabel = ''; source.stayStatus = '공실'; source.stayTone = 'gray'; source.checkin = '예약 없음'; source.earlyCheckinTime = '';
+        addDailyEvent(source, '예약 객실 이동', `${label} · ${source.id}호 → ${target.id}호 · 예약 충돌 해소`);
+        addDailyEvent(target, '예약 객실 이동 수신', `${label} · ${source.id}호에서 이동 · 입실 ${checkin}`);
+        state.pendingAction = null; closeSheet(); render(); showToast(`${label} 예약을 ${target.id}호로 이동했습니다.`); return;
+      }
+      if (action === 'open-guest-allocation') { openGuestAllocationSheet(id || state.selectedRoomId); }
+      if (action === 'open-assignment') { openAssignmentSheet(id || state.selectedRoomId); }
+      if (action === 'edit-password') { openPasswordSheet(id || state.selectedRoomId); }
+      if (action === 'close-sheet') { closeSheet(); }
+      if (action === 'random-password') {
+        const input = document.getElementById('passwordInput');
+        if (input) input.value = randomPassword();
+      }
+      if (action === 'save-password') {
+        const input = document.getElementById('passwordInput');
+        const value = (input?.value || '').replace(/\D/g,'');
+        if (value.length !== 4) { showToast('비밀번호는 숫자 4자리로 입력해 주세요.'); return; }
+        const room = state.rooms.find(r => r.id === state.selectedRoomId);
+        if (!room) return;
+        if (room.password === value) { showToast('현재 비밀번호와 같습니다.'); return; }
+        openPasswordConfirm(room.id, value); return;
+      }
+      if (action === 'confirm-save-password') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'password-change') return;
+        const room = state.rooms.find(r => r.id === pending.roomId);
+        if (!room) return;
+        const old = room.password; room.password = pending.value;
+        addDailyEvent(room, '객실 비밀번호 변경', `${old} → ${pending.value} · 관리자 확인 모달 승인`);
+        state.pendingAction = null; closeSheet(); render(); showToast(`${room.id}호 비밀번호를 변경했습니다.`); return;
+      }
+      if (action === 'toggle-assignment-enabled') {
+        const room = state.rooms.find(r => r.id === id);
+        if (!room || !assignmentLifecycleEligible(room) || room.assignee) { showToast('담당 확정 객실은 먼저 담당을 회수해 주세요.'); return; }
+        openAssignmentEnabledConfirm(id); return;
+      }
+      if (action === 'confirm-toggle-assignment-enabled') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'assignment-enabled') return;
+        const room = state.rooms.find(r => r.id === pending.roomId);
+        if (!room || room.assignee || !assignmentLifecycleEligible(room)) return;
+        const before = room.assignmentEnabled === false ? '배정 불가' : '배정 가능';
+        room.assignmentEnabled = pending.enable; room.openForClaim = false;
+        room.assignmentBlockReason = pending.enable ? '' : '관리자 배정 보류';
+        addAssignmentHistory(room, before, pending.enable ? '배정 가능' : '배정 불가', pending.enable ? '관리자 배정 허용' : '관리자 배정 보류');
+        state.pendingAction = null; closeSheet(); render(); showToast(`${room.id}호를 ${pending.enable ? '배정 가능':'배정 불가'} 상태로 변경했습니다.`); return;
+      }
+      if (action === 'save-assignee') {
+        const room = state.rooms.find(r => r.id === id);
+        if (!room || !assignmentLifecycleEligible(room) || room.assignmentEnabled === false) { showToast('현재 배정할 수 없는 객실입니다.'); return; }
+        const maidId = document.getElementById('assigneeSelect')?.value;
+        const maid = state.maids.find(m => m.id === maidId && m.status === 'active');
+        if (!maid) { showToast('활동 중인 메이드를 선택해 주세요.'); return; }
+        const reason = (document.getElementById('assignmentReasonInput')?.value || '').trim();
+        const inProgress = room.cleaningStatus === '청소 중' || room.cleaningStatus === '재청소 필요' || !!state.taskStarted[room.id];
+        if (room.assignee === maid.name) { showToast('현재 담당자와 같습니다.'); return; }
+        if (inProgress && !reason) { showToast('진행 중 작업은 담당 변경 사유를 입력해 주세요.'); return; }
+        openAssigneeChangeConfirm(id, maidId, reason); return;
+      }
+      if (action === 'confirm-save-assignee') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'save-assignee') return;
+        const room = state.rooms.find(r => r.id === pending.roomId);
+        const maid = state.maids.find(m => m.id === pending.maidId && m.status === 'active');
+        if (!room || !maid || !assignmentLifecycleEligible(room) || room.assignmentEnabled === false) { closeSheet(); render(); showToast('배정 조건이 바뀌었습니다. 다시 확인해 주세요.'); return; }
+        const old = room.assignee || '미배정';
+        if (pending.inProgress && old !== '미배정') {
+          archiveTaskProgress(room, old, pending.reason, '담당 변경으로 작업 중단');
+          if (room.cleaningStatus === '청소 중') { room.cleaningStatus = '청소 가능'; room.color='orange'; }
+        }
+        room.assignee = maid.name; room.openForClaim = false;
+        addAssignmentHistory(room, old, maid.name, pending.reason || (old === '미배정' ? '관리자 직접 배정' : '관리자 담당 변경'));
+        state.pendingAction = null; closeSheet(); render(); showToast(`${room.id}호 담당자를 ${maid.name}님으로 ${old === '미배정' ? '배정' : '변경'}했습니다.`); return;
+      }
+      if (action === 'release-assignee') {
+        const room = state.rooms.find(r => r.id === id);
+        if (!room || !room.assignee || !assignmentLifecycleEligible(room)) return;
+        const reason = (document.getElementById('assignmentReasonInput')?.value || '').trim();
+        const mode = document.getElementById('releaseMode')?.value || 'closed';
+        const inProgress = room.cleaningStatus === '청소 중' || room.cleaningStatus === '재청소 필요' || !!state.taskStarted[room.id];
+        if (inProgress && !reason) { showToast('진행 중 작업은 미배정으로 돌리는 사유를 입력해 주세요.'); return; }
+        openReleaseAssigneeConfirm(room.id, reason, mode);
+        return;
+      }
+      if (action === 'confirm-release-assignee') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'release-assignee') return;
+        const room = state.rooms.find(r => r.id === pending.roomId);
+        if (!room || !room.assignee) return;
+        const old = room.assignee;
+        const inProgress = room.cleaningStatus === '청소 중' || room.cleaningStatus === '재청소 필요' || !!state.taskStarted[room.id];
+        if (inProgress) archiveTaskProgress(room, old, pending.reason, '담당 미배정 전환으로 작업 중단');
+        room.assignee = '';
+        if (room.cleaningStatus === '청소 중') { room.cleaningStatus = '청소 가능'; room.color = 'orange'; }
+        room.openForClaim = pending.mode === 'open' && canOpenForClaim(room);
+        addAssignmentHistory(room, old, room.openForClaim ? '미배정 · 선택 오픈' : '미배정 · 선택 클로즈', pending.reason || '관리자 담당 회수');
+        state.pendingAction = null;
+        closeSheet(); render(); showToast(`${room.id}호 담당을 미배정으로 돌리고 ${room.openForClaim ? '선택 오픈':'선택 클로즈'}했습니다.`);
+        return;
+      }
+      if (action === 'toggle-open') { openClaimVisibilityConfirm(id); return; }
+      if (action === 'confirm-claim-visibility') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'claim-visibility') return;
+        const room = state.rooms.find(r => r.id === pending.roomId);
+        if (!room || room.assignee || !canOpenForClaim(room)) { state.pendingAction = null; closeSheet(); render(); showToast('객실 상태가 바뀌어 공개 설정을 변경할 수 없습니다.'); return; }
+        room.openForClaim = pending.open;
+        addDailyEvent(room, '메이드 선택 공개 변경', `일감을 ${pending.open ? '오픈':'클로즈'}로 변경 · 관리자 확인 모달 승인`);
+        state.pendingAction = null; closeSheet(); render(); showToast(`${room.id}호를 메이드 선택 ${pending.open ? '오픈':'클로즈'}했습니다.`); return;
+      }
+      if (action === 'open-all' || action === 'close-all') {
+        const mode = action === 'open-all' ? 'open':'close';
+        const count = mode === 'open' ? state.rooms.filter(room => canOpenForClaim(room) && !room.assignee && !room.openForClaim).length : state.rooms.filter(room => room.openForClaim).length;
+        state.pendingAction = { type:'batch-claim-visibility', mode };
+        sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">일감 ${count}건을 모두 ${mode === 'open' ? '오픈':'클로즈'}할까요?</h3><p>여러 객실에 한꺼번에 적용되는 변경입니다. 운영 중지·배정 불가·담당 확정 객실은 대상에서 제외됩니다.</p><div class="safety-summary"><div><span>변경 대상</span><b>${count}건</b></div><div><span>변경 후</span><b>${mode === 'open' ? '메이드 자유 선택 가능':'메이드 목록에서 숨김'}</b></div></div><div class="button-row"><button class="btn" data-action="close-sheet">취소</button><button class="btn ${mode === 'open' ? 'green':'red'}" data-action="confirm-batch-claim-visibility">전체 ${mode === 'open' ? '오픈':'클로즈'} 확정</button></div></div>`;
+        sheet.classList.add('open'); sheetBackdrop.classList.add('open'); return;
+      }
+      if (action === 'confirm-batch-claim-visibility') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'batch-claim-visibility') return;
+        if (pending.mode === 'open') state.rooms.forEach(room => { if (canOpenForClaim(room) && !room.assignee) room.openForClaim = true; });
+        else state.rooms.forEach(room => { if (room.openForClaim) room.openForClaim = false; });
+        state.pendingAction = null; closeSheet(); render(); showToast(`메이드 선택 일감을 모두 ${pending.mode === 'open' ? '오픈':'클로즈'}했습니다.`); return;
+      }
+      if (action === 'claim-job') { openClaimJobSheet(id); return; }
+      if (action === 'confirm-claim-job') {
+        const room = state.rooms.find(r => r.id === id);
+        if (!room || !room.openForClaim || room.assignee || assignmentState(room) !== 'available') { closeSheet(); render(); showToast('다른 메이드가 먼저 선택했거나 관리자가 일감을 닫았습니다.'); return; }
+        room.assignee = '김하나';
+        room.openForClaim = false;
+        addAssignmentHistory(room, '미배정 · 선택 오픈', '김하나', '확인 모달 후 메이드 직접 선택', '김하나');
+        closeSheet(); navigate('maid-tasks','maid');
+        showToast(`${id}호 담당으로 확정됐습니다. 취소가 필요하면 관리자에게 알려 주세요.`);
+        return;
+      }
+      if (action === 'save-guest-assignment') {
+        const room = state.rooms.find(r => r.id === id);
+        if (!room) return;
+        const label = (document.getElementById('guestReservationLabel')?.value || '').trim();
+        const checkinTime = document.getElementById('guestCheckinTime')?.value || DEFAULT_CHECKIN_TIME;
+        if (!label) { showToast('예약번호나 예약자 식별 정보를 입력해 주세요.'); return; }
+        if (!room.reservationAssigned && guestAllocationState(room) !== 'available') { showToast('운영 상태·청소·검수·차단 특이사항을 먼저 해결해 주세요.'); return; }
+        if (isOutOfService(room) || reservationConflict(room)) { showToast('운영 중지 또는 예약 충돌 객실에는 고객을 배정할 수 없습니다.'); return; }
+        openGuestAssignmentConfirm(room.id, label, checkinTime); return;
+      }
+      if (action === 'confirm-save-guest-assignment') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'guest-assignment') return;
+        const room = state.rooms.find(r => r.id === pending.roomId);
+        if (!room) return;
+        if (!room.reservationAssigned && guestAllocationState(room) !== 'available') { closeSheet(); render(); showToast('객실 상태가 바뀌어 배정할 수 없습니다. 다시 확인해 주세요.'); return; }
+        const wasAssigned = room.reservationAssigned;
+        room.reservationAssigned = true; room.reservationLabel = pending.label; room.stayStatus = '오늘 입실'; room.stayTone = 'blue'; room.checkin = pending.checkinTime; room.earlyCheckinTime = pending.checkinTime !== DEFAULT_CHECKIN_TIME ? pending.checkinTime : '';
+        addDailyEvent(room, wasAssigned ? '고객 객실 배정 정보 수정' : '고객 객실 배정 완료', `${pending.label} · 입실 ${pending.checkinTime} · 관리자 확인 모달 승인`);
+        state.pendingAction = null; closeSheet(); render(); showToast(`${room.id}호를 ${pending.label} 예약에 배정했습니다.`); return;
+      }
+      if (action === 'confirm-guest-action') { openGuestActionConfirm(id, actionEl.dataset.guestAction); return; }
+      if (action === 'execute-guest-action') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'guest-action') return;
+        const room = state.rooms.find(r => r.id === pending.roomId);
+        if (!room) return;
+        if (pending.actionType === 'checkin' && !canProcessCheckin(room)) { state.pendingAction = null; closeSheet(); render(); showToast(`입실 처리 불가 · ${checkinBlockReason(room)}`); return; }
+        if (pending.actionType === 'release') {
+          const old = room.reservationLabel || '예약';
+          room.reservationAssigned = false; room.reservationLabel = ''; room.stayStatus = '공실'; room.stayTone = 'gray'; room.checkin = '예약 없음'; room.earlyCheckinTime = '';
+          addDailyEvent(room, '고객 객실 배정 해제', `${old} 배정을 해제하고 미배정으로 전환`);
+        }
+        if (pending.actionType === 'checkin') {
+          room.reservationAssigned = true; room.stayStatus = '투숙 중'; room.stayTone = 'purple'; room.checkin = '투숙 중';
+          addDailyEvent(room, '고객 입실 처리', `${room.reservationLabel || '예약'} · 객실 사용 중으로 전환`);
+        }
+        if (pending.actionType === 'checkout') {
+          const old = room.reservationLabel || '투숙객';
+          room.reservationAssigned = false; room.reservationLabel = ''; room.stayStatus = '오늘 퇴실'; room.stayTone = 'purple'; room.checkin = DEFAULT_CHECKIN_TIME; room.checkout = DEFAULT_CHECKOUT_TIME; room.earlyCheckinTime = ''; room.lateCheckoutTime = '';
+          if (isOutOfService(room) || room.cleaningSuppressed) {
+            room.cleaningStatus = '청소 제외'; room.task = '작업 없음'; room.color = 'gray'; room.assignmentEnabled = false; room.openForClaim = false; room.assignee = ''; room.canEnter = false; room.available = '-'; room.deadline = '-';
+            addDailyEvent(room, '고객 퇴실 처리', `${old} 퇴실 확인 · 운영 중지 상태로 청소 작업 미생성`);
+          } else {
+            room.cleaningStatus = '청소 가능'; room.task = '퇴실 청소'; room.color = 'orange'; room.assignmentEnabled = true; room.openForClaim = false; room.assignee = ''; room.canEnter = true; room.available = '지금'; room.deadline = '15:30';
+            addDailyEvent(room, '고객 퇴실 처리', `${old} 퇴실 확인 · 퇴실 청소 작업 생성 · 담당 미배정`);
+          }
+        }
+        const label = pending.actionType === 'release' ? '예약 배정을 해제' : pending.actionType === 'checkin' ? '고객 입실 처리' : '고객 퇴실 처리';
+        state.pendingAction = null;
+        closeSheet(); render(); showToast(`${room.id}호 ${label}했습니다.`);
+        return;
+      }
+      if (action === 'open-stay-time') { openStayTimeSheet(id || state.selectedRoomId); }
+      if (action === 'review-stay-time') {
+        const room = state.rooms.find(r => r.id === id);
+        if (!room) return;
+        const early = document.getElementById('earlyCheckinInput')?.value || '';
+        const late = document.getElementById('lateCheckoutInput')?.value || '';
+        const standardIn = room.standardCheckinTime || DEFAULT_CHECKIN_TIME;
+        const standardOut = room.standardCheckoutTime || DEFAULT_CHECKOUT_TIME;
+        if (early && early >= standardIn) { showToast(`얼리 체크인은 기본 체크인 ${standardIn}보다 이른 시각이어야 합니다.`); return; }
+        if (late && late <= standardOut) { showToast(`레이트 체크아웃은 기본 체크아웃 ${standardOut}보다 늦은 시각이어야 합니다.`); return; }
+        if (early === (room.earlyCheckinTime || '') && late === (room.lateCheckoutTime || '')) { showToast('변경된 시간이 없습니다.'); return; }
+        state.pendingAction = { type:'stay-time', roomId:id, early, late };
+        const cleaningWarning = room.task && room.task !== '작업 없음' ? `<div class="impact-item">청소 가능·마감 시각과 메이드 우선순위를 다시 확인해야 합니다.</div>` : '';
+        sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${id}호 입·퇴실 시간을 변경할까요?</h3><p>예약과 청소 순서에 영향을 줄 수 있는 변경입니다. 저장 전 시각을 다시 확인하세요.</p><div class="safety-summary"><div><span>기본 시각</span><b>체크인 ${standardIn} · 체크아웃 ${standardOut}</b></div><div><span>현재 예외 시각</span><b>얼리 ${room.earlyCheckinTime || '없음'} · 레이트 ${room.lateCheckoutTime || '없음'}</b></div><div><span>변경 후</span><b>얼리 ${early || '없음'} · 레이트 ${late || '없음'}</b></div></div><div class="impact-list"><div class="impact-item">관리자 일자별 이력에 변경 전·후 시각이 기록됩니다.</div>${cleaningWarning}</div><div class="button-row"><button class="btn" data-action="open-stay-time" data-id="${id}">돌아가기</button><button class="btn primary" data-action="confirm-stay-time">시간 변경 확정</button></div></div>`;
+        sheet.classList.add('open'); sheetBackdrop.classList.add('open'); return;
+      }
+      if (action === 'confirm-stay-time') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'stay-time') return;
+        const room = state.rooms.find(r => r.id === pending.roomId);
+        if (!room) return;
+        const before = `${room.earlyCheckinTime || '없음'} / ${room.lateCheckoutTime || '없음'}`;
+        room.earlyCheckinTime = pending.early;
+        room.lateCheckoutTime = pending.late;
+        if (pending.early) room.checkin = pending.early;
+        else if (room.checkin !== '예약 없음' && room.checkin !== '투숙 중') room.checkin = room.standardCheckinTime || DEFAULT_CHECKIN_TIME;
+        if (pending.late) room.checkout = pending.late;
+        else if (!['-'].includes(room.checkout) && !String(room.checkout).includes('내일') && !String(room.checkout).includes('8월')) room.checkout = room.standardCheckoutTime || DEFAULT_CHECKOUT_TIME;
+        addDailyEvent(room, '입·퇴실 시간 수정', `얼리 ${pending.early || '없음'} · 레이트 ${pending.late || '없음'} (이전 ${before}) · 확인 모달 승인`);
+        state.pendingAction = null; closeSheet(); render(); showToast(`${room.id}호 얼리·레이트 시각을 변경했습니다.`); return;
+      }
+      if (action === 'open-entry-issue') { openEntryIssueSheet(id || state.selectedRoomId); }
+      if (action === 'review-entry-issue') {
+        const room = state.rooms.find(r => r.id === id);
+        if (!room) return;
+        const value = (document.getElementById('entryIssueInput')?.value || '').trim();
+        if (!value) { showToast('입실 차단 사유를 입력해 주세요.'); return; }
+        if (value === (room.entryBlockIssue || '')) { showToast('변경된 특이사항이 없습니다.'); return; }
+        const conflict = room.reservationAssigned || ['오늘 입실','투숙 중'].includes(room.stayStatus);
+        state.pendingAction = { type:'save-entry-issue', roomId:id, value };
+        sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${id}호를 고객 배정 불가로 전환할까요?</h3><p>입실 차단 특이사항은 청소 완료 여부와 무관하게 고객 배정을 막습니다.</p><div class="safety-summary"><div><span>차단 사유</span><b>${value}</b></div><div><span>현재 운영</span><b>${operationLabel(room)}</b></div><div><span>현재 예약·투숙</span><b>${room.reservationLabel || room.stayStatus || '없음'}</b></div></div><div class="impact-list"><div class="impact-item">고객 배정 가능 목록에서 즉시 제외됩니다.</div><div class="impact-item">문제가 해결될 때까지 신규 입실 처리가 차단됩니다.</div>${conflict ? `<div class="impact-item danger">현재 예약 또는 투숙 상태와 충돌합니다. 등록 후 예약 이동·배정 해제 또는 현장 조치가 필요합니다.</div>` : ''}</div><div class="button-row"><button class="btn" data-action="open-entry-issue" data-id="${id}">돌아가기</button><button class="btn red" data-action="confirm-save-entry-issue">차단 등록 확정</button></div></div>`;
+        sheet.classList.add('open'); sheetBackdrop.classList.add('open'); return;
+      }
+      if (action === 'confirm-save-entry-issue') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'save-entry-issue') return;
+        const room = state.rooms.find(r => r.id === pending.roomId);
+        if (!room) return;
+        const previous = room.entryBlockIssue || '없음';
+        room.entryBlockIssue = pending.value;
+        addDailyEvent(room, '고객 배정 차단 특이사항 등록', `${pending.value} (이전 ${previous}) · 확인 모달 승인`);
+        const conflict = reservationConflict(room) || ['오늘 입실','투숙 중'].includes(room.stayStatus);
+        state.pendingAction = null; closeSheet(); render();
+        showToast(conflict ? `${room.id}호 차단 등록 완료 · 예약/투숙 충돌을 확인해 주세요.` : `${room.id}호를 고객 배정 불가로 전환했습니다.`); return;
+      }
+      if (action === 'resolve-entry-issue') {
+        const room = state.rooms.find(r => r.id === id);
+        if (!room || !room.entryBlockIssue) return;
+        state.pendingAction = { type:'resolve-entry-issue', roomId:id };
+        sheet.innerHTML = `<div class="sheet-handle"></div><div class="sheet-scroll"><h3 id="sheetTitle">${id}호 입실 차단 특이사항을 해결 처리할까요?</h3><p>실제 문제가 해결됐는지 확인하세요. 예약이 이미 배정돼 있었다면 해결 후 예약 충돌이 해소될 수 있습니다.</p><div class="safety-summary"><div><span>현재 사유</span><b>${room.entryBlockIssue}</b></div><div><span>운영 상태</span><b>${operationLabel(room)}</b></div><div><span>현재 예약</span><b>${room.reservationLabel || '없음'}</b></div></div><div class="button-row"><button class="btn" data-action="close-sheet">취소</button><button class="btn green" data-action="confirm-resolve-entry-issue">해결 처리 확정</button></div></div>`;
+        sheet.classList.add('open'); sheetBackdrop.classList.add('open'); return;
+      }
+      if (action === 'confirm-resolve-entry-issue') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'resolve-entry-issue') return;
+        const room = state.rooms.find(r => r.id === pending.roomId);
+        if (!room || !room.entryBlockIssue) return;
+        const resolved = room.entryBlockIssue; room.entryBlockIssue = '';
+        addDailyEvent(room, '고객 배정 차단 특이사항 해결', `${resolved} · 관리자 확인 모달 승인`);
+        state.pendingAction = null; closeSheet(); render();
+        showToast(guestAllocationState(room) === 'available' ? `${room.id}호 특이사항을 해결해 고객 배정 가능으로 전환했습니다.` : `${room.id}호 특이사항을 해결했습니다. 다른 상태를 확인해 주세요.`); return;
+      }
+      if (action === 'open-candle-management') { openCandleManagementSheet(id || state.selectedRoomId); return; }
+      if (action === 'review-candle-change') { reviewCandleChange(id || state.selectedRoomId); return; }
+      if (action === 'confirm-candle-change') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'candle-change') return;
+        const room = state.rooms.find(r => r.id === pending.roomId);
+        if (!room) return;
+        const before = room.candleCount || 0;
+        room.candleCount = pending.nextCount;
+        room.candleLocations = pending.locations;
+        addDailyEvent(room, room.candleCount === 0 ? '촛불 전량 회수 완료' : '촛불 현황 변경', `${before}개 → ${room.candleCount}개 · ${pending.reason} · 관리자 확인 모달 승인`);
+        state.pendingAction = null;
+        closeSheet(); render();
+        if (room.candleCount > 0) {
+          showToast(room.reservationAssigned ? `${room.id}호 촛불 ${room.candleCount}개 · 기존 예약 입실을 잠갔습니다.` : `${room.id}호 촛불 ${room.candleCount}개 · 고객 배정 불가로 전환했습니다.`);
+        } else {
+          showToast(guestAllocationState(room) === 'available' ? `${room.id}호 촛불 전량 회수 · 고객 배정 가능으로 전환했습니다.` : room.reservationAssigned && canProcessCheckin(room) ? `${room.id}호 촛불 전량 회수 · 고객 입실 잠금이 해제됐습니다.` : `${room.id}호 촛불 전량 회수 · 다른 객실 조건을 확인해 주세요.`);
+        }
+        return;
+      }
+      if (action === 'select-inspection-photo') {
+        state.selectedInspectionPhoto[id] = Number(actionEl.dataset.index);
+        render();
+      }
+      if (action === 'toggle-photo-reviewed') {
+        const index = Number(actionEl.dataset.index);
+        const current = state.photoReviews[id] || [];
+        state.photoReviews[id] = current.includes(index) ? current.filter(x => x !== index) : [...current, index].sort((a,b) => a-b);
+        render();
+      }
+      if (action === 'review-all-photos') {
+        const room = state.rooms.find(r => r.id === id);
+        if (!room) return;
+        state.photoReviews[id] = inspectionPhotosFor(room).map((_, index) => index);
+        render(); showToast(`${id}호 인증사진을 모두 확인 처리했습니다.`);
+      }
+      if (action === 'zoom-inspection-photo') { openInspectionPhotoSheet(id, Number(actionEl.dataset.index)); }
+      if (action === 'confirm-reject-inspection') { openRejectInspectionSheet(id); }
+      if (action === 'submit-reject-inspection') {
+        const room = state.rooms.find(r => r.id === id); if (!room) return;
+        const index = Number(actionEl.dataset.index);
+        const reason = document.getElementById('rejectReason')?.value || '청소 미흡';
+        const detail = (document.getElementById('rejectDetail')?.value || '').trim();
+        if (!detail) { showToast('메이드에게 전달할 상세 사유를 입력해 주세요.'); return; }
+        openInspectionRejectFinalConfirm(id, index, reason, detail); return;
+      }
+      if (action === 'confirm-submit-reject-inspection') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'inspection-reject') return;
+        const room = state.rooms.find(r => r.id === pending.roomId); if (!room) return;
+        const photos = inspectionPhotosFor(room);
+        room.cleaningStatus = '재청소 필요'; room.color = 'red'; room.inspection = true;
+        room.rejectedPhotoLabel = photos[pending.index]?.label || '인증사진';
+        room.rejectionReason = `${pending.reason} · ${pending.detail}`; room.rejectedAt = '13:15'; room.maidUnreadRejection = true;
+        state.taskStarted[room.id] = false; state.taskChecks[room.id] = []; state.taskPhotos[room.id] = []; state.taskNotes[room.id] = `검수 반려: ${room.rejectionReason}`;
+        addDailyEvent(room, '검수 반려·재청소 요청', `${room.rejectedPhotoLabel} · ${room.rejectionReason} · 메이드 앱 알림 발송 · 관리자 확인 모달 승인`, '13:15');
+        state.pendingAction = null; closeSheet(); state.screen = 'admin-inspection'; state.previousScreen = null; render(); showToast(`${room.id}호에 재청소를 요청하고 메이드에게 알렸습니다.`); return;
+      }
+      if (action === 'switch-to-maid') { switchSelectedDate(APP_TODAY); navigate('maid-market','maid'); showToast('메이드 화면으로 전환했습니다.'); }
+      if (action === 'switch-to-admin') { navigate('admin-rooms','admin'); showToast('관리자 화면으로 전환했습니다.'); }
+      if (action === 'go-maid-task') { const room = state.rooms.find(r => r.id === id); if (room) room.maidUnreadRejection = false; state.selectedRoomId = id; navigate('maid-task','maid'); }
+      if (action === 'toggle-password') { state.passwordVisible = !state.passwordVisible; render(); }
+      if (action === 'start-task') { openTaskStartConfirm(id); return; }
+      if (action === 'confirm-start-task') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'task-start') return;
+        const room = state.rooms.find(r => r.id === pending.roomId);
+        if (!room || isOutOfService(room) || room.assignee !== '김하나') { state.pendingAction = null; closeSheet(); render(); showToast('작업 상태가 바뀌어 시작할 수 없습니다.'); return; }
+        state.taskStarted[room.id] = true;
+        if (state.taskCandleCounts[room.id] == null) state.taskCandleCounts[room.id] = room.candleCount || 0;
+        room.cleaningStatus = '청소 중'; room.color = 'orange';
+        addDailyEvent(room, '청소 시작', `${room.assignee} · ${room.task} · 메이드 확인 모달 승인`);
+        state.pendingAction = null; closeSheet(); render(); showToast(`${room.id}호 청소를 시작했습니다.`); return;
+      }
+      if (action === 'toggle-check') {
+        const index = Number(actionEl.dataset.index);
+        const current = state.taskChecks[id] || [];
+        state.taskChecks[id] = current.includes(index) ? current.filter(x => x !== index) : [...current, index];
+        render();
+      }
+      if (action === 'task-candle-plus' || action === 'task-candle-minus') {
+        const room = state.rooms.find(r => r.id === id);
+        if (!room) return;
+        const floor = Number(room.candleCount || 0);
+        const current = Math.max(floor, Number(state.taskCandleCounts[id] ?? floor));
+        if (action === 'task-candle-minus' && current <= floor) {
+          showToast(floor > 0 ? `기존 촛불 ${floor}개는 관리자가 회수 완료 처리해야 줄일 수 있습니다.` : '추가한 촛불이 없습니다.');
+          return;
+        }
+        state.taskCandleCounts[id] = Math.max(floor, Math.min(20, current + (action === 'task-candle-plus' ? 1 : -1)));
+        render();
+      }
+      if (action === 'toggle-photo') {
+        const index = Number(actionEl.dataset.index);
+        const current = state.taskPhotos[id] || [];
+        state.taskPhotos[id] = current.includes(index) ? current.filter(x => x !== index) : [...current, index];
+        render();
+      }
+      if (action === 'complete-task') { openTaskCompleteConfirm(id); return; }
+      if (action === 'confirm-complete-task') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'complete-task') return;
+        const room = state.rooms.find(r => r.id === pending.roomId);
+        if (!room || isOutOfService(room)) { closeSheet(); render(); showToast('작업 상태가 바뀌어 제출할 수 없습니다.'); return; }
+        const id = room.id;
+        room.cleaningStatus = '검수 대기'; room.color = 'orange'; room.inspection = true; room.workStartedAt = room.workStartedAt || '12:20'; room.workFinishedAt = '13:12'; room.submittedAt = '13:18'; room.cleanerNote = state.taskNotes[id] || '특이사항 없음.';
+        const candleBeforeSubmit = Number(room.candleCount || 0);
+        const submittedCandleCount = Math.max(candleBeforeSubmit, Number(state.taskCandleCounts[id] ?? candleBeforeSubmit));
+        room.candleCount = submittedCandleCount;
+        if (room.candleCount > 0 && !room.candleLocations) room.candleLocations = '메이드 청소 완료 시 추가 수량 기록 · 위치 미입력';
+        if (room.candleCount === 0) room.candleLocations = '';
+        addDailyEvent(room, '청소 완료·검수 요청', `인증사진 8장 · 기존 촛불 ${candleBeforeSubmit}개 · 메이드 추가 ${Math.max(0, room.candleCount - candleBeforeSubmit)}개 · 최종 ${room.candleCount}개${room.candleCount > 0 ? ' · 관리자 전량 회수 전 고객 배정·입실 차단' : ''} · 메이드 확인 모달 승인`, '13:18');
+        state.inspectionPhotos[id] = buildInspectionPhotos(room, 13, 4); state.photoReviews[id] = []; state.selectedInspectionPhoto[id] = 0;
+        if (!state.completedTasks.includes(id)) state.completedTasks.unshift(id);
+        state.pendingAction = null; closeSheet(); navigate('maid-completed','maid'); showToast(`${id}호를 검수 요청했습니다.`); return;
+      }
+      if (action === 'approve-inspection') {
+        const room = state.rooms.find(r => r.id === id);
+        if (!room) return;
+        const photos = inspectionPhotosFor(room);
+        const reviewed = state.photoReviews[id] || [];
+        if (reviewed.length !== photos.length) { showToast(`인증사진 ${photos.length - reviewed.length}장을 더 확인해 주세요.`); return; }
+        openInspectionApprovalConfirm(id); return;
+      }
+      if (action === 'confirm-approve-inspection') {
+        const pending = state.pendingAction;
+        if (!pending || pending.type !== 'inspection-approval') return;
+        const room = state.rooms.find(r => r.id === pending.roomId);
+        if (!room) return;
+        const id = room.id;
+        room.cleaningStatus = '입실 준비 완료';
+        room.color = 'green';
+        room.inspection = false;
+        room.approvedAt = '13:22';
+        addDailyEvent(room, '검수 승인', '청소 검수 승인 및 주급 확정', '13:22');
+        if (!room.settlementConfirmed) {
+          const maid = state.maids.find(m => m.name === room.assignee);
+          if (maid) maid.weeklyConfirmed += room.cleaningFee;
+          room.settlementConfirmed = true;
+        }
+        state.pendingAction = null;
+        closeSheet(); state.screen = 'admin-inspection';
+        state.previousScreen = null;
+        render(); showToast(guestAllocationState(room) === 'available' ? `${id}호 검수 승인 · 고객 배정 가능으로 전환했습니다.` : candleBlocksGuest(room) ? `${id}호 검수·주급 확정 · 촛불 ${room.candleCount}개 회수 전 고객 배정 불가입니다.` : `${id}호 검수와 주급은 확정했지만 고객 배정 상태는 별도 사유를 확인해 주세요.`);
+      }
+    });
+
+    document.addEventListener('change', (event) => {
+      if (event.target.id === 'roomTypeFilter' || event.target.id === 'assignmentTypeFilter') {
+        state.roomTypeFilter = event.target.value;
+        render();
+      }
+      if (event.target.id === 'penaltyMaidFilter') {
+        state.penaltyMaidFilter = event.target.value;
+        render();
+      }
+    });
+
+    document.addEventListener('input', (event) => {
+      if (event.target.id === 'passwordInput') event.target.value = event.target.value.replace(/\D/g,'').slice(0,4);
+      if (event.target.id === 'taskNote') state.taskNotes[event.target.dataset.roomId] = event.target.value;
+      if (event.target.id === 'roomSearch') {
+        state.roomSearch = event.target.value;
+        const cursor = event.target.selectionStart;
+        render();
+        const input = document.getElementById('roomSearch');
+        if (input) { input.focus(); input.setSelectionRange(cursor, cursor); }
+      }
+    });
+
+    initializeFromQuery();
+    render();

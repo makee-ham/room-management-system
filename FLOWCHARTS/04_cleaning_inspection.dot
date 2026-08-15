@@ -1,0 +1,20 @@
+digraph G {
+  graph [rankdir=TB, bgcolor="white", pad="0.25", nodesep="0.32", ranksep="0.42", fontname="NanumSquare"];
+  node [shape=box, style="rounded,filled", fontname="NanumSquare", fontsize=11, color="#CBD3D9", fillcolor="#F8FAFB", fontcolor="#17212A", margin="0.15,0.10"];
+  edge [fontname="NanumSquare", fontsize=9, color="#697680", fontcolor="#4D5962", arrowsize=0.7];
+
+  A [label="청소 시작 확인"];
+  B [label="체크리스트·사진·메모"];
+  C [label="메이드 촛불 추가 수량 기록"];
+  D [label="완료 제출 확인"];
+  E [label="검수 대기"];
+  F [label="사진별 확인"];
+  G [label="승인/반려?", shape=diamond, fillcolor="#FFF4E8"];
+  H [label="청소 승인·주급 확정", fillcolor="#E8F5EF"];
+  I [label="운영·이슈·촛불 재검사", shape=diamond, fillcolor="#FFF4E8"];
+  J [label="입실 준비 가능", fillcolor="#E8F5EF"];
+  K [label="별도 차단 유지", fillcolor="#FDEBEC"];
+  L [label="사진·사유·최종 확인"];
+  M [label="재청소·메이드 알림", fillcolor="#FDEBEC"];
+  A->B->C->D->E->F->G; G->H [label="승인"]; H->I; I->J [label="모두 충족"]; I->K [label="차단 남음"]; G->L [label="반려"]; L->M->B;
+}

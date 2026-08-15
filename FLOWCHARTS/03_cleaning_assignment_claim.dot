@@ -1,0 +1,19 @@
+digraph G {
+  graph [rankdir=TB, bgcolor="white", pad="0.25", nodesep="0.32", ranksep="0.42", fontname="NanumSquare"];
+  node [shape=box, style="rounded,filled", fontname="NanumSquare", fontsize=11, color="#CBD3D9", fillcolor="#F8FAFB", fontcolor="#17212A", margin="0.15,0.10"];
+  edge [fontname="NanumSquare", fontsize=9, color="#697680", fontcolor="#4D5962", arrowsize=0.7];
+
+  A [label="청소 작업 생성"];
+  B [label="배정 가능?", shape=diamond, fillcolor="#FFF4E8"];
+  C [label="배정 불가 사유"];
+  D [label="관리자 직접 배정?", shape=diamond, fillcolor="#FFF4E8"];
+  E [label="담당·사유·최종 확인"];
+  F [label="메이드 선택 오픈"];
+  G [label="금액·시간·유형 확인"];
+  H [label="선택 후 직접 취소 불가 확인"];
+  I [label="원자적 claim", fillcolor="#EAF3F8"];
+  J [label="담당 확정·자동 클로즈", fillcolor="#E8F5EF"];
+  K [label="이미 다른 메이드가 선택", fillcolor="#FDEBEC"];
+  L [label="관리자 교체 또는 미배정 회수", fillcolor="#FFF8E7"];
+  A->B; B->C [label="아니오"]; B->D [label="예"]; D->E [label="예"]; D->F [label="아니오"]; F->G->H->I; I->J [label="성공"]; I->K [label="실패"]; J->L;
+}

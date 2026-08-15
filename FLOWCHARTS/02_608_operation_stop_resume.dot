@@ -1,0 +1,19 @@
+digraph G {
+  graph [rankdir=TB, bgcolor="white", pad="0.25", nodesep="0.32", ranksep="0.42", fontname="NanumSquare"];
+  node [shape=box, style="rounded,filled", fontname="NanumSquare", fontsize=11, color="#CBD3D9", fillcolor="#F8FAFB", fontcolor="#17212A", margin="0.15,0.10"];
+  edge [fontname="NanumSquare", fontsize=9, color="#697680", fontcolor="#4D5962", arrowsize=0.7];
+
+  A [label="운영 중지 요청"];
+  B [label="예약·투숙 있음?", shape=diamond, fillcolor="#FFF4E8"];
+  C [label="확정 차단\n예약 이동·해제·퇴실 먼저", fillcolor="#FDEBEC", color="#D7464B"];
+  D [label="사유·영향 확인"];
+  E [label="최종 확인 모달"];
+  F [label="608 불변식\n공실·예약 없음·작업 없음\n담당 없음·공개 닫힘", fillcolor="#FDEBEC"];
+  G [label="운영 재개 요청"];
+  H [label="운영 재개 점검 청소\n미배정·클로즈", fillcolor="#FFF8E7"];
+  I [label="청소·검수 승인"];
+  J [label="촛불 0개 + 이슈 없음?", shape=diamond, fillcolor="#FFF4E8"];
+  K [label="계속 고객 배정 불가", fillcolor="#FDEBEC"];
+  L [label="가용성 재계산", fillcolor="#E8F5EF"];
+  A->B; B->C [label="예"]; C->A; B->D [label="아니오"]; D->E->F->G->H->I->J; J->K [label="아니오"]; J->L [label="예"];
+}

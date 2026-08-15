@@ -1,0 +1,194 @@
+{
+  "html": "/mnt/data/Castle_The_Art_Codex_Handoff_FINAL_v13/CURRENT/castle_the_art_room_manager_wireframe_v13.html",
+  "passed": 37,
+  "total": 37,
+  "all_passed": true,
+  "results": [
+    {
+      "name": "v13 제목",
+      "passed": true,
+      "detail": "Castle The Art 객실관리 — 모바일 와이어프레임 v13"
+    },
+    {
+      "name": "촛불 하드 차단 안내",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "촛불 객실이 고객 배정 불가 수에 포함",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "촛불 예약 객실 충돌 감지",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "608 운영 중지 불변식",
+      "passed": true,
+      "detail": "{\"op\": \"out-of-service\", \"stay\": \"공실\", \"clean\": \"작업 없음\", \"res\": false, \"task\": \"작업 없음\", \"assignee\": \"\", \"open\": false, \"assign\": false, \"candles\": 3, \"guest\": \"unavailable\"}"
+    },
+    {
+      "name": "608 촛불 회수 필요 표시",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "412 초기 고객 배정 가능",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "촛불 관리 시트",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "촛불 사유 필수",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "촛불 변경 최종 확인 모달",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "촛불 추가 후 고객 배정 불가",
+      "passed": true,
+      "detail": "{\"count\": 1, \"state\": \"unavailable\", \"reason\": \"촛불 1개 · 관리자 전량 회수 완료 처리 필요 · 촛불이 0개가 되어야 고객 배정 가능\", \"event\": \"촛불 현황 변경\"}"
+    },
+    {
+      "name": "촛불 변경 감사 이력",
+      "passed": true,
+      "detail": "촛불 현황 변경"
+    },
+    {
+      "name": "전량 회수 최종 확인 모달",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "전량 회수 후 고객 배정 가능",
+      "passed": true,
+      "detail": "{\"count\": 0, \"state\": \"available\", \"locations\": \"\", \"event\": \"촛불 전량 회수 완료\"}"
+    },
+    {
+      "name": "예약 객실 촛불 충돌",
+      "passed": true,
+      "detail": "{\"state\": \"conflict\", \"conflict\": true, \"canCheckin\": false, \"reason\": \"촛불 1개 · 관리자 전량 회수 완료 처리 필요 · 전량 회수 전 입실 불가\"}"
+    },
+    {
+      "name": "예약 충돌 화면에 촛불 회수 경로",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "예약 유지·입실 잠금 해제",
+      "passed": true,
+      "detail": "{\"state\": \"assigned\", \"conflict\": false, \"canCheckin\": true, \"count\": 0}"
+    },
+    {
+      "name": "메이드 완료 모달 촛불 차단 안내",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "메이드 제출 후 촛불 차단 유지",
+      "passed": true,
+      "detail": "{\"clean\": \"검수 대기\", \"count\": 2, \"conflict\": true}"
+    },
+    {
+      "name": "메이드 기존 촛불 감소 버튼 잠금",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "메이드 제출 모달이 기존 촛불 수량을 보존",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "메이드 조작으로 기존 촛불 0개 처리 불가",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "검수 승인 모달 촛불 별도 차단",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "검수 승인 후에도 촛불 있으면 배정 불가",
+      "passed": true,
+      "detail": "{\"clean\": \"입실 준비 완료\", \"state\": \"unavailable\", \"count\": 1}"
+    },
+    {
+      "name": "촛불 전용 목록",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "배정 불가 목록에 촛불 회수 그룹",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "과거 객실 촛불 관리 버튼 없음",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "운영 재개 확인 모달 유지",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "메이드 선택 가능 일감 존재",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "메이드 선택 취소 제한 확인",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "주급 지급 취소 확인 모달 유지",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "벌점 부여 최종 확인 유지",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "달력 날짜 선택 유지",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "모바일 360px 가로 넘침 없음",
+      "passed": true,
+      "detail": "scroll=360 client=360"
+    },
+    {
+      "name": "모바일 390px 가로 넘침 없음",
+      "passed": true,
+      "detail": "scroll=390 client=390"
+    },
+    {
+      "name": "모바일 430px 가로 넘침 없음",
+      "passed": true,
+      "detail": "scroll=430 client=430"
+    },
+    {
+      "name": "브라우저 콘솔 오류 없음",
+      "passed": true,
+      "detail": ""
+    }
+  ],
+  "errors": []
+}

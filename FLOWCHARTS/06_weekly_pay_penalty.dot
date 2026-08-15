@@ -1,0 +1,19 @@
+digraph G {
+  graph [rankdir=TB, bgcolor="white", pad="0.25", nodesep="0.32", ranksep="0.42", fontname="NanumSquare"];
+  node [shape=box, style="rounded,filled", fontname="NanumSquare", fontsize=11, color="#CBD3D9", fillcolor="#F8FAFB", fontcolor="#17212A", margin="0.15,0.10"];
+  edge [fontname="NanumSquare", fontsize=9, color="#697680", fontcolor="#4D5962", arrowsize=0.7];
+
+  A [label="검수 승인"];
+  B [label="주급 확정 항목"];
+  C [label="주차 합산"];
+  D [label="지급 완료 확인"];
+  E [label="기록 오류?", shape=diamond, fillcolor="#FFF4E8"];
+  F [label="사유 입력·미지급 복구", fillcolor="#FFF8E7"];
+  G [label="지급 유지", fillcolor="#E8F5EF"];
+  H [label="품질 문제"];
+  I [label="벌점 사유·근거·점수"];
+  J [label="최종 확인·메이드 알림"];
+  K [label="삭제·복구?", shape=diamond, fillcolor="#FFF4E8"];
+  L [label="사유와 소프트 상태 변경"];
+  A->B->C->D->E; E->F [label="예"]; E->G [label="아니오"]; H->I->J->K->L;
+}

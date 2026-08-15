@@ -1,0 +1,15 @@
+* text=auto eol=lf
+
+# Preserve the exact audited bytes and manifest hashes across platforms.
+DOCS/FINAL_UX_AUDIT.md -text
+WIREFRAME/index.html -text
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.xlsx binary
+*.xls binary
+*.pdf binary

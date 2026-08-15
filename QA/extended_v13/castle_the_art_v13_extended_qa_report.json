@@ -1,0 +1,305 @@
+{
+  "html": "/mnt/data/castle_the_art_room_manager_wireframe_v13.html",
+  "screenshots": "/mnt/data/castle_the_art_v13_extended_screens",
+  "passed": 59,
+  "total": 59,
+  "all_passed": true,
+  "results": [
+    {
+      "name": "608 운영 중지 불변식",
+      "passed": true,
+      "detail": "{\"operationalStatus\": \"out-of-service\", \"stayStatus\": \"공실\", \"cleaningStatus\": \"작업 없음\", \"reservationAssigned\": false, \"checkin\": \"예약 없음\", \"task\": \"작업 없음\", \"assignee\": \"\", \"openForClaim\": false, \"assignmentEnabled\": false, \"cleaningSuppressed\": true, \"guestState\": \"unavailable\", \"reservationConflict\": false, \"needsCleaning\": false, \"claimEligible\": false, \"candleCount\": 3, \"candleBlocked\": true}"
+    },
+    {
+      "name": "608 고객 배정 불가 안내",
+      "passed": true,
+      "detail": "608호 고객 객실 배정\n\n청소 담당자 배정과 별도의 객실 판매·입실 상태입니다. 현재: 촛불 회수 전 고객 배정 불가\n\n운영 상태\n운영 중지 · 청소 제외\n객실 상태\n공실\n청소·검수\n작업 없음\n현재 예약\n미배정\n현재 고객 배정 불가\n운영 중지 · 고객 배정과 청소 모두 차단 · 냄새 원인 확인 전 객실 운영 중지\n강제 배정하지 않음\n운영 중지, 청소·검수 미완료, 촛불 1개 이상 또는 입실 차단 특이사항이 남아 있으면 고객 배정 버튼을 잠급니다. 원인을 해결하면 자동으로 다시 계산합니다.\n운영 상태 관리닫기"
+    },
+    {
+      "name": "608 예약 저장 버튼 없음",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "608 입실 버튼 없음",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "608 운영 재개 최종 확인 모달",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "확정 전 운영 상태 유지",
+      "passed": true,
+      "detail": "out-of-service"
+    },
+    {
+      "name": "운영 재개 후 점검청소·미배정·클로즈",
+      "passed": true,
+      "detail": "{\"op\": \"active\", \"clean\": \"청소 가능\", \"task\": \"운영 재개 점검 청소\", \"assignee\": \"\", \"open\": false, \"assign\": true, \"guest\": \"unavailable\"}"
+    },
+    {
+      "name": "예약 보유 객실 운영 중지 차단",
+      "passed": true,
+      "detail": "운영 중지 전에 예약 충돌을 해결해 주세요\n\n1502호를 청소 제외·고객 배정 불가로 바꿀 수 있지만, 현재 예약이나 투숙 상태를 남긴 채 확정할 수는 없습니다.\n\n1502호 예약 충돌\nYN-260814-042이 배정되어 있습니다.\n운영 중지 사유: 긴급 시설 점검\n1. 예약을 다른 고객 배정 가능 객실로 이동하거나 배정을 해제합니다.\n2. 예약이 없는 상태가 되면 운영 중지를 다시 확정합니다.\n돌아가기\n예약 이동·해제"
+    },
+    {
+      "name": "충돌 해결 전 운영 중지 확정 없음",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "예약 객실 입실 차단 조건 잠금",
+      "passed": true,
+      "detail": "1502호 고객 객실 배정\n\n청소 담당자 배정과 별도의 객실 판매·입실 상태입니다. 현재: 예약 충돌 · 촛불 회수 전 입실 불가\n\n운영 상태\n정상 운영\n객실 상태\n오늘 입실\n청소·검수\n청소 가능\n현재 예약\nYN-260814-042\n예약과 객실 상태가 충돌합니다\n예약 충돌 · YN-260814-042 배정 중 · 촛불 2개 · 관리자 전량 회수 완료 처리 필요 · 입실 전 차단 원인 해결, 다른 객실 이동 또는 배정 해제 필요\n입실 처리는 잠김\n촛불 회수·차단 사유 해결 또는 예약 이동·배정 해제로 충돌 해소\n이동 가능한 객실 2개\n배정 해제\n다른 객실로 이동\n촛불 전량 회수 처리"
+    },
+    {
+      "name": "입실 준비 완료 객실 입실 버튼",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "고객 입실 최종 확인 모달",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "확정 전 고객 상태 유지",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "개별 일감 공개 변경 확인 모달",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "확정 전 공개 상태 유지",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "확정 후 공개 상태 변경",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "메이드 선택 가능 일감 존재",
+      "passed": true,
+      "detail": "2"
+    },
+    {
+      "name": "메이드 일감 선택 취소 제한 안내",
+      "passed": true,
+      "detail": "1502호 일감을 맡을까요?\n\n실수 선택을 막기 위한 최종 확인입니다. 확정 뒤에는 메이드 화면에서 직접 취소할 수 없습니다.\n\n청소 유형\n퇴실 청소\n청소 금액\n9,500원\n청소 가능\n11:20\n완료 마감\n13:20\n확정 후 취소 방법\n잘못 선택했거나 작업이 어려워진 경우 관리자에게 알려 담당을 ‘미배정’으로 회수하거나 다른 메이드로 변경해야 합니다.\n다시 보기\n확인하고 담당 확정"
+    },
+    {
+      "name": "확정 전 담당자 미변경",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "확정 후 메이드 담당·자동 클로즈",
+      "passed": true,
+      "detail": "['김하나', False]"
+    },
+    {
+      "name": "담당자 변경 최종 확인 모달",
+      "passed": true,
+      "detail": "1004호 담당자를 이소라님으로 변경할까요?\n\n담당 변경은 메이드의 내 업무와 책임 이력에 즉시 반영됩니다. 진행 중 기록은 기존 담당자의 중단 작업 이력으로 보존됩니다.\n\n현재 담당\n박미정\n변경 후\n이소라\n작업 상태\n청소 중\n사유\n마감 임박으로 담당 교체\n돌아가기\n담당 변경 확정"
+    },
+    {
+      "name": "확정 전 담당자 유지",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "확정 후 담당자 변경",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "담당자 미배정 회수 확인 모달",
+      "passed": true,
+      "detail": "1004호를 미배정으로 돌릴까요?\n\n이소라님의 담당을 회수합니다. 진행 중 기록이 있다면 중단 작업 이력으로 보존됩니다.\n\n현재 담당\n이소라\n변경 후\n미배정 · 선택 클로즈\n사유\n현장 일정 변경\n돌아가기\n미배정으로 확정"
+    },
+    {
+      "name": "확정 후 미배정·선택 클로즈",
+      "passed": true,
+      "detail": "['', False]"
+    },
+    {
+      "name": "검수 반려 최종 확인 모달",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "확정 전 검수대기 유지",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "반려 후 재청소·미확인 알림",
+      "passed": true,
+      "detail": "['재청소 필요', True, '청소 얼룩·먼지 · 욕실 바닥을 다시 닦고 같은 각도로 촬영']"
+    },
+    {
+      "name": "메이드 화면 재청소 결과 노출",
+      "passed": true,
+      "detail": "CASTLE THE ART\n내 담당 객실\n김하나 · 오늘 · 검수 반려 2건\n관리자 검수 반려 2건\n반려된 객실은 담당 목록 최상단에 표시됩니다. 사진 항목과 사유를 확인한 뒤 재청소·재촬영해 주세요.\n앱 알림과 내 업무 메뉴의 빨간 점으로 함께 안내\n2\n담당 객실\n2\n지금 가능\n2\n검수 반려\n14천\n예상 주급\n지금 할 일\n재청소·마감 임박순\n903호\n스탠다드 · 퇴실 청소\n14:20 마감\n지금 입실 가능\n검수 반려 · 객실 전경\n청소 얼룩·먼지 · 욕실 바닥을 다시 닦고 같은 각도로 촬영\n13:15 반려 · 확인 후 관리자에게 재제출\n청소비 7,000원\n현재 촛불 없음\n퇴실 11:00\n→\n입실 16:00\n사진 8장\n담당 확정 · 관리자 변경 가능\n반려 사유 확인·재청소\n108호\n스탠다드 · 재청소\n13:50 마감\n지금 입실 가능\n검수 반려 · 현관·도어락\n현관 거울 하단 얼룩이 남아 있습니다.\n13:08 반려 · 확인 후 관리자에게 재제출\n청소비 7,000원\n현재 촛불 1개\n퇴실 11:00\n→\n입실 14:30\n얼리 체크인 14:30\n재청소\n급한 객실\n촛불 1개\n담당 확정 · 관리자 변경 가능\n반려 사유 확인·재청소\n일감 찾기\n내 업무\n완료\n주급\n내 정보\n903호 검수를 반려할까요?\n\n확정하면 객실은 ‘재청소 필요’로 바뀌고 담당 메이드에게 사진·사유와 함께 즉시 알림이 갑니다.\n\n대상 사진\n객실 전경\n반려 사유\n청소 얼룩·먼지 · "
+    },
+    {
+      "name": "청소 시작 확인 모달",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "확정 전 청소 가능 유지",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "확정 후 청소 중",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "주급 지급 완료 취소 확인",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "확정 전 주급 지급액 유지",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "확정 후 미지급 전환",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "퇴사 취소 확인 모달",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "확정 전 퇴사 유지",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "복구 후 비활성",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "달력 날짜 선택 UI",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "촛불 객실 고객 배정 차단",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "예약+촛불 충돌 감지",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "촛불 배치 최종 확인",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "촛불 배치 후 즉시 배정 불가",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "촛불 전량 회수 최종 확인",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "촛불 0개 후 다른 조건 충족 시 배정 가능",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "검수 승인과 촛불 차단 분리",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "검수 승인 후 촛불 남으면 배정 불가",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "배정 불가 목록 촛불 회수 그룹",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "메이드 기존 촛불 감소 버튼 비활성",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "메이드 제출 시 기존 촛불 하한 보존",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "메이드가 기존 촛불을 0개로 해제하지 못함",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "중요 변경 확인 액션 구현",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "360px 가로 넘침 없음",
+      "passed": true,
+      "detail": "scroll=360"
+    },
+    {
+      "name": "360px 페이지 오류 없음",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390px 가로 넘침 없음",
+      "passed": true,
+      "detail": "scroll=390"
+    },
+    {
+      "name": "390px 페이지 오류 없음",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "430px 가로 넘침 없음",
+      "passed": true,
+      "detail": "scroll=430"
+    },
+    {
+      "name": "430px 페이지 오류 없음",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "브라우저 오류 없음",
+      "passed": true,
+      "detail": ""
+    }
+  ],
+  "errors": []
+}

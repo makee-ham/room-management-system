@@ -1,0 +1,1064 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f5f6f7" />
+  <title>Castle The Art 객실관리 — 모바일 와이어프레임 v2</title>
+  <style>
+    :root {
+      --bg: #edf0f2;
+      --surface: #ffffff;
+      --surface-2: #f6f7f8;
+      --surface-3: #eef1f3;
+      --ink: #17212a;
+      --muted: #6f7880;
+      --line: #dce1e5;
+      --line-strong: #bfc7ce;
+      --brand: #23384a;
+      --brand-soft: #e9eef2;
+      --red: #c9444a;
+      --red-soft: #fff0f1;
+      --orange: #b76a11;
+      --orange-soft: #fff5e8;
+      --green: #28785b;
+      --green-soft: #edf8f3;
+      --blue: #35638f;
+      --blue-soft: #edf4fb;
+      --purple: #7054a1;
+      --purple-soft: #f3effa;
+      --gold: #9b763c;
+      --gold-soft: #f7f2e8;
+      --shadow: 0 22px 65px rgba(24, 34, 43, .16);
+      --radius: 18px;
+      --safe-bottom: max(12px, env(safe-area-inset-bottom));
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); }
+    body { min-height: 100dvh; }
+    button, input, textarea, select { font: inherit; }
+    button { color: inherit; }
+    button, [role="button"] { -webkit-tap-highlight-color: transparent; }
+    svg { display: block; }
+
+    .workspace {
+      min-height: 100dvh;
+      display: grid;
+      grid-template-columns: minmax(260px, 330px) 390px;
+      justify-content: center;
+      align-items: center;
+      gap: 42px;
+      padding: 28px;
+    }
+
+    .prototype-notes { max-width: 330px; }
+    .prototype-notes h1 { margin: 0; font-size: 27px; line-height: 1.22; letter-spacing: -.04em; }
+    .prototype-notes > p { margin: 12px 0 20px; color: var(--muted); font-size: 14px; line-height: 1.65; }
+    .prototype-brand { margin-bottom: 8px; color: var(--gold); font-size: 11px; font-weight: 900; letter-spacing: .16em; }
+    .control-group { margin-top: 12px; padding: 15px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255,255,255,.76); }
+    .control-label { display: block; margin-bottom: 10px; color: var(--muted); font-size: 11px; font-weight: 900; letter-spacing: .06em; }
+    .control-row { display: flex; flex-wrap: wrap; gap: 7px; }
+    .preview-btn { min-height: 39px; padding: 0 12px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); font-size: 12px; font-weight: 800; cursor: pointer; }
+    .preview-btn.active { color: #fff; border-color: var(--brand); background: var(--brand); }
+    .legend { display: grid; gap: 9px; }
+    .legend-row { display: flex; align-items: center; gap: 9px; color: #4d5861; font-size: 12px; }
+    .legend-dot { width: 11px; height: 11px; border-radius: 50%; flex: 0 0 auto; }
+    .legend-dot.red { background: var(--red); }
+    .legend-dot.orange { background: var(--orange); }
+    .legend-dot.green { background: var(--green); }
+    .legend-dot.gray { background: #9aa3ab; }
+    .legend-dot.blue { background: var(--blue); }
+
+    .phone {
+      position: relative;
+      width: 390px;
+      height: min(844px, calc(100dvh - 28px));
+      min-height: 680px;
+      overflow: hidden;
+      border: 1px solid #b8c0c7;
+      border-radius: 38px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+    .phone::before {
+      content: "";
+      position: absolute;
+      z-index: 60;
+      top: 10px;
+      left: 50%;
+      width: 108px;
+      height: 27px;
+      transform: translateX(-50%);
+      border-radius: 18px;
+      background: #111820;
+      pointer-events: none;
+    }
+    .app { position: relative; display: flex; flex-direction: column; height: 100%; overflow: hidden; background: var(--surface-2); }
+
+    .topbar {
+      position: relative;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 78px;
+      padding: 34px 16px 10px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.97);
+    }
+    .topbar.compact { min-height: 67px; padding-top: 28px; }
+    .topbar-title-wrap { min-width: 0; flex: 1; }
+    .brandline { color: var(--gold); font-size: 9px; font-weight: 950; letter-spacing: .17em; }
+    .topbar-title { margin-top: 2px; overflow: hidden; font-size: 19px; font-weight: 900; letter-spacing: -.03em; white-space: nowrap; text-overflow: ellipsis; }
+    .topbar-subtitle { margin-top: 2px; color: var(--muted); font-size: 10px; }
+    .back-btn, .icon-btn {
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border: 0;
+      background: none;
+      cursor: pointer;
+    }
+    .back-btn { width: 38px; height: 38px; margin-left: -5px; }
+    .icon-btn { width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+    .back-btn svg, .icon-btn svg, .nav-icon svg, .inline-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+    .screen {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 14px 14px calc(88px + var(--safe-bottom));
+      scroll-behavior: smooth;
+    }
+    .screen.no-nav { padding-bottom: calc(30px + var(--safe-bottom)); }
+    .screen::-webkit-scrollbar { width: 0; }
+
+    .bottom-nav {
+      position: absolute;
+      z-index: 30;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      min-height: calc(69px + var(--safe-bottom));
+      padding: 7px 4px var(--safe-bottom);
+      border-top: 1px solid var(--line);
+      background: rgba(255,255,255,.98);
+      backdrop-filter: blur(12px);
+    }
+    .nav-item { min-width: 0; border: 0; border-radius: 10px; background: none; color: #8d969e; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; }
+    .nav-item.active { color: var(--brand); }
+    .nav-icon { position: relative; display: grid; place-items: center; width: 24px; height: 24px; }
+    .nav-item > span:last-child { font-size: 9.5px; font-weight: 800; white-space: nowrap; }
+    .nav-dot { position: absolute; top: -1px; right: 0; width: 7px; height: 7px; border: 1px solid #fff; border-radius: 50%; background: var(--red); }
+
+    .login-screen { min-height: 100%; padding: 76px 26px 30px; background: var(--surface); }
+    .login-mark { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 17px; color: #fff; background: var(--brand); font-size: 14px; font-weight: 950; letter-spacing: .08em; }
+    .login-brand { margin-top: 24px; color: var(--gold); font-size: 11px; font-weight: 950; letter-spacing: .18em; }
+    .login-title { margin: 7px 0 0; font-size: 31px; line-height: 1.15; letter-spacing: -.055em; }
+    .login-copy { margin: 12px 0 27px; color: var(--muted); font-size: 13px; line-height: 1.65; }
+    .role-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 18px; padding: 4px; border-radius: 13px; background: var(--surface-3); }
+    .role-tab { min-height: 40px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-size: 12px; font-weight: 850; cursor: pointer; }
+    .role-tab.active { color: var(--ink); background: var(--surface); box-shadow: 0 2px 8px rgba(20,30,38,.08); }
+    .field { margin-top: 11px; }
+    .field label { display: block; margin: 0 0 7px 2px; color: var(--muted); font-size: 10px; font-weight: 800; }
+    .input, .select, .textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      outline: none;
+      color: var(--ink);
+      background: var(--surface);
+    }
+    .input, .select { height: 47px; padding: 0 13px; font-size: 14px; }
+    .input:focus, .select:focus, .textarea:focus { border-color: #91a0ac; box-shadow: 0 0 0 3px rgba(35,56,74,.08); }
+    .login-actions { margin-top: 18px; }
+    .login-hint { margin-top: 12px; color: var(--muted); text-align: center; font-size: 9px; line-height: 1.5; }
+
+    .btn {
+      min-height: 43px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+      font-size: 12px;
+      font-weight: 850;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .btn.primary { border-color: var(--brand); color: #fff; background: var(--brand); }
+    .btn.green { border-color: var(--green); color: #fff; background: var(--green); }
+    .btn.red { border-color: var(--red); color: #fff; background: var(--red); }
+    .btn.soft { border-color: transparent; color: var(--brand); background: var(--brand-soft); }
+    .btn.gold { border-color: #dcc9a9; color: #6d542b; background: var(--gold-soft); }
+    .btn.small { min-height: 34px; padding: 0 10px; border-radius: 10px; font-size: 10px; }
+    .btn.full { width: 100%; }
+    .btn:disabled { cursor: not-allowed; opacity: .43; }
+    .button-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .summary-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .summary-cell { min-width: 0; padding: 11px 5px 10px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); text-align: center; }
+    .summary-cell strong { display: block; font-size: 20px; line-height: 1; letter-spacing: -.04em; }
+    .summary-cell span { display: block; margin-top: 6px; overflow: hidden; color: var(--muted); font-size: 9px; white-space: nowrap; text-overflow: ellipsis; }
+    .summary-cell.red strong { color: var(--red); }
+    .summary-cell.orange strong { color: var(--orange); }
+    .summary-cell.green strong { color: var(--green); }
+    .summary-cell.blue strong { color: var(--blue); }
+
+    .section-title-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin: 18px 2px 10px; }
+    .section-title-row.first { margin-top: 2px; }
+    .section-title { margin: 0; font-size: 15px; font-weight: 900; letter-spacing: -.025em; }
+    .section-meta { color: var(--muted); font-size: 10px; }
+    .text-action { border: 0; padding: 4px 0; color: var(--blue); background: none; font-size: 10px; font-weight: 850; cursor: pointer; }
+
+    .search-wrap { position: relative; margin-top: 12px; }
+    .search-wrap .input { height: 43px; padding-left: 38px; }
+    .search-icon { position: absolute; top: 50%; left: 12px; width: 17px; height: 17px; transform: translateY(-50%); color: #89939c; pointer-events: none; }
+    .search-icon svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+    .filter-rail { display: flex; gap: 7px; overflow-x: auto; padding: 10px 1px 3px; scrollbar-width: none; }
+    .filter-rail::-webkit-scrollbar { display: none; }
+    .chip { min-height: 34px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); font-size: 10px; font-weight: 800; white-space: nowrap; cursor: pointer; }
+    .chip.active { border-color: var(--brand); color: #fff; background: var(--brand); }
+
+    .notice { display: flex; align-items: flex-start; gap: 9px; margin-top: 12px; padding: 11px 12px; border: 1px solid #ead2aa; border-radius: 13px; color: #75490f; background: var(--orange-soft); font-size: 10px; line-height: 1.5; }
+    .notice-mark { display: grid; place-items: center; width: 19px; height: 19px; flex: 0 0 auto; border-radius: 50%; background: #f0ce96; font-size: 11px; font-weight: 950; }
+
+    .room-board { display: grid; gap: 8px; }
+    .room-row { position: relative; padding: 12px 12px 11px 15px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface); overflow: hidden; }
+    .room-row::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 4px; background: #9ba4ac; }
+    .room-row.red::before { background: var(--red); }
+    .room-row.orange::before { background: var(--orange); }
+    .room-row.green::before { background: var(--green); }
+    .room-row.blue::before { background: var(--blue); }
+    .room-row-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .room-ident { min-width: 0; }
+    .room-ident strong { font-size: 18px; line-height: 1; letter-spacing: -.04em; }
+    .room-ident span { display: block; margin-top: 4px; overflow: hidden; color: var(--muted); font-size: 9.5px; white-space: nowrap; text-overflow: ellipsis; }
+    .status-stack { display: flex; align-items: center; justify-content: flex-end; gap: 5px; flex-wrap: wrap; }
+    .status-chip { display: inline-flex; align-items: center; min-height: 23px; padding: 0 7px; border-radius: 7px; font-size: 9px; font-weight: 850; white-space: nowrap; }
+    .tone-gray { color: #5c666e; background: #eef0f2; }
+    .tone-red { color: var(--red); background: var(--red-soft); }
+    .tone-orange { color: var(--orange); background: var(--orange-soft); }
+    .tone-green { color: var(--green); background: var(--green-soft); }
+    .tone-blue { color: var(--blue); background: var(--blue-soft); }
+    .tone-purple { color: var(--purple); background: var(--purple-soft); }
+    .room-row-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 11px; }
+    .room-data { min-width: 0; padding: 8px 8px 7px; border-radius: 10px; background: var(--surface-2); }
+    .room-data label { display: block; color: var(--muted); font-size: 8.5px; }
+    .room-data strong { display: block; margin-top: 4px; overflow: hidden; font-size: 11px; white-space: nowrap; text-overflow: ellipsis; }
+    .room-data.password strong { color: var(--brand); font-size: 13px; letter-spacing: .12em; font-variant-numeric: tabular-nums; }
+    .room-data.candle strong { color: #7c5a25; }
+    .room-row-actions { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 7px; margin-top: 9px; }
+    .mini-label { color: var(--muted); font-size: 9px; }
+    .open-state { font-size: 10px; font-weight: 850; }
+    .open-state.on { color: var(--green); }
+    .open-state.off { color: #7c858d; }
+
+    .switch { position: relative; width: 42px; height: 25px; flex: 0 0 auto; border: 0; border-radius: 999px; background: #cbd1d6; cursor: pointer; transition: background .16s ease; }
+    .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 19px; height: 19px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(20,30,38,.22); transition: transform .16s ease; }
+    .switch.on { background: var(--green); }
+    .switch.on::after { transform: translateX(17px); }
+    .switch:disabled { opacity: .38; cursor: not-allowed; }
+
+    .panel { margin-bottom: 11px; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+    .panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 13px 10px; border-bottom: 1px solid #edf0f2; }
+    .panel-title { font-size: 12px; font-weight: 900; }
+    .panel-subtitle { margin-top: 2px; color: var(--muted); font-size: 9px; }
+    .panel-body { padding: 13px; }
+    .info-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; padding: 9px 0; }
+    .info-row + .info-row { border-top: 1px solid #edf0f2; }
+    .info-label { color: var(--muted); font-size: 10px; }
+    .info-value { max-width: 65%; text-align: right; font-size: 11px; font-weight: 800; line-height: 1.45; }
+
+    .job-toolbar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+    .job-list { display: grid; gap: 9px; }
+    .job-row { padding: 13px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface); }
+    .job-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .job-room { font-size: 18px; font-weight: 900; letter-spacing: -.04em; }
+    .job-type { margin-top: 3px; color: var(--muted); font-size: 9.5px; }
+    .job-price { color: var(--brand); text-align: right; font-size: 18px; font-weight: 950; letter-spacing: -.035em; }
+    .job-price span { display: block; margin-top: 2px; color: var(--muted); font-size: 8.5px; font-weight: 700; }
+    .job-meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 11px; }
+    .job-meta > div { padding: 8px; border-radius: 10px; background: var(--surface-2); }
+    .job-meta label { display: block; color: var(--muted); font-size: 8px; }
+    .job-meta strong { display: block; margin-top: 4px; overflow: hidden; font-size: 10px; white-space: nowrap; text-overflow: ellipsis; }
+    .job-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #edf0f2; }
+    .job-assignee { min-width: 0; color: var(--muted); font-size: 9px; }
+    .job-assignee strong { color: var(--ink); font-size: 10px; }
+    .candle-badge { display: inline-flex; align-items: center; gap: 4px; min-height: 23px; padding: 0 8px; border-radius: 7px; color: #755626; background: var(--gold-soft); font-size: 9px; font-weight: 850; white-space: nowrap; }
+    .candle-badge svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+    .maid-hero { margin: -14px -14px 14px; padding: 19px 14px 17px; color: #fff; background: var(--brand); }
+    .maid-greeting { color: rgba(255,255,255,.69); font-size: 10px; }
+    .maid-hero h2 { margin: 5px 0 0; font-size: 23px; letter-spacing: -.04em; }
+    .maid-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-top: 15px; }
+    .maid-stat { padding: 9px; border: 1px solid rgba(255,255,255,.16); border-radius: 12px; background: rgba(255,255,255,.06); }
+    .maid-stat span { display: block; color: rgba(255,255,255,.63); font-size: 8px; }
+    .maid-stat strong { display: block; margin-top: 4px; font-size: 14px; }
+
+    .market-card { margin-bottom: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 17px; background: var(--surface); }
+    .market-card.red { border-color: #e6b2b6; box-shadow: inset 4px 0 0 var(--red); }
+    .market-card.orange { border-color: #efd1a7; box-shadow: inset 4px 0 0 var(--orange); }
+    .market-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .market-room { font-size: 20px; font-weight: 950; letter-spacing: -.04em; }
+    .market-price { color: var(--brand); text-align: right; font-size: 22px; font-weight: 950; letter-spacing: -.045em; }
+    .market-price span { display: block; margin-top: 1px; color: var(--muted); font-size: 8.5px; font-weight: 750; }
+    .market-info { display: flex; gap: 7px 14px; flex-wrap: wrap; margin: 11px 0; color: var(--muted); font-size: 9.5px; }
+    .market-info b { color: var(--ink); }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+    .badge { display: inline-flex; align-items: center; min-height: 23px; padding: 0 8px; border-radius: 7px; color: #5f6870; background: var(--surface-3); font-size: 9px; font-weight: 800; white-space: nowrap; }
+    .badge.red { color: var(--red); background: var(--red-soft); }
+    .badge.blue { color: var(--blue); background: var(--blue-soft); }
+    .badge.orange { color: var(--orange); background: var(--orange-soft); }
+
+    .task-card { margin-bottom: 9px; padding: 13px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface); }
+    .task-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .task-number { font-size: 19px; font-weight: 950; letter-spacing: -.04em; }
+    .task-deadline { color: var(--red); text-align: right; font-size: 11px; font-weight: 850; }
+    .task-deadline span { display: block; margin-top: 2px; color: var(--muted); font-size: 8.5px; font-weight: 700; }
+    .task-summary { display: flex; justify-content: space-between; gap: 10px; margin: 10px 0; color: var(--muted); font-size: 9px; }
+    .task-summary b { color: var(--ink); }
+
+    .detail-hero { margin: -14px -14px 13px; padding: 18px 14px 15px; border-bottom: 1px solid var(--line); background: var(--surface); }
+    .detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .detail-room { font-size: 27px; font-weight: 950; letter-spacing: -.05em; }
+    .detail-type { margin-top: 4px; color: var(--muted); font-size: 10px; }
+    .detail-price { color: var(--brand); text-align: right; font-size: 17px; font-weight: 950; }
+    .detail-price span { display: block; margin-top: 2px; color: var(--muted); font-size: 8px; font-weight: 700; }
+    .detail-statuses { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
+
+    .password-box { display: flex; align-items: center; gap: 10px; padding: 13px; border-radius: 13px; background: var(--surface-3); }
+    .password-display { min-width: 0; flex: 1; }
+    .password-display small { display: block; color: var(--muted); font-size: 9px; }
+    .password-display strong { display: block; margin-top: 4px; font-size: 23px; line-height: 1; letter-spacing: .17em; font-variant-numeric: tabular-nums; }
+    .password-display strong.masked { letter-spacing: .21em; }
+    .password-actions { display: flex; gap: 6px; }
+
+    .candle-control { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px; border: 1px solid #e5d7bc; border-radius: 13px; background: var(--gold-soft); }
+    .candle-title { display: flex; align-items: center; gap: 8px; color: #6f5327; }
+    .candle-title svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .candle-title strong { display: block; font-size: 12px; }
+    .candle-title span { display: block; margin-top: 2px; color: #8c744d; font-size: 8.5px; }
+    .stepper { display: grid; grid-template-columns: 32px 32px 32px; align-items: center; }
+    .stepper button { width: 32px; height: 32px; border: 1px solid #d8c49f; background: #fff; font-size: 17px; font-weight: 800; cursor: pointer; }
+    .stepper button:first-child { border-radius: 10px 0 0 10px; }
+    .stepper button:last-child { border-radius: 0 10px 10px 0; }
+    .stepper strong { display: grid; place-items: center; height: 32px; border-top: 1px solid #d8c49f; border-bottom: 1px solid #d8c49f; background: #fff; font-size: 12px; }
+
+    .callout { padding: 11px 12px; border-radius: 12px; color: #7f3237; background: var(--red-soft); font-size: 10px; line-height: 1.5; }
+    .callout.orange { color: #75460c; background: var(--orange-soft); }
+    .callout.green { color: #225f49; background: var(--green-soft); }
+    .callout.gold { color: #6f5327; background: var(--gold-soft); }
+
+    .checklist { display: grid; gap: 7px; }
+    .check-item { min-height: 47px; display: grid; grid-template-columns: 27px 1fr; align-items: center; gap: 9px; padding: 8px 9px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); text-align: left; cursor: pointer; }
+    .check-box { display: grid; place-items: center; width: 23px; height: 23px; border: 1.5px solid var(--line-strong); border-radius: 7px; color: #fff; }
+    .check-item.checked .check-box { border-color: var(--green); background: var(--green); }
+    .check-item strong { display: block; font-size: 11px; }
+    .check-item span span { display: block; margin-top: 2px; color: var(--muted); font-size: 8.5px; }
+    .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .photo-slot { min-height: 98px; border: 1px dashed var(--line-strong); border-radius: 13px; background: var(--surface); color: var(--muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer; }
+    .photo-slot.done { border-style: solid; border-color: #a6d0c0; color: var(--green); background: var(--green-soft); }
+    .photo-slot svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    .photo-slot strong { color: inherit; font-size: 10px; }
+    .photo-slot span { font-size: 8px; }
+    .textarea { min-height: 86px; padding: 11px 12px; resize: vertical; font-size: 13px; line-height: 1.5; }
+
+    .money-summary { padding: 18px; border-radius: 18px; color: #fff; background: var(--brand); }
+    .money-summary small { color: rgba(255,255,255,.65); font-size: 9px; }
+    .money-summary > strong { display: block; margin-top: 6px; font-size: 28px; letter-spacing: -.045em; }
+    .money-split { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+    .money-split div { padding-top: 10px; border-top: 1px solid rgba(255,255,255,.16); }
+    .money-split span { display: block; color: rgba(255,255,255,.58); font-size: 8px; }
+    .money-split b { display: block; margin-top: 3px; font-size: 11px; }
+    .settlement-row { display: grid; grid-template-columns: 42px 1fr auto; align-items: center; gap: 10px; padding: 11px 0; }
+    .settlement-row + .settlement-row { border-top: 1px solid #edf0f2; }
+    .settlement-date { text-align: center; }
+    .settlement-date strong { display: block; font-size: 14px; }
+    .settlement-date span, .settlement-main span, .settlement-amount span { display: block; margin-top: 3px; color: var(--muted); font-size: 8.5px; }
+    .settlement-main strong, .settlement-amount strong { display: block; font-size: 10.5px; }
+    .settlement-amount { text-align: right; }
+
+    .menu-list { overflow: hidden; border: 1px solid var(--line); border-radius: 15px; background: var(--surface); }
+    .menu-row { width: 100%; min-height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 13px; border: 0; border-bottom: 1px solid #edf0f2; background: var(--surface); text-align: left; cursor: pointer; }
+    .menu-row:last-child { border-bottom: 0; }
+    .menu-row strong { font-size: 11px; }
+    .menu-row span { display: inline-flex; align-items: center; gap: 3px; color: var(--muted); font-size: 9px; }
+    .menu-row svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+    .empty-state { padding: 40px 20px; text-align: center; color: var(--muted); }
+    .empty-state strong { display: block; color: var(--ink); font-size: 13px; }
+    .empty-state span { display: block; margin-top: 6px; font-size: 9.5px; line-height: 1.5; }
+
+    .sheet-backdrop { position: absolute; z-index: 80; inset: 0; background: rgba(17,24,32,.42); opacity: 0; pointer-events: none; transition: opacity .18s ease; }
+    .sheet { position: absolute; z-index: 81; left: 0; right: 0; bottom: 0; padding: 10px 15px calc(17px + var(--safe-bottom)); border-radius: 23px 23px 0 0; background: var(--surface); transform: translateY(103%); transition: transform .2s ease; box-shadow: 0 -18px 40px rgba(17,24,32,.16); }
+    .sheet.open { transform: translateY(0); }
+    .sheet-backdrop.open { opacity: 1; pointer-events: auto; }
+    .sheet-handle { width: 38px; height: 4px; margin: 0 auto 14px; border-radius: 999px; background: #ccd2d7; }
+    .sheet h3 { margin: 0; font-size: 17px; letter-spacing: -.03em; }
+    .sheet p { margin: 7px 0 14px; color: var(--muted); font-size: 10px; line-height: 1.5; }
+    .password-input-row { display: grid; grid-template-columns: minmax(0, 1fr) 92px; gap: 7px; }
+    .password-input { text-align: center; font-weight: 950; letter-spacing: .22em; font-variant-numeric: tabular-nums; }
+
+    .toast { position: absolute; z-index: 100; left: 50%; bottom: calc(84px + var(--safe-bottom)); max-width: calc(100% - 34px); padding: 10px 14px; border-radius: 11px; color: #fff; background: #17212a; font-size: 10px; font-weight: 800; text-align: center; transform: translate(-50%, 15px); opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .18s ease; box-shadow: 0 10px 26px rgba(17,24,32,.25); }
+    .toast.show { transform: translate(-50%, 0); opacity: 1; }
+
+    .sticky-action { position: sticky; bottom: 0; margin: 16px -14px -14px; padding: 10px 14px calc(10px + var(--safe-bottom)); border-top: 1px solid var(--line); background: rgba(246,247,248,.97); backdrop-filter: blur(10px); }
+
+    @media (max-width: 760px) {
+      .workspace { display: block; min-height: 100dvh; padding: 0; }
+      .prototype-notes { display: none; }
+      .phone { width: 100%; height: 100dvh; min-height: 0; border: 0; border-radius: 0; box-shadow: none; }
+      .phone::before { display: none; }
+      .topbar { min-height: calc(58px + env(safe-area-inset-top)); padding-top: max(12px, env(safe-area-inset-top)); }
+      .topbar.compact { min-height: calc(54px + env(safe-area-inset-top)); padding-top: max(8px, env(safe-area-inset-top)); }
+      .login-screen { padding-top: calc(42px + env(safe-area-inset-top)); }
+    }
+
+    @media (max-height: 720px) and (min-width: 761px) {
+      .workspace { padding: 10px; }
+      .phone { height: calc(100dvh - 20px); min-height: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="workspace">
+    <aside class="prototype-notes" aria-label="프로토타입 빠른 탐색">
+      <div class="prototype-brand">CASTLE THE ART</div>
+      <h1>객실관리 앱<br>모바일 와이어프레임 v2</h1>
+      <p>전체 객실 상태와 비밀번호를 한 화면에서 관리하고, 관리자가 오픈한 청소 일감을 메이드가 금액을 확인한 뒤 직접 선택하는 구조입니다.</p>
+
+      <div class="control-group">
+        <span class="control-label">빠른 화면 전환</span>
+        <div class="control-row">
+          <button class="preview-btn" data-demo-view="login">로그인</button>
+          <button class="preview-btn" data-demo-view="admin-rooms">관리자 객실표</button>
+          <button class="preview-btn" data-demo-view="admin-open">일감 오픈</button>
+          <button class="preview-btn" data-demo-view="maid-market">메이드 선택</button>
+          <button class="preview-btn" data-demo-view="password">비밀번호</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <span class="control-label">객실 청소 상태 색상</span>
+        <div class="legend">
+          <div class="legend-row"><span class="legend-dot red"></span><span>긴급·재청소·지연</span></div>
+          <div class="legend-row"><span class="legend-dot orange"></span><span>청소 가능·진행·검수</span></div>
+          <div class="legend-row"><span class="legend-dot green"></span><span>입실 준비 완료</span></div>
+          <div class="legend-row"><span class="legend-dot gray"></span><span>투숙 중·작업 없음·입실 대기</span></div>
+          <div class="legend-row"><span class="legend-dot blue"></span><span>연박 청소</span></div>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <span class="control-label">핵심 상호작용</span>
+        <div style="color:#59636b;font-size:11px;line-height:1.65;">객실표에서 비밀번호 수정·랜덤 생성 → 일감 오픈/클로즈 → 메이드 화면에서 금액 확인 후 맡기 → 담당 객실에서 촛불 수량과 비밀번호 확인.</div>
+      </div>
+
+      <button class="preview-btn" data-action="reset-demo" style="margin-top:14px;">시안 초기화</button>
+    </aside>
+
+    <main class="phone" aria-label="Castle The Art 객실관리 앱 모바일 미리보기">
+      <div id="app" class="app"></div>
+      <div id="sheetBackdrop" class="sheet-backdrop" data-action="close-sheet"></div>
+      <div id="sheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle"></div>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </main>
+  </div>
+
+  <script>
+    const icon = (name) => {
+      const icons = {
+        rooms: '<svg viewBox="0 0 24 24"><path d="M4 21V4h16v17"/><path d="M8 8h3v3H8zM13 8h3v3h-3zM8 13h3v3H8zM13 13h3v3h-3z"/><path d="M2 21h20"/></svg>',
+        unlock: '<svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 7.5-2"/></svg>',
+        check: '<svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>',
+        clipboard: '<svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5V3h6v1.5M8 10h8M8 14h8M8 18h5"/></svg>',
+        money: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 9v6M17 9v6"/><circle cx="12" cy="12" r="2.5"/></svg>',
+        user: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c.5-5 3.5-7 8-7s7.5 2 8 7"/></svg>',
+        more: '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1" fill="currentColor" stroke="none"/></svg>',
+        bell: '<svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>',
+        back: '<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>',
+        eye: '<svg viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg>',
+        edit: '<svg viewBox="0 0 24 24"><path d="m4 20 4.5-1 10-10-3.5-3.5-10 10L4 20Z"/><path d="m13.5 7 3.5 3.5"/></svg>',
+        refresh: '<svg viewBox="0 0 24 24"><path d="M20 7v5h-5"/><path d="M19 12a7 7 0 1 1-2-5"/></svg>',
+        search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>',
+        chevron: '<svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>',
+        camera: '<svg viewBox="0 0 24 24"><path d="M4 7h4l1.5-2h5L16 7h4v12H4V7Z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+        candle: '<svg viewBox="0 0 24 24"><path d="M9 10h6v10H9z"/><path d="M12 10V7"/><path d="M12 7c-2-1.7-.5-3.5.6-4.5.3 1.8 2.7 2.6-.6 4.5Z"/><path d="M7 21h10"/></svg>',
+        lock: '<svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>'
+      };
+      return icons[name] || '';
+    };
+
+    const defaultRooms = [
+      { id:'1502', type:'오션 스위트', stayStatus:'오늘 입실', stayTone:'blue', cleaningStatus:'청소 가능', color:'red', available:'11:20', deadline:'13:20', checkin:'14:00', checkout:'11:00', password:'4718', candleCount:2, candleLocations:'거실 창가 1 · 욕실 선반 1', openForClaim:true, assignee:'', cleaningFee:9500, task:'퇴실 청소', canEnter:true, inspection:false, badges:['얼리 체크인','급한 객실'], notes:'객실 냄새 제거용 촛불 2개가 있습니다. 입실 즉시 위치를 확인해 주세요.' },
+      { id:'1208', type:'디럭스 더블', stayStatus:'오늘 퇴실', stayTone:'purple', cleaningStatus:'입실 대기', color:'gray', available:'13:00', deadline:'14:30', checkin:'15:00', checkout:'13:00', password:'0256', candleCount:0, candleLocations:'', openForClaim:true, assignee:'', cleaningFee:7500, task:'퇴실 청소', canEnter:false, inspection:false, badges:['레이트 체크아웃'], notes:'고객 퇴실 확인 전 출입 금지. 13시 이후 입실 가능합니다.' },
+      { id:'1004', type:'패밀리 트윈', stayStatus:'오늘 입실', stayTone:'blue', cleaningStatus:'청소 중', color:'orange', available:'10:50', deadline:'14:40', checkin:'15:00', checkout:'11:00', password:'8642', candleCount:1, candleLocations:'주방 창가 1', openForClaim:false, assignee:'박미정', cleaningFee:8500, task:'퇴실 청소', canEnter:true, inspection:false, badges:['장기투숙 후'], notes:'냉장고 내부와 주방 수납장 전체 확인. 주방 창가에 촛불 1개가 있습니다.' },
+      { id:'903', type:'스탠다드', stayStatus:'공실', stayTone:'gray', cleaningStatus:'검수 대기', color:'orange', available:'10:30', deadline:'14:20', checkin:'15:00', checkout:'11:00', password:'3810', candleCount:0, candleLocations:'', openForClaim:false, assignee:'김하나', cleaningFee:7000, task:'퇴실 청소', canEnter:true, inspection:true, badges:['사진 8장'], notes:'욕실 배수구 냄새 확인 요청.' },
+      { id:'802', type:'디럭스 더블', stayStatus:'오늘 입실', stayTone:'blue', cleaningStatus:'입실 준비 완료', color:'green', available:'완료', deadline:'15:00', checkin:'15:00', checkout:'11:00', password:'1193', candleCount:0, candleLocations:'', openForClaim:false, assignee:'박미정', cleaningFee:7500, task:'퇴실 청소', canEnter:true, inspection:false, badges:['검수 승인'], notes:'특이사항 없음.' },
+      { id:'709', type:'스탠다드', stayStatus:'투숙 중', stayTone:'purple', cleaningStatus:'연박 청소', color:'blue', available:'12:00', deadline:'13:00', checkin:'투숙 중', checkout:'내일 11:00', password:'6407', candleCount:0, candleLocations:'', openForClaim:true, assignee:'', cleaningFee:4000, task:'연박 부분 청소', canEnter:true, inspection:false, badges:['연박','수건·쓰레기'], notes:'고객 소지품 이동 금지. 수건 교체와 쓰레기 수거만 진행.' },
+      { id:'608', type:'스탠다드', stayStatus:'오늘 입실', stayTone:'blue', cleaningStatus:'청소 가능', color:'orange', available:'11:00', deadline:'14:10', checkin:'15:00', checkout:'11:00', password:'7284', candleCount:3, candleLocations:'거실 2 · 욕실 1', openForClaim:true, assignee:'', cleaningFee:7000, task:'퇴실 청소', canEnter:true, inspection:false, badges:['촛불 있음'], notes:'냄새 제거용 촛불 3개가 있습니다. 거실 2개, 욕실 1개 위치 확인.' },
+      { id:'507', type:'오션 스위트', stayStatus:'장기투숙', stayTone:'purple', cleaningStatus:'작업 없음', color:'gray', available:'-', deadline:'-', checkin:'투숙 중', checkout:'8월 28일', password:'5521', candleCount:0, candleLocations:'', openForClaim:false, assignee:'', cleaningFee:9500, task:'작업 없음', canEnter:false, inspection:false, badges:['장기투숙'], notes:'금요일 정기 청소 예정.' },
+      { id:'412', type:'디럭스 더블', stayStatus:'공실', stayTone:'gray', cleaningStatus:'입실 준비 완료', color:'green', available:'완료', deadline:'-', checkin:'예약 없음', checkout:'-', password:'3370', candleCount:0, candleLocations:'', openForClaim:false, assignee:'이소라', cleaningFee:7500, task:'퇴실 청소', canEnter:true, inspection:false, badges:['공실'], notes:'특이사항 없음.' },
+      { id:'311', type:'패밀리 트윈', stayStatus:'오늘 입실', stayTone:'blue', cleaningStatus:'청소 가능', color:'orange', available:'11:10', deadline:'14:20', checkin:'15:00', checkout:'11:00', password:'9084', candleCount:0, candleLocations:'', openForClaim:false, assignee:'박미정', cleaningFee:8500, task:'퇴실 청소', canEnter:true, inspection:false, badges:[], notes:'아기 침대 회수 확인.' },
+      { id:'210', type:'스탠다드', stayStatus:'투숙 중', stayTone:'purple', cleaningStatus:'작업 없음', color:'gray', available:'-', deadline:'-', checkin:'투숙 중', checkout:'내일 11:00', password:'1846', candleCount:0, candleLocations:'', openForClaim:false, assignee:'', cleaningFee:7000, task:'작업 없음', canEnter:false, inspection:false, badges:['연박'], notes:'오늘 객실 출입 없음.' },
+      { id:'108', type:'스탠다드', stayStatus:'오늘 입실', stayTone:'blue', cleaningStatus:'재청소 필요', color:'red', available:'지금', deadline:'13:50', checkin:'14:30', checkout:'11:00', password:'6612', candleCount:1, candleLocations:'현관 선반 1', openForClaim:false, assignee:'김하나', cleaningFee:7000, task:'재청소', canEnter:true, inspection:true, badges:['재청소','급한 객실'], notes:'현관 거울 얼룩 재확인. 현관 선반 촛불 1개 있음.' }
+    ];
+
+    const cloneRooms = () => JSON.parse(JSON.stringify(defaultRooms));
+    const defaultState = () => ({
+      role: null,
+      loginRole: 'admin',
+      screen: 'login',
+      previousScreen: null,
+      selectedRoomId: '1502',
+      roomFilter: 'all',
+      roomSearch: '',
+      rooms: cloneRooms(),
+      passwordVisible: false,
+      taskChecks: {},
+      taskPhotos: {},
+      taskStarted: {},
+      completedTasks: [],
+      toastTimer: null
+    });
+
+    let state = defaultState();
+    const app = document.getElementById('app');
+    const sheet = document.getElementById('sheet');
+    const sheetBackdrop = document.getElementById('sheetBackdrop');
+    const toast = document.getElementById('toast');
+
+    const statusTone = (status) => {
+      if (['재청소 필요'].includes(status)) return 'red';
+      if (['청소 가능','청소 중','검수 대기'].includes(status)) return 'orange';
+      if (['입실 준비 완료'].includes(status)) return 'green';
+      if (['연박 청소'].includes(status)) return 'blue';
+      return 'gray';
+    };
+
+    const claimEligible = (room) => ['청소 가능','입실 대기','연박 청소'].includes(room.cleaningStatus);
+    const ownActive = (room) => room.assignee === '김하나' && !['입실 준비 완료','검수 대기','작업 없음'].includes(room.cleaningStatus);
+    const candleLabel = (room) => room.candleCount > 0 ? `촛불 ${room.candleCount}개` : '촛불 없음';
+
+    function initializeFromQuery() {
+      const view = new URLSearchParams(location.search).get('view');
+      if (view === 'admin-rooms' || view === 'admin') { state.role = 'admin'; state.screen = 'admin-rooms'; }
+      if (view === 'admin-open') { state.role = 'admin'; state.screen = 'admin-open'; }
+      if (view === 'maid-market' || view === 'maid') { state.role = 'maid'; state.screen = 'maid-market'; }
+      if (view === 'maid-tasks') { state.role = 'maid'; state.screen = 'maid-tasks'; }
+      if (view === 'password') { state.role = 'admin'; state.screen = 'admin-room-detail'; state.selectedRoomId = '1502'; setTimeout(() => openPasswordSheet('1502'), 80); }
+      if (view === 'room-detail') { state.role = 'admin'; state.screen = 'admin-room-detail'; state.selectedRoomId = '1502'; }
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(state.toastTimer);
+      state.toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function topbar(title, subtitle = '', back = false) {
+      return `<header class="topbar ${back ? 'compact' : ''}">
+        ${back ? `<button class="back-btn" data-action="back" aria-label="뒤로 가기">${icon('back')}</button>` : ''}
+        <div class="topbar-title-wrap">
+          ${back ? '' : '<div class="brandline">CASTLE THE ART</div>'}
+          <div class="topbar-title">${title}</div>
+          ${subtitle ? `<div class="topbar-subtitle">${subtitle}</div>` : ''}
+        </div>
+        ${back ? '' : `<button class="icon-btn" data-action="open-alerts" aria-label="알림">${icon('bell')}</button>`}
+      </header>`;
+    }
+
+    const adminNavItems = [
+      ['admin-rooms','rooms','객실'], ['admin-open','unlock','일감 오픈'], ['admin-inspection','clipboard','검수'], ['admin-settlement','money','정산'], ['admin-more','more','더보기']
+    ];
+    const maidNavItems = [
+      ['maid-market','unlock','일감 찾기'], ['maid-tasks','clipboard','내 업무'], ['maid-completed','check','완료'], ['maid-settlement','money','정산'], ['maid-profile','user','내 정보']
+    ];
+
+    function bottomNav(role) {
+      const items = role === 'admin' ? adminNavItems : maidNavItems;
+      return `<nav class="bottom-nav" aria-label="주요 메뉴">${items.map(([screen, iconName, label]) => `<button class="nav-item ${state.screen === screen ? 'active' : ''}" data-screen="${screen}"><span class="nav-icon">${icon(iconName)}${screen === 'admin-inspection' ? '<i class="nav-dot"></i>' : ''}</span><span>${label}</span></button>`).join('')}</nav>`;
+    }
+
+    function stayChip(room) {
+      return `<span class="status-chip tone-${room.stayTone}">${room.stayStatus}</span>`;
+    }
+
+    function cleaningChip(room) {
+      return `<span class="status-chip tone-${statusTone(room.cleaningStatus)}">${room.cleaningStatus}</span>`;
+    }
+
+    function badgeMarkup(room) {
+      const items = [...room.badges];
+      if (room.candleCount > 0 && !items.some(x => x.includes('촛불'))) items.push(candleLabel(room));
+      return items.map(label => {
+        const cls = label.includes('급한') || label.includes('재청소') ? 'red' : label.includes('얼리') || label.includes('연박') ? 'blue' : label.includes('레이트') ? 'orange' : '';
+        return `<span class="badge ${cls}">${label}</span>`;
+      }).join('');
+    }
+
+    function renderLogin() {
+      const isAdmin = state.loginRole === 'admin';
+      return `<section class="login-screen">
+        <div class="login-mark">CTA</div>
+        <div class="login-brand">CASTLE THE ART</div>
+        <h1 class="login-title">객실 운영</h1>
+        <p class="login-copy">전체 객실 상태부터 청소 일감 선택과<br>검수·정산까지 한곳에서 관리합니다.</p>
+        <div class="role-tabs" aria-label="로그인 역할 선택">
+          <button class="role-tab ${isAdmin ? 'active' : ''}" data-login-role="admin">관리자</button>
+          <button class="role-tab ${!isAdmin ? 'active' : ''}" data-login-role="maid">메이드</button>
+        </div>
+        <div class="field"><label>아이디</label><input class="input" autocomplete="username" value="${isAdmin ? 'manager01' : 'maid01'}" /></div>
+        <div class="field"><label>비밀번호</label><input class="input" type="password" autocomplete="current-password" value="1234" /></div>
+        <div class="login-actions"><button class="btn primary full" data-action="login">${isAdmin ? '관리자' : '메이드'}로 로그인</button><div class="login-hint">클릭형 와이어프레임이라 별도 인증 없이 이동합니다.</div></div>
+      </section>`;
+    }
+
+    function filteredAdminRooms() {
+      const search = state.roomSearch.trim().toLowerCase();
+      return state.rooms.filter(room => {
+        const matchesSearch = !search || room.id.includes(search) || room.type.toLowerCase().includes(search) || room.stayStatus.includes(search) || room.cleaningStatus.includes(search);
+        if (!matchesSearch) return false;
+        if (state.roomFilter === 'all') return true;
+        if (state.roomFilter === 'occupied') return ['투숙 중','장기투숙'].includes(room.stayStatus);
+        if (state.roomFilter === 'cleaning') return ['청소 가능','청소 중','입실 대기','연박 청소','재청소 필요','검수 대기'].includes(room.cleaningStatus);
+        if (state.roomFilter === 'candle') return room.candleCount > 0;
+        if (state.roomFilter === 'open') return room.openForClaim;
+        return true;
+      });
+    }
+
+    function adminRoomRow(room) {
+      const canToggle = claimEligible(room) && !room.assignee;
+      return `<article class="room-row ${room.color}">
+        <div class="room-row-head">
+          <div class="room-ident"><strong>${room.id}호</strong><span>${room.type}</span></div>
+          <div class="status-stack">${stayChip(room)}${cleaningChip(room)}</div>
+        </div>
+        <div class="room-row-grid">
+          <div class="room-data password"><label>객실 비밀번호</label><strong>${room.password}</strong></div>
+          <div class="room-data candle"><label>촛불</label><strong>${room.candleCount > 0 ? `${room.candleCount}개 있음` : '없음'}</strong></div>
+          <div class="room-data"><label>담당 메이드</label><strong>${room.assignee || '미정'}</strong></div>
+        </div>
+        <div class="room-row-actions">
+          <button class="switch ${room.openForClaim ? 'on' : ''}" data-action="toggle-open" data-id="${room.id}" ${canToggle ? '' : 'disabled'} aria-label="${room.id}호 일감 ${room.openForClaim ? '클로즈' : '오픈'}"></button>
+          <span class="open-state ${room.openForClaim ? 'on' : 'off'}">${room.openForClaim ? '메이드 선택 오픈' : room.assignee ? `${room.assignee} 담당 확정` : '메이드 선택 클로즈'}</span>
+          <div style="display:flex;gap:5px;"><button class="btn small" data-action="edit-password" data-id="${room.id}">${icon('edit')} 비번</button><button class="btn small soft" data-action="go-admin-room" data-id="${room.id}">상세</button></div>
+        </div>
+      </article>`;
+    }
+
+    function renderAdminRooms() {
+      const rooms = filteredAdminRooms();
+      const occupied = state.rooms.filter(r => ['투숙 중','장기투숙'].includes(r.stayStatus)).length;
+      const cleaning = state.rooms.filter(r => ['청소 가능','청소 중','입실 대기','연박 청소','재청소 필요','검수 대기'].includes(r.cleaningStatus)).length;
+      const candle = state.rooms.filter(r => r.candleCount > 0).length;
+      const open = state.rooms.filter(r => r.openForClaim).length;
+      const filters = [['all','전체'],['occupied','투숙 중'],['cleaning','청소 필요'],['candle','촛불 있음'],['open','선택 오픈']];
+      return `${topbar('전체 객실 관리', `샘플 ${state.rooms.length}개 · 비밀번호 기본 표시`)}
+        <section class="screen">
+          <div class="summary-strip">
+            <div class="summary-cell blue"><strong>${state.rooms.length}</strong><span>전체 객실</span></div>
+            <div class="summary-cell"><strong>${occupied}</strong><span>투숙 중</span></div>
+            <div class="summary-cell orange"><strong>${cleaning}</strong><span>청소 관리</span></div>
+            <div class="summary-cell red"><strong>${candle}</strong><span>촛불 있음</span></div>
+          </div>
+          <div class="search-wrap"><span class="search-icon">${icon('search')}</span><input id="roomSearch" class="input" placeholder="객실 번호·상태 검색" value="${state.roomSearch}" /></div>
+          <div class="filter-rail">${filters.map(([key,label]) => `<button class="chip ${state.roomFilter === key ? 'active' : ''}" data-room-filter="${key}">${label}${key === 'open' ? ` ${open}` : ''}</button>`).join('')}</div>
+          <div class="section-title-row"><h2 class="section-title">객실 상태·비밀번호</h2><span class="section-meta">${rooms.length}개 표시</span></div>
+          <div class="room-board">${rooms.length ? rooms.map(adminRoomRow).join('') : `<div class="empty-state"><strong>조건에 맞는 객실이 없습니다</strong><span>검색어 또는 필터를 바꿔 주세요.</span></div>`}</div>
+        </section>${bottomNav('admin')}`;
+    }
+
+    function renderAdminOpen() {
+      const jobs = state.rooms.filter(r => claimEligible(r) || (r.assignee && !['입실 준비 완료','검수 대기','작업 없음'].includes(r.cleaningStatus)));
+      const openCount = jobs.filter(r => r.openForClaim).length;
+      const assignedCount = jobs.filter(r => r.assignee).length;
+      return `${topbar('메이드 선택 일감', `${openCount}건 오픈 · ${assignedCount}건 담당 확정`)}
+        <section class="screen">
+          <div class="notice"><span class="notice-mark">!</span><span>오픈한 객실만 메이드의 ‘일감 찾기’에 금액과 함께 노출됩니다. 누군가 맡으면 자동으로 클로즈됩니다.</span></div>
+          <div class="job-toolbar"><button class="btn soft" data-action="open-all">선택 가능 전체 오픈</button><button class="btn" data-action="close-all">미배정 전체 클로즈</button></div>
+          <div class="section-title-row"><h2 class="section-title">오늘 청소 일감</h2><span class="section-meta">관리자가 노출 제어</span></div>
+          <div class="job-list">${jobs.map(room => {
+            const canToggle = claimEligible(room) && !room.assignee;
+            return `<article class="job-row">
+              <div class="job-head"><div><div class="job-room">${room.id}호</div><div class="job-type">${room.type} · ${room.task}</div></div><div class="job-price">${room.cleaningFee.toLocaleString()}원<span>메이드 표시 금액</span></div></div>
+              <div class="job-meta"><div><label>청소 가능</label><strong>${room.available}</strong></div><div><label>완료 마감</label><strong>${room.deadline}</strong></div><div><label>촛불</label><strong>${room.candleCount ? `${room.candleCount}개` : '없음'}</strong></div></div>
+              <div class="job-footer"><div class="job-assignee">담당 <strong>${room.assignee || '미정'}</strong><br>${room.openForClaim ? '메이드에게 노출 중' : room.assignee ? '선택 완료로 자동 클로즈' : '메이드에게 숨김'}</div><div style="display:flex;align-items:center;gap:8px;"><span class="open-state ${room.openForClaim ? 'on':'off'}">${room.openForClaim ? '오픈':'클로즈'}</span><button class="switch ${room.openForClaim ? 'on':''}" data-action="toggle-open" data-id="${room.id}" ${canToggle ? '' : 'disabled'} aria-label="일감 오픈 상태 변경"></button></div></div>
+            </article>`;
+          }).join('')}</div>
+        </section>${bottomNav('admin')}`;
+    }
+
+    function renderAdminRoomDetail() {
+      const room = state.rooms.find(r => r.id === state.selectedRoomId) || state.rooms[0];
+      const canToggle = claimEligible(room) && !room.assignee;
+      return `${topbar(`${room.id}호`, room.type, true)}
+        <section class="screen no-nav">
+          <div class="detail-hero">
+            <div class="detail-head"><div><div class="detail-room">${room.id}호</div><div class="detail-type">${room.type} · ${room.task}</div></div><div class="detail-price">${room.cleaningFee.toLocaleString()}원<span>객실 청소 요금</span></div></div>
+            <div class="detail-statuses">${stayChip(room)}${cleaningChip(room)}${room.candleCount ? `<span class="candle-badge">${icon('candle')} 촛불 ${room.candleCount}개</span>` : ''}</div>
+          </div>
+
+          <div class="panel"><div class="panel-header"><div><div class="panel-title">객실 상태</div><div class="panel-subtitle">예약 상태와 청소 상태를 별도로 관리</div></div></div><div class="panel-body">
+            <div class="info-row"><span class="info-label">예약 상태</span><span class="info-value">${room.stayStatus}</span></div>
+            <div class="info-row"><span class="info-label">청소 상태</span><span class="info-value">${room.cleaningStatus}</span></div>
+            <div class="info-row"><span class="info-label">체크아웃 → 체크인</span><span class="info-value">${room.checkout} → ${room.checkin}</span></div>
+            <div class="info-row"><span class="info-label">담당 메이드</span><span class="info-value">${room.assignee || '미정'}</span></div>
+          </div></div>
+
+          <div class="panel"><div class="panel-header"><div><div class="panel-title">객실 비밀번호</div><div class="panel-subtitle">직접 수정 또는 숫자 4자리 랜덤 생성</div></div></div><div class="panel-body">
+            <div class="password-box"><div class="password-display"><small>현재 비밀번호</small><strong>${room.password}</strong></div><button class="icon-btn" data-action="edit-password" data-id="${room.id}" aria-label="비밀번호 수정">${icon('edit')}</button></div>
+            <div class="callout" style="margin-top:9px;">현재 범위는 앱 안에서 비밀번호를 저장·공유하는 기능입니다. 실제 도어락 변경은 별도 연동이 필요합니다.</div>
+          </div></div>
+
+          <div class="panel"><div class="panel-header"><div><div class="panel-title">촛불 표시</div><div class="panel-subtitle">객실에 남아 있는 촛불 개수</div></div></div><div class="panel-body">
+            <div class="candle-control"><div class="candle-title">${icon('candle')}<div><strong>${room.candleCount > 0 ? `촛불 ${room.candleCount}개 있음` : '촛불 없음'}</strong><span>${room.candleLocations || '위치 정보 없음'}</span></div></div><div class="stepper"><button data-action="candle-minus" data-id="${room.id}" aria-label="촛불 수량 줄이기">−</button><strong>${room.candleCount}</strong><button data-action="candle-plus" data-id="${room.id}" aria-label="촛불 수량 늘리기">+</button></div></div>
+            ${room.candleCount > 0 ? `<div class="callout gold" style="margin-top:9px;">메이드 업무 화면에 수량과 위치가 표시되고, 청소 완료 전 소화·회수 확인 항목이 추가됩니다.</div>` : ''}
+          </div></div>
+
+          <div class="panel"><div class="panel-header"><div><div class="panel-title">메이드 선택 공개</div><div class="panel-subtitle">금액을 보고 직접 맡을 수 있도록 오픈</div></div></div><div class="panel-body">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;"><div><div class="open-state ${room.openForClaim ? 'on':'off'}">${room.openForClaim ? '현재 오픈':'현재 클로즈'}</div><div class="mini-label" style="margin-top:4px;">${room.assignee ? `${room.assignee} 담당으로 확정됨` : claimEligible(room) ? '미배정 청소 일감' : '현재 선택 대상이 아닌 객실'}</div></div><button class="switch ${room.openForClaim ? 'on':''}" data-action="toggle-open" data-id="${room.id}" ${canToggle ? '' : 'disabled'}></button></div>
+          </div></div>
+
+          <div class="panel"><div class="panel-header"><div><div class="panel-title">객실 특이사항</div><div class="panel-subtitle">관리자와 담당 메이드에게 표시</div></div></div><div class="panel-body"><div class="callout orange">${room.notes}</div><div class="badge-row" style="margin-top:9px;margin-bottom:0;">${badgeMarkup(room)}</div></div></div>
+        </section>`;
+    }
+
+    function renderMaidMarket() {
+      const available = state.rooms.filter(r => r.openForClaim && !r.assignee && claimEligible(r)).sort((a,b) => (a.color === 'red' ? -1 : 0) - (b.color === 'red' ? -1 : 0));
+      const total = available.reduce((sum, r) => sum + r.cleaningFee, 0);
+      return `${topbar('일감 찾기', '관리자가 오픈한 객실만 표시')}
+        <section class="screen">
+          <div class="maid-hero"><div class="maid-greeting">김하나 님이 선택할 수 있는 일감</div><h2>${available.length}개 객실</h2><div class="maid-stats"><div class="maid-stat"><span>지금 입실 가능</span><strong>${available.filter(r => r.canEnter).length}개</strong></div><div class="maid-stat"><span>대기 포함</span><strong>${available.length}개</strong></div><div class="maid-stat"><span>전체 금액</span><strong>${total.toLocaleString()}원</strong></div></div></div>
+          <div class="notice"><span class="notice-mark">i</span><span>원하는 객실의 금액·시간·촛불 여부를 확인한 뒤 ‘이 객실 맡기’를 누르면 내 담당 객실이 됩니다.</span></div>
+          <div class="section-title-row"><h2 class="section-title">선택 가능한 객실</h2><span class="section-meta">마감 임박순</span></div>
+          ${available.length ? available.map(room => `<article class="market-card ${room.color}">
+            <div class="market-top"><div><div class="market-room">${room.id}호</div><div class="job-type">${room.type} · ${room.task}</div></div><div class="market-price">${room.cleaningFee.toLocaleString()}원<span>완료·승인 후 정산</span></div></div>
+            <div class="market-info"><span>청소 가능 <b>${room.available}</b></span><span>완료 마감 <b>${room.deadline}</b></span><span>예상 <b>${room.task.includes('연박') ? '25분':'50분'}</b></span></div>
+            <div class="badge-row">${badgeMarkup(room)}${room.candleCount ? `<span class="candle-badge">${icon('candle')} ${candleLabel(room)}</span>` : ''}</div>
+            <button class="btn ${room.color === 'red' ? 'red':'primary'} full" data-action="claim-job" data-id="${room.id}">${room.canEnter ? '이 객실 맡기' : `${room.available}부터 청소 · 미리 맡기`}</button>
+          </article>`).join('') : `<div class="empty-state"><strong>현재 선택 가능한 일감이 없습니다</strong><span>관리자가 객실을 오픈하면 이곳에 표시됩니다.</span></div>`}
+        </section>${bottomNav('maid')}`;
+    }
+
+    function renderMaidTasks() {
+      const own = state.rooms.filter(ownActive).sort((a,b) => (a.color === 'red' ? -1 : 0) - (b.color === 'red' ? -1 : 0));
+      const total = own.reduce((sum, r) => sum + r.cleaningFee, 0);
+      return `${topbar('내 담당 객실', '김하나 · 오늘')}
+        <section class="screen">
+          <div class="summary-strip"><div class="summary-cell blue"><strong>${own.length}</strong><span>담당 객실</span></div><div class="summary-cell orange"><strong>${own.filter(r => r.canEnter).length}</strong><span>지금 가능</span></div><div class="summary-cell"><strong>${own.filter(r => !r.canEnter).length}</strong><span>입실 대기</span></div><div class="summary-cell green"><strong>${Math.round(total/1000)}천</strong><span>예상 정산</span></div></div>
+          <div class="section-title-row"><h2 class="section-title">지금 할 일</h2><span class="section-meta">마감 임박순</span></div>
+          ${own.length ? own.map(room => `<article class="task-card">
+            <div class="task-card-top"><div><div class="task-number">${room.id}호</div><div class="job-type">${room.type} · ${room.task}</div></div><div class="task-deadline">${room.deadline} 마감<span>${room.canEnter ? '지금 입실 가능' : `${room.available}부터 가능`}</span></div></div>
+            <div class="task-summary"><span>청소비 <b>${room.cleaningFee.toLocaleString()}원</b></span><span>${room.candleCount ? `촛불 <b>${room.candleCount}개</b>` : '촛불 없음'}</span></div>
+            <div class="badge-row">${badgeMarkup(room)}</div>
+            ${room.canEnter ? `<button class="btn primary full" data-action="go-maid-task" data-id="${room.id}">${state.taskStarted[room.id] ? '청소 계속하기' : '업무 상세 보기'}</button>` : `<div class="callout orange">${room.available}부터 비밀번호와 청소 시작 버튼이 열립니다.</div>`}
+          </article>`).join('') : `<div class="empty-state"><strong>아직 맡은 객실이 없습니다</strong><span>‘일감 찾기’에서 원하는 객실을 선택해 주세요.</span></div>`}
+        </section>${bottomNav('maid')}`;
+    }
+
+    function renderMaidTask() {
+      const room = state.rooms.find(r => r.id === state.selectedRoomId) || state.rooms[0];
+      const checks = state.taskChecks[room.id] || [];
+      const photos = state.taskPhotos[room.id] || [];
+      const checkItems = [
+        ['침대·침구','주름, 오염, 머리카락 확인'],
+        ['욕실','배수구·수전·거울 확인'],
+        ['주방·냉장고','음식물과 얼룩 확인'],
+        ['바닥·먼지','모서리와 가구 아래 확인'],
+        ['수건·비품','기준 수량에 맞게 보충'],
+        ...(room.candleCount > 0 ? [[`촛불 ${room.candleCount}개 소화·회수`,`위치: ${room.candleLocations || '객실 내 위치 확인'}`]] : []),
+        ['문 잠금','퇴실 전 도어락 확인']
+      ];
+      const photoItems = ['객실 전경','침대','욕실','주방'];
+      const done = checks.length === checkItems.length && photos.length === photoItems.length;
+      const started = !!state.taskStarted[room.id];
+      return `${topbar(`${room.id}호 청소`, `${room.task} · ${room.cleaningFee.toLocaleString()}원`, true)}
+        <section class="screen no-nav">
+          <div class="detail-hero"><div class="detail-head"><div><div class="detail-room">${room.id}호</div><div class="detail-type">${room.type} · ${room.deadline} 완료 마감</div></div><div class="detail-price">${room.cleaningFee.toLocaleString()}원<span>내 예상 정산</span></div></div><div class="detail-statuses">${cleaningChip(room)}${room.candleCount ? `<span class="candle-badge">${icon('candle')} 촛불 ${room.candleCount}개</span>` : ''}</div></div>
+
+          ${room.candleCount > 0 ? `<div class="callout gold" style="margin-bottom:11px;"><strong>촛불 ${room.candleCount}개 있음</strong><br>${room.candleLocations}. 입실 즉시 위치를 확인하고, 완료 전 모두 소화·회수해 주세요.</div>` : ''}
+
+          <div class="panel"><div class="panel-header"><div><div class="panel-title">입실 정보</div><div class="panel-subtitle">내 담당 객실에만 비밀번호 표시</div></div></div><div class="panel-body">
+            ${room.canEnter ? `<div class="password-box"><div class="password-display"><small>객실 비밀번호</small><strong class="${state.passwordVisible ? '' : 'masked'}">${state.passwordVisible ? room.password : '••••'}</strong></div><button class="icon-btn" data-action="toggle-password" aria-label="비밀번호 보기">${icon('eye')}</button></div>` : `<div class="callout orange">${room.available}부터 객실 비밀번호를 확인할 수 있습니다.</div>`}
+            <div class="info-row"><span class="info-label">청소 가능</span><span class="info-value">${room.available}</span></div>
+            <div class="info-row"><span class="info-label">완료 마감</span><span class="info-value">${room.deadline}</span></div>
+            <div class="info-row"><span class="info-label">특이사항</span><span class="info-value">${room.notes}</span></div>
+          </div></div>
+
+          ${!started ? `<button class="btn primary full" data-action="start-task" data-id="${room.id}" ${room.canEnter ? '' : 'disabled'}>청소 시작</button>` : `
+            <div class="section-title-row"><h2 class="section-title">청소 체크리스트</h2><span class="section-meta">${checks.length}/${checkItems.length}</span></div>
+            <div class="checklist">${checkItems.map((item, i) => `<button class="check-item ${checks.includes(i) ? 'checked':''}" data-action="toggle-check" data-id="${room.id}" data-index="${i}"><span class="check-box">${checks.includes(i) ? '✓':''}</span><span><strong>${item[0]}</strong><span>${item[1]}</span></span></button>`).join('')}</div>
+            <div class="section-title-row"><h2 class="section-title">필수 사진</h2><span class="section-meta">${photos.length}/${photoItems.length}</span></div>
+            <div class="photo-grid">${photoItems.map((name, i) => `<button class="photo-slot ${photos.includes(i) ? 'done':''}" data-action="toggle-photo" data-id="${room.id}" data-index="${i}">${icon('camera')}<strong>${photos.includes(i) ? '등록 완료' : name}</strong><span>${photos.includes(i) ? '눌러서 다시 촬영' : '눌러서 촬영'}</span></button>`).join('')}</div>
+            <div class="section-title-row"><h2 class="section-title">특이사항</h2><span class="section-meta">선택 입력</span></div>
+            <textarea class="textarea" placeholder="객실 상태나 추가 확인이 필요한 내용을 적어 주세요."></textarea>
+            <div class="sticky-action"><button class="btn green full" data-action="complete-task" data-id="${room.id}" ${done ? '' : 'disabled'}>청소 완료·검수 요청 ${done ? '' : `(${checks.length + photos.length}/${checkItems.length + photoItems.length})`}</button></div>
+          `}
+        </section>`;
+    }
+
+    function renderAdminInspection() {
+      const rooms = state.rooms.filter(r => r.inspection || r.cleaningStatus === '검수 대기' || r.cleaningStatus === '재청소 필요');
+      return `${topbar('청소 검수', `${rooms.length}개 객실`)}<section class="screen">
+        <div class="filter-rail"><button class="chip active">전체 ${rooms.length}</button><button class="chip">검수 대기</button><button class="chip">재청소</button></div>
+        <div class="section-title-row"><h2 class="section-title">확인할 객실</h2><span class="section-meta">오래된 순</span></div>
+        <div class="job-list">${rooms.map(room => `<article class="job-row"><div class="job-head"><div><div class="job-room">${room.id}호</div><div class="job-type">${room.assignee || '미정'} · ${room.task}</div></div>${cleaningChip(room)}</div><div class="job-meta"><div><label>청소비</label><strong>${room.cleaningFee.toLocaleString()}원</strong></div><div><label>촛불</label><strong>${room.candleCount ? `${room.candleCount}개` : '없음'}</strong></div><div><label>사진</label><strong>8장</strong></div></div><div class="callout orange" style="margin-top:9px;">메모: ${room.notes}</div><div class="button-row" style="margin-top:9px;"><button class="btn red" data-action="reject-inspection" data-id="${room.id}">재청소</button><button class="btn green" data-action="approve-inspection" data-id="${room.id}">승인</button></div></article>`).join('')}</div>
+      </section>${bottomNav('admin')}`;
+    }
+
+    function renderAdminSettlement() {
+      const rows = [['14','금','김하나','3객실 · 검수 2건','23,500원','1건 대기'],['14','금','박미정','3객실 · 검수 3건','24,500원','확정'],['13','목','김하나','7객실','51,000원','지급 예정'],['13','목','박미정','6객실','45,000원','지급 예정']];
+      return `${topbar('정산 관리', '8월 10일–16일')}<section class="screen"><div class="money-summary"><small>이번 주 확정 정산</small><strong>144,000원</strong><div class="money-split"><div><span>예상 포함</span><b>159,500원</b></div><div><span>지급 완료</span><b>96,000원</b></div></div></div><div class="section-title-row"><h2 class="section-title">메이드별 내역</h2><button class="text-action">엑셀 내보내기</button></div><div class="panel"><div class="panel-body">${rows.map(r => `<div class="settlement-row"><div class="settlement-date"><strong>${r[0]}</strong><span>${r[1]}</span></div><div class="settlement-main"><strong>${r[2]}</strong><span>${r[3]}</span></div><div class="settlement-amount"><strong>${r[4]}</strong><span>${r[5]}</span></div></div>`).join('')}</div></div></section>${bottomNav('admin')}`;
+    }
+
+    function renderAdminMore() {
+      return `${topbar('더보기', '관리자 계정')}<section class="screen"><div class="section-title-row first"><h2 class="section-title">운영 설정</h2></div><div class="menu-list"><button class="menu-row"><strong>객실·객실 타입 관리</strong><span>${state.rooms.length}개 ${icon('chevron')}</span></button><button class="menu-row"><strong>객실별 청소 요금</strong><span>${icon('chevron')}</span></button><button class="menu-row"><strong>청소 체크리스트</strong><span>${icon('chevron')}</span></button><button class="menu-row"><strong>직원 계정·권한</strong><span>8명 ${icon('chevron')}</span></button><button class="menu-row"><strong>알림 설정</strong><span>${icon('chevron')}</span></button></div><div class="section-title-row"><h2 class="section-title">프로토타입</h2></div><div class="menu-list"><button class="menu-row" data-action="switch-to-maid"><strong>메이드 화면으로 보기</strong><span>${icon('chevron')}</span></button><button class="menu-row" data-action="logout"><strong>로그아웃</strong><span>${icon('chevron')}</span></button></div></section>${bottomNav('admin')}`;
+    }
+
+    function renderMaidCompleted() {
+      const completedIds = state.completedTasks.length ? state.completedTasks : ['903','802'];
+      const rooms = completedIds.map(id => state.rooms.find(r => r.id === id)).filter(Boolean);
+      return `${topbar('완료 업무', '김하나 · 오늘')}<section class="screen"><div class="filter-rail"><button class="chip active">오늘</button><button class="chip">검수 대기</button><button class="chip">승인</button></div><div class="section-title-row"><h2 class="section-title">오늘 완료</h2><span class="section-meta">${rooms.length}개</span></div><div class="job-list">${rooms.map(room => `<article class="job-row"><div class="job-head"><div><div class="job-room">${room.id}호</div><div class="job-type">${room.task}</div></div><div class="job-price">${room.cleaningFee.toLocaleString()}원<span>${room.cleaningStatus}</span></div></div><div class="job-footer"><div class="job-assignee">촛불 <strong>${room.candleCount ? `${room.candleCount}개 확인` : '없음'}</strong></div>${cleaningChip(room)}</div></article>`).join('')}</div></section>${bottomNav('maid')}`;
+    }
+
+    function renderMaidSettlement() {
+      return `${topbar('내 정산', '김하나 · 8월')}<section class="screen"><div class="money-summary"><small>이번 달 확정 금액</small><strong>684,500원</strong><div class="money-split"><div><span>예상 포함</span><b>727,000원</b></div><div><span>지급 완료</span><b>512,000원</b></div></div></div><div class="section-title-row"><h2 class="section-title">오늘 선택한 일감</h2><span class="section-meta">예상 23,500원</span></div><div class="panel"><div class="panel-body">${[['1502','퇴실 청소','9,500원','담당'],['903','퇴실 청소','7,000원','검수 전'],['108','재청소','7,000원','진행']].map(r => `<div class="settlement-row"><div class="settlement-date"><strong>${r[0]}</strong><span>호</span></div><div class="settlement-main"><strong>${r[1]}</strong><span>8월 14일</span></div><div class="settlement-amount"><strong>${r[2]}</strong><span>${r[3]}</span></div></div>`).join('')}</div></div></section>${bottomNav('maid')}`;
+    }
+
+    function renderMaidProfile() {
+      const own = state.rooms.filter(r => r.assignee === '김하나').length;
+      return `${topbar('내 정보', '메이드 계정')}<section class="screen"><div class="panel"><div class="panel-body"><div class="info-row"><span class="info-label">이름</span><span class="info-value">김하나</span></div><div class="info-row"><span class="info-label">오늘 담당</span><span class="info-value">${own}객실</span></div><div class="info-row"><span class="info-label">이번 달 승인율</span><span class="info-value">97.4%</span></div></div></div><div class="menu-list"><button class="menu-row"><strong>알림 설정</strong><span>${icon('chevron')}</span></button><button class="menu-row"><strong>내 벌점·컴플레인</strong><span>0건 ${icon('chevron')}</span></button><button class="menu-row" data-action="switch-to-admin"><strong>관리자 화면으로 보기</strong><span>${icon('chevron')}</span></button><button class="menu-row" data-action="logout"><strong>로그아웃</strong><span>${icon('chevron')}</span></button></div></section>${bottomNav('maid')}`;
+    }
+
+    function render() {
+      let html = '';
+      switch (state.screen) {
+        case 'login': html = renderLogin(); break;
+        case 'admin-rooms': html = renderAdminRooms(); break;
+        case 'admin-open': html = renderAdminOpen(); break;
+        case 'admin-room-detail': html = renderAdminRoomDetail(); break;
+        case 'admin-inspection': html = renderAdminInspection(); break;
+        case 'admin-settlement': html = renderAdminSettlement(); break;
+        case 'admin-more': html = renderAdminMore(); break;
+        case 'maid-market': html = renderMaidMarket(); break;
+        case 'maid-tasks': html = renderMaidTasks(); break;
+        case 'maid-task': html = renderMaidTask(); break;
+        case 'maid-completed': html = renderMaidCompleted(); break;
+        case 'maid-settlement': html = renderMaidSettlement(); break;
+        case 'maid-profile': html = renderMaidProfile(); break;
+        default: html = renderLogin();
+      }
+      app.innerHTML = html;
+      document.querySelectorAll('[data-demo-view]').forEach(btn => {
+        const view = btn.dataset.demoView;
+        const active = (view === 'login' && state.screen === 'login') || view === state.screen || (view === 'password' && state.screen === 'admin-room-detail');
+        btn.classList.toggle('active', active);
+      });
+    }
+
+    function navigate(screen, role = state.role) {
+      state.previousScreen = state.screen;
+      state.screen = screen;
+      state.role = role;
+      state.passwordVisible = false;
+      closeSheet(false);
+      render();
+      const scroller = app.querySelector('.screen');
+      if (scroller) scroller.scrollTop = 0;
+    }
+
+    function openPasswordSheet(roomId) {
+      const room = state.rooms.find(r => r.id === roomId);
+      if (!room) return;
+      state.selectedRoomId = roomId;
+      sheet.innerHTML = `<div class="sheet-handle"></div><h3 id="sheetTitle">${room.id}호 비밀번호 수정</h3><p>숫자 4자리를 직접 입력하거나 랜덤 생성한 뒤 저장하세요.</p><div class="password-input-row"><input id="passwordInput" class="input password-input" inputmode="numeric" maxlength="4" value="${room.password}" aria-label="4자리 객실 비밀번호"><button class="btn soft" data-action="random-password">${icon('refresh')} 랜덤</button></div><div class="button-row" style="margin-top:13px;"><button class="btn" data-action="close-sheet">취소</button><button class="btn primary" data-action="save-password">저장</button></div>`;
+      sheet.classList.add('open');
+      sheetBackdrop.classList.add('open');
+      requestAnimationFrame(() => document.getElementById('passwordInput')?.select());
+    }
+
+    function closeSheet(clear = true) {
+      sheet.classList.remove('open');
+      sheetBackdrop.classList.remove('open');
+      if (clear) setTimeout(() => { if (!sheet.classList.contains('open')) sheet.innerHTML = ''; }, 220);
+    }
+
+    function randomPassword() {
+      return String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+    }
+
+    document.addEventListener('click', (event) => {
+      const demo = event.target.closest('[data-demo-view]');
+      if (demo) {
+        const view = demo.dataset.demoView;
+        if (view === 'login') { state = defaultState(); render(); closeSheet(); }
+        if (view === 'admin-rooms') { state.role = 'admin'; navigate('admin-rooms','admin'); }
+        if (view === 'admin-open') { state.role = 'admin'; navigate('admin-open','admin'); }
+        if (view === 'maid-market') { state.role = 'maid'; navigate('maid-market','maid'); }
+        if (view === 'password') { state.role = 'admin'; state.selectedRoomId = '1502'; navigate('admin-room-detail','admin'); setTimeout(() => openPasswordSheet('1502'), 50); }
+        return;
+      }
+
+      const roleTab = event.target.closest('[data-login-role]');
+      if (roleTab) { state.loginRole = roleTab.dataset.loginRole; render(); return; }
+
+      const nav = event.target.closest('[data-screen]');
+      if (nav) { navigate(nav.dataset.screen, nav.dataset.screen.startsWith('admin') ? 'admin' : 'maid'); return; }
+
+      const filter = event.target.closest('[data-room-filter]');
+      if (filter) { state.roomFilter = filter.dataset.roomFilter; render(); return; }
+
+      const actionEl = event.target.closest('[data-action]');
+      if (!actionEl) return;
+      const action = actionEl.dataset.action;
+      const id = actionEl.dataset.id;
+
+      if (action === 'login') {
+        state.role = state.loginRole;
+        navigate(state.role === 'admin' ? 'admin-rooms' : 'maid-market', state.role);
+        showToast(`${state.role === 'admin' ? '관리자' : '메이드'} 화면으로 로그인했습니다.`);
+      }
+      if (action === 'logout') { state = defaultState(); closeSheet(); render(); showToast('로그아웃했습니다.'); }
+      if (action === 'reset-demo') { state = defaultState(); closeSheet(); render(); showToast('시안을 초기 상태로 되돌렸습니다.'); }
+      if (action === 'back') {
+        const target = state.previousScreen || (state.role === 'admin' ? 'admin-rooms' : 'maid-tasks');
+        state.screen = target;
+        state.previousScreen = null;
+        state.passwordVisible = false;
+        render();
+      }
+      if (action === 'open-alerts') { showToast('알림 화면 위치입니다.'); }
+      if (action === 'go-admin-room') { state.selectedRoomId = id; navigate('admin-room-detail','admin'); }
+      if (action === 'edit-password') { openPasswordSheet(id || state.selectedRoomId); }
+      if (action === 'close-sheet') { closeSheet(); }
+      if (action === 'random-password') {
+        const input = document.getElementById('passwordInput');
+        if (input) input.value = randomPassword();
+      }
+      if (action === 'save-password') {
+        const input = document.getElementById('passwordInput');
+        const value = (input?.value || '').replace(/\D/g,'');
+        if (value.length !== 4) { showToast('비밀번호는 숫자 4자리로 입력해 주세요.'); return; }
+        const room = state.rooms.find(r => r.id === state.selectedRoomId);
+        if (room) room.password = value;
+        closeSheet();
+        render();
+        showToast(`${state.selectedRoomId}호 비밀번호를 ${value}로 저장했습니다.`);
+      }
+      if (action === 'toggle-open') {
+        const room = state.rooms.find(r => r.id === id);
+        if (!room || !claimEligible(room) || room.assignee) return;
+        room.openForClaim = !room.openForClaim;
+        render();
+        showToast(`${id}호 일감을 ${room.openForClaim ? '오픈' : '클로즈'}했습니다.`);
+      }
+      if (action === 'open-all') {
+        state.rooms.forEach(room => { if (claimEligible(room) && !room.assignee) room.openForClaim = true; });
+        render(); showToast('선택 가능한 미배정 일감을 모두 오픈했습니다.');
+      }
+      if (action === 'close-all') {
+        state.rooms.forEach(room => { if (!room.assignee) room.openForClaim = false; });
+        render(); showToast('미배정 일감을 모두 클로즈했습니다.');
+      }
+      if (action === 'claim-job') {
+        const room = state.rooms.find(r => r.id === id);
+        if (!room || !room.openForClaim || room.assignee) { showToast('이미 다른 메이드가 선택했거나 클로즈된 객실입니다.'); return; }
+        room.assignee = '김하나';
+        room.openForClaim = false;
+        render();
+        showToast(`${id}호를 내 담당 객실로 선택했습니다.`);
+      }
+      if (action === 'candle-plus' || action === 'candle-minus') {
+        const room = state.rooms.find(r => r.id === id);
+        if (!room) return;
+        room.candleCount = Math.max(0, Math.min(9, room.candleCount + (action === 'candle-plus' ? 1 : -1)));
+        if (room.candleCount === 0) room.candleLocations = '';
+        render();
+        showToast(`${id}호 촛불 수량을 ${room.candleCount}개로 변경했습니다.`);
+      }
+      if (action === 'switch-to-maid') { navigate('maid-market','maid'); showToast('메이드 화면으로 전환했습니다.'); }
+      if (action === 'switch-to-admin') { navigate('admin-rooms','admin'); showToast('관리자 화면으로 전환했습니다.'); }
+      if (action === 'go-maid-task') { state.selectedRoomId = id; navigate('maid-task','maid'); }
+      if (action === 'toggle-password') { state.passwordVisible = !state.passwordVisible; render(); }
+      if (action === 'start-task') {
+        const room = state.rooms.find(r => r.id === id);
+        if (!room) return;
+        state.taskStarted[id] = true;
+        room.cleaningStatus = '청소 중';
+        room.color = 'orange';
+        render();
+        showToast(`${id}호 청소를 시작했습니다.`);
+      }
+      if (action === 'toggle-check') {
+        const index = Number(actionEl.dataset.index);
+        const current = state.taskChecks[id] || [];
+        state.taskChecks[id] = current.includes(index) ? current.filter(x => x !== index) : [...current, index];
+        render();
+      }
+      if (action === 'toggle-photo') {
+        const index = Number(actionEl.dataset.index);
+        const current = state.taskPhotos[id] || [];
+        state.taskPhotos[id] = current.includes(index) ? current.filter(x => x !== index) : [...current, index];
+        render();
+      }
+      if (action === 'complete-task') {
+        const room = state.rooms.find(r => r.id === id);
+        if (!room) return;
+        room.cleaningStatus = '검수 대기';
+        room.color = 'orange';
+        room.inspection = true;
+        if (!state.completedTasks.includes(id)) state.completedTasks.unshift(id);
+        navigate('maid-completed','maid');
+        showToast(`${id}호를 검수 요청했습니다.`);
+      }
+      if (action === 'approve-inspection') {
+        const room = state.rooms.find(r => r.id === id);
+        if (!room) return;
+        room.cleaningStatus = '입실 준비 완료';
+        room.color = 'green';
+        room.inspection = false;
+        render(); showToast(`${id}호를 승인했습니다.`);
+      }
+      if (action === 'reject-inspection') {
+        const room = state.rooms.find(r => r.id === id);
+        if (!room) return;
+        room.cleaningStatus = '재청소 필요';
+        room.color = 'red';
+        room.inspection = true;
+        render(); showToast(`${id}호에 재청소를 요청했습니다.`);
+      }
+    });
+
+    document.addEventListener('input', (event) => {
+      if (event.target.id === 'passwordInput') event.target.value = event.target.value.replace(/\D/g,'').slice(0,4);
+      if (event.target.id === 'roomSearch') {
+        state.roomSearch = event.target.value;
+        const cursor = event.target.selectionStart;
+        render();
+        const input = document.getElementById('roomSearch');
+        if (input) { input.focus(); input.setSelectionRange(cursor, cursor); }
+      }
+    });
+
+    initializeFromQuery();
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1431 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f3f5f7" />
+  <title>캐슬디아트 객실관리 앱 — 모바일 와이어프레임</title>
+  <style>
+    :root {
+      --bg: #eef1f4;
+      --surface: #ffffff;
+      --surface-2: #f6f7f8;
+      --ink: #17202a;
+      --muted: #6d7781;
+      --line: #d9dee3;
+      --line-strong: #bcc4cc;
+      --accent: #24384c;
+      --accent-soft: #e8edf2;
+      --red: #c83f46;
+      --red-soft: #fff0f1;
+      --orange: #b76b12;
+      --orange-soft: #fff5e8;
+      --green: #28795a;
+      --green-soft: #edf8f3;
+      --blue: #365f91;
+      --blue-soft: #edf4fc;
+      --shadow: 0 18px 55px rgba(25, 38, 50, .16);
+      --radius: 18px;
+      --safe-bottom: max(14px, env(safe-area-inset-bottom));
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); }
+    body { min-height: 100dvh; }
+    button, input, textarea, select { font: inherit; }
+    button { color: inherit; }
+    button, [role="button"] { -webkit-tap-highlight-color: transparent; }
+
+    .workspace {
+      min-height: 100dvh;
+      display: grid;
+      grid-template-columns: minmax(250px, 320px) 390px;
+      justify-content: center;
+      align-items: center;
+      gap: 42px;
+      padding: 32px;
+    }
+
+    .prototype-notes {
+      align-self: center;
+      max-width: 320px;
+    }
+
+    .prototype-notes h1 {
+      margin: 0 0 10px;
+      font-size: 26px;
+      line-height: 1.25;
+      letter-spacing: -.03em;
+    }
+
+    .prototype-notes p {
+      margin: 0 0 20px;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .control-group {
+      padding: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.72);
+      border-radius: 16px;
+      margin-top: 12px;
+    }
+
+    .control-label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+      letter-spacing: .04em;
+    }
+
+    .control-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .preview-btn {
+      min-height: 40px;
+      padding: 0 13px;
+      border-radius: 11px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      font-weight: 750;
+      cursor: pointer;
+    }
+    .preview-btn:hover { border-color: var(--line-strong); }
+    .preview-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+    .legend { display: grid; gap: 10px; }
+    .legend-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex: 0 0 auto; }
+    .legend-dot.red { background: var(--red); }
+    .legend-dot.orange { background: var(--orange); }
+    .legend-dot.green { background: var(--green); }
+    .legend-dot.gray { background: #9aa3ab; }
+
+    .phone {
+      position: relative;
+      width: 390px;
+      height: min(844px, calc(100dvh - 32px));
+      min-height: 680px;
+      overflow: hidden;
+      background: var(--surface);
+      border: 1px solid #b9c0c7;
+      border-radius: 38px;
+      box-shadow: var(--shadow);
+    }
+
+    .phone::before {
+      content: "";
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      z-index: 40;
+      width: 110px;
+      height: 27px;
+      transform: translateX(-50%);
+      border-radius: 18px;
+      background: #111820;
+      pointer-events: none;
+    }
+
+    .app {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: var(--surface-2);
+      overflow: hidden;
+    }
+
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      min-height: 78px;
+      padding: 34px 18px 10px;
+      background: rgba(255,255,255,.95);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .topbar.compact { min-height: 66px; padding-top: 28px; }
+    .topbar-title-wrap { min-width: 0; flex: 1; }
+    .brandline { color: var(--muted); font-size: 10px; font-weight: 900; letter-spacing: .15em; }
+    .topbar-title { margin-top: 2px; font-size: 19px; font-weight: 850; letter-spacing: -.025em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .topbar-subtitle { margin-top: 2px; color: var(--muted); font-size: 11px; }
+
+    .icon-btn {
+      display: inline-grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      flex: 0 0 auto;
+      border-radius: 13px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      cursor: pointer;
+    }
+
+    .icon-btn:active, .btn:active, .room-card:active, .nav-item:active { transform: translateY(1px); }
+    .icon-btn svg, .nav-icon svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+    .screen {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 16px 16px calc(90px + var(--safe-bottom));
+      scroll-behavior: smooth;
+    }
+    .screen.no-nav { padding-bottom: calc(24px + var(--safe-bottom)); }
+    .screen::-webkit-scrollbar { width: 0; }
+
+    .section-title-row {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 20px 2px 11px;
+    }
+    .section-title-row:first-child { margin-top: 2px; }
+    .section-title { margin: 0; font-size: 16px; font-weight: 850; letter-spacing: -.02em; }
+    .section-meta { color: var(--muted); font-size: 12px; }
+    .text-action { border: 0; padding: 4px 0; color: var(--blue); background: none; font-size: 12px; font-weight: 800; cursor: pointer; }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 7px;
+    }
+    .summary-cell {
+      min-width: 0;
+      padding: 12px 8px 11px;
+      text-align: center;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+    }
+    .summary-cell strong { display: block; font-size: 21px; line-height: 1; letter-spacing: -.04em; }
+    .summary-cell span { display: block; margin-top: 7px; color: var(--muted); font-size: 10px; white-space: nowrap; }
+    .summary-cell.urgent strong { color: var(--red); }
+    .summary-cell.waiting strong { color: var(--orange); }
+    .summary-cell.ready strong { color: var(--green); }
+
+    .filter-rail {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 2px 1px 4px;
+      scrollbar-width: none;
+    }
+    .filter-rail::-webkit-scrollbar { display: none; }
+    .chip {
+      min-height: 36px;
+      padding: 0 13px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 760;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .chip.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+    .notice {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding: 12px 13px;
+      border: 1px solid #efd5ad;
+      border-radius: 14px;
+      background: var(--orange-soft);
+      color: #75410a;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .notice .notice-mark { width: 20px; height: 20px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 50%; background: #f4d29c; font-weight: 900; }
+
+    .room-list { display: grid; gap: 10px; }
+    .room-card {
+      position: relative;
+      width: 100%;
+      padding: 15px 14px 13px 17px;
+      text-align: left;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: var(--surface);
+      cursor: pointer;
+      overflow: hidden;
+    }
+    .room-card::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      background: #9aa3ab;
+    }
+    .room-card.red::before { background: var(--red); }
+    .room-card.orange::before { background: var(--orange); }
+    .room-card.green::before { background: var(--green); }
+    .room-card.blue::before { background: var(--blue); }
+    .room-card.disabled { opacity: .78; }
+
+    .room-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .room-number { font-size: 20px; font-weight: 900; letter-spacing: -.04em; }
+    .room-type { margin-top: 3px; color: var(--muted); font-size: 11px; }
+    .status-label {
+      flex: 0 0 auto;
+      min-height: 25px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 9px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 850;
+    }
+    .status-label.red { color: var(--red); background: var(--red-soft); }
+    .status-label.orange { color: var(--orange); background: var(--orange-soft); }
+    .status-label.green { color: var(--green); background: var(--green-soft); }
+    .status-label.gray { color: #59636b; background: #eef0f2; }
+    .status-label.blue { color: var(--blue); background: var(--blue-soft); }
+
+    .room-time {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 13px;
+    }
+    .time-block { min-width: 0; }
+    .time-label { display: block; color: var(--muted); font-size: 10px; }
+    .time-value { display: block; margin-top: 3px; font-size: 13px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .time-value.danger { color: var(--red); }
+
+    .room-card-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 12px;
+      padding-top: 11px;
+      border-top: 1px solid #edf0f2;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .badges { display: flex; gap: 5px; flex-wrap: wrap; min-width: 0; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 23px;
+      padding: 0 8px;
+      border-radius: 7px;
+      background: var(--surface-2);
+      color: #59636b;
+      font-size: 10px;
+      font-weight: 760;
+      white-space: nowrap;
+    }
+    .badge.alert { background: var(--red-soft); color: var(--red); }
+    .badge.info { background: var(--blue-soft); color: var(--blue); }
+    .badge.warn { background: var(--orange-soft); color: var(--orange); }
+    .assignee { flex: 0 0 auto; font-weight: 760; color: #59636b; }
+
+    .bottom-nav {
+      position: absolute;
+      z-index: 15;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      min-height: calc(70px + var(--safe-bottom));
+      padding: 7px 5px var(--safe-bottom);
+      border-top: 1px solid var(--line);
+      background: rgba(255,255,255,.97);
+      backdrop-filter: blur(12px);
+    }
+    .nav-item {
+      min-width: 0;
+      border: 0;
+      background: none;
+      color: #8a939c;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border-radius: 11px;
+      cursor: pointer;
+    }
+    .nav-item.active { color: var(--accent); }
+    .nav-icon { position: relative; display: grid; place-items: center; width: 25px; height: 25px; }
+    .nav-item span:last-child { font-size: 10px; font-weight: 760; white-space: nowrap; }
+    .nav-dot { position: absolute; top: 0; right: 1px; width: 7px; height: 7px; border-radius: 50%; background: var(--red); border: 1px solid white; }
+
+    .back-btn { margin-right: 8px; border: 0; background: none; width: 38px; height: 38px; display: grid; place-items: center; cursor: pointer; }
+    .back-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    .detail-hero {
+      margin: -16px -16px 15px;
+      padding: 18px 16px 17px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+    }
+    .detail-hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .detail-room { font-size: 28px; font-weight: 900; letter-spacing: -.05em; }
+    .detail-type { margin-top: 4px; color: var(--muted); font-size: 12px; }
+    .urgency-box { text-align: right; }
+    .urgency-box strong { display: block; color: var(--red); font-size: 14px; }
+    .urgency-box span { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
+
+    .progress-line { height: 5px; margin-top: 16px; background: #e8ebee; border-radius: 999px; overflow: hidden; }
+    .progress-line > span { display: block; height: 100%; width: 64%; border-radius: inherit; background: var(--orange); }
+    .progress-line.green > span { background: var(--green); }
+    .progress-line.red > span { background: var(--red); }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 14px 11px;
+      border-bottom: 1px solid #edf0f2;
+    }
+    .panel-title { font-size: 13px; font-weight: 850; }
+    .panel-subtitle { color: var(--muted); font-size: 10px; }
+    .panel-body { padding: 14px; }
+
+    .info-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 10px 0; }
+    .info-row + .info-row { border-top: 1px solid #edf0f2; }
+    .info-label { color: var(--muted); font-size: 11px; }
+    .info-value { max-width: 64%; text-align: right; font-size: 12px; font-weight: 780; line-height: 1.45; }
+
+    .timeline {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      padding: 8px 0 2px;
+    }
+    .timeline::before { content: ""; position: absolute; left: 15%; right: 15%; top: 15px; height: 2px; background: #dce1e5; }
+    .timeline-step { position: relative; text-align: center; z-index: 1; }
+    .timeline-dot { width: 16px; height: 16px; margin: 0 auto 7px; border: 4px solid var(--surface); border-radius: 50%; background: #a5adb5; box-shadow: 0 0 0 1px #d5dade; }
+    .timeline-step.active .timeline-dot { background: var(--orange); box-shadow: 0 0 0 1px var(--orange); }
+    .timeline-step.done .timeline-dot { background: var(--green); box-shadow: 0 0 0 1px var(--green); }
+    .timeline-step strong { display: block; font-size: 11px; }
+    .timeline-step span { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; }
+
+    .password-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 14px;
+      background: #f0f3f5;
+    }
+    .password-display { flex: 1; min-width: 0; }
+    .password-display small { display: block; color: var(--muted); font-size: 10px; }
+    .password-display strong { display: block; margin-top: 4px; font-size: 24px; line-height: 1; letter-spacing: .16em; font-variant-numeric: tabular-nums; }
+    .password-display strong.masked { letter-spacing: .21em; }
+    .password-actions { display: flex; gap: 7px; }
+
+    .btn {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 0 15px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: var(--surface);
+      font-weight: 820;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn svg { width: 16px; height: 16px; flex: 0 0 auto; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .btn.small { min-height: 38px; padding: 0 12px; font-size: 11px; border-radius: 11px; }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
+    .btn.red { background: var(--red); border-color: var(--red); color: white; }
+    .btn.green { background: var(--green); border-color: var(--green); color: white; }
+    .btn.soft { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
+    .btn.full { width: 100%; }
+    .btn:disabled { cursor: not-allowed; opacity: .42; }
+
+    .button-row { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .button-row.three { grid-template-columns: 1fr 1fr 1fr; }
+
+    .callout {
+      padding: 12px 13px;
+      border-radius: 13px;
+      background: var(--red-soft);
+      color: #843137;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .callout.orange { background: var(--orange-soft); color: #75410a; }
+    .callout.green { background: var(--green-soft); color: #1f6248; }
+
+    .assign-list { display: grid; gap: 9px; }
+    .assign-row {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: var(--surface);
+    }
+    .check-circle { width: 23px; height: 23px; display: grid; place-items: center; border: 1.5px solid var(--line-strong); border-radius: 50%; cursor: pointer; }
+    .check-circle.checked { background: var(--accent); color: white; border-color: var(--accent); }
+    .assign-main strong { display: block; font-size: 14px; }
+    .assign-main span { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; }
+    .assign-person { color: var(--muted); font-size: 11px; font-weight: 760; }
+    .sticky-action {
+      position: sticky;
+      bottom: 2px;
+      margin-top: 14px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,.96);
+      box-shadow: 0 10px 28px rgba(25,38,50,.12);
+    }
+
+    .inspection-card {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: var(--surface);
+      margin-bottom: 10px;
+    }
+    .inspection-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .photo-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 12px 0; }
+    .photo-thumb {
+      aspect-ratio: 1;
+      border: 1px solid #ccd2d7;
+      border-radius: 9px;
+      background:
+        linear-gradient(145deg, rgba(31,48,63,.05), rgba(31,48,63,.12)),
+        repeating-linear-gradient(45deg, #f6f7f8, #f6f7f8 7px, #eef0f2 7px, #eef0f2 14px);
+      display: grid;
+      place-items: center;
+      color: #7d8790;
+      font-size: 9px;
+      font-weight: 750;
+    }
+
+    .money-summary {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 19px;
+      background: var(--accent);
+      color: white;
+    }
+    .money-summary small { color: rgba(255,255,255,.72); font-size: 11px; }
+    .money-summary strong { display: block; margin-top: 6px; font-size: 30px; letter-spacing: -.05em; }
+    .money-split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,.18); }
+    .money-split span { display: block; color: rgba(255,255,255,.65); font-size: 9px; }
+    .money-split b { display: block; margin-top: 4px; font-size: 13px; }
+
+    .settlement-row { display: flex; align-items: center; gap: 12px; padding: 13px 0; }
+    .settlement-row + .settlement-row { border-top: 1px solid #edf0f2; }
+    .settlement-date { width: 38px; flex: 0 0 auto; text-align: center; }
+    .settlement-date strong { display: block; font-size: 14px; }
+    .settlement-date span { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; }
+    .settlement-main { flex: 1; min-width: 0; }
+    .settlement-main strong { display: block; font-size: 12px; }
+    .settlement-main span { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; }
+    .settlement-amount { text-align: right; }
+    .settlement-amount strong { display: block; font-size: 13px; }
+    .settlement-amount span { display: block; margin-top: 3px; color: var(--green); font-size: 9px; font-weight: 780; }
+
+    .login-screen {
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+      padding: 56px 22px calc(24px + var(--safe-bottom));
+      background: var(--surface);
+    }
+    .login-mark {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      border: 2px solid var(--accent);
+      border-radius: 17px;
+      color: var(--accent);
+      font-size: 18px;
+      font-weight: 950;
+      letter-spacing: -.08em;
+    }
+    .login-title { margin: 24px 0 7px; font-size: 27px; font-weight: 900; letter-spacing: -.045em; }
+    .login-copy { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .role-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 32px; padding: 5px; border-radius: 14px; background: var(--surface-2); }
+    .role-tab { min-height: 43px; border: 0; border-radius: 11px; background: transparent; color: var(--muted); font-weight: 820; cursor: pointer; }
+    .role-tab.active { background: var(--surface); color: var(--ink); box-shadow: 0 2px 10px rgba(25,38,50,.08); }
+    .field { margin-top: 14px; }
+    .field label { display: block; margin: 0 0 7px 2px; color: var(--muted); font-size: 11px; font-weight: 750; }
+    .input {
+      width: 100%;
+      min-height: 50px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: var(--surface);
+      color: var(--ink);
+      font-size: 16px;
+      outline: none;
+    }
+    .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(36,56,76,.09); }
+    .login-actions { margin-top: auto; padding-top: 28px; }
+    .login-hint { margin-top: 12px; text-align: center; color: var(--muted); font-size: 10px; line-height: 1.5; }
+
+    .maid-hero {
+      margin: -16px -16px 14px;
+      padding: 18px 16px 17px;
+      background: var(--accent);
+      color: white;
+    }
+    .maid-greeting { color: rgba(255,255,255,.7); font-size: 11px; }
+    .maid-hero h2 { margin: 5px 0 0; font-size: 22px; letter-spacing: -.04em; }
+    .maid-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 17px; }
+    .maid-stat { padding: 11px 10px; border: 1px solid rgba(255,255,255,.18); border-radius: 13px; background: rgba(255,255,255,.06); }
+    .maid-stat span { display: block; color: rgba(255,255,255,.65); font-size: 9px; }
+    .maid-stat strong { display: block; margin-top: 5px; font-size: 15px; }
+
+    .priority-card {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: var(--surface);
+      margin-bottom: 10px;
+    }
+    .priority-card.red { border-color: #e7b4b8; box-shadow: inset 4px 0 0 var(--red); }
+    .priority-card.orange { border-color: #efd2aa; box-shadow: inset 4px 0 0 var(--orange); }
+    .priority-card.gray { box-shadow: inset 4px 0 0 #9aa3ab; }
+    .priority-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .priority-number { font-size: 21px; font-weight: 900; letter-spacing: -.04em; }
+    .priority-deadline { text-align: right; }
+    .priority-deadline strong { display: block; color: var(--red); font-size: 13px; }
+    .priority-deadline span { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; }
+    .priority-details { display: flex; gap: 8px 15px; flex-wrap: wrap; margin: 12px 0; color: var(--muted); font-size: 10px; }
+    .priority-details b { color: var(--ink); }
+
+    .lock-box {
+      padding: 14px;
+      border: 1px dashed var(--line-strong);
+      border-radius: 14px;
+      background: var(--surface-2);
+      text-align: center;
+    }
+    .lock-box strong { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; }
+    .lock-box strong svg { width: 17px; height: 17px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .lock-box span { display: block; margin-top: 5px; color: var(--muted); font-size: 10px; line-height: 1.45; }
+
+    .task-banner {
+      margin: -16px -16px 13px;
+      padding: 18px 16px 16px;
+      background: var(--red-soft);
+      border-bottom: 1px solid #efc4c7;
+    }
+    .task-banner.orange { background: var(--orange-soft); border-bottom-color: #efd5ad; }
+    .task-banner strong { display: block; color: var(--red); font-size: 14px; }
+    .task-banner.orange strong { color: var(--orange); }
+    .task-banner span { display: block; margin-top: 5px; color: #6e5557; font-size: 10px; line-height: 1.5; }
+
+    .checklist { display: grid; gap: 8px; }
+    .check-item {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 10px;
+      align-items: center;
+      min-height: 49px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: var(--surface);
+      cursor: pointer;
+    }
+    .check-item .box { width: 24px; height: 24px; display: grid; place-items: center; border: 1.5px solid var(--line-strong); border-radius: 8px; color: white; }
+    .check-item.checked .box { background: var(--green); border-color: var(--green); }
+    .check-item strong { display: block; font-size: 12px; }
+    .check-item span { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; }
+
+    .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .photo-slot {
+      min-height: 104px;
+      border: 1px dashed var(--line-strong);
+      border-radius: 14px;
+      background: var(--surface-2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .photo-slot strong { font-size: 11px; color: #59636b; }
+    .photo-slot span { font-size: 9px; }
+    .photo-slot.done { border-style: solid; border-color: #9ccdbb; background: var(--green-soft); color: var(--green); }
+    .photo-icon { width: 27px; height: 27px; border: 1.5px solid currentColor; border-radius: 8px; position: relative; }
+    .photo-icon::before { content: ""; position: absolute; width: 6px; height: 6px; right: 4px; top: 4px; border: 1.5px solid currentColor; border-radius: 50%; }
+    .photo-icon::after { content: ""; position: absolute; left: 4px; right: 4px; bottom: 4px; height: 8px; border-left: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: skewY(-35deg); }
+
+    .textarea {
+      width: 100%;
+      min-height: 92px;
+      padding: 12px 13px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      color: var(--ink);
+      background: var(--surface);
+      font-size: 15px;
+      line-height: 1.5;
+      outline: none;
+    }
+
+    .sheet-backdrop {
+      position: absolute;
+      inset: 0;
+      z-index: 60;
+      background: rgba(17,24,32,.42);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease;
+    }
+    .sheet {
+      position: absolute;
+      z-index: 61;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 10px 16px calc(17px + var(--safe-bottom));
+      border-radius: 24px 24px 0 0;
+      background: var(--surface);
+      transform: translateY(102%);
+      transition: transform .22s ease;
+      box-shadow: 0 -18px 40px rgba(17,24,32,.16);
+    }
+    .sheet.open { transform: translateY(0); }
+    .sheet-backdrop.open { opacity: 1; pointer-events: auto; }
+    .sheet-handle { width: 38px; height: 4px; margin: 0 auto 14px; border-radius: 999px; background: #cbd1d6; }
+    .sheet h3 { margin: 0; font-size: 18px; letter-spacing: -.03em; }
+    .sheet p { margin: 7px 0 16px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .password-input-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 94px; gap: 8px; }
+    .password-input { text-align: center; font-weight: 900; letter-spacing: .22em; font-variant-numeric: tabular-nums; }
+
+    .toast {
+      position: absolute;
+      z-index: 100;
+      left: 50%;
+      bottom: calc(87px + var(--safe-bottom));
+      max-width: calc(100% - 36px);
+      padding: 11px 15px;
+      border-radius: 12px;
+      background: #17202a;
+      color: white;
+      font-size: 11px;
+      font-weight: 750;
+      text-align: center;
+      transform: translate(-50%, 16px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+      box-shadow: 0 10px 25px rgba(17,24,32,.24);
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    .empty-state { padding: 42px 20px; text-align: center; color: var(--muted); }
+    .empty-state strong { display: block; color: var(--ink); font-size: 14px; }
+    .empty-state span { display: block; margin-top: 7px; font-size: 11px; line-height: 1.5; }
+
+    .menu-list { border: 1px solid var(--line); border-radius: 17px; overflow: hidden; background: var(--surface); }
+    .menu-row { width: 100%; min-height: 54px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 14px; border: 0; border-bottom: 1px solid #edf0f2; background: var(--surface); text-align: left; cursor: pointer; }
+    .menu-row:last-child { border-bottom: 0; }
+    .menu-row strong { font-size: 12px; }
+    .menu-row span { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-size: 10px; }
+    .menu-row svg { width: 17px; height: 17px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+    @media (max-width: 760px) {
+      .workspace { display: block; padding: 0; min-height: 100dvh; }
+      .prototype-notes { display: none; }
+      .phone { width: 100%; height: 100dvh; min-height: 0; border: 0; border-radius: 0; box-shadow: none; }
+      .phone::before { display: none; }
+      .topbar { padding-top: max(13px, env(safe-area-inset-top)); min-height: calc(58px + env(safe-area-inset-top)); }
+      .topbar.compact { padding-top: max(8px, env(safe-area-inset-top)); min-height: calc(53px + env(safe-area-inset-top)); }
+      .login-screen { padding-top: calc(42px + env(safe-area-inset-top)); }
+    }
+
+    @media (max-height: 720px) and (min-width: 761px) {
+      .phone { height: calc(100dvh - 20px); min-height: 0; }
+      .workspace { padding: 10px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="workspace">
+    <aside class="prototype-notes" aria-label="프로토타입 탐색 도구">
+      <h1>객실관리 모바일 와이어프레임</h1>
+      <p>관리자와 메이드가 같은 앱에 로그인하되, 역할별로 다른 메뉴와 업무 흐름을 보도록 구성한 클릭형 시안입니다.</p>
+
+      <div class="control-group">
+        <span class="control-label">빠른 화면 전환</span>
+        <div class="control-row">
+          <button class="preview-btn" data-demo-view="login">로그인</button>
+          <button class="preview-btn" data-demo-view="admin">관리자</button>
+          <button class="preview-btn" data-demo-view="maid">메이드</button>
+          <button class="preview-btn" data-demo-view="password">비밀번호</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <span class="control-label">객실 상태</span>
+        <div class="legend">
+          <div class="legend-row"><span class="legend-dot red"></span><span>즉시 처리·지연·재청소</span></div>
+          <div class="legend-row"><span class="legend-dot orange"></span><span>작업 가능·진행·검수 대기</span></div>
+          <div class="legend-row"><span class="legend-dot green"></span><span>검수 승인·입실 준비 완료</span></div>
+          <div class="legend-row"><span class="legend-dot gray"></span><span>투숙 중·아직 입실 불가</span></div>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <span class="control-label">확인해 볼 상호작용</span>
+        <p style="margin:0;font-size:12px;line-height:1.65;">객실 카드 열기 → 비밀번호 수정 → 랜덤 생성 → 저장. 메이드 화면에서는 체크리스트와 사진 칸을 눌러 청소 완료 흐름을 확인할 수 있습니다.</p>
+      </div>
+
+      <button class="preview-btn" data-action="reset-demo" style="margin-top:14px;">시안 초기화</button>
+    </aside>
+
+    <main class="phone" aria-label="객실관리 앱 모바일 미리보기">
+      <div id="app" class="app"></div>
+      <div id="sheetBackdrop" class="sheet-backdrop" data-action="close-sheet"></div>
+      <div id="sheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle"></div>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </main>
+  </div>
+
+  <script>
+    const icon = (name) => {
+      const icons = {
+        home: '<svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/></svg>',
+        grid: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>',
+        check: '<svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>',
+        clipboard: '<svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5V3h6v1.5"/><path d="m8 12 2 2 5-5"/><path d="M8 17h8"/></svg>',
+        money: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 9v6M17 9v6"/><circle cx="12" cy="12" r="2.5"/></svg>',
+        more: '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1" fill="currentColor" stroke="none"/></svg>',
+        bell: '<svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>',
+        back: '<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>',
+        eye: '<svg viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg>',
+        edit: '<svg viewBox="0 0 24 24"><path d="m4 20 4.5-1 10-10-3.5-3.5-10 10L4 20Z"/><path d="m13.5 7 3.5 3.5"/></svg>',
+        alert: '<svg viewBox="0 0 24 24"><path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 9v5M12 17h.01"/></svg>',
+        user: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c.5-5 3.5-7 8-7s7.5 2 8 7"/></svg>',
+        camera: '<svg viewBox="0 0 24 24"><path d="M4 7h4l1.5-2h5L16 7h4v12H4V7Z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+        clock: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+        lock: '<svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>',
+        refresh: '<svg viewBox="0 0 24 24"><path d="M20 7v5h-5"/><path d="M19 12a7 7 0 1 1-2-5"/></svg>',
+        chevron: '<svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>'
+      };
+      return icons[name] || '';
+    };
+
+    const defaultRooms = [
+      {
+        id: '1502', type: '오션 스위트', color: 'red', status: '청소 가능', statusTone: 'red',
+        available: '11:20', deadline: '13:20', checkin: '14:00', checkout: '11:00',
+        badges: ['얼리 체크인', '급한 객실', '촛농 주의'], assignee: '김하나', password: '4718',
+        notes: '거실 창가 쪽 촛농 흔적을 반드시 확인해 주세요.', cleaningFee: 9500, task: '퇴실 청소',
+        canEnter: true, inspection: false
+      },
+      {
+        id: '1208', type: '디럭스 더블', color: 'gray', status: '입실 대기', statusTone: 'gray',
+        available: '13:00', deadline: '14:30', checkin: '15:00', checkout: '13:00',
+        badges: ['레이트 체크아웃'], assignee: '김하나', password: '0256',
+        notes: '고객 퇴실 확인 전 출입 금지. 13시 이후 비밀번호가 표시됩니다.', cleaningFee: 7500, task: '퇴실 청소',
+        canEnter: false, inspection: false
+      },
+      {
+        id: '1004', type: '패밀리 트윈', color: 'orange', status: '청소 중', statusTone: 'orange',
+        available: '10:50', deadline: '14:40', checkin: '15:00', checkout: '11:00',
+        badges: ['장기투숙 후'], assignee: '박미정', password: '8642',
+        notes: '냉장고 내부와 주방 수납장 전체 확인.', cleaningFee: 8500, task: '퇴실 청소',
+        canEnter: true, inspection: false
+      },
+      {
+        id: '903', type: '스탠다드', color: 'orange', status: '검수 대기', statusTone: 'orange',
+        available: '10:30', deadline: '14:20', checkin: '15:00', checkout: '11:00',
+        badges: ['사진 8장'], assignee: '김하나', password: '3810',
+        notes: '욕실 배수구 냄새 확인.', cleaningFee: 7000, task: '퇴실 청소',
+        canEnter: true, inspection: true
+      },
+      {
+        id: '802', type: '디럭스 더블', color: 'green', status: '입실 준비 완료', statusTone: 'green',
+        available: '완료', deadline: '15:00', checkin: '15:00', checkout: '11:00',
+        badges: ['검수 승인'], assignee: '박미정', password: '1193',
+        notes: '특이사항 없음.', cleaningFee: 7500, task: '퇴실 청소',
+        canEnter: true, inspection: false
+      },
+      {
+        id: '709', type: '스탠다드', color: 'blue', status: '연박 청소', statusTone: 'blue',
+        available: '12:00', deadline: '13:00', checkin: '투숙 중', checkout: '내일 11:00',
+        badges: ['연박', '수건·쓰레기'], assignee: '김하나', password: '6407',
+        notes: '고객 소지품 이동 금지. 수건 교체와 쓰레기 수거만 진행.', cleaningFee: 4000, task: '연박 부분 청소',
+        canEnter: true, inspection: false
+      }
+    ];
+
+    const defaultState = () => ({
+      role: null,
+      loginRole: 'admin',
+      screen: 'login',
+      previousScreen: null,
+      selectedRoomId: '1502',
+      filter: 'all',
+      rooms: JSON.parse(JSON.stringify(defaultRooms)),
+      selectedAssign: [],
+      passwordVisible: false,
+      sheetOpen: false,
+      taskChecks: {},
+      taskPhotos: {},
+      taskStarted: {},
+      completedTasks: [],
+      toastTimer: null
+    });
+
+    let state = defaultState();
+    const app = document.getElementById('app');
+    const sheet = document.getElementById('sheet');
+    const sheetBackdrop = document.getElementById('sheetBackdrop');
+    const toast = document.getElementById('toast');
+
+    function initializeFromQuery() {
+      const view = new URLSearchParams(location.search).get('view');
+      if (view === 'admin') { state.role = 'admin'; state.screen = 'admin-home'; }
+      if (view === 'maid') { state.role = 'maid'; state.screen = 'maid-home'; }
+      if (view === 'password') { state.role = 'admin'; state.screen = 'room-detail'; state.selectedRoomId = '1502'; setTimeout(openPasswordSheet, 100); }
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(state.toastTimer);
+      state.toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function statusLabel(room) {
+      return `<span class="status-label ${room.statusTone}">${room.status}</span>`;
+    }
+
+    function topbar(title, subtitle = '', back = false) {
+      return `
+        <header class="topbar ${back ? 'compact' : ''}">
+          ${back ? `<button class="back-btn" data-action="back" aria-label="뒤로 가기">${icon('back')}</button>` : ''}
+          <div class="topbar-title-wrap">
+            ${back ? '' : '<div class="brandline">CASTLE D\'ART</div>'}
+            <div class="topbar-title">${title}</div>
+            ${subtitle ? `<div class="topbar-subtitle">${subtitle}</div>` : ''}
+          </div>
+          ${back ? '' : `<button class="icon-btn" data-action="open-alerts" aria-label="알림">${icon('bell')}</button>`}
+        </header>`;
+    }
+
+    const adminNavItems = [
+      ['admin-home','grid','현황'], ['admin-assign','user','배정'], ['admin-inspection','clipboard','검수'], ['admin-settlement','money','정산'], ['admin-more','more','더보기']
+    ];
+    const maidNavItems = [
+      ['maid-home','clipboard','오늘 업무'], ['maid-completed','check','완료'], ['maid-settlement','money','정산'], ['maid-alerts','bell','알림'], ['maid-profile','user','내 정보']
+    ];
+
+    function bottomNav(role) {
+      const items = role === 'admin' ? adminNavItems : maidNavItems;
+      return `<nav class="bottom-nav" aria-label="주요 메뉴">${items.map(([screen, iconName, label]) => `
+        <button class="nav-item ${state.screen === screen ? 'active' : ''}" data-screen="${screen}">
+          <span class="nav-icon">${icon(iconName)}${(screen === 'admin-inspection' || screen === 'maid-alerts') ? '<i class="nav-dot"></i>' : ''}</span>
+          <span>${label}</span>
+        </button>`).join('')}</nav>`;
+    }
+
+    function roomCard(room, role = 'admin') {
+      const badges = room.badges.map((b, i) => {
+        const cls = b.includes('급한') || b.includes('촛농') ? 'alert' : b.includes('얼리') || b.includes('연박') ? 'info' : b.includes('레이트') ? 'warn' : '';
+        return `<span class="badge ${cls}">${b}</span>`;
+      }).join('');
+      return `<button class="room-card ${room.color} ${!room.canEnter ? 'disabled' : ''}" data-room="${room.id}" data-role-target="${role}">
+        <div class="room-card-top">
+          <div><div class="room-number">${room.id}호</div><div class="room-type">${room.type} · ${room.task}</div></div>
+          ${statusLabel(room)}
+        </div>
+        <div class="room-time">
+          <div class="time-block"><span class="time-label">청소 가능</span><span class="time-value">${room.available}</span></div>
+          <div class="time-block"><span class="time-label">완료 마감</span><span class="time-value ${room.color === 'red' ? 'danger' : ''}">${room.deadline}</span></div>
+        </div>
+        <div class="room-card-bottom"><div class="badges">${badges}</div><span class="assignee">${room.assignee}</span></div>
+      </button>`;
+    }
+
+    function renderLogin() {
+      const isAdmin = state.loginRole === 'admin';
+      return `<section class="login-screen">
+        <div class="login-mark">CD</div>
+        <h1 class="login-title">객실관리</h1>
+        <p class="login-copy">오늘의 객실 상태와 청소 업무를<br>한곳에서 확인합니다.</p>
+
+        <div class="role-tabs" aria-label="로그인 역할 선택">
+          <button class="role-tab ${isAdmin ? 'active' : ''}" data-login-role="admin">관리자</button>
+          <button class="role-tab ${!isAdmin ? 'active' : ''}" data-login-role="maid">메이드</button>
+        </div>
+
+        <div class="field"><label>아이디</label><input class="input" autocomplete="username" value="${isAdmin ? 'manager01' : 'maid01'}" /></div>
+        <div class="field"><label>비밀번호</label><input class="input" type="password" autocomplete="current-password" value="1234" /></div>
+
+        <div class="login-actions">
+          <button class="btn primary full" data-action="login">${isAdmin ? '관리자' : '메이드'}로 로그인</button>
+          <div class="login-hint">와이어프레임용 예시 화면입니다.<br>버튼을 누르면 별도 인증 없이 이동합니다.</div>
+        </div>
+      </section>`;
+    }
+
+    function renderAdminHome() {
+      const filtered = state.rooms.filter(r => {
+        if (state.filter === 'all') return true;
+        if (state.filter === 'urgent') return r.color === 'red';
+        if (state.filter === 'available') return r.status === '청소 가능' || r.status === '청소 중';
+        if (state.filter === 'inspection') return r.status === '검수 대기';
+        if (state.filter === 'ready') return r.status === '입실 준비 완료';
+        return true;
+      });
+      const filters = [['all','전체'],['urgent','긴급'],['available','청소'],['inspection','검수 대기'],['ready','입실 준비']];
+      return `${topbar('오늘 객실 현황', '8월 14일 금요일')}
+        <section class="screen">
+          <div class="summary-grid">
+            <div class="summary-cell urgent"><strong>3</strong><span>긴급</span></div>
+            <div class="summary-cell waiting"><strong>8</strong><span>청소 필요</span></div>
+            <div class="summary-cell"><strong>4</strong><span>검수 대기</span></div>
+            <div class="summary-cell ready"><strong>21</strong><span>입실 준비</span></div>
+          </div>
+
+          <div class="section-title-row"><h2 class="section-title">우선 처리 객실</h2><span class="section-meta">마감순 자동 정렬</span></div>
+          <div class="notice"><span class="notice-mark">!</span><span>1502호는 얼리 체크인으로 현재 일정이 촉박합니다. 담당 메이드에게 우선 처리 알림이 발송되었습니다.</span></div>
+          <div class="filter-rail">${filters.map(([key,label]) => `<button class="chip ${state.filter === key ? 'active':''}" data-filter="${key}">${label}</button>`).join('')}</div>
+          <div class="room-list" style="margin-top:10px;">${filtered.map(r => roomCard(r)).join('')}</div>
+        </section>
+        ${bottomNav('admin')}`;
+    }
+
+    function renderAdminAssign() {
+      const rooms = state.rooms.filter(r => ['청소 가능','입실 대기','연박 청소'].includes(r.status));
+      return `${topbar('객실 배정', '오늘 8건 · 선택 후 일괄 배정')}
+        <section class="screen">
+          <div class="section-title-row"><h2 class="section-title">오늘 청소 작업</h2><button class="text-action" data-action="select-all-assign">전체 선택</button></div>
+          <div class="assign-list">${rooms.map(r => `
+            <div class="assign-row">
+              <button class="check-circle ${state.selectedAssign.includes(r.id) ? 'checked':''}" data-action="toggle-assign" data-id="${r.id}" aria-label="${r.id}호 선택">${state.selectedAssign.includes(r.id) ? '✓':''}</button>
+              <div class="assign-main"><strong>${r.id}호 ${r.statusTone === 'red' ? '· 긴급':''}</strong><span>${r.available}부터 · ${r.deadline} 마감 · ${r.cleaningFee.toLocaleString()}원</span></div>
+              <div class="assign-person">${r.assignee}</div>
+            </div>`).join('')}</div>
+          <div class="sticky-action">
+            <div class="button-row"><button class="btn" data-action="clear-assign">선택 해제</button><button class="btn primary" data-action="assign-maid">김하나에게 배정 (${state.selectedAssign.length})</button></div>
+          </div>
+        </section>
+        ${bottomNav('admin')}`;
+    }
+
+    function renderAdminInspection() {
+      const inspectionRooms = state.rooms.filter(r => r.inspection || r.status === '검수 대기');
+      return `${topbar('검수 대기', `${inspectionRooms.length}개 객실 · 오래된 순`)}
+        <section class="screen">
+          <div class="filter-rail"><button class="chip active">전체 ${inspectionRooms.length}</button><button class="chip">긴급 1</button><button class="chip">재청소 1</button></div>
+          <div style="margin-top:12px;">${inspectionRooms.length ? inspectionRooms.map(r => `
+            <article class="inspection-card">
+              <div class="inspection-top"><div><div class="room-number">${r.id}호</div><div class="room-type">${r.assignee} · 12:18 완료</div></div>${statusLabel(r)}</div>
+              <div class="photo-strip"><div class="photo-thumb">침대</div><div class="photo-thumb">욕실</div><div class="photo-thumb">주방</div><div class="photo-thumb">+5</div></div>
+              <div class="callout orange">메이드 메모: ${r.notes}</div>
+              <div class="button-row" style="margin-top:11px;"><button class="btn red" data-action="reject-inspection" data-id="${r.id}">재청소</button><button class="btn green" data-action="approve-inspection" data-id="${r.id}">승인</button></div>
+            </article>`).join('') : `<div class="empty-state"><strong>검수할 객실이 없습니다</strong><span>메이드가 청소를 완료하면 이곳에 표시됩니다.</span></div>`}</div>
+        </section>
+        ${bottomNav('admin')}`;
+    }
+
+    function renderAdminSettlement() {
+      const rows = [
+        ['14','금','김하나','6객실 · 검수 5건','42,500원','1건 대기'],
+        ['14','금','박미정','5객실 · 검수 5건','39,500원','확정'],
+        ['13','목','김하나','7객실','51,000원','지급 예정'],
+        ['13','목','박미정','6객실','45,000원','지급 예정']
+      ];
+      return `${topbar('정산 관리', '8월 10일–16일')}
+        <section class="screen">
+          <div class="money-summary"><small>이번 주 확정 정산</small><strong>178,000원</strong><div class="money-split"><div><span>예상 포함</span><b>192,500원</b></div><div><span>지급 완료</span><b>96,000원</b></div></div></div>
+          <div class="section-title-row"><h2 class="section-title">메이드별 내역</h2><button class="text-action">엑셀 내보내기</button></div>
+          <div class="panel"><div class="panel-body">${rows.map(r => `<div class="settlement-row"><div class="settlement-date"><strong>${r[0]}</strong><span>${r[1]}</span></div><div class="settlement-main"><strong>${r[2]}</strong><span>${r[3]}</span></div><div class="settlement-amount"><strong>${r[4]}</strong><span>${r[5]}</span></div></div>`).join('')}</div></div>
+        </section>
+        ${bottomNav('admin')}`;
+    }
+
+    function renderAdminMore() {
+      return `${topbar('더보기', '관리자 계정')}
+        <section class="screen">
+          <div class="section-title-row"><h2 class="section-title">운영 설정</h2></div>
+          <div class="menu-list">
+            <button class="menu-row"><strong>객실·객실 타입 관리</strong><span>36개 ${icon('chevron')}</span></button>
+            <button class="menu-row"><strong>청소 체크리스트</strong><span>4개 양식 ${icon('chevron')}</span></button>
+            <button class="menu-row"><strong>객실별 청소 요금</strong><span>${icon('chevron')}</span></button>
+            <button class="menu-row"><strong>직원 계정·권한</strong><span>8명 ${icon('chevron')}</span></button>
+            <button class="menu-row"><strong>알림 설정</strong><span>${icon('chevron')}</span></button>
+          </div>
+          <div class="section-title-row"><h2 class="section-title">프로토타입</h2></div>
+          <div class="menu-list">
+            <button class="menu-row" data-action="switch-to-maid"><strong>메이드 화면으로 보기</strong><span>${icon('chevron')}</span></button>
+            <button class="menu-row" data-action="logout"><strong>로그아웃</strong><span>${icon('chevron')}</span></button>
+          </div>
+        </section>
+        ${bottomNav('admin')}`;
+    }
+
+    function renderRoomDetail() {
+      const r = state.rooms.find(x => x.id === state.selectedRoomId) || state.rooms[0];
+      const masked = state.passwordVisible ? r.password : '••••';
+      return `${topbar(`${r.id}호`, r.type, true)}
+        <section class="screen no-nav">
+          <div class="detail-hero">
+            <div class="detail-hero-top"><div><div class="detail-room">${r.id}호</div><div class="detail-type">${r.type} · ${r.task}</div></div><div class="urgency-box">${statusLabel(r)}<span>${r.deadline} 마감</span></div></div>
+            <div class="progress-line ${r.color}"><span style="width:${r.status === '입실 준비 완료' ? '100' : r.status === '검수 대기' ? '82' : r.status === '청소 중' ? '55' : '28'}%"></span></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header"><div><div class="panel-title">오늘 일정</div><div class="panel-subtitle">예약 시간 변경 시 자동 재계산</div></div></div>
+            <div class="panel-body">
+              <div class="timeline"><div class="timeline-step done"><div class="timeline-dot"></div><strong>퇴실</strong><span>${r.checkout}</span></div><div class="timeline-step active"><div class="timeline-dot"></div><strong>청소·검수</strong><span>${r.available}–${r.deadline}</span></div><div class="timeline-step"><div class="timeline-dot"></div><strong>입실</strong><span>${r.checkin}</span></div></div>
+              <div class="info-row"><span class="info-label">담당 메이드</span><span class="info-value">${r.assignee}</span></div>
+              <div class="info-row"><span class="info-label">청소 요금</span><span class="info-value">${r.cleaningFee.toLocaleString()}원</span></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header"><div><div class="panel-title">객실 비밀번호</div><div class="panel-subtitle">직접 수정 또는 4자리 랜덤 생성</div></div></div>
+            <div class="panel-body">
+              <div class="password-box"><div class="password-display"><small>현재 비밀번호</small><strong class="${state.passwordVisible ? '' : 'masked'}">${masked}</strong></div><div class="password-actions"><button class="icon-btn" data-action="toggle-password" aria-label="비밀번호 보기">${icon('eye')}</button><button class="icon-btn" data-action="edit-password" aria-label="비밀번호 수정">${icon('edit')}</button></div></div>
+              <div class="callout" style="margin-top:10px;">앱에서 비밀번호만 관리합니다. 실제 도어락과 자동 연동하는 기능은 이번 범위에 포함하지 않습니다.</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header"><div><div class="panel-title">객실·예약 특이사항</div><div class="panel-subtitle">메이드 업무 화면에도 표시</div></div><button class="text-action">수정</button></div>
+            <div class="panel-body"><div class="callout orange">${r.notes}</div><div class="badges" style="margin-top:10px;">${r.badges.map(b => `<span class="badge">${b}</span>`).join('')}</div></div>
+          </div>
+
+          <div class="button-row"><button class="btn" data-action="assign-one" data-id="${r.id}">담당자 변경</button><button class="btn primary" data-action="mark-urgent" data-id="${r.id}">${r.color === 'red' ? '긴급 해제' : '긴급 지정'}</button></div>
+        </section>`;
+    }
+
+    function renderMaidHome() {
+      const ownRooms = state.rooms.filter(r => r.assignee === '김하나');
+      const active = ownRooms.filter(r => !['입실 준비 완료','검수 대기'].includes(r.status));
+      return `${topbar('오늘 업무', '8월 14일 금요일')}
+        <section class="screen">
+          <div class="maid-hero"><div class="maid-greeting">김하나 님, 좋은 아침이에요</div><h2>오늘 6개 객실</h2><div class="maid-stats"><div class="maid-stat"><span>지금 가능</span><strong>2개</strong></div><div class="maid-stat"><span>대기</span><strong>1개</strong></div><div class="maid-stat"><span>예상 정산</span><strong>42,000원</strong></div></div></div>
+          <div class="section-title-row"><h2 class="section-title">지금 할 일</h2><span class="section-meta">마감 임박순</span></div>
+          ${active.map((r, index) => `<article class="priority-card ${r.color}">
+            <div class="priority-top"><div><div class="priority-number">${index + 1}. ${r.id}호</div><div class="room-type">${r.type} · ${r.task}</div></div><div class="priority-deadline"><strong>${r.deadline} 마감</strong><span>${r.canEnter ? '지금 입실 가능' : `${r.available}부터 가능`}</span></div></div>
+            <div class="priority-details"><span>청소비 <b>${r.cleaningFee.toLocaleString()}원</b></span><span>예상 <b>${r.task.includes('연박') ? '25분' : '50분'}</b></span></div>
+            <div class="badges" style="margin-bottom:11px;">${r.badges.map(b => `<span class="badge ${b.includes('급한') ? 'alert':''}">${b}</span>`).join('')}</div>
+            ${r.canEnter ? `<button class="btn ${r.color === 'red' ? 'red':'primary'} full" data-room="${r.id}" data-role-target="maid">${state.taskStarted[r.id] ? '청소 계속하기' : '업무 상세 보기'}</button>` : `<div class="lock-box"><strong>${icon('lock')} ${r.available}부터 입실 가능</strong><span>퇴실 확인 전에는 비밀번호와 청소 시작 버튼이 잠깁니다.</span></div>`}
+          </article>`).join('')}
+        </section>
+        ${bottomNav('maid')}`;
+    }
+
+    function renderMaidTask() {
+      const r = state.rooms.find(x => x.id === state.selectedRoomId) || state.rooms[0];
+      const checks = state.taskChecks[r.id] || [];
+      const photos = state.taskPhotos[r.id] || [];
+      const checkItems = [
+        ['침대·침구','주름, 오염, 머리카락 확인'], ['욕실','배수구·수전·거울 확인'], ['주방·냉장고','음식물과 얼룩 확인'],
+        ['바닥·먼지','모서리와 가구 아래 확인'], ['수건·비품','기준 수량에 맞게 보충'], ['문 잠금','퇴실 전 도어락 확인']
+      ];
+      const photoItems = ['객실 전경','침대','욕실','주방'];
+      const done = checks.length === checkItems.length && photos.length === photoItems.length;
+      const started = !!state.taskStarted[r.id];
+      return `${topbar(`${r.id}호 청소`, r.task, true)}
+        <section class="screen no-nav">
+          <div class="task-banner ${r.color === 'red' ? '' : 'orange'}"><strong>${r.color === 'red' ? '마감까지 1시간 12분' : `${r.deadline}까지 완료`}</strong><span>${r.notes}</span></div>
+
+          <div class="panel">
+            <div class="panel-header"><div><div class="panel-title">입실 정보</div><div class="panel-subtitle">본인 담당 객실에만 표시</div></div>${statusLabel(r)}</div>
+            <div class="panel-body">
+              ${r.canEnter ? `<div class="password-box"><div class="password-display"><small>객실 비밀번호</small><strong class="${state.passwordVisible ? '' : 'masked'}">${state.passwordVisible ? r.password : '••••'}</strong></div><button class="icon-btn" data-action="toggle-password">${icon('eye')}</button></div>` : `<div class="lock-box"><strong>${r.available}부터 확인 가능</strong><span>고객 퇴실 확인 후 비밀번호가 열립니다.</span></div>`}
+              <div class="info-row"><span class="info-label">청소 가능</span><span class="info-value">${r.available}</span></div>
+              <div class="info-row"><span class="info-label">완료 마감</span><span class="info-value">${r.deadline}</span></div>
+            </div>
+          </div>
+
+          ${!started ? `<button class="btn primary full" data-action="start-task" data-id="${r.id}" ${!r.canEnter ? 'disabled':''}>청소 시작</button>` : `
+          <div class="section-title-row"><h2 class="section-title">청소 체크리스트</h2><span class="section-meta">${checks.length}/${checkItems.length}</span></div>
+          <div class="checklist">${checkItems.map((item, i) => `<button class="check-item ${checks.includes(i) ? 'checked':''}" data-action="toggle-check" data-index="${i}" data-id="${r.id}"><span class="box">${checks.includes(i) ? '✓':''}</span><span><strong>${item[0]}</strong><span>${item[1]}</span></span></button>`).join('')}</div>
+
+          <div class="section-title-row"><h2 class="section-title">필수 사진</h2><span class="section-meta">${photos.length}/${photoItems.length}</span></div>
+          <div class="photo-grid">${photoItems.map((name, i) => `<button class="photo-slot ${photos.includes(i) ? 'done':''}" data-action="toggle-photo" data-index="${i}" data-id="${r.id}"><span class="photo-icon"></span><strong>${photos.includes(i) ? '등록 완료' : name}</strong><span>${photos.includes(i) ? '눌러서 다시 촬영' : '눌러서 촬영'}</span></button>`).join('')}</div>
+
+          <div class="section-title-row"><h2 class="section-title">발견한 특이사항</h2><button class="text-action" data-action="report-issue">이슈 등록</button></div>
+          <textarea class="textarea" placeholder="예: 욕실 배수구 냄새가 심해 관리자 확인이 필요합니다."></textarea>
+
+          <div class="sticky-action"><button class="btn green full" data-action="complete-task" data-id="${r.id}" ${done ? '' : 'disabled'}>사진 제출 후 청소 완료 ${done ? '' : `(${checks.length + photos.length}/${checkItems.length + photoItems.length})`}</button></div>`}
+        </section>`;
+    }
+
+    function renderMaidCompleted() {
+      const completed = state.completedTasks.length ? state.completedTasks : ['903','802'];
+      return `${topbar('완료 업무', '오늘 2개 · 검수 대기 1')}
+        <section class="screen">
+          <div class="filter-rail"><button class="chip active">오늘</button><button class="chip">이번 주</button><button class="chip">검수 대기</button><button class="chip">승인</button></div>
+          <div class="section-title-row"><h2 class="section-title">오늘 완료</h2></div>
+          <div class="room-list">${completed.map(id => state.rooms.find(r => r.id === id)).filter(Boolean).map(r => roomCard(r,'maid')).join('')}</div>
+        </section>${bottomNav('maid')}`;
+    }
+
+    function renderMaidSettlement() {
+      return `${topbar('내 정산', '김하나 · 8월')}
+        <section class="screen">
+          <div class="money-summary"><small>이번 달 확정 금액</small><strong>684,500원</strong><div class="money-split"><div><span>예상 포함</span><b>727,000원</b></div><div><span>지급 완료</span><b>512,000원</b></div></div></div>
+          <div class="section-title-row"><h2 class="section-title">오늘 작업</h2><span class="section-meta">예상 42,000원</span></div>
+          <div class="panel"><div class="panel-body">
+            ${[['1502','퇴실 청소','9,500원','검수 전'],['1208','퇴실 청소','7,500원','배정'],['903','퇴실 청소','7,000원','확정'],['709','연박 부분 청소','4,000원','확정']].map(r => `<div class="settlement-row"><div class="settlement-date"><strong>${r[0]}</strong><span>호</span></div><div class="settlement-main"><strong>${r[1]}</strong><span>8월 14일</span></div><div class="settlement-amount"><strong>${r[2]}</strong><span>${r[3]}</span></div></div>`).join('')}
+          </div></div>
+        </section>${bottomNav('maid')}`;
+    }
+
+    function renderMaidAlerts() {
+      const alerts = [
+        ['재청소 요청','903호 욕실 거울 물자국을 다시 확인해 주세요.','방금 전','red'],
+        ['객실 배정','1208호가 오늘 업무에 추가되었습니다.','12분 전','blue'],
+        ['검수 승인','802호 청소가 승인되어 7,500원이 확정되었습니다.','34분 전','green'],
+        ['시간 변경','1208호 체크아웃이 13:00으로 변경되었습니다.','1시간 전','orange']
+      ];
+      return `${topbar('알림', '읽지 않음 2')}
+        <section class="screen"><div class="panel"><div class="panel-body">${alerts.map(a => `<div class="settlement-row"><span class="legend-dot ${a[3]}" style="width:10px;height:10px;"></span><div class="settlement-main"><strong>${a[0]}</strong><span>${a[1]}</span></div><div class="settlement-amount"><span style="color:var(--muted)">${a[2]}</span></div></div>`).join('')}</div></div></section>${bottomNav('maid')}`;
+    }
+
+    function renderMaidProfile() {
+      return `${topbar('내 정보', '메이드 계정')}
+        <section class="screen">
+          <div class="panel"><div class="panel-body"><div class="info-row"><span class="info-label">이름</span><span class="info-value">김하나</span></div><div class="info-row"><span class="info-label">오늘 배정</span><span class="info-value">6객실</span></div><div class="info-row"><span class="info-label">이번 달 승인율</span><span class="info-value">97.4%</span></div></div></div>
+          <div class="menu-list"><button class="menu-row"><strong>알림 설정</strong><span>${icon('chevron')}</span></button><button class="menu-row"><strong>내 벌점·컴플레인</strong><span>0건 ${icon('chevron')}</span></button><button class="menu-row" data-action="switch-to-admin"><strong>관리자 화면으로 보기</strong><span>${icon('chevron')}</span></button><button class="menu-row" data-action="logout"><strong>로그아웃</strong><span>${icon('chevron')}</span></button></div>
+        </section>${bottomNav('maid')}`;
+    }
+
+    function render() {
+      let html = '';
+      switch (state.screen) {
+        case 'login': html = renderLogin(); break;
+        case 'admin-home': html = renderAdminHome(); break;
+        case 'admin-assign': html = renderAdminAssign(); break;
+        case 'admin-inspection': html = renderAdminInspection(); break;
+        case 'admin-settlement': html = renderAdminSettlement(); break;
+        case 'admin-more': html = renderAdminMore(); break;
+        case 'room-detail': html = renderRoomDetail(); break;
+        case 'maid-home': html = renderMaidHome(); break;
+        case 'maid-task': html = renderMaidTask(); break;
+        case 'maid-completed': html = renderMaidCompleted(); break;
+        case 'maid-settlement': html = renderMaidSettlement(); break;
+        case 'maid-alerts': html = renderMaidAlerts(); break;
+        case 'maid-profile': html = renderMaidProfile(); break;
+        default: html = renderLogin();
+      }
+      app.innerHTML = html;
+      document.querySelectorAll('[data-demo-view]').forEach(btn => {
+        const v = btn.dataset.demoView;
+        const active = (v === 'login' && state.screen === 'login') || (v === 'admin' && state.role === 'admin' && state.screen !== 'room-detail') || (v === 'maid' && state.role === 'maid') || (v === 'password' && state.screen === 'room-detail');
+        btn.classList.toggle('active', active);
+      });
+    }
+
+    function navigate(screen, role = state.role) {
+      state.previousScreen = state.screen;
+      state.screen = screen;
+      state.role = role;
+      state.passwordVisible = false;
+      closeSheet(false);
+      render();
+      const scroller = app.querySelector('.screen');
+      if (scroller) scroller.scrollTop = 0;
+    }
+
+    function openPasswordSheet() {
+      const r = state.rooms.find(x => x.id === state.selectedRoomId);
+      if (!r) return;
+      state.sheetOpen = true;
+      sheet.innerHTML = `<div class="sheet-handle"></div><h3 id="sheetTitle">${r.id}호 비밀번호 수정</h3><p>4자리 숫자를 직접 입력하거나 랜덤으로 생성한 뒤 저장하세요.</p><div class="password-input-wrap"><input id="passwordInput" class="input password-input" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" value="${r.password}" aria-label="4자리 객실 비밀번호"><button class="btn soft" data-action="random-password">${icon('refresh')} 랜덤</button></div><div class="button-row" style="margin-top:14px;"><button class="btn" data-action="close-sheet">취소</button><button class="btn primary" data-action="save-password">저장</button></div>`;
+      sheet.classList.add('open');
+      sheetBackdrop.classList.add('open');
+      requestAnimationFrame(() => document.getElementById('passwordInput')?.select());
+    }
+
+    function closeSheet(clear = true) {
+      state.sheetOpen = false;
+      sheet.classList.remove('open');
+      sheetBackdrop.classList.remove('open');
+      if (clear) setTimeout(() => { if (!state.sheetOpen) sheet.innerHTML = ''; }, 220);
+    }
+
+    function randomPassword() {
+      return String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+    }
+
+    document.addEventListener('click', (event) => {
+      const demoView = event.target.closest('[data-demo-view]');
+      if (demoView) {
+        const view = demoView.dataset.demoView;
+        if (view === 'login') { state = defaultState(); render(); closeSheet(); }
+        if (view === 'admin') { state.role = 'admin'; navigate('admin-home','admin'); }
+        if (view === 'maid') { state.role = 'maid'; navigate('maid-home','maid'); }
+        if (view === 'password') { state.role = 'admin'; state.selectedRoomId = '1502'; navigate('room-detail','admin'); setTimeout(openPasswordSheet, 50); }
+        return;
+      }
+
+      const loginRole = event.target.closest('[data-login-role]');
+      if (loginRole) { state.loginRole = loginRole.dataset.loginRole; render(); return; }
+
+      const screenBtn = event.target.closest('[data-screen]');
+      if (screenBtn) { navigate(screenBtn.dataset.screen, screenBtn.dataset.screen.startsWith('admin') ? 'admin' : 'maid'); return; }
+
+      const roomBtn = event.target.closest('[data-room]');
+      if (roomBtn) {
+        state.selectedRoomId = roomBtn.dataset.room;
+        const roleTarget = roomBtn.dataset.roleTarget || state.role;
+        navigate(roleTarget === 'maid' ? 'maid-task' : 'room-detail', roleTarget);
+        return;
+      }
+
+      const actionEl = event.target.closest('[data-action]');
+      if (!actionEl) return;
+      const action = actionEl.dataset.action;
+
+      if (action === 'login') {
+        state.role = state.loginRole;
+        navigate(state.role === 'admin' ? 'admin-home' : 'maid-home', state.role);
+        showToast(`${state.role === 'admin' ? '관리자' : '메이드'} 화면으로 로그인했습니다.`);
+      }
+      if (action === 'logout') { state = defaultState(); render(); showToast('로그아웃했습니다.'); }
+      if (action === 'back') { navigate(state.role === 'admin' ? 'admin-home' : 'maid-home', state.role); }
+      if (action === 'open-alerts') { navigate(state.role === 'admin' ? 'admin-inspection' : 'maid-alerts', state.role); }
+      if (action === 'toggle-password') { state.passwordVisible = !state.passwordVisible; render(); }
+      if (action === 'edit-password') openPasswordSheet();
+      if (action === 'close-sheet') closeSheet();
+      if (action === 'random-password') {
+        const input = document.getElementById('passwordInput');
+        if (input) { input.value = randomPassword(); input.dispatchEvent(new Event('input')); }
+      }
+      if (action === 'save-password') {
+        const input = document.getElementById('passwordInput');
+        const value = input?.value.replace(/\D/g,'') || '';
+        if (value.length !== 4) { showToast('비밀번호는 숫자 4자리로 입력해 주세요.'); return; }
+        const r = state.rooms.find(x => x.id === state.selectedRoomId);
+        if (r) r.password = value;
+        closeSheet();
+        state.passwordVisible = true;
+        render();
+        showToast(`${state.selectedRoomId}호 비밀번호를 ${value}로 저장했습니다.`);
+      }
+      if (action === 'reset-demo') { state = defaultState(); closeSheet(); render(); showToast('시안을 초기 상태로 되돌렸습니다.'); }
+      if (action === 'select-all-assign') { state.selectedAssign = state.rooms.filter(r => ['청소 가능','입실 대기','연박 청소'].includes(r.status)).map(r => r.id); render(); }
+      if (action === 'clear-assign') { state.selectedAssign = []; render(); }
+      if (action === 'toggle-assign') {
+        const id = actionEl.dataset.id;
+        state.selectedAssign = state.selectedAssign.includes(id) ? state.selectedAssign.filter(x => x !== id) : [...state.selectedAssign, id];
+        render();
+      }
+      if (action === 'assign-maid') {
+        state.rooms.forEach(r => { if (state.selectedAssign.includes(r.id)) r.assignee = '김하나'; });
+        const count = state.selectedAssign.length;
+        state.selectedAssign = [];
+        render(); showToast(`${count}개 객실을 김하나에게 배정했습니다.`);
+      }
+      if (action === 'approve-inspection') {
+        const r = state.rooms.find(x => x.id === actionEl.dataset.id);
+        if (r) { r.status = '입실 준비 완료'; r.statusTone = 'green'; r.color = 'green'; r.inspection = false; }
+        render(); showToast(`${actionEl.dataset.id}호를 검수 승인했습니다.`);
+      }
+      if (action === 'reject-inspection') {
+        const r = state.rooms.find(x => x.id === actionEl.dataset.id);
+        if (r) { r.status = '재청소 필요'; r.statusTone = 'red'; r.color = 'red'; r.inspection = true; }
+        render(); showToast(`${actionEl.dataset.id}호에 재청소를 요청했습니다.`);
+      }
+      if (action === 'mark-urgent') {
+        const r = state.rooms.find(x => x.id === actionEl.dataset.id);
+        if (r) {
+          const wasUrgent = r.color === 'red';
+          r.color = wasUrgent ? 'orange' : 'red';
+          r.statusTone = wasUrgent ? 'orange' : 'red';
+          if (!wasUrgent && !r.badges.includes('급한 객실')) r.badges.unshift('급한 객실');
+          if (wasUrgent) r.badges = r.badges.filter(b => b !== '급한 객실');
+          render();
+          showToast(r.color === 'red' ? '긴급 객실로 지정했습니다.' : '긴급 지정을 해제했습니다.');
+        }
+      }
+      if (action === 'assign-one') { showToast('담당자 선택 시트를 여는 위치입니다.'); }
+      if (action === 'switch-to-maid') { navigate('maid-home','maid'); showToast('메이드 화면으로 전환했습니다.'); }
+      if (action === 'switch-to-admin') { navigate('admin-home','admin'); showToast('관리자 화면으로 전환했습니다.'); }
+      if (action === 'start-task') {
+        const id = actionEl.dataset.id;
+        state.taskStarted[id] = true;
+        const r = state.rooms.find(x => x.id === id);
+        if (r) { r.status = '청소 중'; r.statusTone = 'orange'; r.color = 'orange'; }
+        render(); showToast(`${id}호 청소를 시작했습니다.`);
+      }
+      if (action === 'toggle-check') {
+        const id = actionEl.dataset.id;
+        const index = Number(actionEl.dataset.index);
+        const arr = state.taskChecks[id] || [];
+        state.taskChecks[id] = arr.includes(index) ? arr.filter(x => x !== index) : [...arr, index];
+        render();
+      }
+      if (action === 'toggle-photo') {
+        const id = actionEl.dataset.id;
+        const index = Number(actionEl.dataset.index);
+        const arr = state.taskPhotos[id] || [];
+        state.taskPhotos[id] = arr.includes(index) ? arr.filter(x => x !== index) : [...arr, index];
+        render();
+      }
+      if (action === 'report-issue') showToast('파손·오염 사진과 설명을 등록하는 화면입니다.');
+      if (action === 'complete-task') {
+        const id = actionEl.dataset.id;
+        const r = state.rooms.find(x => x.id === id);
+        if (r) { r.status = '검수 대기'; r.statusTone = 'orange'; r.color = 'orange'; r.inspection = true; }
+        if (!state.completedTasks.includes(id)) state.completedTasks.unshift(id);
+        navigate('maid-home','maid');
+        showToast(`${id}호를 검수 요청했습니다.`);
+      }
+    });
+
+    document.addEventListener('input', (event) => {
+      if (event.target.id === 'passwordInput') {
+        event.target.value = event.target.value.replace(/\D/g,'').slice(0,4);
+      }
+    });
+
+    initializeFromQuery();
+    render();
+  </script>
+</body>
+</html>

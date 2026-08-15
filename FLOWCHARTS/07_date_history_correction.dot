@@ -1,0 +1,16 @@
+digraph G {
+  graph [rankdir=TB, bgcolor="white", pad="0.25", nodesep="0.32", ranksep="0.42", fontname="NanumSquare"];
+  node [shape=box, style="rounded,filled", fontname="NanumSquare", fontsize=11, color="#CBD3D9", fillcolor="#F8FAFB", fontcolor="#17212A", margin="0.15,0.10"];
+  edge [fontname="NanumSquare", fontsize=9, color="#697680", fontcolor="#4D5962", arrowsize=0.7];
+
+  A [label="월 달력 날짜 선택"];
+  B [label="해당 날짜 객실 읽기 모델"];
+  C [label="오늘?", shape=diamond, fillcolor="#FFF4E8"];
+  D [label="실시간 명령 가능", fillcolor="#E8F5EF"];
+  E [label="과거 읽기 전용", fillcolor="#F3F4F5"];
+  F [label="오기입?", shape=diamond, fillcolor="#FFF4E8"];
+  G [label="정정 내용·사유"];
+  H [label="최종 확인"];
+  I [label="원본 유지·정정 이벤트 추가", fillcolor="#EAF3F8"];
+  A->B->C; C->D [label="예"]; C->E [label="아니오"]; E->F; F->G [label="예"]; G->H->I;
+}

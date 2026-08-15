@@ -1,0 +1,18 @@
+digraph G {
+  graph [rankdir=TB, bgcolor="white", pad="0.25", nodesep="0.32", ranksep="0.42", fontname="NanumSquare"];
+  node [shape=box, style="rounded,filled", fontname="NanumSquare", fontsize=11, color="#CBD3D9", fillcolor="#F8FAFB", fontcolor="#17212A", margin="0.15,0.10"];
+  edge [fontname="NanumSquare", fontsize=9, color="#697680", fontcolor="#4D5962", arrowsize=0.7];
+
+  A [label="현재 촛불 수량"];
+  B [label="메이드 작업?", shape=diamond, fillcolor="#FFF4E8"];
+  C [label="기존 수량을 하한으로 잠금\n새로 둔 개수만 추가"];
+  D [label="관리자 수량·위치·사유 입력"];
+  E [label="최종 수량 > 0?", shape=diamond, fillcolor="#FFF4E8"];
+  F [label="고객 배정·입실 하드 차단", fillcolor="#FDEBEC", color="#D7464B"];
+  G [label="관리자 현장 회수"];
+  H [label="전후 수량·사유·최종 확인"];
+  I [label="0개 확정?", shape=diamond, fillcolor="#FFF4E8"];
+  J [label="차단 유지", fillcolor="#FDEBEC"];
+  K [label="촛불 차단 해제\n다른 조건 재계산", fillcolor="#E8F5EF", color="#24835F"];
+  A->B; B->C [label="예"]; B->D [label="아니오"]; C->E; D->E; E->F [label="예"]; E->K [label="아니오(0개)"]; F->G->H->I; I->J [label="아니오"]; J->G; I->K [label="예"];
+}
