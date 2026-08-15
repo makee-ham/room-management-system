@@ -24,6 +24,8 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-mobile-inspection-gallery.png',
   'WIREFRAME/QA/screenshots/admin-mobile-inspection-photo.png',
   'WIREFRAME/QA/screenshots/admin-mobile-pay-calendar.png',
+  'WIREFRAME/QA/screenshots/admin-auto-early-late-1440.png',
+  'WIREFRAME/QA/screenshots/admin-auto-early-late-390.png',
   'WIREFRAME/QA/screenshots/admin-next-day-assignment-1440.png',
   'WIREFRAME/QA/screenshots/admin-next-day-assignment-390.png',
   'WIREFRAME/QA/screenshots/maid-weekly-availability-390.png',
