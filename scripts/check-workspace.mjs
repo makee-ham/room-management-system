@@ -8,15 +8,22 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const required = [
   'AGENTS.md',
+  'manifest.json',
   'DOCS/FINAL_UX_AUDIT.md',
   'DOCS/14_CLICKABLE_WIREFRAME_HANDOFF.md',
+  'DOCS/15_TWO_PASS_AUDIT_RESULT.md',
   'DOCS/WIREFRAME_TASK_PROMPT.md',
   'WIREFRAME/index.html',
   'WIREFRAME/README.md',
   'WIREFRAME/QA.md',
+  'WIREFRAME/screenshots/admin-desktop-1440.png',
+  'WIREFRAME/screenshots/admin-mobile-390.png',
+  'WIREFRAME/screenshots/maid-mobile-390.png',
   'WIREFRAME/QA/screenshots/admin-mobile-rooms-unified.png',
   'WIREFRAME/QA/screenshots/admin-mobile-inspection-gallery.png',
+  'WIREFRAME/QA/screenshots/admin-mobile-inspection-photo.png',
   'WIREFRAME/QA/screenshots/admin-mobile-pay-calendar.png',
+  'WIREFRAME/reference/redesign-concepts/admin-inspection.png',
 ];
 
 const missing = required.filter((file) => !existsSync(resolve(root, file)));
@@ -50,9 +57,22 @@ if (/<(?:script|link)\b[^>]*(?:src|href)=["']https?:\/\//i.test(html)) {
 
 const audit = readFileSync(resolve(root, 'DOCS/FINAL_UX_AUDIT.md'));
 const auditHash = createHash('sha256').update(audit).digest('hex');
+const indexHash = createHash('sha256').update(readFileSync(resolve(root, 'WIREFRAME/index.html'))).digest('hex');
+const manifest = JSON.parse(readFileSync(resolve(root, 'manifest.json'), 'utf8'));
+const expectedAuditHash = manifest.sha256?.['DOCS/FINAL_UX_AUDIT.md'];
+const expectedIndexHash = manifest.sha256?.['WIREFRAME/index.html'];
+if (auditHash !== expectedAuditHash || indexHash !== expectedIndexHash) {
+  throw new Error([
+    'Canonical file hash mismatch.',
+    `Audit: ${auditHash} (expected ${expectedAuditHash})`,
+    `Index: ${indexHash} (expected ${expectedIndexHash})`,
+  ].join('\n'));
+}
 
 console.log(`Required files: ${required.length}/${required.length}`);
 console.log(`Inline scripts parsed: ${inlineScripts.length}`);
 console.log('Portable path scan: passed');
 console.log(`Final UX audit SHA-256: ${auditHash}`);
+console.log(`Wireframe SHA-256: ${indexHash}`);
+console.log('Manifest hashes: passed');
 console.log('Workspace check: passed');
