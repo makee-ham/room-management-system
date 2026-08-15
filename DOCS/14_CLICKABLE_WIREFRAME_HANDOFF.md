@@ -1,14 +1,17 @@
 # 캐슬디아트 클릭형 와이어프레임 제작 인계서
 
+> 2026-08-16 운영 결정: 청소 근무 가능일과 담당 배정은 `DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md`가 이 문서의 공개 일감·메이드 선점·재공개 규칙을 대체한다. 메이드는 일요일에 다음 주 월–일 가능일을 제출하고, 관리자는 각 근무일 전날 밤 객실 담당을 직접 배정·통보한다.
+
 - 작성일: 2026-08-14
 - 목적: 감사가 끝난 제품 기준을 별도 Codex 작업에서 반응형 클릭형 HTML로 구현한다.
 - 산출물 진입점: `WIREFRAME/index.html`
 
 ## 1. 기준 문서 우선순위
 
-1. 최종 제품 기준: `DOCS/FINAL_UX_AUDIT.md`
-2. 구현 범위·완료 조건: 이 문서
-3. 시각 참고만: `CURRENT/index.html`
+1. 청소 가능일·담당 배정 최신 기준: `DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md`
+2. 그 밖의 최종 제품 기준: `DOCS/FINAL_UX_AUDIT.md`
+3. 구현 범위·완료 조건: 이 문서
+4. 시각 참고만: `CURRENT/index.html`
 
 `CURRENT` HTML과 `DOCS/01`~`DOCS/13`은 기존 v13의 감사 근거이지 제품 정책의 정본이 아니다. 충돌할 때는 반드시 최종 제품 기준과 이 문서를 따른다. 특히 기존 시안의 608호 전용 규칙, 사진별 검수, 예약 충돌 상태, 임의 객실별 단가, 자체 PMS 범위는 계승하지 않는다.
 
