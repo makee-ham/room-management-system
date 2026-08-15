@@ -12,6 +12,7 @@ const required = [
   'DOCS/FINAL_UX_AUDIT.md',
   'DOCS/14_CLICKABLE_WIREFRAME_HANDOFF.md',
   'DOCS/15_TWO_PASS_AUDIT_RESULT.md',
+  'DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md',
   'DOCS/WIREFRAME_TASK_PROMPT.md',
   'WIREFRAME/index.html',
   'WIREFRAME/README.md',
@@ -23,7 +24,12 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-mobile-inspection-gallery.png',
   'WIREFRAME/QA/screenshots/admin-mobile-inspection-photo.png',
   'WIREFRAME/QA/screenshots/admin-mobile-pay-calendar.png',
+  'WIREFRAME/QA/screenshots/admin-next-day-assignment-1440.png',
+  'WIREFRAME/QA/screenshots/admin-next-day-assignment-390.png',
+  'WIREFRAME/QA/screenshots/maid-weekly-availability-390.png',
   'WIREFRAME/reference/redesign-concepts/admin-inspection.png',
+  'WIREFRAME/reference/redesign-concepts/admin-next-day-assignment.png',
+  'WIREFRAME/reference/redesign-concepts/maid-weekly-availability.png',
 ];
 
 const missing = required.filter((file) => !existsSync(resolve(root, file)));
@@ -37,6 +43,7 @@ const portableDocs = [
   'DOCS/00_START_HERE.md',
   'DOCS/CODEX_PROMPT.md',
   'DOCS/14_CLICKABLE_WIREFRAME_HANDOFF.md',
+  'DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md',
   'DOCS/WIREFRAME_TASK_PROMPT.md',
   'WIREFRAME/README.md',
   'WIREFRAME/QA.md',
