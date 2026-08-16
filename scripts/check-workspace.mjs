@@ -33,6 +33,7 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-room-issue-gallery-1440.png',
   'WIREFRAME/QA/screenshots/admin-assignment-type-filter-1440.png',
   'WIREFRAME/QA/screenshots/admin-maid-order-board-390.png',
+  'WIREFRAME/QA/screenshots/admin-weekly-worktable-symbols-390.png',
   'WIREFRAME/reference/redesign-concepts/admin-inspection.png',
   'WIREFRAME/reference/redesign-concepts/admin-next-day-assignment.png',
   'WIREFRAME/reference/redesign-concepts/maid-weekly-availability.png',
