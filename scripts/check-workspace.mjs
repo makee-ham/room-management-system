@@ -44,6 +44,8 @@ const required = [
   'WIREFRAME/QA/screenshots/maid-bomb-room-report-390.png',
   'WIREFRAME/QA/screenshots/admin-bomb-room-inspection-390.png',
   'WIREFRAME/QA/screenshots/admin-bomb-room-payroll-1440.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-cleaning-ledger-1440.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-cleaning-ledger-390.png',
   'WIREFRAME/QA/screenshots/maid-bomb-room-pay-history-390.png',
   'WIREFRAME/QA/screenshots/admin-type-photo-template-1440.png',
   'WIREFRAME/QA/screenshots/maid-type-photo-template-390.png',
