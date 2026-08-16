@@ -1095,16 +1095,19 @@
     .work-history-hero > div { min-width:0; flex:1; }
     .work-history-hero h2 { margin:0 0 4px; font-size:1.25rem; }
     .work-history-hero p { margin:0; color:var(--muted); font-size:13px; }
-    .work-history-toolbar { display:grid; grid-template-columns:minmax(220px,1fr) minmax(180px,.65fr); gap:10px; padding:14px 16px; border-bottom:1px solid var(--line); }
-    .work-history-toolbar label { display:grid; gap:5px; color:var(--muted); font-size:12px; font-weight:800; }
+    .work-history-toolbar { display:grid; grid-template-columns:minmax(260px,1fr) minmax(180px,.65fr); gap:10px; padding:14px 16px; border-bottom:1px solid var(--line); }
+    .work-history-toolbar label, .work-history-week-field { display:grid; gap:5px; color:var(--muted); font-size:12px; font-weight:800; }
+    .work-history-week-picker { width:100%; color:var(--navy); }
     .work-history-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border-bottom:1px solid var(--line); }
-    .work-history-summary > div { min-height:78px; padding:13px 16px; border-right:1px solid var(--line); }
+    .work-history-summary > div { min-height:96px; padding:13px 16px; border-right:1px solid var(--line); }
     .work-history-summary > div:last-child { border-right:0; }
     .work-history-summary span { display:block; color:var(--muted); font-size:12px; }
     .work-history-summary strong { display:block; margin-top:3px; font-size:1.25rem; }
+    .work-history-summary small { display:block; margin-top:5px; color:var(--muted); font-size:12px; font-weight:750; }
     .work-history-summary .planned strong { color:#315d83; }
     .work-history-summary .assigned strong { color:#9a6813; }
     .work-history-summary .completed strong { color:var(--green); }
+    .work-history-unit-note { margin:0; padding:10px 16px; border-bottom:1px solid var(--line); color:var(--muted); background:#fbfcfe; font-size:12px; line-height:1.55; }
     .work-history-legend { display:flex; flex-wrap:wrap; gap:8px 14px; padding:11px 16px; color:var(--muted); font-size:12px; }
     .work-history-legend span { display:inline-flex; align-items:center; gap:5px; }
     .history-dot { width:9px; height:9px; border-radius:50%; background:#6b91b2; }
@@ -1190,7 +1193,7 @@
       .work-history-hero { flex-direction:column; }
       .work-history-toolbar { grid-template-columns:1fr; padding:13px; }
       .work-history-summary { grid-template-columns:1fr; }
-      .work-history-summary > div { min-height:64px; border-right:0; border-bottom:1px solid var(--line); }
+      .work-history-summary > div { min-height:84px; border-right:0; border-bottom:1px solid var(--line); }
       .work-history-summary > div:last-child { border-bottom:0; }
       .work-history-person-head { flex-direction:column; }
       .work-history-counts { justify-content:flex-start; }
@@ -1600,7 +1603,7 @@
           detail:state.detail?{type:String(state.detail.type),id:String(state.detail.id),...(state.detail.mode?{mode:String(state.detail.mode)}:{})}:null,
           date:state.selectedDate,filter:state.roomFilter,typeFilter:state.roomTypeFilter,q:state.roomSearch,
           scrollY:Math.max(0,Math.round(Number(scrollY)||0)),loggedIn:state.loggedIn!==false,
-          adminMaidTab:state.adminMaidTab,workHistoryWeek:state.workHistoryWeek,workHistoryMaid:state.workHistoryMaid,cleaningTab:state.cleaningTab,assignmentTypeFilter:state.assignmentTypeFilter,adminPayWeek:state.adminPayWeek,
+          adminMaidTab:state.adminMaidTab,workHistoryWeek:state.workHistoryWeek,workHistoryMaid:state.workHistoryMaid,calendarContext:state.calendarContext,calendarMonth:state.calendarMonth,cleaningTab:state.cleaningTab,assignmentTypeFilter:state.assignmentTypeFilter,adminPayWeek:state.adminPayWeek,
           maidPayFilter:state.maidPayFilter,maidPayOpenWeek:state.maidPayOpenWeek,maidPaySelectedWeek:state.maidPaySelectedWeek,
           templateChange:pendingTemplateChange?cloneHistoryPayload(pendingTemplateChange):null
         };
@@ -1704,8 +1707,11 @@
         if(['all',...Object.keys(ROOM_TYPES)].includes(route.typeFilter))state.roomTypeFilter=route.typeFilter;
         if(/^\d{0,6}$/.test(route.q||''))state.roomSearch=route.q||'';
         if(['workforce','history','pay','complaints'].includes(route.adminMaidTab))state.adminMaidTab=route.adminMaidTab;
-        if(/^2026-\d{2}-\d{2}$/.test(route.workHistoryWeek||''))state.workHistoryWeek=route.workHistoryWeek;
+        const restoredWorkHistoryWeek=normalizeWorkHistoryWeek(route.workHistoryWeek);
+        if(restoredWorkHistoryWeek)state.workHistoryWeek=restoredWorkHistoryWeek;
         if(route.workHistoryMaid==='all'||MAIDS.some(maid=>maid.id===route.workHistoryMaid))state.workHistoryMaid=route.workHistoryMaid;
+        state.calendarContext=['room','admin-pay','maid-pay','work-history'].includes(route.calendarContext)?route.calendarContext:null;
+        if(/^\d{4}-(0[1-9]|1[0-2])$/.test(route.calendarMonth||''))state.calendarMonth=route.calendarMonth;
         if(['assignment','progress','inspection','done'].includes(route.cleaningTab))state.cleaningTab=route.cleaningTab;
         if(['all',...Object.keys(ROOM_TYPES)].includes(route.assignmentTypeFilter))state.assignmentTypeFilter=route.assignmentTypeFilter;
         const restoredAdminPayWeek=normalizePayWeek(route.adminPayWeek);
@@ -2519,6 +2525,14 @@
         const start=weekStartIso(value);
         return start<='2026-08-10'?start:null;
       }
+      function normalizeWorkHistoryWeek(value) {
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(value||''))return null;
+        const date=dateObject(value);
+        if(dateIso(date)!==value)return null;
+        const start=weekStartIso(value);
+        return start<='2026-08-17'?start:null;
+      }
+      function workHistoryCalendarAllowed() { return state.loggedIn!==false&&state.role==='admin'&&state.adminView==='maids'&&state.adminMaidTab==='history'; }
       function weekRangeLabel(start,withYear=false) {
         const from=dateObject(start),to=new Date(from);to.setDate(from.getDate()+6);
         const prefix=withYear?`${from.getFullYear()}년 `:'';
@@ -2538,16 +2552,17 @@
 
       function calendarMarkup() {
         const [year,month]=state.calendarMonth.split('-').map(Number);
-        const payMode=state.calendarContext==='admin-pay'||state.calendarContext==='maid-pay';
-        const paySelected=state.calendarContext==='admin-pay'?state.adminPayWeek:(state.maidPaySelectedWeek||state.maidPayOpenWeek||'2026-08-03');
-        const first=new Date(year,month-1,1), offset=payMode?(first.getDay()+6)%7:first.getDay(), start=new Date(year,month-1,1-offset);
+        const weekMode=['admin-pay','maid-pay','work-history'].includes(state.calendarContext);
+        const weekSelectedStart=state.calendarContext==='admin-pay'?state.adminPayWeek:state.calendarContext==='maid-pay'?(state.maidPaySelectedWeek||state.maidPayOpenWeek||'2026-08-03'):state.workHistoryWeek;
+        const latestWeek=state.calendarContext==='work-history'?'2026-08-17':'2026-08-10';
+        const first=new Date(year,month-1,1), offset=weekMode?(first.getDay()+6)%7:first.getDay(), start=new Date(year,month-1,1-offset);
         const days=Array.from({length:42},(_,i)=>{const d=new Date(start);d.setDate(start.getDate()+i);return d;});
         return `<div class="calendar-backdrop" data-action="calendar-backdrop"><section class="calendar-dialog" role="dialog" aria-modal="true" aria-labelledby="calendar-title">
           <div class="calendar-head"><button class="icon-btn" type="button" data-action="calendar-month" data-offset="-1" aria-label="이전 달">${icon('chevronLeft')}</button><strong id="calendar-title">${year}년 ${month}월</strong><button class="icon-btn" type="button" data-action="calendar-month" data-offset="1" aria-label="다음 달">${icon('chevronRight')}</button></div>
-          ${payMode?`<p class="pay-week-calendar-note">날짜를 누르면 그 날짜가 포함된 월요일–일요일 주차를 선택합니다.</p>`:''}
-          <div class="calendar-week" aria-hidden="true">${(payMode?['월','화','수','목','금','토','일']:['일','월','화','수','목','금','토']).map(v=>`<span>${v}</span>`).join('')}</div>
-          <div class="calendar-grid">${days.map(d=>{const iso=dateIso(d), other=d.getMonth()!==month-1, today=iso==='2026-08-15', weekSelected=payMode&&weekStartIso(iso)===paySelected, selected=payMode?iso===paySelected:iso===state.selectedDate, future=payMode&&weekStartIso(iso)>'2026-08-10';return `<button type="button" class="calendar-day ${other?'other':''} ${today?'today':''} ${weekSelected?'week-selected':''} ${selected?'selected':''}" data-action="calendar-select" data-date="${iso}" ${payMode?`aria-pressed="${weekSelected}"`:`aria-current="${selected?'date':'false'}"`} aria-label="${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일${today?' 오늘':''}${weekSelected?' 선택 주차':''}" ${future?'disabled':''}>${d.getDate()}</button>`;}).join('')}</div>
-          <div class="calendar-foot">${button(payMode?'이번 주':'오늘로 이동','calendar-today','outline')}${button('닫기','calendar-close','soft')}</div>
+          ${weekMode?`<p class="pay-week-calendar-note">날짜를 누르면 그 날짜가 포함된 월요일–일요일 주차를 선택합니다.</p>`:''}
+          <div class="calendar-week" aria-hidden="true">${(weekMode?['월','화','수','목','금','토','일']:['일','월','화','수','목','금','토']).map(v=>`<span>${v}</span>`).join('')}</div>
+          <div class="calendar-grid">${days.map(d=>{const iso=dateIso(d), other=d.getMonth()!==month-1, today=iso==='2026-08-15', weekSelected=weekMode&&weekStartIso(iso)===weekSelectedStart, selected=weekMode?iso===weekSelectedStart:iso===state.selectedDate, future=weekMode&&weekStartIso(iso)>latestWeek;return `<button type="button" class="calendar-day ${other?'other':''} ${today?'today':''} ${weekSelected?'week-selected':''} ${selected?'selected':''}" data-action="calendar-select" data-date="${iso}" ${weekMode?`aria-pressed="${weekSelected}"`:`aria-current="${selected?'date':'false'}"`} aria-label="${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일${today?' 오늘':''}${weekSelected?' 선택 주차':''}" ${future?'disabled':''}>${d.getDate()}</button>`;}).join('')}</div>
+          <div class="calendar-foot">${button(weekMode?'이번 주':'오늘로 이동','calendar-today','outline')}${button('닫기','calendar-close','soft')}</div>
         </section></div>`;
       }
       function openCalendar(trigger=document.activeElement,context='room') {
@@ -2555,10 +2570,10 @@
         modalTrigger=trigger;
         document.getElementById('modal-root').innerHTML=calendarMarkup();
         setModalBackgroundLocked(true);document.body.classList.add('modal-open');
-        registerModalHistory({kind:'calendar'});
-        requestAnimationFrame(()=>(document.querySelector('.calendar-day.selected')||document.querySelector('.calendar-day'))?.focus());
+        registerModalHistory({kind:'calendar',payload:{context,month:state.calendarMonth}});
+        requestAnimationFrame(()=>(document.querySelector('.calendar-day.selected:not(:disabled)')||document.querySelector('.calendar-day:not(:disabled)')||document.querySelector('[data-action="calendar-close"]'))?.focus());
       }
-      function rerenderCalendar() { document.getElementById('modal-root').innerHTML=calendarMarkup();registerModalHistory();requestAnimationFrame(()=>(document.querySelector('.calendar-day.selected')||document.querySelector('.calendar-day'))?.focus()); }
+      function rerenderCalendar() { document.getElementById('modal-root').innerHTML=calendarMarkup();registerModalHistory({kind:'calendar',payload:{context:state.calendarContext,month:state.calendarMonth}});requestAnimationFrame(()=>(document.querySelector('.calendar-day.selected:not(:disabled)')||document.querySelector('.calendar-day:not(:disabled)')||document.querySelector('[data-action="calendar-close"]'))?.focus()); }
 
       function renderAccordion(key,title,count,body,open=false) {
         const expanded=state.todaySections[key] ?? open;
@@ -2895,12 +2910,14 @@
         return [currentWorkHistoryWeek(),...fixtures];
       }
       function renderWorkHistory() {
-        const weeks=workHistoryWeeks(),week=weeks.find(item=>item.start===state.workHistoryWeek)||weeks[1]||weeks[0],selectedMaid=state.workHistoryMaid||'all';
+        const weeks=workHistoryWeeks(),week=weeks.find(item=>item.start===state.workHistoryWeek)||{start:state.workHistoryWeek,status:'기록 없음',records:{}},selectedMaid=state.workHistoryMaid||'all';
         const people=MAIDS.filter(maid=>selectedMaid==='all'||maid.id===selectedMaid).map(maid=>({maid,record:week.records[maid.id]})).filter(item=>item.record);
         const totals=people.reduce((sum,item)=>({submitted:sum.submitted+item.record.submitted.length,assigned:sum.assigned+item.record.assigned.length,completed:sum.completed+item.record.completed.length}),{submitted:0,assigned:0,completed:0});
+        const maidCounts={submitted:people.filter(item=>item.record.submitted.length>0).length,assigned:people.filter(item=>item.record.assigned.length>0).length,completed:people.filter(item=>item.record.completed.length>0).length};
         const dayNames=['월','화','수','목','금','토','일'];
         const cards=people.map(({maid,record})=>{const days=dayNames.map((name,index)=>{const iso=addIsoDays(week.start,index),flags=[];if(record.submitted.includes(index))flags.push('<span class="work-history-flag">가능 제출</span>');if(record.assigned.includes(index))flags.push('<span class="work-history-flag assigned">담당 통보</span>');if(record.completed.includes(index))flags.push('<span class="work-history-flag completed">실근무 완료</span>');return `<div class="work-history-day"><strong>${name}요일</strong><span>${shortIsoDate(iso)}</span>${flags.length?`<div class="work-history-flags">${flags.join('')}</div>`:'<span class="work-history-empty">기록 없음</span>'}</div>`;}).join('');return `<article class="card work-history-person"><div class="work-history-person-head"><div><h3>${esc(record.nameSnapshot)} · 데모</h3><p>당시 이름 스냅샷 · 가능일 제출 ${esc(record.submittedAt)}${record.submissionVersions?` · 제출 버전 ${record.submissionVersions}개 보존`:''}</p></div><div class="work-history-counts">${statusBadge(`가능 ${record.submitted.length}일`,'blue')}${statusBadge(`배정 ${record.assigned.length}일`,'amber')}${statusBadge(`실근무 ${record.completed.length}일`,'green')}</div></div><div class="work-history-days" aria-label="${esc(record.nameSnapshot)} ${weekRangeLabel(week.start)} 주간 기록">${days}</div></article>`;}).join('');
-        return `<div class="work-history-page"><section class="card work-history-hero"><div><h2>주간 근무 기록</h2><p>가능일 제출, 관리자 배정 통보, 실제 청소 완료일을 구분해 사람별·주차별로 확인합니다.</p></div>${statusBadge(`${week.status} · 관리자 전용`,week.status==='계획 중'?'blue':'neutral')}</section><section class="card"><div class="work-history-toolbar"><label for="work-history-week">조회 주차<select id="work-history-week" class="select-control" data-control="work-history-week">${weeks.map(item=>`<option value="${item.start}" ${item.start===week.start?'selected':''}>${weekRangeLabel(item.start,true)} · ${item.status}</option>`).join('')}</select></label><label for="work-history-maid">메이드<select id="work-history-maid" class="select-control" data-control="work-history-maid"><option value="all" ${selectedMaid==='all'?'selected':''}>전체 메이드</option>${MAIDS.map(maid=>`<option value="${maid.id}" ${selectedMaid===maid.id?'selected':''}>${esc(maid.name)}</option>`).join('')}</select></label></div><div class="work-history-summary"><div class="planned"><span>가능일 제출</span><strong>${totals.submitted} 인일</strong></div><div class="assigned"><span>담당 통보</span><strong>${totals.assigned} 인일</strong></div><div class="completed"><span>실근무 완료</span><strong>${totals.completed} 인일</strong></div></div><div class="work-history-legend"><span><i class="history-dot"></i>가능 제출 · 계획</span><span><i class="history-dot assigned"></i>담당 통보 · 예정</span><span><i class="history-dot completed"></i>실근무 완료 · 수행 실적</span></div></section><div class="work-history-list">${cards}</div><section class="card work-history-contract"><p><strong>기록 기준:</strong> 가능일은 제출 버전, 배정일은 관리자 통보 이벤트, 실근무일은 정상 청소 수행 회차의 현장 완료일입니다. 가능일만 제출한 날짜는 실제 근무로 세지 않으며, 과거 주차는 현재 제출·재배정으로 덮어쓰지 않습니다. 이 화면은 서버 영속 저장이 아닌 결정적 데모 fixture입니다.</p></section></div>`;
+        const list=cards||`<section class="card empty-state"><h3>이 주차에는 저장된 근무 기록이 없습니다.</h3><p>다른 주차를 달력에서 선택하거나 메이드 필터를 바꿔 보세요.</p></section>`;
+        return `<div class="work-history-page"><section class="card work-history-hero"><div><h2>주간 근무 기록</h2><p>가능일 제출, 관리자 배정 통보, 실제 청소 완료일을 구분해 사람별·주차별로 확인합니다.</p></div>${statusBadge(`${week.status} · 관리자 전용`,week.status==='계획 중'?'blue':'neutral')}</section><section class="card"><div class="work-history-toolbar"><div class="work-history-week-field"><span id="work-history-week-label">조회 주차</span><button class="pay-week-picker work-history-week-picker" type="button" data-action="open-work-history-calendar" aria-haspopup="dialog" aria-labelledby="work-history-week-label work-history-week-value">${icon('calendar','icon-sm')}<span id="work-history-week-value">${weekRangeLabel(week.start,true)} · ${week.status}</span>${icon('chevronRight','icon-sm')}</button></div><label for="work-history-maid">메이드<select id="work-history-maid" class="select-control" data-control="work-history-maid"><option value="all" ${selectedMaid==='all'?'selected':''}>전체 메이드</option>${MAIDS.map(maid=>`<option value="${maid.id}" ${selectedMaid===maid.id?'selected':''}>${esc(maid.name)}</option>`).join('')}</select></label></div><div class="work-history-summary"><div class="planned"><span>가능 제출 메이드</span><strong>${maidCounts.submitted}명</strong><small>메이드별 가능일 합계 ${totals.submitted}일</small></div><div class="assigned"><span>담당 통보 메이드</span><strong>${maidCounts.assigned}명</strong><small>메이드별 배정일 합계 ${totals.assigned}일</small></div><div class="completed"><span>실제 근무 메이드</span><strong>${maidCounts.completed}명</strong><small>메이드별 실근무일 합계 ${totals.completed}일</small></div></div><p class="work-history-unit-note"><strong>단위 안내:</strong> ‘명’은 해당 기록이 한 번 이상 있는 메이드 수, ‘일’은 메이드별 기록 날짜를 합한 일수입니다.</p><div class="work-history-legend"><span><i class="history-dot"></i>가능 제출 · 계획</span><span><i class="history-dot assigned"></i>담당 통보 · 예정</span><span><i class="history-dot completed"></i>실근무 완료 · 수행 실적</span></div></section><div class="work-history-list">${list}</div><section class="card work-history-contract"><p><strong>기록 기준:</strong> 가능일은 제출 버전, 배정일은 관리자 통보 이벤트, 실근무일은 정상 청소 수행 회차의 현장 완료일입니다. 가능일만 제출한 날짜는 실제 근무로 세지 않으며, 과거 주차는 현재 제출·재배정으로 덮어쓰지 않습니다. 이 화면은 서버 영속 저장이 아닌 결정적 데모 fixture입니다.</p></section></div>`;
       }
 
       function renderMaids() {
@@ -3760,7 +3777,7 @@
         const confirm=document.querySelector('[data-action="confirm-start-deactivation-v2"]');if(confirm)confirm.disabled=isLocked();
       }
 
-      const rebuiltActions=new Set(['toggle-demo','reset','switch-role','nav','filter-rooms','back','close-modal','backdrop-close','room-detail','cleaning-detail','maid-detail','complaint-detail','pay-detail','template','template-detail','template-back-list','template-edit','template-cancel-edit','template-review','template-save','inspection-photo','open-room-export','export-rooms-csv','export-rooms-xls','open-calendar','open-pay-calendar','calendar-backdrop','calendar-close','calendar-month','calendar-select','calendar-today','date-shift','date-today','toggle-section','clear-room-filters','pin-show','pin-hide','pin-edit','pin-clear','pin-random','pin-review','pin-back','pin-save','reservation-edit','new-reservation','save-reservation-v2','create-stayover','confirm-stayover','operation-status','confirm-operation-stop','resume-operation','candle-change','task-candle-change','direct-assign','confirm-direct-assign','cleaning-tab','assignment-type-filter','admin-maid-tab','go-today','go-workforce','go-work-history','go-payroll','go-complaints','go-cleaning-drafts','go-cleaning-assignment','go-inspection','go-open','go-schedule','go-my','go-maid-pay','toggle-maid-pay-week','clear-maid-pay-week','new-cleaning','confirm-new-cleaning','toggle-week-day','submit-week-availability','edit-week-availability','request-availability-change','move-assignment-order','save-assignments','set-availability','change-availability','confirm-off-active','claim-job','confirm-claim','start-cleaning','confirm-start','add-task-photo','add-task-photos','retry-task-photo','retry-all-task-photos','field-complete-v2','submit-cleaning-v2','approve-inspection-v2','reject-inspection-v2','confirm-approve-v2','confirm-reject-v2','toggle-payment','confirm-toggle-payment','confirm-reverse-payment','undo-payment','delete-complaint','undo-complaint','publish-selected','confirm-publish','retry-network','alerts','audit-log','rates','logout','request-cancel','confirm-request-cancel','cancel-review','confirm-cancel','rule-complaint-v2','ack-complaint','object-complaint','confirm-objection','close-complaint-v2','correct-complaint-v2','confirm-correct-complaint-v2','reclean-existing','demo-info','notification-permission','confirm-notification-permission']);
+      const rebuiltActions=new Set(['toggle-demo','reset','switch-role','nav','filter-rooms','back','close-modal','backdrop-close','room-detail','cleaning-detail','maid-detail','complaint-detail','pay-detail','template','template-detail','template-back-list','template-edit','template-cancel-edit','template-review','template-save','inspection-photo','open-room-export','export-rooms-csv','export-rooms-xls','open-calendar','open-pay-calendar','open-work-history-calendar','calendar-backdrop','calendar-close','calendar-month','calendar-select','calendar-today','date-shift','date-today','toggle-section','clear-room-filters','pin-show','pin-hide','pin-edit','pin-clear','pin-random','pin-review','pin-back','pin-save','reservation-edit','new-reservation','save-reservation-v2','create-stayover','confirm-stayover','operation-status','confirm-operation-stop','resume-operation','candle-change','task-candle-change','direct-assign','confirm-direct-assign','cleaning-tab','assignment-type-filter','admin-maid-tab','go-today','go-workforce','go-work-history','go-payroll','go-complaints','go-cleaning-drafts','go-cleaning-assignment','go-inspection','go-open','go-schedule','go-my','go-maid-pay','toggle-maid-pay-week','clear-maid-pay-week','new-cleaning','confirm-new-cleaning','toggle-week-day','submit-week-availability','edit-week-availability','request-availability-change','move-assignment-order','save-assignments','set-availability','change-availability','confirm-off-active','claim-job','confirm-claim','start-cleaning','confirm-start','add-task-photo','add-task-photos','retry-task-photo','retry-all-task-photos','field-complete-v2','submit-cleaning-v2','approve-inspection-v2','reject-inspection-v2','confirm-approve-v2','confirm-reject-v2','toggle-payment','confirm-toggle-payment','confirm-reverse-payment','undo-payment','delete-complaint','undo-complaint','publish-selected','confirm-publish','retry-network','alerts','audit-log','rates','logout','request-cancel','confirm-request-cancel','cancel-review','confirm-cancel','rule-complaint-v2','ack-complaint','object-complaint','confirm-objection','close-complaint-v2','correct-complaint-v2','confirm-correct-complaint-v2','reclean-existing','demo-info','notification-permission','confirm-notification-permission']);
       ['resolve-conflict-v2','confirm-conflict-v2','deactivate-maid-v2','confirm-start-deactivation-v2','complete-deactivation-v2','admin-pay-week','export-rooms-xlsx','room-issue-photo','choose-room-issue-files','remove-room-issue-photo','save-room-issue','bomb-room-photo','choose-bomb-room-files','remove-bomb-room-photo','add-demo-bomb-room-photos','save-bomb-room-report','approve-bomb-room','reject-bomb-room','confirm-approve-bomb-room','confirm-reject-bomb-room'].forEach(action=>rebuiltActions.add(action));
       const deprecatedStateActions=new Set(['add-photo','add-photos','retry-photo','field-complete','submit-cleaning','approve-inspection','reject-inspection','confirm-approve','confirm-reject','recover-candle','confirm-candle','save-reservation','show-pin','hide-pin','resolve-conflict','confirm-conflict','deactivate-maid','confirm-deactivate','start-payment','confirm-payment','finish-payment','payment-check','payment-open','rule-complaint','confirm-ruling','close-complaint','correct-complaint','publish-template','change-availability','confirm-off-active']);
       deprecatedStateActions.forEach(action=>rebuiltActions.add(action));
@@ -3923,24 +3940,30 @@
           const selected=context==='maid-pay'?(state.maidPaySelectedWeek||state.maidPayOpenWeek||'2026-08-03'):(state.adminPayWeek||'2026-08-03');
           state.calendarMonth=selected.slice(0,7);openCalendar(el,context);return;
         }
+        if(a==='open-work-history-calendar'){if(!workHistoryCalendarAllowed()){toast('관리자 근무 기록 화면에서만 주차를 선택할 수 있습니다.','error');return;}state.calendarMonth=state.workHistoryWeek.slice(0,7);openCalendar(el,'work-history');return;}
         if(a==='calendar-month'){const [y,m]=state.calendarMonth.split('-').map(Number),d=new Date(y,m-1+Number(el.dataset.offset),1);state.calendarMonth=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;rerenderCalendar();return;}
         if(a==='calendar-select'){
           const context=state.calendarContext;
-          if(context==='admin-pay'||context==='maid-pay'){
-            const start=weekStartIso(el.dataset.date);
+          if(context==='admin-pay'||context==='maid-pay'||context==='work-history'){
+            if(context==='work-history'&&!workHistoryCalendarAllowed()){closeModal();state.calendarContext=null;render();toast('관리자 근무 기록 화면에서만 주차를 바꿀 수 있습니다.','error');return;}
+            const start=context==='work-history'?normalizeWorkHistoryWeek(el.dataset.date):weekStartIso(el.dataset.date);
+            if(!start){toast('선택할 수 없는 주차입니다.','error');return;}
             if(context==='admin-pay')state.adminPayWeek=start;
-            else {state.maidPaySelectedWeek=start;state.maidPayOpenWeek=start;state.maidPayFilter='all';}
-            closeModal();state.calendarContext=null;render();requestAnimationFrame(()=>document.querySelector(`[data-action="open-pay-calendar"][data-context="${context}"]`)?.focus());toast(`${weekRangeLabel(start)} 지급 이력을 표시합니다.`);return;
+            else if(context==='maid-pay'){state.maidPaySelectedWeek=start;state.maidPayOpenWeek=start;state.maidPayFilter='all';}
+            else state.workHistoryWeek=start;
+            closeModal();state.calendarContext=null;render();requestAnimationFrame(()=>document.querySelector(context==='work-history'?'[data-action="open-work-history-calendar"]':`[data-action="open-pay-calendar"][data-context="${context}"]`)?.focus());toast(`${weekRangeLabel(start)} ${context==='work-history'?'근무 기록':'지급 이력'}을 표시합니다.`);return;
           }
           state.selectedDate=el.dataset.date;state.calendarMonth=state.selectedDate.slice(0,7);closeModal();state.calendarContext=null;render();requestAnimationFrame(()=>document.querySelector('[data-action="open-calendar"]')?.focus());toast(`${dateLabel()} 현황을 표시합니다.`);return;
         }
         if(a==='calendar-today'){
           const context=state.calendarContext;
-          if(context==='admin-pay'||context==='maid-pay'){
+          if(context==='admin-pay'||context==='maid-pay'||context==='work-history'){
+            if(context==='work-history'&&!workHistoryCalendarAllowed()){closeModal();state.calendarContext=null;render();toast('관리자 근무 기록 화면에서만 주차를 바꿀 수 있습니다.','error');return;}
             const start='2026-08-10';
             if(context==='admin-pay')state.adminPayWeek=start;
-            else {state.maidPaySelectedWeek=start;state.maidPayOpenWeek=start;state.maidPayFilter='all';}
-            closeModal();state.calendarContext=null;render();requestAnimationFrame(()=>document.querySelector(`[data-action="open-pay-calendar"][data-context="${context}"]`)?.focus());return;
+            else if(context==='maid-pay'){state.maidPaySelectedWeek=start;state.maidPayOpenWeek=start;state.maidPayFilter='all';}
+            else state.workHistoryWeek=start;
+            closeModal();state.calendarContext=null;render();requestAnimationFrame(()=>document.querySelector(context==='work-history'?'[data-action="open-work-history-calendar"]':`[data-action="open-pay-calendar"][data-context="${context}"]`)?.focus());return;
           }
           state.selectedDate='2026-08-15';state.calendarMonth='2026-08';closeModal();state.calendarContext=null;render();requestAnimationFrame(()=>document.querySelector('[data-action="open-calendar"]')?.focus());return;
         }
@@ -4272,7 +4295,7 @@
       });
 
       document.addEventListener('change',e=>{
-        const c=e.target.dataset.control;if(!c||!['role','maid-account','scenario','room-filter','room-type-filter','maid-pay-filter','work-history-week','work-history-maid','task-check','task-candle','room-issue-type','room-issue-files','bomb-room-files','complaint-type','conflict-step-v2','maid-deactivation-gate','assignment-maid'].includes(c))return;
+        const c=e.target.dataset.control;if(!c||!['role','maid-account','scenario','room-filter','room-type-filter','maid-pay-filter','work-history-maid','task-check','task-candle','room-issue-type','room-issue-files','bomb-room-files','complaint-type','conflict-step-v2','maid-deactivation-gate','assignment-maid'].includes(c))return;
         e.stopImmediatePropagation();
         if(c==='role'){maskPin();closeModal();state.role=e.target.value;state.detail=null;render();requestAnimationFrame(()=>document.querySelector('[data-control="role"]')?.focus());return;}
         if(c==='maid-account'){if(state.role!=='maid')return;maskPin();closeModal();state.currentMaidId=MAIDS.some(maid=>maid.id===e.target.value)?e.target.value:'m1';syncSignedInMaidAvailability();state.detail=null;render();requestAnimationFrame(()=>document.querySelector('[data-control="maid-account"]')?.focus());toast(`${signedInMaidName()} 메이드 데모 계정으로 전환했습니다.`);return;}
@@ -4280,7 +4303,6 @@
         if(c==='room-filter'){state.roomFilter=e.target.value;render();requestAnimationFrame(()=>document.querySelector('[data-control="room-filter"]')?.focus());return;}
         if(c==='room-type-filter'){state.roomTypeFilter=e.target.value;render();requestAnimationFrame(()=>document.querySelector('[data-control="room-type-filter"]')?.focus());return;}
         if(c==='maid-pay-filter'){state.maidPayFilter=e.target.value;state.maidPaySelectedWeek=null;const visibleIds={all:['2026-08-10','2026-08-03','2026-07-27','2026-07-20','2026-07-13','2026-07-06'],current:['2026-08-10'],last:['2026-08-03'],older:['2026-07-27','2026-07-20','2026-07-13','2026-07-06']}[state.maidPayFilter]||[];if(!visibleIds.includes(state.maidPayOpenWeek))state.maidPayOpenWeek=visibleIds[0]||null;render();requestAnimationFrame(()=>document.querySelector('[data-control="maid-pay-filter"]')?.focus());return;}
-        if(c==='work-history-week'){state.workHistoryWeek=e.target.value;render();requestAnimationFrame(()=>document.querySelector('[data-control="work-history-week"]')?.focus());return;}
         if(c==='work-history-maid'){state.workHistoryMaid=e.target.value;render();requestAnimationFrame(()=>document.querySelector('[data-control="work-history-maid"]')?.focus());return;}
         if(c==='task-check'){const no=e.target.dataset.room,item=e.target.value;if(!maidCanEditCleaning(no)){render();toast('본인 담당 청소 중 작업의 체크만 변경할 수 있습니다.','error');return;}taskState(no).checklist[item]=e.target.checked;render();requestAnimationFrame(()=>document.querySelector(`[data-control="task-check"][data-room="${no}"][value="${item}"]`)?.focus());return;}
         if(c==='task-candle'){const no=e.target.dataset.room;if(!maidCanEditCleaning(no)){render();toast('본인 담당 청소 중 작업의 촛불 결과만 변경할 수 있습니다.','error');return;}taskState(no).candle=Number(e.target.value);render();requestAnimationFrame(()=>document.querySelector(`[data-control="task-candle"][data-room="${no}"]`)?.focus());return;}

@@ -36,6 +36,8 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-partial-assignment-390.png',
   'WIREFRAME/QA/screenshots/admin-weekly-worktable-symbols-390.png',
   'WIREFRAME/QA/screenshots/admin-maid-type-distribution-1440.png',
+  'WIREFRAME/QA/screenshots/admin-weekly-work-history-calendar-1440.png',
+  'WIREFRAME/QA/screenshots/admin-weekly-work-history-calendar-390.png',
   'WIREFRAME/QA/screenshots/admin-room-catalog-1440.png',
   'WIREFRAME/QA/screenshots/admin-room-catalog-390.png',
   'WIREFRAME/QA/screenshots/admin-assignment-elevator-1440.png',
