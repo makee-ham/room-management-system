@@ -50,6 +50,8 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-bomb-room-payroll-1440.png',
   'WIREFRAME/QA/screenshots/admin-payroll-cleaning-ledger-1440.png',
   'WIREFRAME/QA/screenshots/admin-payroll-cleaning-ledger-390.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-per-maid-toggle-1440.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-per-maid-toggle-390.png',
   'WIREFRAME/QA/screenshots/maid-bomb-room-pay-history-390.png',
   'WIREFRAME/QA/screenshots/admin-type-photo-template-1440.png',
   'WIREFRAME/QA/screenshots/maid-type-photo-template-390.png',
@@ -96,6 +98,12 @@ if (maidIds.length !== 9 || new Set(maidIds).size !== 9) {
 }
 for (const contract of ['recommend-assignments', 'undo-assignment-recommendation', 'toggle-assignment-route', '마감 위험으로 대기']) {
   if (!html.includes(contract)) throw new Error(`Assignment recommendation contract missing: ${contract}`);
+}
+for (const contract of ['paymentRecords:{}', 'paymentAttemptHistory:[]', 'paymentRecordKey(weekStart,maidId)', 'data-action="toggle-payment" data-week=', 'data-maid=', 'taskFingerprint', "['OPEN','PAYING','CHECK']", 'confirm-finish-payment', 'mark-payment-check', 'confirm-payment-open-v2', 'resolutionReason']) {
+  if (!html.includes(contract)) throw new Error(`Per-maid payment contract missing: ${contract}`);
+}
+if (/cfg\.start==='2026-08-03'&&index===0/.test(html) || /state\.payment\s*=/.test(html)) {
+  throw new Error('A first-card-only or global payment state regression remains in WIREFRAME/index.html.');
 }
 
 const sourceIds = (source, label) => {
@@ -162,6 +170,7 @@ if (auditHash !== expectedAuditHash || indexHash !== expectedIndexHash) {
 console.log(`Required files: ${required.length}/${required.length}`);
 console.log(`Inline scripts parsed: ${inlineScripts.length}`);
 console.log(`Large-team assignment fixture: ${maidIds.length} maids`);
+console.log('Per-maid weekly payment static contracts: passed');
 console.log('Portable path scan: passed');
 console.log(`Room master contract: ${availableRoomCount} customer-assignable / ${longStayIds.length} long-stay / ${holdIds.length} hold`);
 console.log(`Final UX audit SHA-256: ${auditHash}`);
