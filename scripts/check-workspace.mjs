@@ -40,6 +40,8 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-weekly-work-history-calendar-390.png',
   'WIREFRAME/QA/screenshots/admin-room-catalog-1440.png',
   'WIREFRAME/QA/screenshots/admin-room-catalog-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-status-available-long-stay-1440.png',
+  'WIREFRAME/QA/screenshots/admin-available-room-edit-390.png',
   'WIREFRAME/QA/screenshots/admin-assignment-elevator-1440.png',
   'WIREFRAME/QA/screenshots/maid-bomb-room-report-390.png',
   'WIREFRAME/QA/screenshots/admin-bomb-room-inspection-390.png',
@@ -86,6 +88,53 @@ if (/<(?:script|link)\b[^>]*(?:src|href)=["']https?:\/\//i.test(html)) {
   throw new Error('External script or stylesheet dependency found in WIREFRAME/index.html.');
 }
 
+const sourceIds = (source, label) => {
+  if (!source) throw new Error(`${label} source block not found.`);
+  return [...source.matchAll(/'(\d+)'\s*:/g)].map((match) => match[1]);
+};
+const expectedLongStayRooms = ['139', '358', '359', '449', '458', '461', '553', '558', '559', '628', '629'];
+const longStayIds = sourceIds(
+  html.match(/const LONG_STAY_ROOMS\s*=\s*Object\.freeze\(\{([\s\S]*?)\}\);/)?.[1],
+  'LONG_STAY_ROOMS',
+).sort();
+const endedLongStayIds = sourceIds(
+  html.match(/const LONG_STAY_ENDED_ROOMS\s*=\s*Object\.freeze\(\{([\s\S]*?)\}\);/)?.[1],
+  'LONG_STAY_ENDED_ROOMS',
+).sort();
+const holdIds = sourceIds(
+  html.match(/const ROOM_STATUS_HOLDS\s*=\s*\{([\s\S]*?)\};/)?.[1],
+  'ROOM_STATUS_HOLDS',
+).sort();
+const catalogSource = html.match(/const ROOM_CATALOG\s*=\s*\[([\s\S]*?)\n\s*\];/)?.[1];
+if (!catalogSource) throw new Error('ROOM_CATALOG source block not found.');
+const catalogIds = [...catalogSource.matchAll(/\['(\d+)'\s*,/g)].map((match) => match[1]);
+const uniqueCatalogIds = new Set(catalogIds);
+const sameIds = (actual, expected) => actual.length === expected.length && actual.every((id, index) => id === expected[index]);
+if (!sameIds(longStayIds, expectedLongStayRooms)) {
+  throw new Error(`Active long-stay room contract mismatch: ${longStayIds.join(', ')}`);
+}
+if (!sameIds(endedLongStayIds, ['527'])) {
+  throw new Error(`Ended long-stay room contract mismatch: ${endedLongStayIds.join(', ')}`);
+}
+if (!sameIds(holdIds, ['762'])) {
+  throw new Error(`Room hold contract mismatch: ${holdIds.join(', ')}`);
+}
+if (catalogIds.length !== 121 || uniqueCatalogIds.size !== 121) {
+  throw new Error(`Room catalog contract mismatch: ${catalogIds.length} rows / ${uniqueCatalogIds.size} unique rooms.`);
+}
+const availableRoomCount = catalogIds.filter((id) => !longStayIds.includes(id) && !holdIds.includes(id)).length;
+if (availableRoomCount !== 109) {
+  throw new Error(`Customer-assignable room contract mismatch: ${availableRoomCount} rooms.`);
+}
+if (!/catalogStatus:hold\?'hold':longStay\?'longstay':'available'/.test(html) || /디폴트/.test(html)) {
+  throw new Error('General rooms must use the existing customer-assignable status without a neutral default UI state.');
+}
+
+const qa = readFileSync(resolve(root, 'WIREFRAME/QA.md'), 'utf8');
+if (/운영 상태 미입력|상태 미연결 111개|기준정보만 연결된 112개|디폴트/.test(qa)) {
+  throw new Error('Stale neutral/default room status wording remains in WIREFRAME/QA.md.');
+}
+
 const audit = readFileSync(resolve(root, 'DOCS/FINAL_UX_AUDIT.md'));
 const auditHash = createHash('sha256').update(audit).digest('hex');
 const indexHash = createHash('sha256').update(readFileSync(resolve(root, 'WIREFRAME/index.html'))).digest('hex');
@@ -103,6 +152,7 @@ if (auditHash !== expectedAuditHash || indexHash !== expectedIndexHash) {
 console.log(`Required files: ${required.length}/${required.length}`);
 console.log(`Inline scripts parsed: ${inlineScripts.length}`);
 console.log('Portable path scan: passed');
+console.log(`Room master contract: ${availableRoomCount} customer-assignable / ${longStayIds.length} long-stay / ${holdIds.length} hold`);
 console.log(`Final UX audit SHA-256: ${auditHash}`);
 console.log(`Wireframe SHA-256: ${indexHash}`);
 console.log('Manifest hashes: passed');
