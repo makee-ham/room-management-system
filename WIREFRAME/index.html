@@ -564,6 +564,27 @@
     .pay-week-index-button span { margin-top:2px; color:var(--muted); font-size:12px; }
     .pay-week-index-button b { font-size:13px; font-variant-numeric:tabular-nums; white-space:nowrap; }
     .pay-selected-week { display:grid; gap:10px; }
+    .admin-pay-detail-button { width:100%; justify-content:space-between; margin-top:2px; }
+    .pay-ledger-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+    .pay-ledger-summary > div { min-width:0; padding:12px; border:1px solid var(--line); border-radius:11px; background:#fff; }
+    .pay-ledger-summary span,.pay-ledger-summary strong { display:block; }
+    .pay-ledger-summary span { color:var(--muted); font-size:12px; }
+    .pay-ledger-summary strong { margin-top:4px; color:var(--navy); font-size:1rem; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+    .pay-ledger-list { display:grid; gap:9px; }
+    .pay-ledger-row { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(180px,.9fr) auto; gap:14px; align-items:center; padding:13px; border:1px solid var(--line); border-radius:11px; background:#fff; }
+    .pay-ledger-row.is-pending { border-color:#e5c98e; background:#fffaf0; }
+    .pay-ledger-row.is-excluded { border-color:#e4b5b9; background:#fff7f7; }
+    .pay-ledger-room,.pay-ledger-calc,.pay-ledger-amount { min-width:0; }
+    .pay-ledger-room strong,.pay-ledger-room span,.pay-ledger-calc strong,.pay-ledger-calc span,.pay-ledger-amount b,.pay-ledger-amount span { display:block; }
+    .pay-ledger-room span,.pay-ledger-calc span,.pay-ledger-amount span { margin-top:3px; color:var(--muted); font-size:12px; line-height:1.45; }
+    .pay-ledger-calc strong { color:var(--navy); font-size:13px; font-variant-numeric:tabular-nums; }
+    .pay-ledger-amount { display:flex; align-items:flex-end; flex-direction:column; gap:5px; text-align:right; }
+    .pay-ledger-amount b { color:var(--navy); font-size:16px; font-variant-numeric:tabular-nums; }
+    .pay-ledger-proof { display:flex; flex-wrap:wrap; gap:7px; margin-top:8px; }
+    .pay-ledger-reconcile { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; align-items:center; padding:14px; border:1px solid #8eb0d0; border-radius:12px; background:var(--blue-soft); }
+    .pay-ledger-reconcile strong,.pay-ledger-reconcile span { display:block; }
+    .pay-ledger-reconcile span { margin-top:3px; color:var(--muted); font-size:12px; }
+    .pay-ledger-reconcile b { color:var(--navy); font-size:1.15rem; font-variant-numeric:tabular-nums; }
     .toggle-row { display:flex; align-items:center; gap:12px; min-height:54px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; }
     .toggle-row > div { min-width:0; flex:1; }
     .toggle-row strong, .toggle-row span { display:block; }
@@ -799,6 +820,10 @@
       .pay-week-toolbar { align-items:stretch; flex-direction:column; }
       .pay-week-picker { width:100%; }
       .pay-week-index-button { grid-template-columns:minmax(0,1fr) auto 18px; }
+      .pay-ledger-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .pay-ledger-row { grid-template-columns:1fr; gap:9px; }
+      .pay-ledger-amount { align-items:flex-start; text-align:left; }
+      .pay-ledger-reconcile { grid-template-columns:1fr; }
       .maid-pay-week-stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
       .maid-pay-week-stats > div:last-child { grid-column:1 / -1; }
       .complaint-form { grid-template-columns:1fr; }
@@ -1352,6 +1377,126 @@
           }
         }
       ];
+      const PAYROLL_CLEANING_FIXTURES = {
+        '2026-08-10':{
+          m1:[
+            {id:'pay-20260810-m1-352',room:'352',kind:'퇴실 청소',date:'8월 14일',base:16000},
+            {id:'pay-20260810-m1-350',room:'350',kind:'퇴실 청소',date:'8월 13일',base:16000},
+            {id:'pay-20260810-m1-332',room:'332',kind:'퇴실 청소',date:'8월 11일',base:20000}
+          ],
+          m2:[
+            {id:'pay-20260810-m2-142',room:'142',kind:'연박 청소',date:'8월 14일',base:30000},
+            {id:'pay-20260810-m2-332',room:'332',kind:'퇴실 청소',date:'8월 12일',base:20000},
+            {id:'pay-20260810-m2-350',room:'350',kind:'퇴실 청소',date:'8월 10일',base:16000}
+          ],
+          m3:[
+            {id:'pay-20260810-m3-142',room:'142',kind:'연박 청소',date:'8월 15일',base:30000},
+            {id:'pay-20260810-m3-639',room:'639',kind:'퇴실 청소',date:'8월 13일',base:20000},
+            {id:'pay-20260810-m3-332',room:'332',kind:'퇴실 청소',date:'8월 10일',base:20000}
+          ]
+        },
+        '2026-08-03':{
+          m1:[
+            {id:'pay-20260803-m1-536',room:'536',kind:'퇴실 청소',date:'8월 9일',base:20000,bombBonus:20000,status:'폭탄방 승인 · ×2'},
+            {id:'pay-20260803-m1-639',room:'639',kind:'퇴실 청소',date:'8월 8일',base:20000},
+            {id:'pay-20260803-m1-142',room:'142',kind:'연박 청소',date:'8월 7일',base:30000},
+            {id:'pay-20260803-m1-350-a',room:'350',kind:'퇴실 청소',date:'8월 6일',base:16000},
+            {id:'pay-20260803-m1-352',room:'352',kind:'퇴실 청소',date:'8월 5일',base:16000},
+            {id:'pay-20260803-m1-350-b',room:'350',kind:'퇴실 청소',date:'8월 3일',base:16000}
+          ],
+          m2:[
+            {id:'pay-20260803-m2-645',room:'645',kind:'퇴실 청소',date:'8월 9일',base:30000},
+            {id:'pay-20260803-m2-540',room:'540',kind:'퇴실 청소',date:'8월 8일',base:20000},
+            {id:'pay-20260803-m2-516',room:'516',kind:'퇴실 청소',date:'8월 6일',base:16000},
+            {id:'pay-20260803-m2-623',room:'623',kind:'퇴실 청소',date:'8월 5일',base:16000},
+            {id:'pay-20260803-m2-350',room:'350',kind:'퇴실 청소',date:'8월 3일',base:16000}
+          ],
+          m3:[
+            {id:'pay-20260803-m3-542',room:'542',kind:'퇴실 청소',date:'8월 9일',base:30000},
+            {id:'pay-20260803-m3-641',room:'641',kind:'퇴실 청소',date:'8월 6일',base:20000},
+            {id:'pay-20260803-m3-352',room:'352',kind:'퇴실 청소',date:'8월 4일',base:16000}
+          ]
+        },
+        '2026-07-27':{
+          m1:[
+            {id:'pay-20260727-m1-142',room:'142',kind:'연박 청소',date:'8월 2일',base:30000},
+            {id:'pay-20260727-m1-536',room:'536',kind:'퇴실 청소',date:'7월 31일',base:20000},
+            {id:'pay-20260727-m1-332',room:'332',kind:'퇴실 청소',date:'7월 30일',base:20000},
+            {id:'pay-20260727-m1-350',room:'350',kind:'퇴실 청소',date:'7월 29일',base:16000},
+            {id:'pay-20260727-m1-352',room:'352',kind:'퇴실 청소',date:'7월 27일',base:16000}
+          ],
+          m2:[
+            {id:'pay-20260727-m2-645',room:'645',kind:'퇴실 청소',date:'8월 2일',base:30000},
+            {id:'pay-20260727-m2-540',room:'540',kind:'퇴실 청소',date:'7월 31일',base:20000},
+            {id:'pay-20260727-m2-639',room:'639',kind:'퇴실 청소',date:'7월 29일',base:20000},
+            {id:'pay-20260727-m2-350',room:'350',kind:'퇴실 청소',date:'7월 27일',base:16000}
+          ],
+          m3:[
+            {id:'pay-20260727-m3-639',room:'639',kind:'퇴실 청소',date:'8월 1일',base:20000},
+            {id:'pay-20260727-m3-641',room:'641',kind:'퇴실 청소',date:'7월 30일',base:20000},
+            {id:'pay-20260727-m3-350',room:'350',kind:'퇴실 청소',date:'7월 28일',base:16000},
+            {id:'pay-20260727-m3-352',room:'352',kind:'퇴실 청소',date:'7월 27일',base:16000}
+          ]
+        },
+        '2026-07-20':{
+          m1:[
+            {id:'pay-20260720-m1-142',room:'142',kind:'연박 청소',date:'7월 26일',base:30000},
+            {id:'pay-20260720-m1-332',room:'332',kind:'퇴실 청소',date:'7월 24일',base:20000},
+            {id:'pay-20260720-m1-350',room:'350',kind:'퇴실 청소',date:'7월 22일',base:16000},
+            {id:'pay-20260720-m1-352',room:'352',kind:'퇴실 청소',date:'7월 20일',base:16000}
+          ],
+          m2:[
+            {id:'pay-20260720-m2-528',room:'528',kind:'퇴실 청소',date:'7월 26일',base:20000},
+            {id:'pay-20260720-m2-350',room:'350',kind:'퇴실 청소',date:'7월 24일',base:16000},
+            {id:'pay-20260720-m2-352',room:'352',kind:'퇴실 청소',date:'7월 22일',base:16000},
+            {id:'pay-20260720-m2-516',room:'516',kind:'퇴실 청소',date:'7월 20일',base:16000}
+          ],
+          m3:[
+            {id:'pay-20260720-m3-332',room:'332',kind:'퇴실 청소',date:'7월 25일',base:20000},
+            {id:'pay-20260720-m3-536',room:'536',kind:'퇴실 청소',date:'7월 23일',base:20000},
+            {id:'pay-20260720-m3-639',room:'639',kind:'퇴실 청소',date:'7월 21일',base:20000}
+          ]
+        },
+        '2026-07-13':{
+          m1:[
+            {id:'pay-20260713-m1-536-a',room:'536',kind:'퇴실 청소',date:'7월 19일',base:20000},
+            {id:'pay-20260713-m1-332',room:'332',kind:'퇴실 청소',date:'7월 17일',base:20000},
+            {id:'pay-20260713-m1-142',room:'142',kind:'연박 청소',date:'7월 15일',base:30000},
+            {id:'pay-20260713-m1-536-b',room:'536',kind:'퇴실 청소',date:'7월 13일',base:20000}
+          ],
+          m2:[
+            {id:'pay-20260713-m2-528',room:'528',kind:'퇴실 청소',date:'7월 19일',base:20000},
+            {id:'pay-20260713-m2-540',room:'540',kind:'퇴실 청소',date:'7월 17일',base:20000},
+            {id:'pay-20260713-m2-639',room:'639',kind:'퇴실 청소',date:'7월 15일',base:20000},
+            {id:'pay-20260713-m2-641',room:'641',kind:'퇴실 청소',date:'7월 13일',base:20000}
+          ],
+          m3:[
+            {id:'pay-20260713-m3-350',room:'350',kind:'퇴실 청소',date:'7월 19일',base:16000},
+            {id:'pay-20260713-m3-352',room:'352',kind:'퇴실 청소',date:'7월 17일',base:16000},
+            {id:'pay-20260713-m3-516',room:'516',kind:'퇴실 청소',date:'7월 15일',base:16000},
+            {id:'pay-20260713-m3-623',room:'623',kind:'퇴실 청소',date:'7월 13일',base:16000}
+          ]
+        },
+        '2026-07-06':{
+          m1:[
+            {id:'pay-20260706-m1-142',room:'142',kind:'연박 청소',date:'7월 12일',base:30000},
+            {id:'pay-20260706-m1-536',room:'536',kind:'퇴실 청소',date:'7월 10일',base:20000},
+            {id:'pay-20260706-m1-332',room:'332',kind:'퇴실 청소',date:'7월 8일',base:20000},
+            {id:'pay-20260706-m1-350',room:'350',kind:'퇴실 청소',date:'7월 6일',base:16000}
+          ],
+          m2:[
+            {id:'pay-20260706-m2-528',room:'528',kind:'퇴실 청소',date:'7월 12일',base:20000},
+            {id:'pay-20260706-m2-540',room:'540',kind:'퇴실 청소',date:'7월 10일',base:20000},
+            {id:'pay-20260706-m2-639',room:'639',kind:'퇴실 청소',date:'7월 8일',base:20000},
+            {id:'pay-20260706-m2-350',room:'350',kind:'퇴실 청소',date:'7월 6일',base:16000}
+          ],
+          m3:[
+            {id:'pay-20260706-m3-332',room:'332',kind:'퇴실 청소',date:'7월 12일',base:20000},
+            {id:'pay-20260706-m3-536',room:'536',kind:'퇴실 청소',date:'7월 9일',base:20000},
+            {id:'pay-20260706-m3-639',room:'639',kind:'퇴실 청소',date:'7월 6일',base:20000}
+          ]
+        }
+      };
       const SCENARIOS = {
         0: { title:'기본 운영판', role:'admin', view:'today', next:'오늘 조치 큐와 일별 객실 현황을 탐색하세요.' },
         1: { title:'일요일 다음 주 근무 가능일 제출', role:'maid', view:'schedule', next:'월·화·목·금을 선택하고 다음 주 가능일을 제출하세요.' },
@@ -2929,23 +3074,61 @@
         const cards=MAIDS.map((maid,i)=>{const record=state.weeklyAvailability[maid.id],availableDays=record.days.map(index=>['월','화','수','목','금','토','일'][index]).join('·')||'없음';return `<article class="card pay-person"><div class="pay-person-head"><div class="avatar">${maid.name[0]}</div><div><h3>${maid.name} · 데모</h3><p>${maid.phone} · ${maid.active}</p></div>${statusBadge(record.status==='submitted'?'제출 완료':record.status==='change-requested'?'변경 요청':'미제출',record.status==='submitted'?'green':record.status==='change-requested'?'amber':'red')}</div><div class="pay-stats"><div class="pay-stat"><span>다음 주 가능</span><strong>${availableDays}</strong></div><div class="pay-stat"><span>예정 배정</span><strong>${assignmentTargets().filter(item=>assignmentFor(item).maidId===maid.id).length}객실</strong></div><div class="pay-stat"><span>제출 시각</span><strong>${record.submittedAt||'—'}</strong></div></div>${button('상세·이력','maid-detail','outline',`data-id="${maid.id}"`)}</article>`;}).join('');
         return `<section class="card assignment-panel"><div class="assignment-panel-head"><div><h3>메이드 주간 근무표</h3><p>8월 17일–23일 · 일요일 밤 마감</p></div>${statusBadge(`${submitted}/${MAIDS.length} 제출`,submitted===MAIDS.length?'green':'amber')}</div>${renderAvailabilityMatrix()}</section><div class="room-list-v2">${cards}</div>`;
       }
+      function payrollDateLabel(value) {
+        const match=String(value||'').match(/(?:\d{4}[.-])?(\d{1,2})[.-](\d{1,2})/);
+        return match?`${Number(match[1])}월 ${Number(match[2])}일`:'날짜 미입력';
+      }
+      function payrollTaskRoomContext(roomNo) {
+        const room=ROOMS.find(item=>item.no===String(roomNo)),type=room?ROOM_TYPES[room.type]:null;
+        return {room,type,typeName:type?.name||'객실 타입 미입력',elevator:room?elevatorLabel(room):'엘리베이터 미입력'};
+      }
+      function normalizePayrollFixture(task,weekStart,maidId) {
+        const roomNo=String(task.room),context=payrollTaskRoomContext(roomNo),base=Number(task.base??context.type?.rate??0),bombBonus=Number(task.bombBonus||0),amount=base+bombBonus;
+        return {...task,id:task.id||`pay-${weekStart}-${maidId}-${roomNo}`,weekStart,maidId,roomNo,room:`${roomNo}호`,typeName:context.typeName,elevator:context.elevator,baseAmount:base,bombBonus,amount,total:amount,stage:'confirmed',status:task.status||'승인 확정',tone:'green',bombStatus:bombBonus?'approved':'none',source:'fixture',included:true,potential:false};
+      }
+      function currentPayrollTasks(maidId,weekStart='2026-08-10') {
+        const confirmed=validatedEarningRecords().filter(record=>record.weekStart===weekStart&&record.performerId===maidId).sort((a,b)=>String(b.creditedAt).localeCompare(String(a.creditedAt))).map(record=>{
+          const submission=validatedSubmission(state.cleaningSubmissions?.[record.submissionId]||null),report=bombRoomReportForSubmission(submission),context=payrollTaskRoomContext(record.room);
+          return {id:record.id,weekStart,maidId,roomNo:record.room,room:`${record.room}호`,typeName:context.typeName,elevator:context.elevator,kind:submission?.kind||'퇴실 청소',date:payrollDateLabel(submission?.completedAt||submission?.submittedAt),baseAmount:record.base,bombBonus:record.bombBonus,amount:record.total,total:record.total,stage:'confirmed',status:record.bombBonus?'폭탄방 승인 · ×2':report?.status==='rejected'?'폭탄방 미인정 · 승인 확정':'승인 확정',tone:'green',bombStatus:report?.status||'none',reportId:report?.id||null,photoId:report?.photos?.[0]?.id||null,submissionId:submission?.id||record.submissionId,attemptId:submission?.attemptId||null,roundLabel:String(record.submissionId||'').split('-').slice(-2).join('-'),source:'earning',included:true,potential:false};
+        });
+        const unsettled=validatedSubmissions().filter(submission=>submission.weekStart===weekStart&&submission.performerId===maidId&&!earningRecordForSubmission(submission)&&(['pending','rejected'].includes(submission.status)||(submission.status==='approved'&&submission.kind==='재청소'))).sort((a,b)=>String(b.submittedAt).localeCompare(String(a.submittedAt))).map(submission=>{
+          const report=bombRoomReportForSubmission(submission),wholeRejected=submission.status==='rejected',unpaidReclean=submission.kind==='재청소',unpaidApproved=unpaidReclean&&submission.status==='approved',fee=bombRoomBreakdown(submission.room,{pendingAsBonus:!wholeRejected&&!unpaidReclean&&report?.status==='pending',reportOverride:report,baseOverride:submission.baseRateSnapshot}),context=payrollTaskRoomContext(submission.room),stage=wholeRejected||unpaidReclean?'excluded':'pending';
+          const decision=report?.status==='approved'?'폭탄방 승인 결정':report?.status==='rejected'?'폭탄방 미인정 결정':report?.status==='pending'?'폭탄방 검수 대기':'폭탄방 신고 없음',status=wholeRejected?`청소 전체 반려 · ${decision} 보존`:unpaidApproved?'재청소 승인 · 무급 0원':unpaidReclean?'재청소 검수 대기 · 무급 0원':report?.status==='pending'?'폭탄방 검수 대기':report?.status==='approved'?'폭탄방 인정 · 전체 검수 대기':report?.status==='rejected'?'폭탄방 미인정 · 전체 검수 대기':'검수 대기';
+          return {id:`pay-${submission.id}`,weekStart,maidId,roomNo:submission.room,room:`${submission.room}호`,typeName:context.typeName,elevator:context.elevator,kind:submission.kind||'퇴실 청소',date:payrollDateLabel(submission.completedAt||submission.submittedAt),baseAmount:unpaidReclean?0:fee.base,bombBonus:unpaidReclean?0:fee.bonus,amount:stage==='pending'?fee.total:0,total:stage==='pending'?fee.total:0,referenceBase:fee.base,referenceBombBonus:fee.bonus,referenceTotal:fee.total,stage,status,tone:wholeRejected?'red':unpaidApproved?'green':'amber',bombStatus:report?.status||'none',reportId:report?.id||null,photoId:report?.photos?.[0]?.id||null,submissionId:submission.id,attemptId:submission.attemptId,roundLabel:String(submission.id).split('-').slice(-2).join('-'),source:'submission',included:false,potential:stage==='pending',breakdownText:wholeRejected&&report?`${decision} · 기본 ${money(fee.base)} + 폭탄방 추가 ${money(fee.bonus)} = 결정 참고 ${money(fee.total)} · 실제 적립 0원`:unpaidReclean?'처음 청소한 본인 재청소 · 적립 0원 · 수익 원장 없음':''};
+        });
+        const aborted=Object.values(state.bombRoomReports||{}).filter(report=>!report.submissionId&&report.attemptStatus==='superseded'&&report.reportedById===maidId&&weekStartIso(timestampIsoDate(report.reportedAt))===weekStart).map(report=>{const attempt=state.cleaningAttempts?.[report.attemptId],context=payrollTaskRoomContext(report.room);return {id:`pay-${report.id}`,weekStart,maidId,roomNo:report.room,room:`${report.room}호`,typeName:context.typeName,elevator:context.elevator,kind:attempt?.kind||'퇴실 청소',date:payrollDateLabel(report.reportedAt),baseAmount:report.baseRateSnapshot,bombBonus:0,amount:0,total:0,referenceBase:report.baseRateSnapshot,referenceBombBonus:0,referenceTotal:report.baseRateSnapshot,stage:'excluded',status:'제출 전 회차 종료 · 적립 없음',tone:'red',bombStatus:report.status,reportId:report.id,photoId:report.photos?.[0]?.id||null,attemptId:report.attemptId,roundLabel:String(report.attemptId||'').split('-').slice(-2).join('-'),source:'report',included:false,potential:false,breakdownText:'미제출 폭탄방 증빙 보존 · 담당 변경으로 회차 종료 · 적립 0원'};});
+        return [...confirmed,...unsettled,...aborted];
+      }
+      function payrollTasksFor(weekStart,maidId) {
+        const fixtures=(PAYROLL_CLEANING_FIXTURES[weekStart]?.[maidId]||[]).map(task=>normalizePayrollFixture(task,weekStart,maidId));
+        return weekStart==='2026-08-10'?[...currentPayrollTasks(maidId,weekStart),...fixtures]:fixtures;
+      }
+      function payrollTaskTotals(tasks=[]) {
+        return tasks.reduce((sum,task)=>{if(task.stage==='confirmed')sum.confirmed+=task.amount;if(task.stage==='pending')sum.pending+=task.amount;return sum;},{confirmed:0,pending:0});
+      }
+      function adminPayDetailId(weekStart,maidId) { return `${weekStart}_${maidId}`; }
+      function parseAdminPayDetailId(value) {
+        const match=String(value||'').match(/^(\d{4}-\d{2}-\d{2})_(m\d+)$/);
+        if(!match||!MAIDS.some(maid=>maid.id===match[2]))return null;
+        return {weekStart:match[1],maidId:match[2]};
+      }
       function adminPayWeeks() {
-        const baseConfirmed={m1:52000,m2:66000,m3:70000},confirmedExtra={m1:0,m2:0,m3:0},pendingByMaid={m1:0,m2:0,m3:0};
-        validatedEarningRecords().filter(record=>record.weekStart==='2026-08-10').forEach(record=>{if(record.performerId in confirmedExtra)confirmedExtra[record.performerId]+=record.total;});
-        validatedSubmissions().filter(submission=>submission.weekStart==='2026-08-10'&&submission.status==='pending'&&!earningRecordForSubmission(submission)).forEach(submission=>{const report=bombRoomReportForSubmission(submission),fee=bombRoomBreakdown(submission.room,{pendingAsBonus:report?.status==='pending',reportOverride:report,baseOverride:submission.baseRateSnapshot});if(submission.performerId in pendingByMaid)pendingByMaid[submission.performerId]+=fee.total;});
-        const currentPeople=MAIDS.map(maid=>{const confirmed=baseConfirmed[maid.id]+confirmedExtra[maid.id],pending=pendingByMaid[maid.id];return [maid.name,confirmed,confirmed+pending,pending];});
         const submittedBombRooms=validatedSubmissions().filter(submission=>submission.weekStart==='2026-08-10'&&submission.reportId).map(submission=>{const report=bombRoomReportForSubmission(submission);if(!report)return null;const record=earningRecordForSubmission(submission),fee=record||bombRoomBreakdown(submission.room,{pendingAsBonus:submission.status==='pending'&&report.status==='pending',reportOverride:report,baseOverride:submission.baseRateSnapshot}),wholeRejected=submission.status==='rejected',meta=wholeRejected?{label:'청소 전체 반려 · 적립 없음',tone:'red'}:bombRoomStatusMeta(report);return {room:submission.room,kind:submission.kind||'퇴실 청소',submissionId:submission.id,reportId:report.id,photoId:report.photos?.[0]?.id||null,date:submission.completedAt||submission.submittedAt,roundLabel:submission.id.split('-').slice(-2).join('-'),maid:record?.performerName||submission.performerName,status:wholeRejected?'whole-rejected':report.status,label:meta.label,tone:meta.tone,base:fee.base,bombBonus:fee.bombBonus??fee.bonus,total:wholeRejected?0:fee.total,confirmed:!!record,wholeRejected};}).filter(Boolean);
         const abortedBombRooms=Object.values(state.bombRoomReports||{}).filter(report=>!report.submissionId&&report.attemptStatus==='superseded'&&weekStartIso(timestampIsoDate(report.reportedAt))==='2026-08-10').map(report=>({room:report.room,kind:state.cleaningAttempts?.[report.attemptId]?.kind||'퇴실 청소',submissionId:null,reportId:report.id,photoId:report.photos?.[0]?.id||null,date:report.reportedAt,roundLabel:report.attemptId?.split('-').slice(-2).join('-')||'',maid:report.reportedBy,status:'superseded',label:'제출 전 회차 종료 · 적립 없음',tone:'red',base:report.baseRateSnapshot,bombBonus:0,total:0,confirmed:false,aborted:true}));
         const liveBombRooms=[...submittedBombRooms,...abortedBombRooms];
-        const weeks=[
-          {start:'2026-08-10',label:'이번 주',status:'적립 중',tone:'blue',people:currentPeople,bombRooms:liveBombRooms},
-          {start:'2026-08-03',label:'지급 대상',status:state.payment==='PAID'?'지급 완료':'지급 대기',tone:state.payment==='PAID'?'green':'amber',people:[['김민지1',138000,138000,0],['김민지2',98000,98000,0],['이서연',66500,66500,0]],bombRooms:[{room:'536',maid:'김민지1',status:'approved',label:'폭탄방 승인 · ×2',tone:'green',base:20000,bombBonus:20000,total:40000,confirmed:true,date:'8월 9일'}]},
-          {start:'2026-07-27',label:'지급 완료',status:'지급 완료',tone:'green',people:[['김민지1',102000,102000,0],['김민지2',86000,86000,0],['이서연',72000,72000,0]]},
-          {start:'2026-07-20',label:'지급 완료',status:'지급 완료',tone:'green',people:[['김민지1',82000,82000,0],['김민지2',68000,68000,0],['이서연',58000,58000,0]]},
-          {start:'2026-07-13',label:'지급 완료',status:'지급 완료',tone:'green',people:[['김민지1',90000,90000,0],['김민지2',80000,80000,0],['이서연',64000,64000,0]]},
-          {start:'2026-07-06',label:'지급 완료',status:'지급 완료',tone:'green',people:[['김민지1',86000,86000,0],['김민지2',74000,74000,0],['이서연',59000,59000,0]]}
+        const weekMeta=[
+          {start:'2026-08-10',label:'이번 주',status:'적립 중',tone:'blue',bombRooms:liveBombRooms},
+          {start:'2026-08-03',label:'지급 대상',status:state.payment==='PAID'?'지급 완료':'지급 대기',tone:state.payment==='PAID'?'green':'amber',bombRooms:[{room:'536',maid:'김민지1',status:'approved',label:'폭탄방 승인 · ×2',tone:'green',base:20000,bombBonus:20000,total:40000,confirmed:true,date:'8월 9일'}]},
+          {start:'2026-07-27',label:'지급 완료',status:'지급 완료',tone:'green'},
+          {start:'2026-07-20',label:'지급 완료',status:'지급 완료',tone:'green'},
+          {start:'2026-07-13',label:'지급 완료',status:'지급 완료',tone:'green'},
+          {start:'2026-07-06',label:'지급 완료',status:'지급 완료',tone:'green'}
         ];
-        return weeks.map(week=>({...week,confirmed:week.people.reduce((sum,person)=>sum+person[1],0),expected:week.people.reduce((sum,person)=>sum+person[2],0),pending:week.people.reduce((sum,person)=>sum+person[3],0)}));
+        return weekMeta.map(week=>{
+          const tasksByMaid=Object.fromEntries(MAIDS.map(maid=>[maid.id,payrollTasksFor(week.start,maid.id)]));
+          const people=MAIDS.map(maid=>{const totals=payrollTaskTotals(tasksByMaid[maid.id]);return [maid.name,totals.confirmed,totals.confirmed+totals.pending,totals.pending];});
+          return {...week,tasksByMaid,people,confirmed:people.reduce((sum,person)=>sum+person[1],0),expected:people.reduce((sum,person)=>sum+person[2],0),pending:people.reduce((sum,person)=>sum+person[3],0)};
+        });
       }
       function maidPayAmount(name,weekStart='2026-08-10',column=1) {
         return adminPayWeeks().find(week=>week.start===weekStart)?.people.find(person=>person[0]===name)?.[column]||0;
@@ -2958,10 +3141,32 @@
       }
       function renderAdminPayroll() {
         const weeks=adminPayWeeks(),current=weeks[0],historyWeeks=weeks.slice(1),selectedStart=state.adminPayWeek||'2026-08-03',cfg=weeks.find(item=>item.start===selectedStart),paid=state.payment==='PAID';
-        const people=cfg?cfg.people.map(([name,confirmed,expected,pending],index)=>{const bombCount=(cfg.bombRooms||[]).filter(item=>item.maid===name).length;return `<article class="card pay-person"><div class="pay-person-head"><div><h3>${name}</h3><p>${weekRangeLabel(cfg.start)} · 데모 금액</p></div><div class="amount">${money(confirmed)}</div></div>${bombCount?`<div class="badge-row" style="margin-top:8px">${statusBadge(`폭탄방 ${bombCount}건`,'red')}</div>`:''}<div class="pay-stats"><div class="pay-stat"><span>예상 포함</span><strong>${money(expected)}</strong></div><div class="pay-stat"><span>검수 대기</span><strong>${money(pending)}</strong></div><div class="pay-stat"><span>${cfg.start==='2026-08-03'?'지급액':'확정액'}</span><strong>${money(confirmed)}</strong></div></div>${cfg.start==='2026-08-03'&&index===0?`<div class="toggle-row"><div><strong>8월 3일–9일 지급 완료 · ${money(confirmed)}</strong><span>${paid?'지급 완료 기록됨':'외부 송금 완료 후 켜 주세요'}</span></div><button class="switch" type="button" role="switch" aria-checked="${paid}" data-action="toggle-payment" aria-label="김민지1 8월 3일–9일 ${money(confirmed)} 지급 완료" ${isLocked()?'disabled':''}></button></div>`:`<p class="audit-note">승인 금액은 월요일–일요일 주차에 고정되어 이력으로 보존됩니다.</p>`}</article>`;}).join(''):'';
+        const people=cfg?cfg.people.map(([name,confirmed,expected,pending],index)=>{const maid=MAIDS.find(item=>item.name===name),tasks=cfg.tasksByMaid?.[maid?.id]||[],confirmedCount=tasks.filter(task=>task.stage==='confirmed').length,pendingCount=tasks.filter(task=>task.stage==='pending').length,bombCount=tasks.filter(task=>task.bombBonus>0||task.bombStatus&&task.bombStatus!=='none').length,detailId=adminPayDetailId(cfg.start,maid?.id||'');return `<article class="card pay-person"><div class="pay-person-head"><div><h3>${esc(name)}</h3><p>${weekRangeLabel(cfg.start)} · 객실별 청소 원장 합계</p></div><div class="amount">${money(confirmed)}</div></div><div class="badge-row" style="margin-top:8px">${statusBadge(`확정 ${confirmedCount}건`,'green')}${pendingCount?statusBadge(`검수 대기 ${pendingCount}건`,'amber'):''}${bombCount?statusBadge(`폭탄방 기록 ${bombCount}건`,'red'):''}</div><div class="pay-stats"><div class="pay-stat"><span>예상 포함</span><strong>${money(expected)}</strong></div><div class="pay-stat"><span>검수 대기</span><strong>${money(pending)}</strong></div><div class="pay-stat"><span>${cfg.start==='2026-08-03'?'지급액':'확정액'}</span><strong>${money(confirmed)}</strong></div></div><div class="admin-pay-detail-button">${button(`청소 내역 ${tasks.length}건 · 산출 보기`,'admin-pay-detail','outline',`data-id="${detailId}" data-week="${cfg.start}" data-maid="${maid?.id||''}" aria-label="${esc(name)} ${weekRangeLabel(cfg.start)} 청소 내역과 ${money(confirmed)} 산출 근거 보기"`)}</div>${cfg.start==='2026-08-03'&&index===0?`<div class="toggle-row"><div><strong>8월 3일–9일 지급 완료 · ${money(confirmed)}</strong><span>${paid?'지급 완료 기록됨':'외부 송금 완료 후 켜 주세요'}</span></div><button class="switch" type="button" role="switch" aria-checked="${paid}" data-action="toggle-payment" aria-label="김민지1 8월 3일–9일 ${money(confirmed)} 지급 완료" ${isLocked()?'disabled':''}></button></div>`:`<p class="audit-note">확정 금액은 위 청소 원장의 확정 포함 행만 합산해 월요일–일요일 주차에 보존합니다.</p>`}</article>`;}).join(''):'';
         const weekIndex=historyWeeks.map(item=>`<button class="pay-week-index-button" type="button" data-action="admin-pay-week" data-week="${item.start}" aria-current="${selectedStart===item.start}"><span><strong>${weekRangeLabel(item.start,true)}</strong><span>${item.label} · ${item.status} · 데모</span></span><b>${money(item.confirmed)}</b>${icon('chevronRight','icon-sm')}</button>`).join('');
         const selectedPanel=cfg?`<div class="pay-selected-week"><div class="section-head"><div><h2>${weekRangeLabel(cfg.start,true)}</h2><span class="meta">월요일–일요일 · 데모</span></div><div class="actions">${statusBadge(cfg.status,cfg.tone)}</div></div><section class="card card-pad"><div class="summary-strip"><span>확정 <strong>${money(cfg.confirmed)}</strong></span><span>검수 전 예상 <strong>${money(cfg.expected)}</strong></span><span>검수 대기 <strong>${money(cfg.pending)}</strong></span></div></section><div class="tab-panel" aria-label="${weekRangeLabel(cfg.start)} 메이드별 주급">${people}</div>${renderAdminBombRoomLedger(cfg)}</div>`:`<section class="inline-empty"><h3>${weekRangeLabel(selectedStart,true)} 지급 기록이 없습니다</h3><p>해당 월요일–일요일 주차에는 저장된 데모 지급 이력이 없습니다.</p></section>`;
         return `<section class="card pay-hero"><span>이번 주 · ${weekRangeLabel(current.start)} · 데모</span><strong>${money(current.confirmed)}</strong><div class="pay-hero-grid"><div><span>검수 전 예상 포함</span><b>${money(current.expected)}</b></div><div><span>검수 대기</span><b>${money(current.pending)}</b></div></div></section><div class="notice notice-warning">${icon('wallet')}<div><strong>앱은 송금하지 않고 지급 여부만 기록합니다.</strong><br>청소 승인 후 확정 금액에 차곡차곡 쌓이며 컴플레인·벌점은 자동 차감되지 않습니다.</div></div><div class="pay-week-toolbar"><div><h2>주별 지급 이력</h2><p>모든 이력은 월요일 00:00부터 일요일 23:59까지 묶어 표시합니다.</p></div><button class="pay-week-picker" type="button" data-action="open-pay-calendar" data-context="admin-pay" aria-haspopup="dialog">${icon('calendar','icon-sm')}<span>${weekRangeLabel(selectedStart,true)}</span>${icon('chevronRight','icon-sm')}</button></div>${selectedPanel}<section class="card card-pad"><div class="section-head"><h3>저장된 전체 과거 주차</h3><span class="meta">데모 ${historyWeeks.length}주</span></div><div class="pay-week-index">${weekIndex}</div></section>`;
+      }
+      function payrollTaskStageMeta(task) {
+        if(task.stage==='confirmed')return {label:'확정 합계 포함',tone:'green',rowClass:''};
+        if(task.stage==='pending')return {label:'검수 전 예상만',tone:'amber',rowClass:'is-pending'};
+        return {label:'주급 합계 제외',tone:'red',rowClass:'is-excluded'};
+      }
+      function payrollTaskFormula(task) {
+        if(task.breakdownText)return task.breakdownText;
+        if(task.stage==='excluded')return `기본 ${money(task.referenceBase??task.baseAmount??0)} + 폭탄방 추가 ${money(task.referenceBombBonus??0)} · 실제 주급 반영 0원`;
+        return `기본 ${money(task.baseAmount||0)} + 폭탄방 추가 ${money(task.bombBonus||0)} = ${money(task.amount||0)}`;
+      }
+      function renderAdminPayLedgerRow(task) {
+        const stage=payrollTaskStageMeta(task),recordId=task.submissionId?`제출 ${String(task.submissionId).split('-').slice(-2).join('-')}`:task.attemptId?`회차 ${String(task.attemptId).split('-').slice(-2).join('-')}`:'과거 지급 스냅샷',proof=task.reportId&&task.photoId?button('폭탄방 증빙 보기','bomb-room-photo','outline',`data-room="${task.roomNo}" data-report="${task.reportId}" data-photo="${task.photoId}"`):'';
+        return `<article class="pay-ledger-row ${stage.rowClass}"><div class="pay-ledger-room"><div class="badge-row">${statusBadge(task.status||'상태 미입력',task.tone||stage.tone)}${statusBadge(stage.label,stage.tone)}</div><h3>${esc(task.room)} · ${esc(task.typeName)}</h3><p>${esc(task.date)} · ${esc(task.kind)} · ${esc(task.elevator)} · ${esc(recordId)}</p>${proof?`<div class="pay-ledger-proof">${proof}</div>`:''}</div><div class="pay-ledger-calc"><span>객실별 계산</span><strong>${esc(payrollTaskFormula(task))}</strong><small>${task.stage==='pending'?'전체 검수 승인 전이라 확정액에는 포함하지 않습니다.':task.stage==='excluded'?'반려·회차 종료·본인 무급 재청소는 주급을 늘리지 않습니다.':'이 객실 한 건의 확정액만 주급에 더합니다.'}</small></div><div class="pay-ledger-amount"><span>${task.stage==='pending'?'승인 시':'주급 반영'}</span><strong>${money(task.stage==='excluded'?0:task.amount||0)}</strong></div></article>`;
+      }
+      function renderAdminPayDetailView() {
+        const parsed=parseAdminPayDetailId(state.detail?.id),weeks=adminPayWeeks(),cfg=parsed?weeks.find(week=>week.start===parsed.weekStart):null,maid=parsed?MAIDS.find(item=>item.id===parsed.maidId):null;
+        if(state.role!=='admin'||!cfg||!maid)return renderCoach()+renderNetworkNotice()+detailHeader('주급 산출 내역을 열 수 없습니다','관리자 권한과 저장된 주차·메이드 식별자를 다시 확인합니다.')+`<section class="card card-pad"><div class="notice notice-danger"><div><strong>유효한 주급 원장을 찾지 못했습니다.</strong><br>주급 정산 목록으로 돌아가 저장된 메이드의 산출 보기 버튼을 선택하세요.</div></div></section>`;
+        state.adminView='maids';state.adminMaidTab='pay';state.adminPayWeek=parsed.weekStart;
+        const tasks=cfg.tasksByMaid?.[maid.id]||[],totals=payrollTaskTotals(tasks),confirmedTasks=tasks.filter(task=>task.stage==='confirmed'),pendingTasks=tasks.filter(task=>task.stage==='pending'),excludedTasks=tasks.filter(task=>task.stage==='excluded'),calculatedConfirmed=confirmedTasks.reduce((sum,task)=>sum+(task.amount||0),0),calculatedPending=pendingTasks.reduce((sum,task)=>sum+(task.amount||0),0),matches=calculatedConfirmed===totals.confirmed&&calculatedPending===totals.pending;
+        const rows=tasks.length?tasks.map(renderAdminPayLedgerRow).join(''):`<section class="inline-empty"><h3>저장된 청소 내역이 없습니다</h3><p>이 주차의 객실별 주급 산출 원장이 생성되면 여기에 표시합니다.</p></section>`;
+        return renderCoach()+renderNetworkNotice()+detailHeader(`${esc(maid.name)} · 주급 산출 내역`,`${weekRangeLabel(cfg.start,true)} · 객실별 청소 원장 · 관리자 전용`)+`<div class="detail-grid"><div class="detail-stack"><section class="card card-pad"><div class="section-head"><div><h3>왜 ${money(totals.confirmed)}인가요?</h3><span class="meta">확정 포함 행만 더한 객실별 계산</span></div>${statusBadge(cfg.status,cfg.tone)}</div><div class="pay-ledger-summary"><div><span>확정 주급</span><strong>${money(totals.confirmed)}</strong><small>${confirmedTasks.length}건 합계</small></div><div><span>검수 전 예상</span><strong>${money(totals.confirmed+totals.pending)}</strong><small>확정 + 대기</small></div><div><span>검수 대기</span><strong>${money(totals.pending)}</strong><small>${pendingTasks.length}건</small></div><div><span>합계 제외</span><strong>${excludedTasks.length}건</strong><small>실제 반영 0원</small></div></div></section><section class="pay-ledger-list" aria-label="${esc(maid.name)} ${weekRangeLabel(cfg.start)} 객실별 청소 산출 내역">${rows}</section><section class="card card-pad pay-ledger-reconcile"><div><span>객실별 확정 행 합계</span><strong>${money(calculatedConfirmed)}</strong></div><div><span>카드의 확정 주급</span><strong>${money(totals.confirmed)}</strong></div><div><span>검수 대기 행 합계</span><strong>${money(calculatedPending)}</strong></div><div>${statusBadge(matches?'원장 합계 일치':'원장 합계 불일치',matches?'green':'red')}</div></section></div><aside class="detail-stack"><section class="card card-pad"><h3>계산 규칙</h3><ul class="bullet-list"><li>객실 타입 기본 청소요금은 8월 객실현황 시트 정본을 사용합니다.</li><li>폭탄방 승인 시 <strong>해당 객실</strong> 기본요금만 같은 금액으로 한 번 더합니다.</li><li>청소 전체 반려와 처음 청소한 본인의 재청소는 0원이며 합계에 포함하지 않습니다.</li><li>검수 대기 금액은 예상에만 보이고 확정 주급에는 포함하지 않습니다.</li></ul></section><section class="card card-pad"><h3>데이터 범위</h3><p class="audit-note">객실 타입·기본 청소요금은 운영 시트 정본이고, 인명·예약·과거 지급 이력은 기능 확인용 데모 스냅샷입니다. 앱은 실제 송금이나 자동 차감을 수행하지 않습니다.</p></section></aside></div>`;
       }
       function renderComplaintsPanel() {
         const active=state.complaints.filter(c=>!c.deleted);
@@ -3037,6 +3242,8 @@
         if(!submission||state.cleaningSubmissions?.[submission.id]!==submission||!attempt)return null;
         const lineageOk=attempt.id===submission.attemptId&&attempt.room===submission.room&&attempt.performerId===submission.performerId&&attempt.performerName===submission.performerName&&attempt.kind===submission.kind&&attempt.baseRateSnapshot===submission.baseRateSnapshot;
         if(!lineageOk)return null;
+        const completedDate=timestampIsoDate(submission.completedAt,'');
+        if(!completedDate||weekStartIso(completedDate)!==submission.weekStart||(attempt.workDate&&attempt.workDate!==completedDate))return null;
         if(!submission.templateSnapshot&&!submission.templateId)return submission;
         const attemptTemplate=attempt.templateSnapshot,submissionTemplate=submission.templateSnapshot;
         if(!attemptTemplate||!submissionTemplate||submission.templateId!==submissionTemplate.id||attemptTemplate.id!==submissionTemplate.id||attemptTemplate.version!==submissionTemplate.version||attemptTemplate.typeId!==submissionTemplate.typeId||attemptTemplate.kindId!==submissionTemplate.kindId)return null;
@@ -3294,7 +3501,14 @@
         const confirmed=maidPayAmount(maid.name);
         return renderCoach()+renderNetworkNotice()+`<div class="tab-panel">${assigned.map(({item,assignment})=>`<article class="card task-row"><div><h3>${assignment.order}번째 청소 · ${item.room}호 ${esc(item.kind)}</h3><p>8월 17일 (월) · ${item.checkout} 이후 시작 · 관리자 순서 통보</p></div><div class="task-meta"><span>${state.time}</span><strong>배정·순서 통보 완료</strong></div><div class="task-row-action">${button('내 업무 보기','go-my','outline')}</div></article>`).join('')}<article class="card task-row"><div><h3>이번 주 승인 금액 반영</h3><p>해당 객실별 승인 합계 · ${money(confirmed)}</p></div><div class="task-meta"><span>09:55</span><strong>주급</strong></div><div class="task-row-action">${button('내 주급','go-maid-pay','outline')}</div></article><article class="card task-row"><div><h3>컴플레인 판정 확인</h3><p>판정 확인 또는 이의 메모만 가능합니다.</p></div><div class="task-meta"><span>어제</span><strong>응답 필요</strong></div><div class="task-row-action">${button('내용 보기','complaint-detail','outline')}</div></article></div>`;
       }
+      function renderMaidPayFromLedger() {
+        const currentMaid=signedInMaid(),paid=state.payment==='PAID',weeks=adminPayWeeks().map((week,index)=>{const totals=payrollTaskTotals(week.tasksByMaid?.[currentMaid.id]||[]);return {id:week.start,group:index===0?'current':index===1?'last':'older',label:index===0?'이번 주':index===1?'지난주':'이전 주',period:weekRangeLabel(week.start),confirmed:totals.confirmed,pending:totals.pending,status:week.status,tone:week.tone,paidAt:index===0?'다음 월요일 지급 예정':week.start==='2026-08-03'&&!paid?'외부 송금 확인 대기':`${payrollDateLabel(addIsoDays(week.start,7))} 지급 기록`,tasks:week.tasksByMaid?.[currentMaid.id]||[]};}),current=weeks[0],selectedWeek=state.maidPaySelectedWeek,shown=selectedWeek?weeks.filter(week=>week.id===selectedWeek):weeks;
+        const weekCard=week=>{const open=state.maidPayOpenWeek===week.id;return `<article class="card maid-pay-week"><div class="maid-pay-week-head"><div><span class="maid-pay-week-label">${week.label} · ${week.period}</span><strong>${money(week.confirmed)}</strong><small>승인 확정 · ${esc(currentMaid.name)} 데모 지급 이력</small></div>${statusBadge(week.status,week.tone)}</div><div class="maid-pay-week-stats"><div><span>검수 전 예상</span><strong>${money(week.confirmed+week.pending)}</strong></div><div><span>검수 대기</span><strong>${money(week.pending)}</strong></div><div><span>지급 기록</span><strong>${week.paidAt}</strong></div></div><button class="maid-pay-disclosure" type="button" data-action="toggle-maid-pay-week" data-id="${week.id}" aria-expanded="${open}" aria-controls="maid-pay-week-${week.id}"><span>작업 상세 ${week.tasks.length}건</span><span>${open?'접기':'자세히 보기'} ${icon('chevronRight','icon-sm')}</span></button><div id="maid-pay-week-${week.id}" class="maid-pay-task-list" ${open?'':'hidden'}>${week.tasks.map(task=>`<div class="maid-pay-task"><div><strong>${esc(task.room)} · ${esc(task.kind)}</strong><span>${esc(task.date)} · ${esc(task.typeName)} · ${esc(task.elevator)}${task.roundLabel?` · 제출/회차 ${esc(task.roundLabel)}`:''}</span><span class="bomb-room-pay-breakdown">${esc(payrollTaskFormula(task))}</span>${task.reportId&&task.photoId?button('폭탄방 증빙 보기','bomb-room-photo','outline',`data-room="${task.roomNo}" data-report="${task.reportId}" data-photo="${task.photoId}"`):''}</div><div><b>${task.stage==='pending'?'승인 시 ':''}${money(task.stage==='excluded'?0:task.amount)}</b>${statusBadge(task.status,task.tone)}</div></div>`).join('')}</div></article>`;};
+        const selectedLabel=selectedWeek?weekRangeLabel(selectedWeek,true):'달력에서 주차 선택',historyBody=shown.length?shown.map(weekCard).join(''):`<section class="inline-empty"><h3>${weekRangeLabel(selectedWeek,true)} 주급 기록이 없습니다</h3><p>해당 월요일–일요일 주차에는 저장된 데모 작업 이력이 없습니다.</p></section>`;
+        return renderCoach()+renderNetworkNotice()+`<div class="view-stack"><section class="card pay-hero"><span>이번 주 · ${weekRangeLabel(current.id)} · 데모 지급 이력</span><strong>${money(current.confirmed)}</strong><div class="pay-hero-grid"><div><span>검수 전 예상 포함</span><b>${money(current.confirmed+current.pending)}</b></div><div><span>검수 대기</span><b>${money(current.pending)}</b></div></div></section><div class="notice notice-warning"><div><strong>앱은 송금하지 않고 지급 여부만 기록합니다.</strong><br>청소 완료 후 관리자 검수 승인을 받은 금액만 확정됩니다. 폭탄방 승인 건은 해당 객실 기본요금과 같은 추가요금만 분리해 표시합니다.</div></div><div class="pay-week-toolbar"><div><h2>지금까지 주급 내역</h2><p>관리자와 같은 객실별 원장을 월요일–일요일 주차로 표시합니다.</p></div><button class="pay-week-picker" type="button" data-action="open-pay-calendar" data-context="maid-pay" aria-haspopup="dialog">${icon('calendar','icon-sm')}<span>${selectedLabel}</span>${icon('chevronRight','icon-sm')}</button></div><div class="maid-pay-history-head"><div><h2>${selectedWeek?'선택한 주차':'저장된 전체 주차'}</h2><p>${selectedWeek?weekRangeLabel(selectedWeek,true):`데모 ${weeks.length}주 · 최신순`}</p></div>${selectedWeek?button('전체 주차 보기','clear-maid-pay-week','outline'):''}</div><div class="maid-pay-history">${historyBody}</div><p class="maid-pay-footnote">객실 타입·기본 청소요금은 8월 운영 시트 정본이고, 인명·예약·과거 지급 이력은 기능 확인용 데모입니다. 컴플레인·벌점은 주급에서 자동 차감되지 않습니다.</p></div>`;
+      }
       function renderMaidPay() {
+        return renderMaidPayFromLedger();
         const paid=state.payment==='PAID',currentMaid=signedInMaid();
         const currentWeekStart='2026-08-10',currentMaidId=currentMaid.id,submissionDate=submission=>{const match=String(submission?.submittedAt||'').match(/(?:\d{4}[.-])?(\d{1,2})[.-](\d{1,2})/);return match?`${Number(match[1])}월 ${Number(match[2])}일`:'이번 주';},taskKind=(room,record)=>record?.kind||(room==='142'?'연박 청소':'퇴실 청소'),roundLabel=id=>id?String(id).split('-').slice(-2).join('-'):'';
         const baselineTasksByMaid={
@@ -3500,7 +3714,7 @@
       }
 
       function renderPayDetail() {
-        return renderCoach()+renderNetworkNotice()+detailHeader('지난주 주급 정산','단일 지급 완료 기록 · 실제 송금 기능 아님')+renderAdminPayroll();
+        return renderAdminPayDetailView();
       }
       function renderComplaintDetail() {
         const active=state.detail?.id?complaintForExactAction(state.detail.id):complaintForAction();
@@ -3777,7 +3991,7 @@
         const confirm=document.querySelector('[data-action="confirm-start-deactivation-v2"]');if(confirm)confirm.disabled=isLocked();
       }
 
-      const rebuiltActions=new Set(['toggle-demo','reset','switch-role','nav','filter-rooms','back','close-modal','backdrop-close','room-detail','cleaning-detail','maid-detail','complaint-detail','pay-detail','template','template-detail','template-back-list','template-edit','template-cancel-edit','template-review','template-save','inspection-photo','open-room-export','export-rooms-csv','export-rooms-xls','open-calendar','open-pay-calendar','open-work-history-calendar','calendar-backdrop','calendar-close','calendar-month','calendar-select','calendar-today','date-shift','date-today','toggle-section','clear-room-filters','pin-show','pin-hide','pin-edit','pin-clear','pin-random','pin-review','pin-back','pin-save','reservation-edit','new-reservation','save-reservation-v2','create-stayover','confirm-stayover','operation-status','confirm-operation-stop','resume-operation','candle-change','task-candle-change','direct-assign','confirm-direct-assign','cleaning-tab','assignment-type-filter','admin-maid-tab','go-today','go-workforce','go-work-history','go-payroll','go-complaints','go-cleaning-drafts','go-cleaning-assignment','go-inspection','go-open','go-schedule','go-my','go-maid-pay','toggle-maid-pay-week','clear-maid-pay-week','new-cleaning','confirm-new-cleaning','toggle-week-day','submit-week-availability','edit-week-availability','request-availability-change','move-assignment-order','save-assignments','set-availability','change-availability','confirm-off-active','claim-job','confirm-claim','start-cleaning','confirm-start','add-task-photo','add-task-photos','retry-task-photo','retry-all-task-photos','field-complete-v2','submit-cleaning-v2','approve-inspection-v2','reject-inspection-v2','confirm-approve-v2','confirm-reject-v2','toggle-payment','confirm-toggle-payment','confirm-reverse-payment','undo-payment','delete-complaint','undo-complaint','publish-selected','confirm-publish','retry-network','alerts','audit-log','rates','logout','request-cancel','confirm-request-cancel','cancel-review','confirm-cancel','rule-complaint-v2','ack-complaint','object-complaint','confirm-objection','close-complaint-v2','correct-complaint-v2','confirm-correct-complaint-v2','reclean-existing','demo-info','notification-permission','confirm-notification-permission']);
+      const rebuiltActions=new Set(['toggle-demo','reset','switch-role','nav','filter-rooms','back','close-modal','backdrop-close','room-detail','cleaning-detail','maid-detail','complaint-detail','pay-detail','admin-pay-detail','template','template-detail','template-back-list','template-edit','template-cancel-edit','template-review','template-save','inspection-photo','open-room-export','export-rooms-csv','export-rooms-xls','open-calendar','open-pay-calendar','open-work-history-calendar','calendar-backdrop','calendar-close','calendar-month','calendar-select','calendar-today','date-shift','date-today','toggle-section','clear-room-filters','pin-show','pin-hide','pin-edit','pin-clear','pin-random','pin-review','pin-back','pin-save','reservation-edit','new-reservation','save-reservation-v2','create-stayover','confirm-stayover','operation-status','confirm-operation-stop','resume-operation','candle-change','task-candle-change','direct-assign','confirm-direct-assign','cleaning-tab','assignment-type-filter','admin-maid-tab','go-today','go-workforce','go-work-history','go-payroll','go-complaints','go-cleaning-drafts','go-cleaning-assignment','go-inspection','go-open','go-schedule','go-my','go-maid-pay','toggle-maid-pay-week','clear-maid-pay-week','new-cleaning','confirm-new-cleaning','toggle-week-day','submit-week-availability','edit-week-availability','request-availability-change','move-assignment-order','save-assignments','set-availability','change-availability','confirm-off-active','claim-job','confirm-claim','start-cleaning','confirm-start','add-task-photo','add-task-photos','retry-task-photo','retry-all-task-photos','field-complete-v2','submit-cleaning-v2','approve-inspection-v2','reject-inspection-v2','confirm-approve-v2','confirm-reject-v2','toggle-payment','confirm-toggle-payment','confirm-reverse-payment','undo-payment','delete-complaint','undo-complaint','publish-selected','confirm-publish','retry-network','alerts','audit-log','rates','logout','request-cancel','confirm-request-cancel','cancel-review','confirm-cancel','rule-complaint-v2','ack-complaint','object-complaint','confirm-objection','close-complaint-v2','correct-complaint-v2','confirm-correct-complaint-v2','reclean-existing','demo-info','notification-permission','confirm-notification-permission']);
       ['resolve-conflict-v2','confirm-conflict-v2','deactivate-maid-v2','confirm-start-deactivation-v2','complete-deactivation-v2','admin-pay-week','export-rooms-xlsx','room-issue-photo','choose-room-issue-files','remove-room-issue-photo','save-room-issue','bomb-room-photo','choose-bomb-room-files','remove-bomb-room-photo','add-demo-bomb-room-photos','save-bomb-room-report','approve-bomb-room','reject-bomb-room','confirm-approve-bomb-room','confirm-reject-bomb-room'].forEach(action=>rebuiltActions.add(action));
       const deprecatedStateActions=new Set(['add-photo','add-photos','retry-photo','field-complete','submit-cleaning','approve-inspection','reject-inspection','confirm-approve','confirm-reject','recover-candle','confirm-candle','save-reservation','show-pin','hide-pin','resolve-conflict','confirm-conflict','deactivate-maid','confirm-deactivate','start-payment','confirm-payment','finish-payment','payment-check','payment-open','rule-complaint','confirm-ruling','close-complaint','correct-complaint','publish-template','change-availability','confirm-off-active']);
       deprecatedStateActions.forEach(action=>rebuiltActions.add(action));
@@ -3840,7 +4054,16 @@
           render();focusAfterRender();toast('김민지1을 비활성으로 전환하고 과거 이력·검수·수익을 보존했습니다.');return;
         }
         if(a==='complaint-detail'){const item=id?complaintForExactAction(id):complaintForAction();maskPin();openDetail('complaint',item?.id||'none',el);return;}
-        if(a==='pay-detail'){maskPin();openDetail('pay','week',el);return;}
+        if(a==='admin-pay-detail'){
+          const parsed=parseAdminPayDetailId(id),cfg=parsed?adminPayWeeks().find(week=>week.start===parsed.weekStart):null;
+          if(!state.loggedIn||state.role!=='admin'||state.adminView!=='maids'||state.adminMaidTab!=='pay'||!cfg||!cfg.tasksByMaid?.[parsed.maidId]){toast('관리자 주급 정산의 저장된 청소 원장에서만 상세를 열 수 있습니다.','error');return;}
+          state.adminPayWeek=parsed.weekStart;maskPin();openDetail('pay',adminPayDetailId(parsed.weekStart,parsed.maidId),el);return;
+        }
+        if(a==='pay-detail'){
+          if(!state.loggedIn||state.role!=='admin'){toast('관리자만 주급 산출 상세를 볼 수 있습니다.','error');return;}
+          const maidId=state.detail?.type==='maid'&&MAIDS.some(maid=>maid.id===state.detail.id)?state.detail.id:'m1',week=adminPayWeeks().some(item=>item.start===state.adminPayWeek)?state.adminPayWeek:'2026-08-03';
+          state.adminView='maids';state.adminMaidTab='pay';state.adminPayWeek=week;maskPin();openDetail('pay',adminPayDetailId(week,maidId),el);return;
+        }
         if(a==='alerts'){openActionAlerts(el);return;}
         if(a==='audit-log'){openActionAuditLog(el);return;}
         if(a==='rates'){openActionRates(el);return;}
