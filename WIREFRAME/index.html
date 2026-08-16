@@ -932,24 +932,29 @@
     .availability-cell.available { color:var(--green); }
     .availability-cell.unavailable { color:var(--red); }
     .availability-cell.missing { color:var(--muted); }
-    .assignment-table { min-width:740px; }
-    .assignment-table th:nth-child(1) { width:150px; }
-    .assignment-table th:nth-child(2) { width:132px; }
-    .assignment-table th:nth-child(3) { width:164px; }
-    .assignment-table th:nth-child(4) { width:188px; }
+    .assignment-type-filters { display:grid; grid-template-columns:repeat(5,minmax(118px,1fr)); gap:8px; padding:12px 14px; border-bottom:1px solid var(--line); background:#fbfcfe; }
+    .assignment-type-filter { display:grid; align-content:start; gap:3px; min-height:76px; padding:10px 11px; border:1px solid var(--line); border-radius:11px; background:#fff; color:var(--ink); text-align:left; cursor:pointer; }
+    .assignment-type-filter:hover { border-color:#a9bfd2; background:var(--blue-soft); }
+    .assignment-type-filter[aria-pressed="true"] { border-color:#2a688f; background:#e9f3fa; box-shadow:inset 0 0 0 1px #2a688f; }
+    .assignment-type-filter:focus-visible { outline:3px solid rgba(31,111,155,.24); outline-offset:2px; }
+    .assignment-type-filter strong { font-size:12px; line-height:1.35; }
+    .assignment-type-filter span { color:#315d83; font-size:12px; font-weight:850; }
+    .assignment-type-filter small { color:var(--muted); font-size:11px; line-height:1.3; }
+    .assignment-filter-context { display:flex; align-items:center; gap:8px; min-height:42px; padding:9px 14px; border-bottom:1px solid var(--line); color:var(--muted); font-size:12px; }
+    .assignment-filter-context strong { color:#244966; }
+    .assignment-table { min-width:700px; }
+    .assignment-table th:nth-child(1) { width:178px; }
+    .assignment-table th:nth-child(2) { width:128px; }
+    .assignment-table th:nth-child(3) { width:172px; }
+    .assignment-table th:nth-child(4) { width:164px; }
     .assignment-table th:nth-child(5) { width:106px; }
     .assignment-table .select-control { min-height:44px; width:100%; font-size:13px; }
     .assignment-assignee { display:grid; gap:7px; }
-    .assignment-order { display:flex; align-items:center; gap:7px; min-height:44px; padding:5px 6px 5px 9px; border:1px solid var(--line); border-radius:10px; background:var(--surface-soft); }
-    .assignment-order-copy { min-width:0; flex:1; display:grid; gap:1px; }
-    .assignment-order-copy strong { color:#244966; font-size:12px; line-height:1.3; }
-    .assignment-order-copy span { color:var(--muted); font-size:11px; line-height:1.3; }
-    .assignment-order-actions { display:flex; flex:0 0 auto; gap:4px; }
+    .assignment-route-reference { color:#315d83; font-size:11px; font-weight:800; line-height:1.4; }
     .assignment-order-btn { display:inline-grid; place-items:center; width:44px; height:44px; padding:0; border:1px solid #c9d7e4; border-radius:9px; background:#fff; color:var(--navy); cursor:pointer; }
     .assignment-order-btn:hover:not(:disabled) { border-color:var(--blue); background:var(--blue-soft); }
     .assignment-order-btn:focus-visible { outline:3px solid rgba(31,111,155,.24); outline-offset:1px; }
     .assignment-order-btn:disabled { opacity:.34; cursor:not-allowed; }
-    .assignment-order-empty { color:var(--muted); font-size:12px; line-height:1.4; }
     .assignment-cell-stack { display:grid; gap:3px; min-width:0; }
     .assignment-cell-stack > strong { font-size:13px; line-height:1.35; }
     .assignment-room-type { color:var(--muted); font-size:12px; line-height:1.4; }
@@ -984,6 +989,27 @@
     .assignment-target-rule strong { display:block; color:#244966; font-size:13px; }
     .assignment-target-rule p { margin:3px 0 0; font-size:12px; line-height:1.5; }
     .assignment-target-rule .badge-row { flex:0 0 auto; justify-content:flex-end; }
+    .maid-order-panel { overflow:hidden; }
+    .maid-order-board { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; padding:14px; background:#f7f9fc; }
+    .maid-order-lane { min-width:0; overflow:hidden; border:1px solid var(--line); border-radius:13px; background:#fff; }
+    .maid-order-lane-head { display:flex; align-items:flex-start; gap:10px; min-height:70px; padding:12px 13px; border-bottom:1px solid var(--line); background:#fbfcfe; }
+    .maid-order-lane-head > div { min-width:0; flex:1; }
+    .maid-order-lane-head h4 { margin:0 0 3px; font-size:14px; }
+    .maid-order-lane-head p { margin:0; color:var(--muted); font-size:11px; line-height:1.4; }
+    .maid-order-list { display:grid; gap:8px; padding:10px; }
+    .maid-order-item { display:grid; grid-template-columns:38px minmax(0,1fr) auto; gap:9px; align-items:center; min-height:70px; padding:9px; border:1px solid var(--line); border-radius:11px; background:#fff; }
+    .maid-order-number { display:grid; place-items:center; width:34px; height:34px; border-radius:999px; background:var(--navy); color:#fff; font-size:13px; font-weight:900; }
+    .maid-order-copy { min-width:0; display:grid; gap:2px; }
+    .maid-order-copy strong { font-size:13px; line-height:1.35; }
+    .maid-order-copy span { color:var(--muted); font-size:11px; line-height:1.4; }
+    .maid-order-controls { display:flex; gap:4px; }
+    .maid-order-empty { min-height:88px; margin:10px; padding:18px 12px; border:1px dashed #c9d7e4; border-radius:11px; color:var(--muted); font-size:12px; text-align:center; }
+    .maid-order-unassigned { display:flex; align-items:flex-start; gap:12px; padding:13px 14px; border-top:1px solid var(--line); background:#fffaf3; }
+    .maid-order-unassigned > div:first-child { min-width:150px; }
+    .maid-order-unassigned h4 { margin:0 0 3px; font-size:13px; color:#7a4f10; }
+    .maid-order-unassigned p { margin:0; color:var(--muted); font-size:11px; }
+    .maid-order-unassigned-list { min-width:0; flex:1; display:flex; flex-wrap:wrap; gap:6px; }
+    .maid-order-unassigned-chip { display:inline-flex; align-items:center; min-height:36px; padding:7px 9px; border:1px solid #efc58f; border-radius:9px; background:#fff; color:#684919; font-size:11px; font-weight:800; }
     .work-history-page { display:grid; gap:14px; }
     .work-history-hero { display:flex; align-items:flex-start; gap:14px; padding:16px; }
     .work-history-hero > div { min-width:0; flex:1; }
@@ -1059,6 +1085,10 @@
       .assignment-summary strong { font-size:1.25rem; }
       .assignment-panel-head { padding:13px; }
       .availability-matrix { min-width:610px; }
+      .assignment-type-filters { grid-template-columns:repeat(2,minmax(0,1fr)); padding:10px; }
+      .assignment-type-filter:first-child { grid-column:1/-1; min-height:62px; }
+      .assignment-type-filter { min-height:82px; }
+      .assignment-filter-context { align-items:flex-start; }
       .assignment-table-wrap { overflow:visible; padding:10px; }
       .assignment-table, .assignment-table tbody, .assignment-table tr, .assignment-table td { display:block; width:100%; min-width:0; }
       .assignment-table thead { display:none; }
@@ -1073,6 +1103,11 @@
       .assignment-history-row > :nth-child(n+3) { grid-column:2; }
       .assignment-target-rule { flex-direction:column; }
       .assignment-target-rule .badge-row { justify-content:flex-start; }
+      .maid-order-board { grid-template-columns:1fr; padding:10px; }
+      .maid-order-item { grid-template-columns:38px minmax(0,1fr); }
+      .maid-order-controls { grid-column:2; }
+      .maid-order-unassigned { flex-direction:column; }
+      .maid-order-unassigned > div:first-child { min-width:0; }
       .work-history-hero { flex-direction:column; }
       .work-history-toolbar { grid-template-columns:1fr; padding:13px; }
       .work-history-summary { grid-template-columns:1fr; }
@@ -1247,7 +1282,7 @@
           detail:null, returnContext:null, demoOpen:false, time:'10:32', network:'online', listMode:'data', loggedIn:true, loginMode:'normal',
           selectedDate:'2026-08-15', calendarMonth:'2026-08', roomFilter:'all', roomTypeFilter:'all', roomSearch:'', selectedDrafts:[], reservationSaved:false,
           publications:{}, cancelRequests:{}, recleanPublications:{},
-          todaySections:{schedule:true,assignment:true,drafts:false,inspection:false,pay:false}, cleaningTab:'assignment', adminMaidTab:'workforce', adminPayWeek:'2026-08-03', workHistoryWeek:'2026-08-10', workHistoryMaid:'all',
+          todaySections:{schedule:true,assignment:true,drafts:false,inspection:false,pay:false}, cleaningTab:'assignment', assignmentTypeFilter:'all', adminMaidTab:'workforce', adminPayWeek:'2026-08-03', workHistoryWeek:'2026-08-10', workHistoryMaid:'all',
           drafts:[{id:'d301-next',room:'301',kind:'퇴실 청소',created:'09:55',date:'8월 16일'},{id:'d402-next',room:'402',kind:'퇴실 청소',created:'10:20',date:'8월 16일'}],
           jobs:{'1208':'scheduled','201':'inspection','202':'cleaning','203':'upload','301':'approved','302':'inspection','401':'stayover-requested','402':'draft','412':'approved'},
           candles:{'1208':0,'201':0,'202':0,'203':0,'301':0,'302':0,'401':0,'402':1,'412':0},
@@ -1392,13 +1427,14 @@
           detail:state.detail?{type:String(state.detail.type),id:String(state.detail.id),...(state.detail.mode?{mode:String(state.detail.mode)}:{})}:null,
           date:state.selectedDate,filter:state.roomFilter,typeFilter:state.roomTypeFilter,q:state.roomSearch,
           scrollY:Math.max(0,Math.round(Number(scrollY)||0)),loggedIn:state.loggedIn!==false,
-          adminMaidTab:state.adminMaidTab,cleaningTab:state.cleaningTab,adminPayWeek:state.adminPayWeek,
+          adminMaidTab:state.adminMaidTab,cleaningTab:state.cleaningTab,assignmentTypeFilter:state.assignmentTypeFilter,adminPayWeek:state.adminPayWeek,
           maidPayFilter:state.maidPayFilter,maidPayOpenWeek:state.maidPayOpenWeek,maidPaySelectedWeek:state.maidPaySelectedWeek,
           templateChange:pendingTemplateChange?cloneHistoryPayload(pendingTemplateChange):null
         };
       }
       function historyRouteUrl(route) {
         const params=new URLSearchParams({scenario:String(route.scenario),role:route.role,view:route.view,date:route.date,filter:route.filter,type:route.typeFilter,q:route.q});
+        if(route.assignmentTypeFilter&&route.assignmentTypeFilter!=='all')params.set('assignmentType',route.assignmentTypeFilter);
         if(route.detail){params.set('detail',`${route.detail.type}:${route.detail.id}`);if(route.detail.mode)params.set('mode',route.detail.mode);}
         return `${location.pathname}${location.search}#${params.toString()}`;
       }
@@ -1472,14 +1508,15 @@
       }
       function pushHistoryOnNextRender() { if(!restoringHistory)historyWriteMode='push'; }
       function historyFocusDescriptor(element) {
-        if(!element?.dataset?.action)return null;
-        const descriptor={action:element.dataset.action};
-        ['id','view','key','room','photo','week'].forEach(key=>{if(element.dataset[key]!=null)descriptor[key]=element.dataset[key];});
+        if(!element?.dataset?.action&&!element?.dataset?.control)return null;
+        const descriptor=element.dataset.action?{action:element.dataset.action}:{control:element.dataset.control};
+        ['id','view','key','room','photo','week','type','target'].forEach(key=>{if(element.dataset[key]!=null)descriptor[key]=element.dataset[key];});
         return descriptor;
       }
       function findHistoryFocusTarget(descriptor) {
-        if(!descriptor?.action)return null;
-        return [...document.querySelectorAll(`[data-action="${descriptor.action}"]`)].find(element=>Object.entries(descriptor).every(([key,value])=>key==='action'||element.dataset[key]===value))||null;
+        if(!descriptor?.action&&!descriptor?.control)return null;
+        const rootKey=descriptor.action?'action':'control',rootValue=descriptor[rootKey];
+        return [...document.querySelectorAll(`[data-${rootKey}="${rootValue}"]`)].find(element=>Object.entries(descriptor).every(([key,value])=>key===rootKey||element.dataset[key]===value))||null;
       }
       function applyHistoryRoute(route) {
         if(!route)return;
@@ -1493,6 +1530,7 @@
         if(/^\d{0,6}$/.test(route.q||''))state.roomSearch=route.q||'';
         if(['workforce','pay','complaints'].includes(route.adminMaidTab))state.adminMaidTab=route.adminMaidTab;
         if(['assignment','progress','inspection','done'].includes(route.cleaningTab))state.cleaningTab=route.cleaningTab;
+        if(['all',...Object.keys(ROOM_TYPES)].includes(route.assignmentTypeFilter))state.assignmentTypeFilter=route.assignmentTypeFilter;
         const restoredAdminPayWeek=normalizePayWeek(route.adminPayWeek);
         if(restoredAdminPayWeek)state.adminPayWeek=restoredAdminPayWeek;
         if(['all','current','last','older'].includes(route.maidPayFilter))state.maidPayFilter=route.maidPayFilter;
@@ -2348,11 +2386,31 @@
         if(!maidId)return;
         orderedAssignmentsForMaid(maidId).forEach((item,index)=>{const assignment=assignmentFor(item),nextOrder=index+1;if(assignment.order!==nextOrder){assignment.order=nextOrder;if(assignment.status==='notified')assignment.status='draft';}});
       }
-      function assignmentOrderMarkup(item) {
+      function assignmentTypeId(item) {
+        return item.type||ROOMS.find(room=>room.no===item.room)?.type||'standard';
+      }
+      function filteredAssignmentTargets() {
+        const filter=state.assignmentTypeFilter||'all';
+        return assignmentTargets().filter(item=>filter==='all'||assignmentTypeId(item)===filter);
+      }
+      function assignmentTypeFiltersMarkup() {
+        const targets=assignmentTargets(),filter=state.assignmentTypeFilter||'all',items=[{id:'all',name:'전체 객실 타입',count:targets.length,meta:'타입별 요금 비교'},...Object.entries(ROOM_TYPES).map(([id,type])=>({id,name:type.name,count:targets.filter(item=>assignmentTypeId(item)===id).length,meta:`객실당 ${money(type.rate)}`}))];
+        return `<div class="assignment-type-filters" role="group" aria-label="청소대상 객실 타입 필터">${items.map(item=>`<button class="assignment-type-filter" type="button" data-action="assignment-type-filter" data-type="${esc(item.id)}" aria-pressed="${filter===item.id}" aria-label="${esc(item.name)} ${item.count}건${item.id==='all'?'':`, 청소 요금 ${item.meta.replace('객실당 ','')}`} 보기"><strong>${esc(item.name)}</strong><span>${item.count}건</span><small>${esc(item.meta)}</small></button>`).join('')}</div>`;
+      }
+      function assignmentRouteReference(item) {
         const assignment=assignmentFor(item);
-        if(!assignment.maidId)return '<span class="assignment-order-empty">담당을 선택하면 메이드별 청소 순서를 지정할 수 있습니다.</span>';
-        const ordered=orderedAssignmentsForMaid(assignment.maidId),index=ordered.findIndex(entry=>entry.id===item.id),first=index<=0,last=index===ordered.length-1,name=maidName(assignment.maidId);
-        return `<div class="assignment-order"><span class="assignment-order-copy"><strong>${assignment.order}번째 청소</strong><span>${esc(name)} 작업 순서</span></span><span class="assignment-order-actions"><button class="assignment-order-btn" type="button" data-action="move-assignment-order" data-target="${esc(item.id)}" data-direction="up" aria-label="${esc(name)}의 ${item.room}호 청소 순서를 위로 이동" ${first?'disabled':''}>${icon('arrowUp','icon-sm')}</button><button class="assignment-order-btn" type="button" data-action="move-assignment-order" data-target="${esc(item.id)}" data-direction="down" aria-label="${esc(name)}의 ${item.room}호 청소 순서를 아래로 이동" ${last?'disabled':''}>${icon('arrowDown','icon-sm')}</button></span></div>`;
+        if(!assignment.maidId)return '<span class="assignment-route-reference">담당 선택 후 아래 순서 보드에 추가</span>';
+        return `<span class="assignment-route-reference">${esc(maidName(assignment.maidId))} · 순서 보드 ${assignment.order}번째</span>`;
+      }
+      function maidOrderItemMarkup(item,ordered,index) {
+        const assignment=assignmentFor(item),context=assignmentContext(item),name=maidName(assignment.maidId),first=index===0,last=index===ordered.length-1,status=assignment.status==='notified'?'통보 완료':'저장 전';
+        return `<article class="maid-order-item"><span class="maid-order-number" aria-hidden="true">${assignment.order}</span><div class="maid-order-copy"><strong>${assignment.order}번째 · ${item.room}호</strong><span>${esc(context.type.name)} · ${money(context.type.rate)}</span><span>${esc(item.kind)} · ${status}</span></div><div class="maid-order-controls"><button class="assignment-order-btn" type="button" data-action="move-assignment-order" data-target="${esc(item.id)}" data-direction="up" aria-label="${esc(name)}의 ${item.room}호 청소 순서를 위로 이동" ${first?'disabled':''}>${icon('arrowUp','icon-sm')}</button><button class="assignment-order-btn" type="button" data-action="move-assignment-order" data-target="${esc(item.id)}" data-direction="down" aria-label="${esc(name)}의 ${item.room}호 청소 순서를 아래로 이동" ${last?'disabled':''}>${icon('arrowDown','icon-sm')}</button></div></article>`;
+      }
+      function renderMaidOrderBoard() {
+        const dayIndex=assignmentDayIndex(),eligible=MAIDS.filter(maid=>availabilityFor(maid.id,dayIndex)==='available'),unassigned=assignmentTargets().filter(item=>!assignmentFor(item).maidId);
+        const lanes=eligible.map(maid=>{const ordered=orderedAssignmentsForMaid(maid.id),total=ordered.reduce((sum,item)=>sum+ROOM_TYPES[assignmentTypeId(item)].rate,0);return `<section class="maid-order-lane" aria-labelledby="maid-order-${maid.id}"><div class="maid-order-lane-head"><div><h4 id="maid-order-${maid.id}">${esc(maid.name)} 청소 순서</h4><p>${ordered.length}객실 · 예상 청소비 ${money(total)} · 데모</p></div>${statusBadge(ordered.length?`${ordered.length}건 배정`:'배정 없음',ordered.length?'blue':'neutral')}</div>${ordered.length?`<div class="maid-order-list">${ordered.map((item,index)=>maidOrderItemMarkup(item,ordered,index)).join('')}</div>`:'<div class="maid-order-empty">위 객실 목록에서 담당을 선택하면<br>이 메이드의 마지막 순서에 추가됩니다.</div>'}</section>`;}).join('');
+        const unassignedList=unassigned.length?unassigned.map(item=>{const context=assignmentContext(item);return `<span class="maid-order-unassigned-chip">${item.room}호 · ${esc(context.type.name)} · ${money(context.type.rate)}</span>`;}).join(''):'<span class="maid-order-unassigned-chip">미배정 객실 없음</span>';
+        return `<section class="card maid-order-panel" aria-labelledby="maid-order-board-title"><div class="assignment-panel-head"><div><h3 id="maid-order-board-title">메이드별 청소 순서</h3><p>위 타입 필터와 관계없이 전체 배정 기준입니다. 같은 메이드 안에서만 위·아래로 조정합니다.</p></div>${statusBadge(`${unassigned.length}건 미배정`,unassigned.length?'red':'green')}</div><div class="maid-order-board">${lanes}</div><div class="maid-order-unassigned"><div><h4>아직 순서가 없는 객실</h4><p>담당을 선택해야 순서 보드에 들어갑니다.</p></div><div class="maid-order-unassigned-list">${unassignedList}</div></div><div class="assignment-foot"><p>타입 필터에 숨은 객실도 저장 대상입니다. 모든 객실의 담당과 1–N번 순서가 확인되면 통보할 수 있습니다.</p>${button('배정·순서 저장 및 통보','save-assignments','primary',assignmentCanSave()?'':'disabled')}</div></section>`;
       }
       function assignmentCounts() {
         const targets=assignmentTargets(),rows=targets.map(assignmentFor),assigned=rows.filter(item=>item.maidId).length,notified=rows.filter(item=>item.status==='notified').length;
@@ -2398,10 +2456,11 @@
         return `<span class="assignment-source ${cls}">${icon(item.source==='manual'?'user':'sync','icon-sm')}${item.source==='manual'?'직접 등록':`자동 · ${esc(label)}`}</span>`;
       }
       function renderAssignmentDashboard() {
-        const counts=assignmentCounts(),targets=assignmentTargets();
-        const rows=targets.map(item=>{const assignment=assignmentFor(item),context=assignmentContext(item),status=assignment.status==='notified'?'통보 완료':assignment.maidId?'저장 전':'미배정',tone=assignment.status==='notified'?'green':assignment.maidId?'amber':'red';return `<tr><td data-label="객실 정보"><div class="assignment-cell-stack"><strong>${item.room}호</strong><span class="assignment-room-type">${esc(context.type.name)}</span></div></td><td data-label="청소 정보"><div class="assignment-cell-stack"><strong>${esc(item.kind)}</strong><span class="assignment-fee">${money(context.type.rate)} · 데모</span>${assignmentSourceMarkup(item)}</div></td><td data-label="일정">${assignmentScheduleMarkup(item)}</td><td data-label="담당·순서"><div class="assignment-assignee"><select class="select-control" data-control="assignment-maid" data-target="${esc(item.id)}" aria-label="${item.room}호 ${esc(item.kind)} 담당 메이드 · 근무 가능 제출자만 표시">${assignmentOptions(item)}</select>${assignmentOrderMarkup(item)}</div></td><td data-label="상태">${statusBadge(status,tone)}${assignment.maidId?'<span class="cell-sub">근무 가능·순서 확인</span>':''}</td></tr>`;}).join('');
+        const counts=assignmentCounts(),targets=assignmentTargets(),visibleTargets=filteredAssignmentTargets(),activeType=state.assignmentTypeFilter==='all'?null:ROOM_TYPES[state.assignmentTypeFilter];
+        const rows=visibleTargets.map(item=>{const assignment=assignmentFor(item),context=assignmentContext(item),status=assignment.status==='notified'?'통보 완료':assignment.maidId?'저장 전':'미배정',tone=assignment.status==='notified'?'green':assignment.maidId?'amber':'red';return `<tr><td data-label="객실·타입·요금"><div class="assignment-cell-stack"><strong>${item.room}호</strong><span class="assignment-room-type">${esc(context.type.name)}</span><span class="assignment-fee">${money(context.type.rate)} · 데모</span></div></td><td data-label="청소 정보"><div class="assignment-cell-stack"><strong>${esc(item.kind)}</strong>${assignmentSourceMarkup(item)}</div></td><td data-label="일정">${assignmentScheduleMarkup(item)}</td><td data-label="담당 메이드"><div class="assignment-assignee"><select class="select-control" data-control="assignment-maid" data-target="${esc(item.id)}" aria-label="${item.room}호 ${esc(item.kind)} 담당 메이드 · 근무 가능 제출자만 표시">${assignmentOptions(item)}</select>${assignmentRouteReference(item)}</div></td><td data-label="상태">${statusBadge(status,tone)}${assignment.maidId?'<span class="cell-sub">순서 보드 반영</span>':''}</td></tr>`;}).join('');
         const history=state.assignmentHistory.map(entry=>`<div class="assignment-history-row"><strong>${esc(entry.time)}</strong><span>${esc(entry.room)}호</span><span>${esc(entry.before)} → ${esc(entry.after)}</span><span>${esc(entry.reason)}</span></div>`).join('');
-        return `<div class="assignment-page"><div class="assignment-intro"><div><h2>내일 청소 배정</h2><p>${dateLabel(state.assignmentDate)} · 담당과 메이드별 청소 순서는 근무일 전날 밤에 관리자만 확정합니다.</p></div><div class="job-actions">${button('주간 근무 기록','go-work-history','outline')}${button('청소대상 직접 등록','new-cleaning','outline')}</div></div><section class="card assignment-summary"><div><span>다음 주 가능일 제출</span><strong>${counts.submitted} / ${MAIDS.length}</strong><small>메이드 제출 현황</small></div><div><span>내일 청소 대상 객실</span><strong>${counts.total}</strong><small>자동 ${counts.automatic} · 직접 ${counts.manual}</small></div><div class="summary-good"><span>담당 선택</span><strong>${counts.assigned}</strong><small>통보 완료 ${counts.notified}건</small></div><div class="summary-warn"><span>미배정</span><strong>${counts.unassigned}</strong><small>담당·순서 확인 후 저장</small></div></section><section class="assignment-target-rule" aria-label="청소대상 자동 구성과 순서 지정 기준">${icon('sync')}<div><strong>청소대상은 일정에서 자동 구성하고, 작업 순서는 관리자가 확정합니다.</strong><p>내일 체크아웃·연박 신청 객실은 자동 포함됩니다. 담당 선택 뒤 위·아래 버튼으로 같은 메이드의 청소 순서를 지정하세요.</p></div><div class="badge-row">${statusBadge(`체크아웃 ${counts.checkout}`,'blue')}${statusBadge(`연박 ${counts.stayover}`,'neutral')}${statusBadge(`직접 ${counts.manual}`,'amber')}</div></section><div class="assignment-grid"><section class="card assignment-panel"><div class="assignment-panel-head"><div><h3>메이드 주간 가능 현황</h3><p>8월 17일–23일 · Asia/Seoul</p></div>${statusBadge(`${counts.submitted}/${MAIDS.length} 제출`,counts.submitted===MAIDS.length?'green':'amber')}</div>${renderAvailabilityMatrix()}</section><section class="card assignment-panel"><div class="assignment-panel-head"><div><h3>내일 청소대상 객실별 담당·순서</h3><p>‘가능’ 제출자만 담당으로 선택하고 같은 메이드의 객실 순서까지 지정합니다.</p></div>${statusBadge(`${counts.unassigned}건 미배정`,counts.unassigned?'red':'green')}</div><div class="assignment-table-wrap"><table class="assignment-table"><thead><tr><th scope="col">객실 정보</th><th scope="col">청소 정보·등록 근거</th><th scope="col">일정</th><th scope="col">담당·청소 순서</th><th scope="col">상태</th></tr></thead><tbody>${rows}</tbody></table></div><div class="assignment-foot"><p>불가·미제출 메이드는 나오지 않습니다. 저장하면 지정 순서대로 내 업무와 알림에 통보됩니다.</p>${button('배정·순서 저장 및 통보','save-assignments','primary',assignmentCanSave()?'':'disabled')}</div></section></div><section class="card assignment-history"><div class="assignment-panel-head"><div><h3>배정·순서 통보 이력</h3><p>담당과 청소 순서의 이전 값을 덮어쓰지 않고 변경 이력을 추가합니다.</p></div>${statusBadge('관리자 전용','neutral')}</div><div class="assignment-history-list">${history}</div></section></div>`;
+        const emptyRows=`<tr><td colspan="5"><div class="inline-empty"><h3>이 타입의 청소대상이 없습니다</h3><p>다른 타입을 선택하거나 전체 객실을 확인하세요.</p></div></td></tr>`;
+        return `<div class="assignment-page"><div class="assignment-intro"><div><h2>내일 청소 배정</h2><p>${dateLabel(state.assignmentDate)} · 담당 선택과 메이드별 순서를 분리해 관리자만 확정합니다.</p></div><div class="job-actions">${button('주간 근무 기록','go-work-history','outline')}${button('청소대상 직접 등록','new-cleaning','outline')}</div></div><section class="card assignment-summary"><div><span>다음 주 가능일 제출</span><strong>${counts.submitted} / ${MAIDS.length}</strong><small>메이드 제출 현황</small></div><div><span>내일 청소 대상 객실</span><strong>${counts.total}</strong><small>자동 ${counts.automatic} · 직접 ${counts.manual}</small></div><div class="summary-good"><span>담당 선택</span><strong>${counts.assigned}</strong><small>통보 완료 ${counts.notified}건</small></div><div class="summary-warn"><span>미배정</span><strong>${counts.unassigned}</strong><small>담당 선택 후 순서 보드 반영</small></div></section><section class="assignment-target-rule" aria-label="청소대상 자동 구성과 순서 지정 기준">${icon('sync')}<div><strong>객실 타입·요금을 먼저 비교하고, 메이드별 순서를 한곳에서 정합니다.</strong><p>내일 체크아웃·연박 신청 객실은 자동 포함됩니다. 타입 필터는 표시만 좁히며 전체 배정과 저장 조건은 그대로 유지합니다.</p></div><div class="badge-row">${statusBadge(`체크아웃 ${counts.checkout}`,'blue')}${statusBadge(`연박 ${counts.stayover}`,'neutral')}${statusBadge(`직접 ${counts.manual}`,'amber')}</div></section><div class="assignment-grid"><section class="card assignment-panel"><div class="assignment-panel-head"><div><h3>메이드 주간 가능 현황</h3><p>8월 17일–23일 · Asia/Seoul</p></div>${statusBadge(`${counts.submitted}/${MAIDS.length} 제출`,counts.submitted===MAIDS.length?'green':'amber')}</div>${renderAvailabilityMatrix()}</section><section class="card assignment-panel"><div class="assignment-panel-head"><div><h3>청소대상 객실 · 담당 선택</h3><p>객실 타입별 요금을 비교하고 ‘가능’ 제출자만 담당으로 선택합니다.</p></div>${statusBadge(`${visibleTargets.length}/${targets.length}건 표시`,'blue')}</div>${assignmentTypeFiltersMarkup()}<div class="assignment-filter-context">${icon('filter','icon-sm')}<span><strong>${activeType?esc(activeType.name):'전체 객실 타입'}</strong> ${visibleTargets.length}건 표시 · 타입 필터와 관계없이 전체 ${targets.length}건이 저장 대상입니다.</span></div><div class="assignment-table-wrap"><table class="assignment-table"><thead><tr><th scope="col">객실·타입·요금</th><th scope="col">청소 정보·등록 근거</th><th scope="col">일정</th><th scope="col">담당 메이드</th><th scope="col">상태</th></tr></thead><tbody>${rows||emptyRows}</tbody></table></div><div class="assignment-foot"><p>담당을 바꾸면 해당 객실이 새 메이드 순서의 마지막으로 이동합니다. 불가·미제출 메이드는 표시하지 않습니다.</p></div></section></div>${renderMaidOrderBoard()}<section class="card assignment-history"><div class="assignment-panel-head"><div><h3>배정·순서 통보 이력</h3><p>담당과 청소 순서의 이전 값을 덮어쓰지 않고 변경 이력을 추가합니다.</p></div>${statusBadge('관리자 전용','neutral')}</div><div class="assignment-history-list">${history}</div></section></div>`;
       }
       function cleaningTabButton(id,label,count) { return `<button type="button" role="tab" data-action="cleaning-tab" data-tab="${id}" aria-selected="${state.cleaningTab===id}">${label} ${count}</button>`; }
       function renderCleaningHub() {
@@ -3021,7 +3080,7 @@
         const confirm=document.querySelector('[data-action="confirm-start-deactivation-v2"]');if(confirm)confirm.disabled=isLocked();
       }
 
-      const rebuiltActions=new Set(['toggle-demo','reset','switch-role','nav','filter-rooms','back','close-modal','backdrop-close','room-detail','cleaning-detail','maid-detail','complaint-detail','pay-detail','template','template-detail','template-back-list','template-edit','template-cancel-edit','template-review','template-save','inspection-photo','open-room-export','export-rooms-csv','export-rooms-xls','open-calendar','open-pay-calendar','calendar-backdrop','calendar-close','calendar-month','calendar-select','calendar-today','date-shift','date-today','toggle-section','clear-room-filters','pin-show','pin-hide','pin-edit','pin-clear','pin-random','pin-review','pin-back','pin-save','reservation-edit','new-reservation','save-reservation-v2','create-stayover','confirm-stayover','operation-status','confirm-operation-stop','resume-operation','candle-change','task-candle-change','direct-assign','confirm-direct-assign','cleaning-tab','admin-maid-tab','go-today','go-workforce','go-work-history','go-payroll','go-complaints','go-cleaning-drafts','go-cleaning-assignment','go-inspection','go-open','go-schedule','go-my','go-maid-pay','toggle-maid-pay-week','clear-maid-pay-week','new-cleaning','confirm-new-cleaning','toggle-week-day','submit-week-availability','edit-week-availability','request-availability-change','move-assignment-order','save-assignments','set-availability','change-availability','confirm-off-active','claim-job','confirm-claim','start-cleaning','confirm-start','add-task-photo','add-task-photos','retry-task-photo','retry-all-task-photos','field-complete-v2','submit-cleaning-v2','approve-inspection-v2','reject-inspection-v2','confirm-approve-v2','confirm-reject-v2','toggle-payment','confirm-toggle-payment','confirm-reverse-payment','undo-payment','delete-complaint','undo-complaint','publish-selected','confirm-publish','retry-network','alerts','audit-log','rates','logout','request-cancel','confirm-request-cancel','rule-complaint-v2','ack-complaint','object-complaint','confirm-objection','close-complaint-v2','correct-complaint-v2','confirm-correct-complaint-v2','reclean-existing','reclean-republish','confirm-republish','demo-info','notification-permission','confirm-notification-permission']);
+      const rebuiltActions=new Set(['toggle-demo','reset','switch-role','nav','filter-rooms','back','close-modal','backdrop-close','room-detail','cleaning-detail','maid-detail','complaint-detail','pay-detail','template','template-detail','template-back-list','template-edit','template-cancel-edit','template-review','template-save','inspection-photo','open-room-export','export-rooms-csv','export-rooms-xls','open-calendar','open-pay-calendar','calendar-backdrop','calendar-close','calendar-month','calendar-select','calendar-today','date-shift','date-today','toggle-section','clear-room-filters','pin-show','pin-hide','pin-edit','pin-clear','pin-random','pin-review','pin-back','pin-save','reservation-edit','new-reservation','save-reservation-v2','create-stayover','confirm-stayover','operation-status','confirm-operation-stop','resume-operation','candle-change','task-candle-change','direct-assign','confirm-direct-assign','cleaning-tab','assignment-type-filter','admin-maid-tab','go-today','go-workforce','go-work-history','go-payroll','go-complaints','go-cleaning-drafts','go-cleaning-assignment','go-inspection','go-open','go-schedule','go-my','go-maid-pay','toggle-maid-pay-week','clear-maid-pay-week','new-cleaning','confirm-new-cleaning','toggle-week-day','submit-week-availability','edit-week-availability','request-availability-change','move-assignment-order','save-assignments','set-availability','change-availability','confirm-off-active','claim-job','confirm-claim','start-cleaning','confirm-start','add-task-photo','add-task-photos','retry-task-photo','retry-all-task-photos','field-complete-v2','submit-cleaning-v2','approve-inspection-v2','reject-inspection-v2','confirm-approve-v2','confirm-reject-v2','toggle-payment','confirm-toggle-payment','confirm-reverse-payment','undo-payment','delete-complaint','undo-complaint','publish-selected','confirm-publish','retry-network','alerts','audit-log','rates','logout','request-cancel','confirm-request-cancel','rule-complaint-v2','ack-complaint','object-complaint','confirm-objection','close-complaint-v2','correct-complaint-v2','confirm-correct-complaint-v2','reclean-existing','reclean-republish','confirm-republish','demo-info','notification-permission','confirm-notification-permission']);
       ['resolve-conflict-v2','confirm-conflict-v2','deactivate-maid-v2','confirm-start-deactivation-v2','complete-deactivation-v2','admin-pay-week','export-rooms-xlsx','room-issue-photo','choose-room-issue-files','remove-room-issue-photo','save-room-issue'].forEach(action=>rebuiltActions.add(action));
 
       document.addEventListener('click', e => {
@@ -3223,6 +3282,11 @@
         if(a==='direct-assign'){openDirectAssign(id);return;}
         if(a==='confirm-direct-assign'){const name=document.getElementById('assign-maid')?.value||'',room=ROOMS.find(r=>r.no===id),maid=MAIDS.find(item=>item.name===name);if(!maid||availabilityFor(maid.id,assignmentDayIndex())!=='available'){toast('해당 날짜를 근무 가능으로 제출한 메이드만 배정할 수 있습니다.','error');return;}if(name==='김민지1'&&state.maidStatus!=='active'){toast('비활성 처리 중이거나 비활성인 메이드에게는 새 업무를 배정할 수 없습니다.','error');return;}if(room)room.assignee=name;state.jobs[id]='claimed';appendEvent(`${id}호 청소 직접 배정`,`${name} · 근무 가능 제출 확인 · 미시작 담당 구간 생성`);closeModal();render();toast(`${name}에게 ${id}호를 배정했습니다.`);return;}
         if(a==='cleaning-tab'){const tab=el.dataset.tab;state.cleaningTab=tab;render();requestAnimationFrame(()=>document.querySelector(`[data-action="cleaning-tab"][data-tab="${tab}"]`)?.focus());return;}
+        if(a==='assignment-type-filter'){
+          const type=el.dataset.type;
+          if(state.role!=='admin'||!['all',...Object.keys(ROOM_TYPES)].includes(type))return;
+          state.assignmentTypeFilter=type;render();requestAnimationFrame(()=>document.querySelector(`[data-action="assignment-type-filter"][data-type="${type}"]`)?.focus());return;
+        }
         if(a==='admin-maid-tab'){const tab=el.dataset.tab;state.adminMaidTab=tab;render();requestAnimationFrame(()=>document.querySelector(`[data-action="admin-maid-tab"][data-tab="${tab}"]`)?.focus());return;}
         if(a==='admin-pay-week'){
           if(!/^\d{4}-\d{2}-\d{2}$/.test(el.dataset.week||''))return;
@@ -3253,9 +3317,9 @@
           if(duplicate){toast(`${no}호 ${kind}은 이미 ${duplicate.source==='manual'?'직접 등록':'자동 포함'}된 청소대상입니다.`,'error');document.getElementById('new-cleaning-room')?.focus();return;}
           const room=ROOMS.find(item=>item.no===no)||ROOMS[0],templateSnapshot=templateSnapshotFor(no,kind),special=roomReservationStatus(room),target={id:key,room:no,type:room.type,kind,checkout:startTimeFor(no),checkin:special.checkin,deadline:shiftClockTime(special.checkin,-30)||'—',source:'manual',sourceLabel:'직접 등록'};
           if(kind==='연박 청소')Object.assign(target,{accessStart:'13:00',requestDue:'14:30',accessEnd:'15:00',deadline:'14:30'});
-          state.manualAssignmentTargets.push(target);assignmentFor(target);
+          state.manualAssignmentTargets.push(target);assignmentFor(target);state.assignmentTypeFilter=room.type;
           state.drafts.push({id:key,room:no,kind,created:state.time,date:state.assignmentDate,templateSnapshot,source:'manual'});
-          state.jobs[no]='draft';appendEvent(`${no}호 ${kind} 청소대상 직접 등록`,`${dateLabel(state.assignmentDate)} · ${templateSnapshot?.id||'데모 템플릿'} ${templateSnapshot?.version||''} 스냅샷 · 자동 대상과 중복 검사 완료`);closeModal();render();focusAfterRender(`[data-control="assignment-maid"][data-target="${key}"]`);toast(`${no}호 ${kind}을 내일 청소대상에 추가했습니다.`);return;
+          state.jobs[no]='draft';appendEvent(`${no}호 ${kind} 청소대상 직접 등록`,`${dateLabel(state.assignmentDate)} · ${templateSnapshot?.id||'데모 템플릿'} ${templateSnapshot?.version||''} 스냅샷 · 자동 대상과 중복 검사 완료`);historyReturnFocus={control:'assignment-maid',target:key};closeModal();render();focusAfterRender(`[data-control="assignment-maid"][data-target="${key}"]`);toast(`${no}호 ${kind}을 내일 청소대상에 추가했습니다.`);return;
         }
         if(a==='toggle-week-day'){
           if(state.availabilitySubmitted||state.availabilityChangeRequested||isLocked())return;
@@ -3601,6 +3665,7 @@
         if(/^2026-08-(0[1-9]|[12]\d|3[01])$/.test(params.get('date')||'')){state.selectedDate=params.get('date');state.calendarMonth=state.selectedDate.slice(0,7);}
         if(['all','available','blocked','cleaning','occupied','candle','early','late'].includes(params.get('filter')))state.roomFilter=params.get('filter');
         if(['all',...Object.keys(ROOM_TYPES)].includes(params.get('type')))state.roomTypeFilter=params.get('type');
+        if(['all',...Object.keys(ROOM_TYPES)].includes(params.get('assignmentType')))state.assignmentTypeFilter=params.get('assignmentType');
         if(/^\d{0,6}$/.test(params.get('q')||''))state.roomSearch=params.get('q')||'';
         const detailValue=params.get('detail');
         if(detailValue){state.detail=null;const separator=detailValue.indexOf(':'),type=separator>0?detailValue.slice(0,separator):'',id=separator>0?detailValue.slice(separator+1):'';if(detailAllowedForRole(type,state.role)&&id)state.detail={type,id,...(params.get('mode')?{mode:params.get('mode')}:{})};}
