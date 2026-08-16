@@ -43,6 +43,8 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-room-status-available-long-stay-1440.png',
   'WIREFRAME/QA/screenshots/admin-available-room-edit-390.png',
   'WIREFRAME/QA/screenshots/admin-assignment-elevator-1440.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-recommendation-1440.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-recommendation-390.png',
   'WIREFRAME/QA/screenshots/maid-bomb-room-report-390.png',
   'WIREFRAME/QA/screenshots/admin-bomb-room-inspection-390.png',
   'WIREFRAME/QA/screenshots/admin-bomb-room-payroll-1440.png',
@@ -86,6 +88,14 @@ if (!inlineScripts.length) throw new Error('No inline application script found.'
 for (const script of inlineScripts) new Function(script);
 if (/<(?:script|link)\b[^>]*(?:src|href)=["']https?:\/\//i.test(html)) {
   throw new Error('External script or stylesheet dependency found in WIREFRAME/index.html.');
+}
+const maidSource = html.match(/const MAIDS\s*=\s*\[([\s\S]*?)\n\s*\];/)?.[1];
+const maidIds = [...(maidSource || '').matchAll(/id:'(m\d+)'/g)].map((match) => match[1]);
+if (maidIds.length !== 9 || new Set(maidIds).size !== 9) {
+  throw new Error(`Large-team maid fixture mismatch: ${maidIds.length} rows / ${new Set(maidIds).size} unique IDs.`);
+}
+for (const contract of ['recommend-assignments', 'undo-assignment-recommendation', 'toggle-assignment-route', '마감 위험으로 대기']) {
+  if (!html.includes(contract)) throw new Error(`Assignment recommendation contract missing: ${contract}`);
 }
 
 const sourceIds = (source, label) => {
@@ -151,6 +161,7 @@ if (auditHash !== expectedAuditHash || indexHash !== expectedIndexHash) {
 
 console.log(`Required files: ${required.length}/${required.length}`);
 console.log(`Inline scripts parsed: ${inlineScripts.length}`);
+console.log(`Large-team assignment fixture: ${maidIds.length} maids`);
 console.log('Portable path scan: passed');
 console.log(`Room master contract: ${availableRoomCount} customer-assignable / ${longStayIds.length} long-stay / ${holdIds.length} hold`);
 console.log(`Final UX audit SHA-256: ${auditHash}`);
