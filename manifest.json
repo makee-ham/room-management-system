@@ -1,7 +1,7 @@
 {
   "package": "CASTLE THE ART room management wireframe",
-  "version": "2026-08-16-cleaning-assignment-payroll",
-  "generated_at_kst": "2026-08-16T12:15:23+09:00",
+  "version": "2026-08-16-august-room-catalog",
+  "generated_at_kst": "2026-08-16T14:33:01+09:00",
   "repository": "https://github.com/makee-ham/room-management-system",
   "entrypoint": "WIREFRAME/index.html",
   "policy_source": "DOCS/FINAL_UX_AUDIT.md",
@@ -11,7 +11,7 @@
   "qa_record": "WIREFRAME/QA.md",
   "sha256": {
     "DOCS/FINAL_UX_AUDIT.md": "8c868aa0d3601d58a49209dea1e766155a04edb935246c6b8f44c9741fe0af5b",
-    "WIREFRAME/index.html": "7e9e14e6a54bfdf99bfa8d77f15f00b596654ff80deb45f3ef24fb4513bf37f3"
+    "WIREFRAME/index.html": "06fb59fbf4542c07ac707d98e83cb3f15f2698d379c7f3d12315a9db5aaa63d8"
   },
   "runtime": {
     "build_required": false,
@@ -25,7 +25,7 @@
     768,
     1440
   ],
-  "data_classification": "deterministic demo data only",
+  "data_classification": "non-personal August room master plus deterministic demo operational fixtures",
   "excluded_from_git": [
     ".codex-remote-attachments/",
     "local caches",
