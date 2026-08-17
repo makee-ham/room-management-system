@@ -135,6 +135,21 @@ for (const contract of [
 if (html.includes('<span class="info-tip-mark" aria-hidden="true">!</span>')) {
   throw new Error('Legacy exclamation help glyph remains; use the ⓘ symbol.');
 }
+const availabilityPhaseStart = html.indexOf('function availabilitySubmissionPhase()');
+const availabilityPhaseSource = html.slice(availabilityPhaseStart, html.indexOf('function availabilityCell', availabilityPhaseStart));
+if (availabilityPhaseStart < 0) throw new Error('Maid availability submission phase source could not be resolved.');
+for (const contract of [
+  "AVAILABILITY_OPEN_TIME='12:00'",
+  "AVAILABILITY_CLOSE_TIME='23:59'",
+  'minutes<=closingMinutes',
+  '일요일 ${AVAILABILITY_OPEN_TIME}부터 ${AVAILABILITY_CLOSE_TIME}까지',
+  '일요일 23:59 마감 후',
+]) {
+  if (!html.includes(contract)) throw new Error(`Maid availability submission window contract missing: ${contract}`);
+}
+if (availabilityPhaseSource.includes("timeMinutes('22:00')") || /일요일[^\n]{0,40}22:00/.test(html)) {
+  throw new Error('Legacy Sunday 22:00 maid availability deadline remains.');
+}
 const maidSource = html.match(/const MAIDS\s*=\s*\[([\s\S]*?)\n\s*\];/)?.[1];
 const maidIds = [...(maidSource || '').matchAll(/id:'(m\d+)'/g)].map((match) => match[1]);
 if (maidIds.length !== 9 || new Set(maidIds).size !== 9) {
@@ -592,6 +607,9 @@ for (const contract of ['추가 검증 · 관리자 설명 간소화와 도움�
 for (const contract of ['추가 검증 · 메이드 설명 간소화와 도움말', '시나리오 코치 0개', 'maid-copy-cleanup-390.png', 'maid-info-tooltip-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Maid copy/help QA documentation missing: ${contract}`);
 }
+for (const contract of ['추가 검증 · 메이드 근무 가능일 제출 시간', '일요일 12:00부터 23:59까지 제출 가능', '일요일 11:59', '12:00', '22:15', '23:59', 'maid-weekly-availability-390.png']) {
+  if (!qa.includes(contract)) throw new Error(`Maid availability submission window QA contract missing: ${contract}`);
+}
 if (!/(?:실물|실기기)[^\n]{0,80}(?:후면 )?카메라[^\n]{0,120}(?:미검증|검증하지 못|확인하지 못)/.test(qa)) {
   throw new Error('Maid zone camera QA must distinguish static/browser checks from unverified physical-device camera behavior.');
 }
@@ -635,6 +653,7 @@ console.log('Per-maid weekly payment static contracts: passed');
 console.log('Admin copy/help static contracts: passed');
 console.log('Maid copy/help static contracts: passed');
 console.log('Maid photo-only workflow static contracts: passed');
+console.log('Maid availability submission window static contracts: passed');
 console.log('Portable path scan: passed');
 console.log(`Room master contract: ${catalogIds.length} rooms / ${initialOccupiedIds.length} initially occupied / ${dataIssueIds.length} data issue`);
 console.log(`Final UX audit SHA-256: ${auditHash}`);
