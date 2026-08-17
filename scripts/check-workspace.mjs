@@ -39,6 +39,11 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-weekly-work-history-calendar-390.png',
   'WIREFRAME/QA/screenshots/admin-room-catalog-1440.png',
   'WIREFRAME/QA/screenshots/admin-room-catalog-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-four-states-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-priority-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-stay-progress-390.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-early-late-1440.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-early-late-390.png',
   'WIREFRAME/QA/screenshots/admin-available-room-edit-390.png',
   'WIREFRAME/QA/screenshots/admin-room-info-edit-1440.png',
   'WIREFRAME/QA/screenshots/admin-room-info-edit-390.png',
@@ -187,6 +192,24 @@ if (!/occupancy:occupiedSeed\?'occupied':'vacant'/.test(html) || !/catalogStatus
 }
 if (/LONG_STAY_(?:ROOMS|ENDED_ROOMS)|long-?stay|장기투숙/i.test(html)) {
   throw new Error('Legacy long-stay UI or state contracts remain in WIREFRAME/index.html.');
+}
+for (const contract of [
+  "key:'blocked',tone:'red',status:'배정 불가'",
+  "key:'cleaning',tone:'amber',status:'청소 필요'",
+  "key:'occupied',tone:'neutral',status:'투숙 중'",
+  "key:'available',tone:'green',status:'배정 가능'",
+  'roomCleaningStageLabel(job)',
+  'cardReservationStatus(no)',
+  "{id:'reservation-demo-142'",
+  'label:`연박 ${day}/${total}일차`',
+]) {
+  if (!html.includes(contract)) throw new Error(`Four-state room card contract missing: ${contract}`);
+}
+const roomPresentationSource = html.slice(html.indexOf('function roomPresentation(no)'), html.indexOf('function renderPinRow', html.indexOf('function roomPresentation(no)')));
+const roomPresentationOrder = ["if(blockers.length)return", "if(cleaning)return", "if(room.occupancy==='occupied')return", "key:'available'"]
+  .map((marker) => roomPresentationSource.indexOf(marker));
+if (roomPresentationOrder.some((index) => index < 0) || roomPresentationOrder.some((index, position) => position && index <= roomPresentationOrder[position - 1])) {
+  throw new Error(`Room card priority must remain blocked > cleaning > occupied > available: ${roomPresentationOrder.join(', ')}`);
 }
 
 for (const contract of [
@@ -341,6 +364,12 @@ if (!/(?:실물|실기기)[^\n]{0,80}(?:후면 )?카메라[^\n]{0,120}(?:미검�
 }
 for (const contract of ['예약정보 수정·예약 취소', '카드·예약표 공통 설정', '기타 사유 상세', '같은 날짜 재예약 격리', '다중 예약 중 한 건', '독립 현장 청소 요청', '비공개 초안·현재 카드 정리', '예정 시각 경과·실제 투숙 경계', '공개·수행·랜덤 초안 경계', '최신 상태 재검사', 'admin-reservation-cancel-1440.png', 'admin-reservation-cancel-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Reservation cancellation QA contract missing: ${contract}`);
+}
+for (const contract of ['객실 카드 4개 주 상태·일정 우선 배지', '연박 진행 배지', '별도 주의 패널 없이', 'admin-room-four-states-1440.png', 'admin-room-stay-progress-390.png', 'admin-assignment-early-late-390.png']) {
+  if (!qa.includes(contract)) throw new Error(`Four-state room card QA contract missing: ${contract}`);
+}
+if (html.includes('내일 청소·일정 주의 한눈에') || html.includes('assignmentAttentionItems()')) {
+  throw new Error('Redundant assignment attention panel must stay removed.');
 }
 
 const audit = readFileSync(resolve(root, 'DOCS/FINAL_UX_AUDIT.md'));

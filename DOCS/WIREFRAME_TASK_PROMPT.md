@@ -8,10 +8,11 @@ CASTLE THE ART 관리자·메이드용 객실관리 앱의 클릭 가능한 반�
 
 1. `AGENTS.md`
 2. `DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md`
-3. `DOCS/FINAL_UX_AUDIT.md`
-4. `DOCS/14_CLICKABLE_WIREFRAME_HANDOFF.md`
-5. `WIREFRAME/README.md`
-6. `WIREFRAME/QA.md`
+3. `DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md`
+4. `DOCS/FINAL_UX_AUDIT.md`
+5. `DOCS/14_CLICKABLE_WIREFRAME_HANDOFF.md`
+6. `WIREFRAME/README.md`
+7. `WIREFRAME/QA.md`
 
 `CURRENT/index.html`, `HISTORY/`, `DOCS/01`~`DOCS/13`은 감사 근거와 시각 참고만 가능합니다. 기존 상태명·업무 규칙을 현재 제품 정책으로 되살리지 마세요.
 
@@ -24,6 +25,6 @@ CASTLE THE ART 관리자·메이드용 객실관리 앱의 클릭 가능한 반�
 
 실제 객실 번호·객실 타입 매핑·단가·예상시간·체크리스트는 아직 확정 전이므로 질문으로 멈추지 말고 제작 인계서의 `데모` 데이터로 진행합니다. 실제 서버·도어락·송금·푸시·동시성은 구현한 것처럼 주장하지 않고 클릭 가능한 결정적 시뮬레이션으로 표시합니다. PIN·고객 개인정보·사진 원본은 URL, 로그, 알림, 브라우저 영속 저장소에 넣지 않습니다.
 
-내비게이션과 버튼을 단순 전시하지 말고 대표 시나리오에서 카드·상태·배지·타임라인·가능 행동이 실제로 변하게 합니다. 청소 근무·담당 정책이 모호하면 `DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md`를 먼저 확인하고, 그 밖의 정책은 `DOCS/FINAL_UX_AUDIT.md`에서 확인합니다. 실제 운영 데이터가 아니면 합리적인 데모값으로 진행합니다. 최종 UX 감사 원문은 수정하지 않습니다.
+내비게이션과 버튼을 단순 전시하지 말고 대표 시나리오에서 카드·상태·배지·타임라인·가능 행동이 실제로 변하게 합니다. 청소 근무·담당 정책은 `DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md`, 객실 기준정보·점유·카드 주 상태·수동 체크아웃은 `DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md`를 먼저 확인하고, 그 밖의 정책은 `DOCS/FINAL_UX_AUDIT.md`에서 확인합니다. 실제 운영 데이터가 아니면 합리적인 데모값으로 진행합니다. 최종 UX 감사 원문은 수정하지 않습니다.
 
 완료 뒤에는 변경 파일, 대표 상호작용, 실제 테스트 결과, 남은 데모 한계를 간결하게 보고합니다.
