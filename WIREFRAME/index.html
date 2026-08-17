@@ -91,8 +91,9 @@
     .demo-strip-inner { display: flex; align-items: center; gap: 14px; min-height: 50px; padding: 6px clamp(12px, 2vw, 28px); }
     .demo-label { display: flex; align-items: center; gap: 8px; min-width: max-content; font-size: 13px; font-weight: 800; letter-spacing: .01em; }
     .demo-label .signal { width: 8px; height: 8px; border-radius: 50%; background: #f5bc54; box-shadow: 0 0 0 4px rgba(245,188,84,.15); }
-    .demo-toggle { display: none; margin-left: auto; color: #fff; border-color: rgba(255,255,255,.25); background: rgba(255,255,255,.08); }
-    .demo-controls { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+    .demo-toggle { display: inline-grid; place-items: center; margin-left: auto; color: #fff; border-color: rgba(255,255,255,.25); background: rgba(255,255,255,.08); }
+    .demo-controls { display: none; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+    .demo-strip.open .demo-controls { display: flex; }
     .demo-field { display: flex; align-items: center; gap: 6px; min-width: 0; }
     .demo-field label { color: #afbfcd; font-size: 12px; white-space: nowrap; }
     .demo-field select { height: 44px; max-width: 190px; min-width: 96px; padding: 0 30px 0 10px; border: 1px solid rgba(255,255,255,.22); border-radius: 8px; color: #fff; background: #19364f; }
@@ -663,6 +664,21 @@
     .complaint-row { display:grid; grid-template-columns:160px 100px minmax(0,1fr) 80px auto; gap:10px; align-items:center; padding:13px 14px; }
     .complaint-row + .complaint-row { border-top:1px solid var(--line); }
     .audit-note { color:var(--muted); font-size:12px; }
+    .admin-mode .audit-note { display:none; }
+    .help-title { display:flex; align-items:center; gap:7px; min-width:0; }
+    .help-title > :is(h2,h3) { margin:0; }
+    .info-tip { position:relative; display:inline-flex; flex:0 0 auto; }
+    .info-tip-trigger { display:grid; place-items:center; width:44px; height:44px; padding:9px; border:0; border-radius:50%; color:var(--navy); background:transparent; }
+    .info-tip-trigger:hover { color:var(--blue); background:transparent; }
+    .info-tip-trigger:focus-visible { color:var(--blue); background:transparent; outline:2px solid var(--blue); outline-offset:-5px; }
+    .info-tip-mark { display:grid; place-items:center; width:22px; height:22px; border:0; font-size:19px; font-weight:800; line-height:1; }
+    .info-tip-trigger[aria-expanded="true"] { color:var(--blue); background:transparent; }
+    .info-tip-panel { position:absolute; z-index:120; top:calc(100% + 4px); left:0; width:min(320px,calc(100vw - 32px)); max-height:min(240px,calc(100vh - 120px)); overflow:auto; padding:12px 14px; border:1px solid var(--line-strong); border-radius:11px; color:var(--ink); background:#fff; box-shadow:var(--shadow); font-size:13px; font-weight:500; line-height:1.55; text-align:left; white-space:normal; }
+    .info-tip.align-end .info-tip-panel { right:0; left:auto; }
+    .info-tip-panel[hidden] { display:none; }
+    @media (max-width:720px) {
+      .info-tip-panel,.info-tip.align-end .info-tip-panel { position:fixed; z-index:120; top:auto; right:12px; bottom:calc(var(--bottom-nav) + 12px + env(safe-area-inset-bottom)); left:12px; width:auto; max-height:40vh; }
+    }
 
     .calendar-backdrop { position:fixed; inset:0; z-index:210; display:grid; place-items:center; padding:18px; background:rgba(10,25,39,.5); }
     .calendar-dialog { width:min(420px,100%); padding:15px; border-radius:16px; background:#fff; box-shadow:0 30px 90px rgba(0,0,0,.25); }
@@ -2068,6 +2084,21 @@
       }
       function statusBadge(label, tone='neutral', iconName='') { return `<span class="badge badge-${tone}">${iconName ? icon(iconName,'icon-sm') : ''}${esc(label)}</span>`; }
       function button(label, action, variant='outline', extra='') { return `<button class="btn btn-${variant}" type="button" data-action="${action}" ${extra}>${esc(label)}</button>`; }
+      function infoTip(id,label,text,align='start') {
+        const safeId=String(id).replace(/[^a-zA-Z0-9_-]/g,'-'),panelId=`info-tip-${safeId}`;
+        return `<span class="info-tip ${align==='end'?'align-end':''}"><button class="info-tip-trigger" type="button" data-info-tip aria-label="${esc(label)} 사용 안내" aria-expanded="false" aria-controls="${panelId}"><span class="info-tip-mark" aria-hidden="true">ⓘ</span></button><span class="info-tip-panel" id="${panelId}" role="tooltip" hidden>${esc(text)}</span></span>`;
+      }
+      function closeInfoTips({restoreFocus=false}={}) {
+        const panels=[...document.querySelectorAll('.info-tip-panel:not([hidden])')],focusTarget=panels[0]?.closest('.info-tip')?.querySelector('[data-info-tip]');
+        panels.forEach(panel=>{const trigger=panel.closest('.info-tip')?.querySelector('[data-info-tip]');panel.hidden=true;trigger?.setAttribute('aria-expanded','false');trigger?.removeAttribute('aria-describedby');});
+        if(restoreFocus)focusTarget?.focus({preventScroll:true});
+        return panels.length>0;
+      }
+      function toggleInfoTip(trigger) {
+        const panel=document.getElementById(trigger.getAttribute('aria-controls')||'');if(!panel)return;
+        const opening=panel.hidden;closeInfoTips();
+        if(opening){panel.hidden=false;trigger.setAttribute('aria-expanded','true');trigger.setAttribute('aria-describedby',panel.id);}
+      }
       function focusAfterRender(selector='') { requestAnimationFrame(()=>{const target=selector?document.querySelector(selector):null;(target||document.getElementById('main-content'))?.focus?.({preventScroll:true});}); }
       function titleForView() {
         if (state.detail) {
@@ -2082,7 +2113,7 @@
         projectReservationState(state);
         const nav=currentNav();
         const app=document.getElementById('app');
-        app.className='';
+        app.className=state.role==='admin'?'admin-mode':'';
         app.innerHTML=`
           ${renderDemoStrip()}
           ${state.loggedIn ? `
@@ -2095,6 +2126,7 @@
             </div>
           </div>` : renderLogin()}
         `;
+        applyAdminCopyPolicy(app);
         document.documentElement.style.setProperty('--nav-count', nav.length);
         document.title=`${titleForView()} · CASTLE THE ART 데모`;
         syncUrlState();
@@ -2303,6 +2335,7 @@
           root.innerHTML=viewerMarkup;
         }
         else if(!pinKind)root.innerHTML=entry.modalHtml;
+        applyAdminCopyPolicy(root);
         modalTrigger=findHistoryFocusTarget(entry.trigger);if(entry.modalKind==='pin-editor')pinCardTrigger=modalTrigger;setModalBackgroundLocked(true);document.body.classList.add('modal-open');
         requestAnimationFrame(()=>{const restoredFocus=findHistoryFocusTarget(focusDescriptor);(restoredFocus&&root.contains(restoredFocus)?restoredFocus:root.querySelector('.calendar-day.selected, button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])'))?.focus();});
       }
@@ -2328,7 +2361,7 @@
       function renderDemoStrip() {
         return `<section class="demo-strip ${state.demoOpen?'open':''}" aria-label="데모 도구">
           <div class="demo-strip-inner">
-            <div class="demo-label"><span class="signal"></span>혼합 와이어프레임 · 객실 정본 + 운영 데모</div>
+            <div class="demo-label"><span class="signal"></span>데모 화면 · 실제 운영 데이터 아님</div>
             <button class="icon-btn demo-toggle" type="button" data-action="toggle-demo" aria-expanded="${state.demoOpen}" aria-label="데모 도구 ${state.demoOpen?'접기':'펼치기'}">${icon('settings')}</button>
             <div class="demo-controls">
               <div class="demo-field"><label for="demo-role">역할</label><select id="demo-role" data-control="role"><option value="admin" ${state.role==='admin'?'selected':''}>관리자</option><option value="maid" ${state.role==='maid'?'selected':''}>메이드</option></select></div>
@@ -2345,11 +2378,155 @@
       function renderSidebar(nav) {
         const maid=signedInMaid();
         return `<aside class="sidebar" aria-label="주요 내비게이션">
-          <div class="brand"><div class="brand-mark">CA</div><div><div class="brand-name">CASTLE THE ART</div><div class="brand-sub">객실관리 · 데모</div></div></div>
-          <div class="identity"><div class="avatar">${state.role==='admin'?'관':esc(maid.name[0])}</div><div><strong>${state.role==='admin'?'관리자 · 데모':`${esc(maid.name)} · 데모`}</strong><span>${state.role==='admin'?'최고 관리자':'메이드'}</span></div></div>
+          <div class="brand"><div class="brand-mark">CA</div><div><div class="brand-name">CASTLE THE ART</div><div class="brand-sub">객실관리</div></div></div>
+          <div class="identity"><div class="avatar">${state.role==='admin'?'관':esc(maid.name[0])}</div><div><strong>${state.role==='admin'?'관리자':esc(maid.name)}</strong><span>${state.role==='admin'?'최고 관리자':'메이드'}</span></div></div>
           <nav class="side-nav">${nav.map(n=>`<button class="nav-btn" type="button" data-action="nav" data-view="${n.id}" ${currentView()===n.id&&!state.detail?'aria-current="page"':''}>${icon(n.icon)}<span>${n.label}</span></button>`).join('')}</nav>
           <div class="side-foot">${button('로그인 상태 보기','logout','ghost')}</div>
         </aside>`;
+      }
+
+      function addAdminHelp(root,headingText,id,label,text,{rename=''}={}) {
+        [...root.querySelectorAll('h2,h3')].filter(heading=>heading.textContent.trim()===headingText).forEach((heading,index)=>{
+          if(rename)heading.textContent=rename;
+          if(heading.closest('.help-title'))return;
+          const wrapper=document.createElement('div');wrapper.className='help-title';heading.before(wrapper);wrapper.append(heading);wrapper.insertAdjacentHTML('beforeend',infoTip(`${id}-${index}`,label,text));
+        });
+      }
+      function addAdminHelpToElement(heading,id,label,text) {
+        if(!heading||heading.closest('.help-title'))return;
+        const wrapper=document.createElement('div');wrapper.className='help-title';heading.before(wrapper);wrapper.append(heading);wrapper.insertAdjacentHTML('beforeend',infoTip(id,label,text));
+      }
+      function applyMaidCopyPolicy(root) {
+        if(state.role!=='maid')return;
+        root.querySelectorAll('.scenario-coach,.week-card-head p,.weekly-availability .assignment-notice,.assigned-preview .meta,.assigned-preview > .audit-note,.work-hero p,.mobile-section-title p,.pay-week-toolbar p,.maid-pay-history-head p,.maid-pay-footnote').forEach(element=>element.remove());
+        root.querySelectorAll('.assignment-notice p').forEach(paragraph=>{const title=paragraph.querySelector('strong');if(title)paragraph.replaceChildren(title);});
+        root.querySelectorAll('.task-row p').forEach(paragraph=>{
+          if(paragraph.textContent.includes('해당 객실별 승인 합계'))paragraph.textContent=paragraph.textContent.replace('해당 객실별 승인 합계','승인 금액');
+          if(paragraph.textContent.includes('판정 확인 또는 이의 메모만 가능합니다'))paragraph.remove();
+        });
+        root.querySelectorAll('.pay-hero > span').forEach(label=>{label.textContent=label.textContent.replace(/\s*·\s*데모 (?:지급 이력|금액)$/,'');});
+        root.querySelectorAll('.maid-pay-week-head small').forEach(label=>{label.textContent=label.textContent.includes('지급 기록액')?'지급 기록액':'승인 확정';});
+        root.querySelectorAll('.maid-pay-week-stats span').forEach(label=>{if(label.textContent.trim()==='현재 원장 예상')label.textContent='예상 금액';});
+        root.querySelectorAll('.maid-pay-disclosure > span:first-child').forEach(label=>{label.textContent=label.textContent.replace('작업 상세','청소 내역');});
+        root.querySelectorAll('.maid-pay-task > div:first-child > span').forEach(label=>{label.textContent=label.textContent.replace(/\s*·\s*제출\/회차.*$/,'');});
+        root.querySelectorAll('.maid-pay-week .notice-danger strong').forEach(label=>{label.textContent=label.textContent.replace('현재 원장','현재 합계');});
+        root.querySelectorAll('.setting-card p').forEach(copy=>{
+          const text=copy.textContent.trim();
+          if(text==='담당·시작·완료·제출 이력')copy.textContent='최근 업무 확인';
+          if(text==='브라우저 알림 권한 전')copy.textContent='알림 권한 확인 필요';
+          if(text==='판정 확인·이의 메모만 가능')copy.textContent='판정과 답변 확인';
+        });
+        root.querySelectorAll('.detail-title p').forEach(subtitle=>{subtitle.textContent=subtitle.textContent.replace(/\s*·\s*v\d+(?:\.\d+)?\s*$/i,'').replace(/\s*·\s*데모\s*$/,'');});
+        root.querySelectorAll('h3').forEach(heading=>{if(heading.textContent.trim()==='수행·제출 타임라인')heading.textContent='진행 상황';});
+        root.querySelectorAll('.cleaning-section-body > .notice-warning').forEach(notice=>{if(/레이아웃 확인 보류|객실 프로필/.test(notice.textContent))notice.remove();});
+        root.querySelectorAll('.cleaning-section-body > .audit-note,.room-issue-form > .audit-note,.bomb-room-editor > .audit-note').forEach(note=>{if(/현재 탭|실제 서버|영속|흐름만 검증|지원 기기/.test(note.textContent))note.remove();});
+        root.querySelectorAll('.photo-template-banner .badge').forEach(badge=>{if(/타입 템플릿|레이아웃 확인 보류|사진 표본 확인/.test(badge.textContent))badge.remove();});
+        root.querySelectorAll('.photo-template-banner .badge-row').forEach(row=>{if(!row.children.length)row.remove();});
+        root.querySelectorAll('.timeline li span').forEach(copy=>{copy.textContent=adminAuditSummary(copy.textContent.replace(/\s*·\s*(?:이력 보존|조건 미충족)$/,''));});
+        root.querySelectorAll('.photo-meta .info-item').forEach(item=>{const label=item.querySelector('span');if(label&&/제출 버전|관리자 결정·회차|보존 상태/.test(label.textContent))item.remove();});
+        root.querySelectorAll('.photo-viewer-visual + .photo-meta ~ .audit-note').forEach(note=>note.remove());
+        const modalTitle=root.querySelector('#modal-title'),modalDescription=root.querySelector('#modal-desc');
+        if(modalTitle?.textContent.includes('내 업무 이력'))modalTitle.textContent='내 업무 이력';
+        if(modalTitle?.textContent.includes('내 알림'))modalTitle.textContent='내 알림';
+        if(modalTitle?.textContent.includes('알림 상태'))modalTitle.textContent='알림 상태';
+        if(modalTitle?.textContent.includes('알림을 켤까요'))modalTitle.textContent='알림을 켤까요?';
+        if(modalDescription&&/본인 담당·수행·응답 기록|이 브라우저|실제 운영에서는 브라우저 권한/.test(modalDescription.textContent))modalDescription.remove();
+        root.querySelectorAll('.notice-info').forEach(notice=>{
+          if(/허용 여부와 관계없이 앱 내부 알림/.test(notice.textContent)){notice.textContent='기기 알림을 켜도 앱 안 알림은 그대로 확인할 수 있습니다.';return;}
+          if(/정적 데모|정적 파일|현재 탭 메모리|브라우저의 화면 상태/.test(notice.textContent))notice.remove();
+        });
+        root.querySelectorAll('.rail-row span').forEach(copy=>{copy.textContent=copy.textContent.replace(/\s*·\s*내 담당 작업만 표시/g,'').replace(/\s*·\s*본인 기록만 확인/g,'').replace(/\s*·\s*객실별 합계/g,'');});
+        addAdminHelp(root,'8월 17일 (월)–8월 23일 (일)','maid-schedule','근무 가능일','다음 주에 일할 수 있는 요일을 모두 고른 뒤 제출하세요. 객실과 순서는 관리자가 각 근무일 전날 배정합니다.');
+        addAdminHelp(root,'배정된 내 업무','maid-assigned','배정된 업무','관리자가 통보한 업무만 표시합니다. 담당이나 순서가 바뀌면 알림에서 확인할 수 있습니다.');
+        root.querySelectorAll('.mobile-section-title h2').forEach((heading,index)=>{if(heading.textContent.trim().startsWith('내 업무 '))addAdminHelpToElement(heading,`maid-my-${index}`,'내 업무','관리자가 통보한 업무만 표시하며 청소는 한 번에 한 객실씩 진행합니다.');});
+        addAdminHelp(root,'지금까지 주급 내역','maid-pay','주급 내역','월요일부터 일요일까지 관리자 승인을 받은 청소비를 합산합니다. 검수 대기는 예상 금액에만 표시되고, 폭탄방 승인 시 해당 객실 기본요금과 같은 추가요금이 반영됩니다. 컴플레인·벌점은 자동 차감되지 않습니다.');
+        const cameraBanner=root.querySelector('.cleaning-sections .photo-template-banner');
+        if(cameraBanner&&!cameraBanner.previousElementSibling?.classList.contains('task-photo-help')){
+          const help=document.createElement('div');help.className='help-title task-photo-help';help.innerHTML=`<h3>촬영 방법</h3>${infoTip(`maid-camera-${state.detail?.id||'task'}`,'촬영 방법','구역별 체크와 필수 사진을 각각 완료하세요. 바로 촬영은 후면 카메라를 열고 갤러리는 저장된 사진을 선택합니다. 다시 촬영하면 해당 사진을 교체합니다.')}`;cameraBanner.before(help);
+        }
+        const notificationCard=[...root.querySelectorAll('.setting-card')].find(card=>card.querySelector('h3')?.textContent.trim()==='알림 설정');
+        if(notificationCard){const heading=notificationCard.querySelector('h3');addAdminHelpToElement(heading,'maid-notifications','알림 설정','기기 알림을 끄더라도 앱 안의 배정 변경·검수·주급 알림은 계속 확인할 수 있습니다.');}
+        const replacements=new Map([
+          ['데모 메모리 이미지','사진'],['현재 원장','현재 합계'],['객실별 원장','객실별 청소 내역'],['수익 원장','청소비 내역'],['새 청소비 내역','추가 청소비'],['스냅샷','기준'],['fixture','데모 기록'],['수행 회차','청소 작업'],['회차 종료','청소 종료'],['제출 버전','제출 내용'],['데모 지급 이력','지급 이력'],['데모 금액','금액'],['브라우저 세션','현재 기록']
+        ]);
+        const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+        nodes.forEach(node=>{if(node.parentElement?.closest('.demo-strip'))return;let value=node.nodeValue;for(const [from,to] of replacements)value=value.split(from).join(to);value=value.replace(/\b(?:ATT|SUB|REPORT|PAY|LEASE|work|target)-[A-Za-z0-9-]+\b/gi,'').replace(/\s*·\s*v\d+(?:\.\d+)?\b/gi,'').replace(/\s*·\s*데모(?:\s+(?:기록|지급 이력|금액))?/g,'').replace(/\(데모\)/g,'').replace(/\s{2,}/g,' ');node.nodeValue=value;});
+      }
+
+      function applyAdminCopyPolicy(root) {
+        if(state.role==='maid'){applyMaidCopyPolicy(root);return;}
+        if(state.role!=='admin')return;
+        root.querySelectorAll('.work-history-person-head p').forEach(paragraph=>{paragraph.textContent=paragraph.textContent.replace(/^당시 이름 스냅샷\s*·\s*/,'').replace(/\s*·\s*제출 버전.*$/,'');});
+        root.querySelectorAll('.pay-ledger-room p').forEach(paragraph=>{paragraph.textContent=paragraph.textContent.split(' · ').slice(0,3).join(' · ');});
+        root.querySelectorAll('.audit-note,.scenario-coach,.mobile-section-title p,.quick-booking-boundary,.quick-booking-guide-copy,.quick-booking-summary small,.quick-grid-status span:last-child,.assignment-random-copy p,.random-rule,.maid-order-lane-head p,.assignment-panel-head p,.maid-order-unassigned p,.assignment-target-rule,.work-history-unit-note,.work-history-contract,.work-history-hero p,.tab-header p,.pay-week-toolbar p,.pay-ledger-reconcile,.template-page > .notice-info,.template-row-version,.template-hero-stat,.template-hero p,.template-evidence,.template-timeline').forEach(element=>element.remove());
+        root.querySelectorAll('.cleaning-cost-foot').forEach(foot=>{const range=foot.querySelector('b');foot.replaceChildren(range||document.createTextNode(''));});
+        const costCard=root.querySelector('.cleaning-cost-card');
+        if(costCard)costCard.setAttribute('aria-label',`청소비 예상 지출. 오늘과 이번 주 금액을 확인하고 주급 정산으로 이동합니다.`);
+        root.querySelectorAll('.concept-cleaning-row').forEach(row=>{const strong=row.querySelector('strong'),copy=row.querySelector('div > span');if(strong?.textContent.includes('예약 없음')&&copy)copy.textContent='체크인·체크아웃 입력';});
+        const assignmentIntro=root.querySelector('.assignment-intro p');if(assignmentIntro)assignmentIntro.textContent=assignmentIntro.textContent.split(' · ')[0];
+        root.querySelectorAll('.assignment-normal,.assignment-table .cell-sub').forEach(element=>element.remove());
+        root.querySelectorAll('.assignment-route-reference').forEach(element=>{if(element.textContent.includes('담당 선택 후'))element.remove();});
+        const randomKicker=root.querySelector('.random-kicker');if(randomKicker)randomKicker.textContent='미배정 객실 자동 분배';
+        const randomLive=root.querySelector('.random-live');if(randomLive)randomLive.textContent=state.randomAssignmentSnapshot?`${state.randomAssignmentSummary?.assigned||0}건 배정됨 · 아래에서 수정하세요`:'미배정 객실만 배정합니다.';
+        const filterContext=root.querySelector('.assignment-filter-context span');if(filterContext)filterContext.innerHTML=`<strong>${esc(ROOM_TYPES[state.assignmentTypeFilter]?.name||'전체 객실 타입')}</strong> · 배정된 객실만 저장·통보`;
+        root.querySelectorAll('.template-group-head p').forEach(paragraph=>{paragraph.textContent=`${paragraph.textContent.split(' · ')[0]} · 기본 청소요금`;});
+        root.querySelectorAll('.template-group-head > .badge').forEach(badge=>badge.remove());
+        root.querySelectorAll('[data-action="admin-pay-detail"]').forEach(button=>{
+          button.textContent=button.textContent.replace('산출 보기','상세 보기');
+          button.setAttribute('aria-label',(button.getAttribute('aria-label')||'').replace(/현재 원장/g,'현재 합계').replace(/산출 근거 보기/g,'청소 내역 보기'));
+        });
+        root.querySelectorAll('.toggle-row span').forEach(span=>{if(['외부 송금을 시작하기 전입니다.','확정 지급액이 생기면 이 자리에서 기록합니다.'].includes(span.textContent.trim()))span.remove();});
+        const quickCopy=root.querySelector('.quick-booking-hero-copy');
+        if(quickCopy)quickCopy.innerHTML=`<span class="quick-booking-kicker">빠른 예약 등록</span><div class="help-title"><h2>간편 예약</h2>${infoTip('quick-booking','간편 예약','빈 날짜를 클릭하거나 같은 객실 행에서 가로로 드래그하세요. 터치는 0.35초 길게 누른 뒤 드래그합니다. 한 번 선택한 범위는 예약 한 건으로 저장됩니다.')}</div>`;
+        root.querySelectorAll('p').forEach(paragraph=>{if(!paragraph.closest('.notice')&&/서버 영속|fixture|스냅샷|불변 사용자 ID|PIN lease|식별값|이력 연결키|원장 비연결|예약 가능과 현재 입실 가능을 별도로 판단|사진 원본은 앱에 저장하지 않음/.test(paragraph.textContent))paragraph.remove();});
+        root.querySelectorAll('.meta').forEach(meta=>{if(/데모|스냅샷|정본/.test(meta.textContent))meta.remove();});
+        addAdminHelp(root,'총 청소요금을 먼저 맞추고 가까운 객실로 배정','random-assignment','랜덤 배정','근무 가능한 메이드의 총 청소요금이 비슷해지도록 먼저 나누고, 같은 엘리베이터와 가까운 호수를 다음 기준으로 사용합니다. 결과는 저장 전에 담당과 순서를 바꿀 수 있습니다.',{rename:'랜덤 배정'});
+        addAdminHelp(root,'메이드별 배정 객실·청소 순서','assignment-result','배정 결과 수정','객실별 담당 메이드를 바꾸고 위·아래 버튼으로 1번부터 순서를 정하세요. 담당과 순서가 정해진 객실만 저장·통보됩니다.',{rename:'배정 결과 수정'});
+        addAdminHelp(root,'내일 청소 배정','next-day-assignment','내일 청소 배정','근무 가능일을 제출한 메이드에게만 배정할 수 있습니다. 랜덤 배정 뒤에도 객실별 담당과 메이드별 청소 순서를 직접 바꾼 다음 저장·통보하세요.');
+        addAdminHelp(root,'주간 근무 기록','work-history','주간 근무 기록','명은 해당 기록이 있는 메이드 수이고, 일은 메이드별 기록 날짜를 합한 값입니다. 가능 제출·담당 통보·실근무 완료를 서로 다른 표시로 확인합니다.');
+        addAdminHelp(root,'주별 지급 이력','weekly-pay','주별 지급 이력','월요일부터 일요일까지의 승인 청소를 합산합니다. 검수 대기는 예상액에만, 전체 반려와 본인 재청소는 0원으로 표시됩니다.');
+        addAdminHelp(root,'객실 기본정보','room-basics','객실 기본정보','관리자는 객실 타입과 엘리베이터를 수정할 수 있습니다. 변경값은 새로 만드는 작업부터 적용되고 객실번호는 이 화면에서 바꿀 수 없습니다.');
+        addAdminHelp(root,'현재 투숙 상태','occupancy','현재 투숙 상태','투숙 중에는 지금 체크아웃하거나 투숙 중 청소를 요청할 수 있습니다. 지금 체크아웃하면 공실·청소 필요 상태로 바뀝니다.');
+        addAdminHelp(root,'예약·입퇴실','reservation-times','예약·입퇴실','한 고객의 체크인부터 체크아웃 순서로 입력합니다. 체크인 16:00보다 빠르거나 체크아웃 11:00보다 늦으면 자동으로 표시되고, 체크아웃 날짜에 퇴실 청소가 추가됩니다.');
+        addAdminHelp(root,'타입별 촬영 구역을 확인하세요','templates','청소 템플릿','객실 타입과 실제 침실·욕실 수에 맞춰 체크 항목과 촬영 구역을 정합니다. 수정한 내용은 새 작업부터 적용됩니다. 촬영할 때 연락처·얼굴·고객 물품·켜진 TV 화면이 나오지 않게 확인하세요.',{rename:'타입별 청소 템플릿'});
+        root.querySelectorAll('h3').forEach((heading,index)=>{if(/^왜 .+인가요\?$/.test(heading.textContent.trim()))addAdminHelpToElement(heading,`pay-detail-${index}`,'주급 계산','확정된 객실별 청소요금을 합산합니다. 폭탄방은 해당 객실만 기본요금을 한 번 더하고, 검수 대기 금액은 확정 주급에 포함하지 않습니다.');});
+        root.querySelectorAll('h3').forEach(heading=>{
+          const text=heading.textContent.trim();
+          if(text==='계산 규칙'||text==='객실 사건 타임라인')heading.closest('.card')?.remove();
+          if(text==='폭탄방 요금 원장')heading.textContent='폭탄방 청소비';
+          if(text==='저장된 전체 과거 주차')heading.textContent='과거 주차';
+        });
+        root.querySelectorAll('th').forEach(heading=>{if(heading.textContent.trim()==='청소 정보·등록 근거')heading.textContent='청소 유형';});
+        root.querySelectorAll('#modal-desc').forEach(description=>{
+          if(/이력 연결키|식별값/.test(description.textContent))description.textContent='객실 타입과 엘리베이터를 수정합니다.';
+          if(/시트 정본|예상시간만 데모/.test(description.textContent))description.textContent='객실 타입별 청소요금과 예상시간을 확인합니다.';
+        });
+        root.querySelectorAll('.field small').forEach(note=>{if(/PIN·청소·주급 이력|식별값/.test(note.textContent))note.remove();});
+        root.querySelectorAll('.field label').forEach(label=>{if(/예약 식별|예약 ID/.test(label.textContent))label.closest('.field')?.remove();});
+        root.querySelectorAll('.info-item').forEach(item=>{
+          const label=item.querySelector('span'),value=item.querySelector('strong');if(!label||!value)return;
+          if(/PIN lease 영향|lease 영향/.test(label.textContent)){label.textContent='PIN 조회 처리';value.textContent='기존 조회 종료 후 다시 확인';}
+          if(/이전 PIN lease/.test(label.textContent)){label.textContent='이전 PIN 조회';value.textContent='종료됨';}
+          if(/활성 PIN lease/.test(label.textContent)){label.textContent='활성 PIN 조회';value.textContent=value.textContent.replace(/^[^·]+/,'1건');}
+        });
+        root.querySelectorAll('.choice').forEach(choice=>{
+          const title=choice.querySelector('strong'),copy=title?.nextElementSibling;if(!title||!copy)return;
+          if(title.textContent.includes('작업 재계획 완료')){title.textContent='청소 일정 변경 완료';copy.textContent=copy.textContent.replace('기존 수행 회차','진행 중 청소').replace('새 회차','새 청소');}
+          if(title.textContent.includes('필요 PIN 교체')){title.textContent='도어락 PIN 확인 완료';copy.textContent='기존 PIN 조회를 끝내고 필요하면 PIN을 변경합니다.';}
+        });
+        root.querySelectorAll('.notice-info').forEach(notice=>{
+          if(/새 작업은 시트 청소요금을 스냅샷|기존 확정 이력은 당시 기록|새 담당 구간이 타임라인/.test(notice.textContent))notice.textContent=/담당/.test(notice.textContent)?'저장하면 담당 메이드에게 통보됩니다.':'변경한 청소요금은 새 작업부터 적용됩니다.';
+          if(/새 타입·엘리베이터는 이후 생성하는 작업/.test(notice.textContent))notice.textContent='변경한 정보는 새 작업부터 적용됩니다.';
+        });
+        const catalogCopy=root.querySelector('.catalog-summary-copy');
+        if(catalogCopy){const occupied=ROOMS.filter(room=>room.occupancy==='occupied').length,vacant=ROOMS.filter(room=>room.occupancy==='vacant'&&!roomIsOnHold(room.no)).length,hold=ROOMS.filter(room=>roomIsOnHold(room.no)).length;catalogCopy.querySelector('span').textContent=`투숙 중 ${occupied}개 · 공실 ${vacant}개 · 확인 필요 ${hold}개`;catalogCopy.insertAdjacentHTML('beforeend',infoTip('room-status','객실 상태','고객 배정 가능은 공실 중 청소·촛불·운영 조건까지 모두 준비된 객실에만 표시됩니다.'));}
+        const replacements=new Map([
+          ['객실별 청소 원장 합계','청소 내역 합계'],['객실별 청소 원장','객실별 청소 내역'],['주급 산출 원장','주급 청소 내역'],['현재 원장 예상','승인 시 예상'],['현재 원장','현재 합계'],['공통 원장 산식','청소 내역 합계'],['카드·예약표 공통 원장','예약 일정'],['다중 예약 원장','예약 일정'],['비공개 퇴실 청소 초안','퇴실 청소 미배정'],['잠근 지급 기록액','지급 기록액'],['잠근 지급액','지급 기록액'],['지급 진행 스냅샷','지급 진행 상태'],['원장 변동 · 정정 필요','금액 확인 필요'],['지급 대기(OPEN)','지급 대기'],['지급 진행(PAYING)','지급 진행'],['정산 확인 필요(CHECK)','정산 확인 필요'],['지급 완료(PAID)','지급 완료'],['송금하지 않음 · OPEN 복귀','송금하지 않음 · 지급 대기'],['OPEN 복귀','지급 대기 복귀'],['잠근 수익 ID','청소 내역'],['수익 ID','청소 내역'],['잠근 수익','청소 내역'],['포함 수익','청소 내역'],['미지급 수익','미지급 청소비'],['PIN lease','PIN 조회 기록'],['활성 lease','활성 PIN 조회'],['lease 영향','PIN 조회 영향'],['lease','PIN 조회'],['기존 수행 회차','기존 청소 작업'],['수행 회차','청소 작업'],['기존 회차','기존 청소 작업'],['기존 청소 작업는','기존 청소 작업은'],['새 회차 생성','새 청소 생성'],['중단 이력으로 보존','중단 처리하고'],['상태 재계산','상태 다시 확인'],['재계산 완료','확인 완료'],['재검증','다시 확인'],['충돌 종결','충돌 조치 완료'],['충돌 조치 완료·상태 다시 확인','조치 완료'],['종결 전','조치 완료 전'],['종결 시각','조치 시각'],['기존 사건 삭제 금지','현재 상태 변경 전 확인'],['체크아웃 투숙 상태 복원을 추가합니다.','체크아웃 시각까지 투숙 중으로 표시합니다.'],['투숙 상태 복원와','투숙 상태 복원과'],['점유 재개 보정','투숙 상태 복원'],['점유 보정','투숙 상태'],['점유 재개','투숙 상태 복원'],['보정 대기','변경 대기'],['보정 완료','변경 완료'],['보정 이벤트','변경 기록'],[' · 원문 미표시',''],['브라우저 시뮬레이션','데모 화면'],['정적 파일','데모 화면'],['fixture','데모 기록'],['fingerprint','확인값'],['예약 ID별','예약별'],['예약 ID','예약'],['예약 식별','예약'],['식별값','확인값'],['식별자','확인값'],['스냅샷','기준'],['수익 원장','청소 내역'],['폭탄방 요금 원장','폭탄방 청소비'],['산출 원장','청소 내역'],['원장','내역'],['시트 정본','기본 요금'],[' · 8월 시트',''],['제출 당시 기준','제출 당시 기준'],['제출 버전 고정','제출 내용'],['현재 활성 템플릿 상세','템플릿 상세'],[' · 상태 이력 보존',''],['메이드 지정 · 사유 입력 · 삭제/복구 이력','메이드별 기록 관리'],['PIN 원문을 제외한 예약·업무·지급 감사 이력','예약·업무·지급 변경 내역'],['시트 청소요금·데모 예상시간과 템플릿','청소요금과 사진 템플릿'],['로그인 비밀번호는 객실 PIN과 분리','계정과 로그인 설정'],['OPEN','지급 대기'],['PAYING','지급 진행'],['CHECK','정산 확인 필요'],['PAID','지급 완료']
+        ]);
+        const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+        nodes.forEach(node=>{if(node.parentElement?.closest('.demo-strip'))return;let value=node.nodeValue;for(const [from,to] of replacements)value=value.split(from).join(to);value=value.replace(/\bLEASE-[A-Za-z0-9-]+\b/g,'기존 PIN 조회').replace(/\s*·\s*데모/g,'').replace(/\(데모\)/g,'').replace(/투숙 상태 복원와/g,'투숙 상태 복원과').replace(/중단 처리하고하고/g,'중단 처리하고').replace(/기존 청소 작업는/g,'기존 청소 작업은').replace(/청소 작업를/g,'청소 작업을').replace(/데모 데모 기록/g,'데모 기록');node.nodeValue=value.trim()==='데모'?'':value;});
+        root.querySelectorAll('.info-item').forEach(item=>{const label=item.querySelector('span'),value=item.querySelector('strong');if(label?.textContent.trim()==='PIN 조회'&&value?.textContent.includes('기존 조회 종료'))label.textContent='PIN 조회 처리';});
+        root.querySelectorAll('.badge').forEach(badge=>{if(!badge.textContent.trim())badge.remove();});
       }
 
       function renderTopbar() {
@@ -2383,14 +2560,14 @@
       }
 
       function renderCoach() {
-        if (state.scenario===0) return '';
+        if (state.role==='admin'||state.scenario===0) return '';
         const cfg=SCENARIOS[state.scenario];
         return `<aside class="scenario-coach"><span class="step">${state.scenario}</span><div><strong>${esc(cfg.title)}</strong><p>${esc(cfg.next)}</p></div>${button('시나리오 재설정','reset','outline')}</aside>`;
       }
 
       function renderNetworkNotice() {
         if (state.network==='online' && state.listMode!=='stale') return '';
-        return `<div class="notice notice-danger">${icon('sync')}<div><strong>${state.network==='offline'?'오프라인 · 읽기 전용':'오래된 데이터 · 위험 행동 잠금'}</strong><br>마지막 정상 동기화 09:48. 가능일 제출·배정·상태 변경·PIN·검수·지급은 최신 상태 재검증 전까지 잠깁니다.</div>${button('다시 시도','retry-network','outline')}</div>`;
+        return `<div class="notice notice-danger">${icon('sync')}<div><strong>${state.network==='offline'?'오프라인 · 읽기 전용':'오래된 데이터 · 변경할 수 없음'}</strong><br>마지막 연결 09:48. 인터넷에 연결한 뒤 다시 시도하세요.</div>${button('다시 시도','retry-network','outline')}</div>`;
       }
 
       function renderListState(content, kind='queue') {
@@ -2607,7 +2784,7 @@
 
       function renderCleaningTimeline(no,job) {
         const stages=[['담당 확정','09:44',true],['객실 PIN 조회',no==='528'?'10:01':'—',job!=='claimed'],['청소 시작',no==='528'?'10:03':'—',['cleaning','upload','inspection','approved'].includes(job)],['현장 완료','—',['upload','inspection','approved'].includes(job)],['전체 제출','—',['inspection','approved'].includes(job)],['관리자 검수','—',job==='approved']];
-        return `<ol class="timeline">${stages.map(s=>`<li style="opacity:${s[2]?1:.45}"><strong>${s[0]}</strong><span>${s[2]?s[1]:'대기'} · ${s[2]?'이력 보존':'조건 미충족'}</span></li>`).join('')}</ol>`;
+        return `<ol class="timeline">${stages.map(s=>`<li style="opacity:${s[2]?1:.45}"><strong>${s[0]}</strong><span>${s[2]?s[1]:'대기'}</span></li>`).join('')}</ol>`;
       }
 
       function demoUploadImageFixture(key) {
@@ -2627,7 +2804,7 @@
       }
       function inspectionPhotoSvg(upload,label='') {
         if(upload.image?.objectUrl)return `<img src="${esc(upload.image.src)}" alt="${esc(label||upload.label)} 현장 촬영 이미지">`;
-        return `<svg viewBox="${esc(upload.image?.view||'0 0 852 1850')}" role="img" aria-label="${esc(label||upload.label)} 데모 업로드 이미지" preserveAspectRatio="xMidYMid slice"><image href="${esc(upload.image?.src||'')}" x="0" y="0" width="852" height="1850" preserveAspectRatio="none"></image></svg>`;
+        return `<svg viewBox="${esc(upload.image?.view||'0 0 852 1850')}" role="img" aria-label="${esc(label||upload.label)} 사진" preserveAspectRatio="xMidYMid slice"><image href="${esc(upload.image?.src||'')}" x="0" y="0" width="852" height="1850" preserveAspectRatio="none"></image></svg>`;
       }
       function inspectionPhotoTime(upload) { return String(upload?.image?.uploadedAt||'촬영 시각 없음').split(' ').pop(); }
       function renderInspectionGallery(no) {
@@ -2726,10 +2903,12 @@
         return `<div class="modal-backdrop" data-action="backdrop-close"><section class="modal ${large?'modal-lg':''}" role="dialog" aria-modal="true" aria-labelledby="modal-title"${subtitle?' aria-describedby="modal-desc"':''}><header class="modal-head"><div><h2 id="modal-title">${title}</h2>${subtitle?`<p id="modal-desc">${subtitle}</p>`:''}</div><button class="icon-btn" type="button" data-action="close-modal" aria-label="닫기">${icon('x')}</button></header><div class="modal-body">${body}</div><footer class="modal-foot ${secondaryAction?'has-secondary':''}">${secondary}${button(closeLabel,'close-modal','outline')}${confirmAction?button(confirmLabel,confirmAction,confirmVariant):''}</footer></section></div>`;
       }
       function showModal(options) {
+        closeInfoTips();
         const {trigger=document.activeElement,historyKind='generic',historyPayload=null,historyStack=false}=options;
         modalTrigger=trigger;
         const root=document.getElementById('modal-root');
         root.innerHTML=standardModalMarkup(options);
+        applyAdminCopyPolicy(root);
         setModalBackgroundLocked(true);document.body.classList.add('modal-open');
         registerModalHistory({stack:historyStack,kind:historyKind,payload:historyPayload});
         queueMicrotask(()=>{if(root.hasChildNodes()&&history.state?.layer==='modal')captureCurrentModalHistory();});
@@ -2749,7 +2928,11 @@
           historyTraversalOverride=route;historyTraversalPending=true;history.go(-depth);
         });
       }
-      function toast(message,type='') { const root=document.getElementById('toast-region');root.innerHTML=`<div class="toast ${type}" role="status">${esc(message)}</div>`;clearTimeout(toastTimer);toastTimer=setTimeout(()=>root.innerHTML='',3400);document.getElementById('assertive-live').textContent=message; }
+      function adminOperatorText(message) {
+        if(state.role!=='admin')return String(message||'');
+        return String(message||'').replace(/PIN lease|\blease\b/gi,'PIN 조회').replace(/수익 ID/g,'청소 내역').replace(/수익 원장|청소 원장|주급 원장/g,'청소 내역').replace(/스냅샷/g,'기준').replace(/fingerprint/gi,'확인값').replace(/수행 회차/g,'청소 작업').replace(/회차/g,'작업').replace(/미종결/g,'미완료').replace(/종결/g,'조치 완료').replace(/재계산/g,'다시 확인').replace(/충돌을 조치 완료하고/g,'충돌 조치를 완료하고').replace(/충돌을 조치 완료하지/g,'충돌 조치를 완료하지').replace(/청소 작업가/g,'청소 작업이').replace(/청소 작업를/g,'청소 작업을').replace(/담당·청소 작업·PIN 조회 조치 완료/g,'담당 변경·진행 중 청소·PIN 조회 확인').replace(/비공개 퇴실 청소 초안|퇴실 청소 초안/g,'퇴실 청소').replace(/\bOPEN\b/g,'지급 대기').replace(/\bPAYING\b/g,'지급 진행').replace(/\bCHECK\b/g,'정산 확인 필요').replace(/\bPAID\b/g,'지급 완료');
+      }
+      function toast(message,type='') { const display=adminOperatorText(message),root=document.getElementById('toast-region');root.innerHTML=`<div class="toast ${type}" role="status">${esc(display)}</div>`;clearTimeout(toastTimer);toastTimer=setTimeout(()=>root.innerHTML='',3400);document.getElementById('assertive-live').textContent=display; }
 
       function openReservation() {
         showModal({title:'예약 등록 · 데모',subtitle:'체크인과 체크아웃 일정을 입력하세요.',large:true,body:`<form id="reservation-form" class="form-grid"><div class="field"><label for="res-room">객실</label><select id="res-room" class="select-control"><option>211호 · 데모</option></select></div><div class="field"><label for="res-customer">고객 이름 · 선택</label><input id="res-customer" class="input-control" value="홍길동 (데모)"><small>관리자 예약 상세에서만 표시</small></div><div class="field"><label for="res-checkin">예정 체크인</label><input id="res-checkin" class="input-control" type="datetime-local" value="2026-08-15T16:00"></div><div class="field"><label for="res-checkout">예정 체크아웃</label><input id="res-checkout" class="input-control" type="datetime-local" value="2026-08-16T11:00"></div><div class="field"><label for="early">얼리 체크인</label><select id="early" class="select-control"><option>없음</option><option>1시간</option><option>2시간</option></select></div><div class="field"><label for="late">레이트 체크아웃</label><select id="late" class="select-control"><option>없음</option><option>1시간</option><option>2시간</option></select></div></form>`,confirmLabel:'예약 저장',confirmAction:'save-reservation',historyKind:'reservation',historyPayload:{room:'211'}});
@@ -4023,16 +4206,16 @@
       }
       function paymentStatusFor(weekStart,maidId) { return paymentRecordFor(weekStart,maidId).status; }
       function paymentDisplayAmount(record,currentConfirmed=0) { return ['PAYING','CHECK','PAID'].includes(record?.status)&&record?.amountSnapshot!=null&&Number.isFinite(Number(record.amountSnapshot))?Number(record.amountSnapshot):currentConfirmed; }
-      function paymentManagerLabel(record) { return record?.managerId==='admin-demo'?'관리자 · 데모':record?.managerId||'담당 관리자 미기록'; }
+      function paymentManagerLabel(record) { return record?.managerId==='admin-demo'?'관리자':record?.managerId||'담당 관리자 미기록'; }
       function paymentStatusMeta(weekStart,maidId,confirmed=0) {
         const stored=state.paymentRecords?.[paymentRecordKey(weekStart,maidId)],status=stored?.status||defaultPaymentStatus(weekStart);
-        if(stored?.status==='PAID')return {status,label:'지급 완료',tone:'green',locked:true,helper:`${paymentManagerLabel(stored)} · 외부 전액 송금 완료 기록됨 · 이후 차이는 정정·상계`};
-        if(stored?.status==='PAYING')return {status,label:'지급 진행',tone:'amber',locked:false,helper:`${paymentManagerLabel(stored)} · 금액·수익 ID 잠금 · 송금 완료 또는 미송금 사유를 기록`};
+        if(stored?.status==='PAID')return {status,label:'지급 완료',tone:'green',locked:true,helper:`${paymentManagerLabel(stored)} · 외부 송금 완료`};
+        if(stored?.status==='PAYING')return {status,label:'지급 진행',tone:'amber',locked:false,helper:`${paymentManagerLabel(stored)} · 송금 결과를 기록하세요`};
         if(stored?.status==='CHECK')return {status,label:'정산 확인 필요',tone:'red',locked:false,helper:`${paymentManagerLabel(stored)} · 송금 여부를 확인해 완료하거나 미송금 사유로 대기 복귀`};
         if(weekStart===CURRENT_PAYMENT_WEEK_START)return {status:'OPEN',label:'주차 마감 전',tone:'blue',locked:true,helper:'이번 주 적립 중 · 다음 월요일부터 지급 기록 가능'};
         if(confirmed<=0)return {status:'OPEN',label:'지급 대상 없음',tone:'neutral',locked:true,helper:'확정 지급액이 생기면 이 자리에서 기록합니다.'};
-        if(status==='PAID')return {status,label:'지급 완료',tone:'green',locked:true,helper:'외부 전액 송금 완료 기록됨 · 이후 차이는 정정·상계'};
-        return {status:'OPEN',label:'지급 대기',tone:'amber',locked:false,helper:'지급 진행을 선점한 뒤 외부 전액 송금을 확인합니다.'};
+        if(status==='PAID')return {status,label:'지급 완료',tone:'green',locked:true,helper:'외부 송금 완료'};
+        return {status:'OPEN',label:'지급 대기',tone:'amber',locked:false,helper:'외부 송금을 시작하기 전입니다.'};
       }
       function setPaymentStatusFor(context,status) {
         const key=paymentRecordKey(context.cfg.start,context.maid.id),confirmedTasks=context.tasks.filter(task=>task.stage==='confirmed'),previous=paymentRecordFor(context.cfg.start,context.maid.id);
@@ -4347,11 +4530,11 @@
         const report=reportOverride===undefined?bombRoomReport(no):reportOverride,meta=bombRoomStatusMeta(report),canCreate=!report&&maidCanCreateBombRoomReport(no,job),draft=bombRoomDraft(no),panelClass=report?.status==='approved'?' is-approved':report?.status==='rejected'?' is-rejected':'',wholeRejected=job==='inspection'&&state.inspections[no]==='rejected';
         const reportSubmission=report?.submissionId?validatedSubmission(state.cleaningSubmissions?.[report.submissionId]||null):null,activeAttempt=state.cleaningAttempts?.[currentAttemptId(no)],unpaidReclean=reportSubmission?.kind==='재청소'||(!report&&activeAttempt?.kind==='재청소'),panelTitle=unpaidReclean?'무급 재청소 요금 안내':'폭탄방 신고·2배 요금';
         const reportCopy=report?`<p>${esc(report.reportedBy)} · ${esc(report.reportedStage)} · ${esc(report.reportedAt)} · 이미지 ${report.photos?.length||0}장</p>`:unpaidReclean?'<p>전체 반려 뒤 품질 보완 회차 · 추가 정산 없음</p>':`<p>일반 청소 범위를 크게 넘는 상태일 때 이미지와 함께 알려 주세요.</p>`;
-        const editor=canCreate?`<div class="bomb-room-editor"><div class="field"><label for="bomb-room-note-${no}">폭탄방 메모 · 선택</label><textarea id="bomb-room-note-${no}" class="input-control" rows="3" data-control="bomb-room-note" data-room="${no}" placeholder="개인정보를 제외하고 오염 상태를 적어 주세요.">${esc(draft.note)}</textarea></div><input id="bomb-room-files-${no}" type="file" accept="image/*" multiple tabindex="-1" data-control="bomb-room-files" data-room="${no}"><div class="bomb-room-editor-actions"><button class="btn btn-outline" type="button" data-action="choose-bomb-room-files" data-room="${no}">${icon('camera','icon-sm')}이미지 선택</button><button class="btn btn-soft" type="button" data-action="add-demo-bomb-room-photos" data-room="${no}">데모 이미지 2장</button></div>${renderBombRoomDraftPhotos(no)}<button class="btn btn-primary btn-block" type="button" data-action="save-bomb-room-report" data-room="${no}" ${draft.photos.length?'':'disabled'}>폭탄방 신고 · 이미지 ${draft.photos.length}장</button><p class="audit-note" style="margin:0">현재 탭에서 흐름만 검증하는 데모입니다. 실제 서버 업로드·자동 지급은 하지 않습니다.</p></div>`:'';
+        const editor=canCreate?`<div class="bomb-room-editor"><div class="field"><label for="bomb-room-note-${no}">폭탄방 메모 · 선택</label><textarea id="bomb-room-note-${no}" class="input-control" rows="3" data-control="bomb-room-note" data-room="${no}" placeholder="개인정보를 제외하고 오염 상태를 적어 주세요.">${esc(draft.note)}</textarea></div><input id="bomb-room-files-${no}" type="file" accept="image/*" multiple tabindex="-1" data-control="bomb-room-files" data-room="${no}"><div class="bomb-room-editor-actions"><button class="btn btn-outline" type="button" data-action="choose-bomb-room-files" data-room="${no}">${icon('camera','icon-sm')}이미지 선택</button></div>${renderBombRoomDraftPhotos(no)}<button class="btn btn-primary btn-block" type="button" data-action="save-bomb-room-report" data-room="${no}" ${draft.photos.length?'':'disabled'}>폭탄방 신고 · 이미지 ${draft.photos.length}장</button></div>`:'';
         const decision=state.role==='admin'&&job==='inspection'&&report?.status==='pending'?`<div class="notice notice-warning" style="margin:0"><div><strong>전체 검수 결정 전에 폭탄방 여부를 먼저 결정해 주세요.</strong><br>인정하면 기본 요금과 같은 금액이 한 번만 추가됩니다.</div></div><div class="bomb-room-decision-actions"><button class="btn btn-outline" type="button" data-action="reject-bomb-room" data-id="${no}">폭탄방 미인정</button><button class="btn btn-success" type="button" data-action="approve-bomb-room" data-id="${no}">폭탄방 인정 · 2배</button></div>`:'';
         const reportSettled=!!earningRecordForReport(report);
         const result=wholeRejected?`<div class="notice notice-danger" style="margin:0"><div><strong>청소 전체 반려 · 적립 없음</strong><br>폭탄방 ${report?.status==='approved'?'인정':'미인정'} 결정과 증빙은 제출 이력에 보존하지만 이 제출의 주급은 0원입니다.</div></div>`:report?.status==='approved'?`<div class="notice notice-success" style="margin:0"><div><strong>관리자 폭탄방 인정</strong><br>${esc(report.decidedAt||'결정 기록')} · ${reportSettled?'전체 청소 승인으로 해당 객실의 같은 금액 추가요금이 확정됐습니다.':'전체 청소 승인 시 해당 객실의 같은 금액 추가요금이 확정됩니다.'}</div></div>`:report?.status==='rejected'?`<div class="notice notice-info" style="margin:0"><div><strong>관리자 폭탄방 미인정</strong><br>${esc(report.decisionReason||'일반 청소요금만 적용')} · ${reportSettled?'전체 청소 승인으로 기본 요금만 확정됐습니다.':'전체 청소 승인 시 기본 요금만 확정됩니다.'}</div></div>`:report?'<div class="notice notice-warning" style="margin:0"><div><strong>관리자 검수 대기</strong><br>증빙은 제출 내역에 보존되며 승인 전에는 추가 요금이 확정되지 않습니다.</div></div>':'';
-        const unpaidNotice=unpaidReclean?'<div class="notice notice-info" style="margin:0"><div><strong>재청소는 무급 0원입니다.</strong><br>처음 청소한 본인에게만 귀속되며 폭탄방 신고·추가요금·새 수익 원장을 만들지 않습니다.</div></div>':'';
+        const unpaidNotice=unpaidReclean?'<div class="notice notice-info" style="margin:0"><div><strong>재청소는 무급 0원입니다.</strong><br>처음 청소한 본인이 완료하며 폭탄방 신고와 추가 청소비는 없습니다.</div></div>':'';
         return `<div class="bomb-room-panel${panelClass}"><div class="bomb-room-head"><div><h4>${panelTitle}</h4>${reportCopy}</div>${statusBadge(wholeRejected?'청소 전체 반려 · 적립 없음':unpaidReclean?'재청소 · 무급':meta.label,wholeRejected?'red':unpaidReclean?'neutral':meta.tone)}</div>${bombRoomFeeMarkup(no,report,{wholeRejected})}${unpaidNotice}${report?.note?`<p class="bomb-room-note">${esc(report.note)}</p>`:''}${bombRoomPhotoGallery(no,report)}${result}${editor}${decision}</div>`;
       }
       function roomIssueRecords(no) {
@@ -4491,7 +4674,7 @@
         const currentMaid=signedInMaid(),weeks=adminPayWeeks().map((week,index)=>{const tasks=week.tasksByMaid?.[currentMaid.id]||[],totals=payrollTaskTotals(tasks),payment=paymentStatusMeta(week.start,currentMaid.id,totals.confirmed),record=paymentRecordFor(week.start,currentMaid.id),displayAmount=paymentDisplayAmount(record,totals.confirmed),paymentDrift=displayAmount!==totals.confirmed,paidAt=payment.status==='PAID'?(record.paidAt||`${payrollDateLabel(addIsoDays(week.start,7))} 지급 기록`):['PAYING','CHECK'].includes(record.status)?payment.label:index===0?'다음 월요일 지급 예정':payment.label;return {id:week.start,group:index===0?'current':index===1?'last':'older',label:index===0?'이번 주':index===1?'지난주':'이전 주',period:weekRangeLabel(week.start),confirmed:displayAmount,ledgerConfirmed:totals.confirmed,pending:totals.pending,paymentDrift,status:payment.label,tone:payment.tone,paidAt,tasks};}),current=weeks[0],selectedWeek=state.maidPaySelectedWeek,shown=selectedWeek?weeks.filter(week=>week.id===selectedWeek):weeks;
         const weekCard=week=>{const open=state.maidPayOpenWeek===week.id;return `<article class="card maid-pay-week"><div class="maid-pay-week-head"><div><span class="maid-pay-week-label">${week.label} · ${week.period}</span><strong>${money(week.confirmed)}</strong><small>${week.paymentDrift?'잠근 지급 기록액':'승인 확정'} · ${esc(currentMaid.name)} 데모 지급 이력</small></div>${statusBadge(week.status,week.tone)}</div>${week.paymentDrift?`<div class="notice notice-danger" style="margin:10px 0 0"><div><strong>현재 원장 ${money(week.ledgerConfirmed)}</strong><br>지급 기록액과의 차이는 관리자 정정·상계 대상으로 분리됩니다.</div></div>`:''}<div class="maid-pay-week-stats"><div><span>현재 원장 예상</span><strong>${money(week.ledgerConfirmed+week.pending)}</strong></div><div><span>검수 대기</span><strong>${money(week.pending)}</strong></div><div><span>지급 기록</span><strong>${week.paidAt}</strong></div></div><button class="maid-pay-disclosure" type="button" data-action="toggle-maid-pay-week" data-id="${week.id}" aria-expanded="${open}" aria-controls="maid-pay-week-${week.id}"><span>작업 상세 ${week.tasks.length}건</span><span>${open?'접기':'자세히 보기'} ${icon('chevronRight','icon-sm')}</span></button><div id="maid-pay-week-${week.id}" class="maid-pay-task-list" ${open?'':'hidden'}>${week.tasks.map(task=>`<div class="maid-pay-task"><div><strong>${esc(task.room)} · ${esc(task.kind)}</strong><span>${esc(task.date)} · ${esc(task.typeName)} · ${esc(task.elevator)}${task.roundLabel?` · 제출/회차 ${esc(task.roundLabel)}`:''}</span><span class="bomb-room-pay-breakdown">${esc(payrollTaskFormula(task))}</span>${task.reportId&&task.photoId?button('폭탄방 증빙 보기','bomb-room-photo','outline',`data-room="${task.roomNo}" data-report="${task.reportId}" data-photo="${task.photoId}"`):''}</div><div><b>${task.stage==='pending'?'승인 시 ':''}${money(task.stage==='excluded'?0:task.amount)}</b>${statusBadge(task.status,task.tone)}</div></div>`).join('')}</div></article>`;};
         const selectedLabel=selectedWeek?weekRangeLabel(selectedWeek,true):'달력에서 주차 선택',historyBody=shown.length?shown.map(weekCard).join(''):`<section class="inline-empty"><h3>${weekRangeLabel(selectedWeek,true)} 주급 기록이 없습니다</h3><p>해당 월요일–일요일 주차에는 저장된 데모 작업 이력이 없습니다.</p></section>`;
-        return renderCoach()+renderNetworkNotice()+`<div class="view-stack"><section class="card pay-hero"><span>이번 주 · ${weekRangeLabel(current.id)} · 데모 지급 이력</span><strong>${money(current.confirmed)}</strong><div class="pay-hero-grid"><div><span>검수 전 예상 포함</span><b>${money(current.confirmed+current.pending)}</b></div><div><span>검수 대기</span><b>${money(current.pending)}</b></div></div></section><div class="notice notice-warning"><div><strong>앱은 송금하지 않고 지급 여부만 기록합니다.</strong><br>청소 완료 후 관리자 검수 승인을 받은 금액만 확정됩니다. 폭탄방 승인 건은 해당 객실 기본요금과 같은 추가요금만 분리해 표시합니다.</div></div><div class="pay-week-toolbar"><div><h2>지금까지 주급 내역</h2><p>관리자와 같은 객실별 원장을 월요일–일요일 주차로 표시합니다.</p></div><button class="pay-week-picker" type="button" data-action="open-pay-calendar" data-context="maid-pay" aria-haspopup="dialog">${icon('calendar','icon-sm')}<span>${selectedLabel}</span>${icon('chevronRight','icon-sm')}</button></div><div class="maid-pay-history-head"><div><h2>${selectedWeek?'선택한 주차':'저장된 전체 주차'}</h2><p>${selectedWeek?weekRangeLabel(selectedWeek,true):`데모 ${weeks.length}주 · 최신순`}</p></div>${selectedWeek?button('전체 주차 보기','clear-maid-pay-week','outline'):''}</div><div class="maid-pay-history">${historyBody}</div><p class="maid-pay-footnote">객실 타입·기본 청소요금은 8월 운영 시트 정본이고, 인명·예약·과거 지급 이력은 기능 확인용 데모입니다. 컴플레인·벌점은 주급에서 자동 차감되지 않습니다.</p></div>`;
+        return renderCoach()+renderNetworkNotice()+`<div class="view-stack"><section class="card pay-hero"><span>이번 주 · ${weekRangeLabel(current.id)} · 데모 지급 이력</span><strong>${money(current.confirmed)}</strong><div class="pay-hero-grid"><div><span>검수 전 예상 포함</span><b>${money(current.confirmed+current.pending)}</b></div><div><span>검수 대기</span><b>${money(current.pending)}</b></div></div></section><div class="notice notice-warning"><div><strong>앱은 송금하지 않고 지급 여부만 기록합니다.</strong></div></div><div class="pay-week-toolbar"><div><h2>지금까지 주급 내역</h2><p>관리자와 같은 객실별 원장을 월요일–일요일 주차로 표시합니다.</p></div><button class="pay-week-picker" type="button" data-action="open-pay-calendar" data-context="maid-pay" aria-haspopup="dialog">${icon('calendar','icon-sm')}<span>${selectedLabel}</span>${icon('chevronRight','icon-sm')}</button></div><div class="maid-pay-history-head"><div><h2>${selectedWeek?'선택한 주차':'저장된 전체 주차'}</h2><p>${selectedWeek?weekRangeLabel(selectedWeek,true):`데모 ${weeks.length}주 · 최신순`}</p></div>${selectedWeek?button('전체 주차 보기','clear-maid-pay-week','outline'):''}</div><div class="maid-pay-history">${historyBody}</div><p class="maid-pay-footnote">객실 타입·기본 청소요금은 8월 운영 시트 정본이고, 인명·예약·과거 지급 이력은 기능 확인용 데모입니다. 컴플레인·벌점은 주급에서 자동 차감되지 않습니다.</p></div>`;
       }
       function renderMaidPay() {
         return renderMaidPayFromLedger();
@@ -4673,7 +4856,7 @@
       function taskUploadStatusText(upload) {
         if(upload.status==='uploading')return '사진 확인 중';
         if(upload.status==='failed')return '전송 실패 · 다시 촬영';
-        if(upload.status==='done')return upload.image?.objectUrl?'현장 촬영 완료':'데모 사진 완료';
+        if(upload.status==='done')return upload.image?.objectUrl?'현장 촬영 완료':'사진 완료';
         return upload.required?'필수 사진 없음':'선택 사진 없음';
       }
       function taskPhotoVisual(upload) {
@@ -4702,7 +4885,7 @@
         const editable=maidCanEditRoomIssue(no,job),bomb=bombRoomReport(no),bombMeta=bombRoomStatusMeta(bomb),groups=taskZoneGroups(task,snapshot);
         const completedChecks=(snapshot?.checklist||[]).filter(item=>task.checklist[item.id]).length,doneUploads=task.uploads.filter(upload=>upload.status==='done').length,type=ROOM_TYPES[snapshot?.typeId||ROOMS.find(room=>room.no===no)?.type||'standard'];
         const layout=snapshot?.layoutProfile,layoutBadge=layout?.verified?'사진 표본 확인':'레이아웃 확인 보류',layoutTone=layout?.verified?'green':'amber',requiredGroups=groups.filter(group=>group.checks.some(item=>item.required)||group.uploads.some(item=>item.required)),completedGroups=requiredGroups.filter(group=>group.checks.filter(item=>item.required).every(item=>task.checklist[item.id])&&group.uploads.filter(item=>item.required).every(item=>item.status==='done')).length;
-        return `<div class="cleaning-sections"><details open><summary>구역별 청소·촬영 <span>${completedGroups}/${requiredGroups.length} 구역</span></summary><div class="cleaning-section-body"><div class="photo-template-banner"><div><strong>${esc(type.name)} · ${esc(snapshot?.name||'퇴실 청소')} ${esc(snapshot?.version||'')}</strong><span>작업 생성 시 고정 · 체크와 사진은 각각 완료 · 필수 슬롯 ${requiredUploads.length}개</span></div><div class="badge-row">${statusBadge('타입 템플릿','blue')}${statusBadge(layoutBadge,layoutTone)}</div></div><div class="task-zone-progress"><div><span>구역 진행</span><strong>${completedGroups}/${requiredGroups.length} 구역</strong></div><div><span>청소 확인</span><strong>${completedChecks}/${snapshot?.checklist.length||0}</strong></div><div><span>사진 촬영</span><strong>${doneUploads}/${task.uploads.length}</strong></div></div><div class="task-zone-safety">${icon('shield','icon-sm')}<span><strong>촬영 전 개인정보를 확인하세요.</strong><br>연락처·얼굴·고객 물품·거울 속 사람·켜진 TV 화면은 촬영하지 않습니다.</span></div>${layout&&!layout.verified?`<div class="notice notice-warning"><div><strong>${no}호 레이아웃 확인 보류</strong><br>사진 근거가 없어 최소 공통 슬롯만 적용했습니다. 실제 침실·욕실 수 확인 뒤 객실 프로필을 확정해야 합니다.</div></div>`:''}<div class="task-zone-grid">${groups.map(group=>taskZoneCardMarkup(no,group,task,editable)).join('')}</div><p class="audit-note" style="margin:12px 0 0">카메라 버튼은 지원 기기에서 후면 카메라를 바로 요청합니다. 각 슬롯은 현재 사진 1장만 유지하며 재촬영 시 교체됩니다. 미리보기는 현재 탭 메모리에만 있고 실제 서버 전송·영속 보존은 연결되지 않은 데모입니다.</p></div></details><details><summary>폭탄방 신고 <span>${bombMeta.label}</span></summary><div class="cleaning-section-body">${renderBombRoomPanel(no,job)}</div></details><details><summary>객실 특이사항 <span>${visibleRoomIssueRecords(no).length}건 · 선택 ${task.issueDraft.photos.length}장</span></summary><div class="cleaning-section-body">${renderRoomIssueInput(no,editable)}</div></details>${occupied?'':`<details><summary>촛불 <span>${task.candle||0}개</span></summary><div class="cleaning-section-body"><p class="audit-note" style="margin:12px 0 0">청소 결과를 입력하는 동안만 객실의 최종 촛불 수량을 조정할 수 있습니다.</p><div class="candle-stepper" role="group" aria-label="${no}호 청소 결과 촛불 수량"><button class="btn btn-outline" type="button" data-action="task-candle-change" data-room="${no}" data-delta="-1" aria-label="촛불 1개 줄이기" ${!editable||task.candle<1?'disabled':''}>−</button><div class="candle-stepper-value" aria-live="polite"><strong>${task.candle||0}개</strong><span>청소 완료 후 객실 수량</span></div><button class="btn btn-outline" type="button" data-action="task-candle-change" data-room="${no}" data-delta="1" aria-label="촛불 1개 늘리기" ${!editable||task.candle>=9?'disabled':''}>+</button></div></div></details>`}</div>`;
+        return `<div class="cleaning-sections"><details open><summary>구역별 청소·촬영 <span>${completedGroups}/${requiredGroups.length} 구역</span></summary><div class="cleaning-section-body"><div class="photo-template-banner"><div><strong>${esc(type.name)} · ${esc(snapshot?.name||'퇴실 청소')}</strong><span>필수 사진 ${requiredUploads.length}장 · 체크와 사진을 모두 완료하세요.</span></div><div class="badge-row">${statusBadge(`${completedGroups}/${requiredGroups.length} 구역 완료`,completedGroups===requiredGroups.length?'green':'amber')}</div></div><div class="task-zone-progress"><div><span>구역 진행</span><strong>${completedGroups}/${requiredGroups.length} 구역</strong></div><div><span>청소 확인</span><strong>${completedChecks}/${snapshot?.checklist.length||0}</strong></div><div><span>사진 촬영</span><strong>${doneUploads}/${task.uploads.length}</strong></div></div><div class="task-zone-safety">${icon('shield','icon-sm')}<span><strong>촬영 전 개인정보를 확인하세요.</strong><br>연락처·얼굴·고객 물품·거울 속 사람·켜진 TV 화면은 촬영하지 않습니다.</span></div><div class="task-zone-grid">${groups.map(group=>taskZoneCardMarkup(no,group,task,editable)).join('')}</div></div></details><details><summary>폭탄방 신고 <span>${bombMeta.label}</span></summary><div class="cleaning-section-body">${renderBombRoomPanel(no,job)}</div></details><details><summary>객실 특이사항 <span>${visibleRoomIssueRecords(no).length}건 · 선택 ${task.issueDraft.photos.length}장</span></summary><div class="cleaning-section-body">${renderRoomIssueInput(no,editable)}</div></details>${occupied?'':`<details><summary>촛불 <span>${task.candle||0}개</span></summary><div class="cleaning-section-body"><p class="audit-note" style="margin:12px 0 0">청소 결과를 입력하는 동안만 객실의 최종 촛불 수량을 조정할 수 있습니다.</p><div class="candle-stepper" role="group" aria-label="${no}호 청소 결과 촛불 수량"><button class="btn btn-outline" type="button" data-action="task-candle-change" data-room="${no}" data-delta="-1" aria-label="촛불 1개 줄이기" ${!editable||task.candle<1?'disabled':''}>−</button><div class="candle-stepper-value" aria-live="polite"><strong>${task.candle||0}개</strong><span>청소 완료 후 객실 수량</span></div><button class="btn btn-outline" type="button" data-action="task-candle-change" data-room="${no}" data-delta="1" aria-label="촛불 1개 늘리기" ${!editable||task.candle>=9?'disabled':''}>+</button></div></div></details>`}</div>`;
       }
       function cleaningPrimary(no,job) {
         const req=taskRequirements(no),access=attemptAccessStatus(no);
@@ -4905,7 +5088,7 @@
         const room=ROOMS.find(item=>item.no===no),blockingAttempt=manualCheckoutBlockingAttempt(no),unstartedAttempt=activeUnfinishedAttempt(no),pinViewed=unstartedAttempt&&roomPinWasViewed(no,unstartedAttempt.id);
         if(!room||state.role!=='admin'||isLocked()||roomIsOnHold(no)||room.occupancy!=='occupied'){toast('관리자 최신 상태의 투숙 중 객실만 지금 체크아웃할 수 있습니다.','error');return;}
         if(blockingAttempt){toast(`진행 중인 ${blockingAttempt.kind} ${blockingAttempt.id}을 먼저 마무리하세요.`,'error');return;}
-        showModal({title:`${no}호 지금 체크아웃`,subtitle:'예정 체크아웃은 예약 이력으로 남기고 실제 퇴실만 지금 기록합니다.',trigger,body:`<div class="info-grid"><div class="info-item"><span>현재 상태</span><strong>투숙 중</strong></div><div class="info-item"><span>실제 체크아웃</span><strong>${dateLabel(state.selectedDate)} ${esc(state.time)}</strong></div><div class="info-item"><span>예정 체크아웃</span><strong>${esc(plannedCheckoutLabel(room))}</strong></div><div class="info-item"><span>처리 결과</span><strong>공실 · 퇴실 청소 필요</strong></div></div><div class="notice notice-warning" style="margin-top:14px"><div><strong>예약 취소가 아닙니다.</strong><br>예정 일정과 미래 예약은 보존하고, 오늘 퇴실 청소는 정확히 한 건만 유지합니다.${unstartedAttempt?'<br>이미 배정된 미시작 청소는 담당·회차를 유지하고 실제 퇴실 시각부터 시작할 수 있게 바뀝니다.':''}${pinViewed?'<br>이 회차의 기존 PIN 조회 lease는 종료하고 실제 퇴실 시각 기준으로 다시 조회하게 합니다.':''}</div></div>`,confirmLabel:'투숙 종료·청소 준비',confirmAction:'confirm-manual-checkout',confirmVariant:'danger'});
+        showModal({title:`${no}호 지금 체크아웃`,subtitle:'예정 일정은 남기고 실제 퇴실만 지금 기록합니다.',trigger,body:`<div class="info-grid"><div class="info-item"><span>현재 상태</span><strong>투숙 중</strong></div><div class="info-item"><span>실제 체크아웃</span><strong>${dateLabel(state.selectedDate)} ${esc(state.time)}</strong></div><div class="info-item"><span>예정 체크아웃</span><strong>${esc(plannedCheckoutLabel(room))}</strong></div><div class="info-item"><span>처리 결과</span><strong>공실 · 퇴실 청소 필요</strong></div></div><div class="notice notice-warning" style="margin-top:14px"><div><strong>예약 취소가 아닙니다.</strong><br>예정 일정과 미래 예약은 유지하고 오늘 퇴실 청소는 한 건만 만듭니다.${unstartedAttempt?'<br>이미 배정된 미시작 청소는 담당과 순서를 유지하고 실제 퇴실 시각부터 시작할 수 있습니다.':''}${pinViewed?'<br>기존 PIN 조회는 종료되며 실제 퇴실 시각 이후 다시 확인할 수 있습니다.':''}</div></div>`,confirmLabel:'투숙 종료·청소 준비',confirmAction:'confirm-manual-checkout',confirmVariant:'danger'});
         const confirm=document.querySelector('[data-action="confirm-manual-checkout"]');if(confirm){confirm.dataset.id=no;confirm.dataset.fingerprint=roomMasterFingerprint(room);}
       }
       function openManualCheckin(no,trigger=document.activeElement) {
@@ -4919,9 +5102,9 @@
         const room=ROOMS.find(item=>item.no===(requested?.room||String(roomNo)))||ROOMS.find(item=>item.no==='211')||ROOMS[0],roomReservations=activeReservationsFor(state,room.no),pivot=`${state.selectedDate}T00:00`,existing=requested||(!reservationId?(roomReservations.find(item=>item.checkOutAt>pivot)||roomReservations[0]||null):null),defaultDate=state.selectedDate,checkinAt=existing?.checkInAt||`${defaultDate}T${DEFAULT_CHECKIN_TIME}`,checkoutAt=existing?.checkOutAt||`${shiftIsoDate(defaultDate,1)}T${DEFAULT_CHECKOUT_TIME}`,cancelImpact=existing?reservationCancellationImpact(existing):null,historyReservationId=isNew?'__new__':requestedId||existing?.id||'';
         const roomOptions=ROOMS.filter(item=>item.no===room.no||!quickRoomBlockReason(item)).map(item=>`<option value="${item.no}" ${item.no===room.no?'selected':''}>${item.no}호 · ${esc(ROOM_TYPES[item.type].name)} · ${esc(item.elevator||'미기재')}</option>`).join('');
         const scheduleList=roomReservations.length?`<div class="field field-full"><div class="section-head" style="margin:0 0 8px"><h3 style="margin:0">${room.no}호 예약 ${roomReservations.length}건</h3></div><div class="rail-list" style="margin:0">${roomReservations.map(reservation=>{const assignment=cleaningAssignmentForReservation(reservation);return `<button class="rail-row" type="button" data-action="quick-reservation-edit" data-id="${esc(reservation.id)}" data-room="${room.no}" ${existing?.id===reservation.id?'aria-current="true"':''}><strong>${esc(quickRangeLabel(reservation))} · ${reservationNights(reservation)}박</strong><span>${esc(assignment.assigned?`${assignment.name} · ${assignment.status}`:'청소 미배정')} ${icon('chevronRight','icon-sm')}</span></button>`;}).join('')}</div></div>`:'';
-        const managementNotice=existing?`<div class="field field-full"><div class="notice ${cancelImpact.blockedReason?'notice-warning':'notice-info'}"><div><strong>${cancelImpact.blockedReason?'예약 취소 불가':'예약정보 수정 또는 취소'}</strong><br>${cancelImpact.blockedReason?esc(cancelImpact.blockedReason):'날짜·시각 오류는 위 값을 고쳐 저장하고, 예약 자체를 없애야 할 때만 아래 예약 취소에서 청소 영향을 먼저 확인합니다.'}</div></div></div>`:'';
+        const managementNotice=existing?`<div class="field field-full"><div class="notice ${cancelImpact.blockedReason?'notice-warning':'notice-info'}"><div><strong>${cancelImpact.blockedReason?'예약 취소 불가':'예약정보 수정 또는 취소'}</strong><br>${cancelImpact.blockedReason?esc(cancelImpact.blockedReason):'날짜·시각은 위에서 수정하고, 예약을 없앨 때만 예약 취소를 누르세요.'}</div></div></div>`:'';
         if(stale)return {room:room.no,reservationId:requestedId,title:`${room.no}호 예약을 다시 확인해 주세요`,subtitle:'열어 둔 예약이 이미 변경되었거나 취소되었습니다.',closeLabel:'닫기',large:true,body:`<div class="notice notice-warning"><div><strong>최신 예약 목록에서 다시 선택해 주세요.</strong></div></div>${scheduleList}`,confirmLabel:'',confirmAction:''};
-        return {room:room.no,reservationId:historyReservationId,title:`${room.no}호 ${existing?'예약 상세·변경':'예약 등록'} · 데모`,subtitle:existing?'체크인·체크아웃 일정과 퇴실 청소 담당을 확인하세요.':'체크인과 체크아웃 일정을 입력하세요.',closeLabel:'닫기',secondaryLabel:existing&&!cancelImpact.blockedReason?'예약 취소':'',secondaryAction:existing&&!cancelImpact.blockedReason?'reservation-cancel-review':'',secondaryVariant:'danger',secondaryExtra:existing?`data-id="${esc(existing.id)}" data-fingerprint="${esc(reservationFingerprint(existing))}"`:'',large:true,body:`<form id="reservation-form" class="form-grid"><input id="res-id" type="hidden" value="${esc(existing?.id||'')}"><input id="res-fingerprint" type="hidden" value="${esc(reservationFingerprint(existing))}"><div class="field"><label for="res-room">객실</label><select id="res-room" class="select-control" ${existing?'disabled aria-disabled="true"':''}>${roomOptions}</select><small>${existing?'기존 예약의 객실은 변경하지 않습니다.':'예약 가능한 객실만 표시합니다.'}</small></div><div class="field"><label for="res-checkin">1. 체크인 일시</label><input id="res-checkin" class="input-control" type="datetime-local" step="3600" value="${esc(checkinAt)}" required><small>기본 16:00 · 이보다 빠르면 얼리 체크인</small></div><div class="field"><label for="res-checkout">2. 체크아웃 일시</label><input id="res-checkout" class="input-control" type="datetime-local" step="3600" value="${esc(checkoutAt)}" required><small>기본 11:00 · 이보다 늦으면 레이트 체크아웃</small></div>${reservationPreviewMarkup(checkinAt,checkoutAt)}${managementNotice}${scheduleList}</form>`,confirmLabel:existing?'예약정보 수정 저장':'예약 접수',confirmAction:'save-reservation-v2'};
+        return {room:room.no,reservationId:historyReservationId,title:`${room.no}호 ${existing?'예약 상세·변경':'예약 등록'}`,subtitle:'체크인부터 체크아웃까지 한 고객의 일정을 입력합니다.',closeLabel:'닫기',secondaryLabel:existing&&!cancelImpact.blockedReason?'예약 취소':'',secondaryAction:existing&&!cancelImpact.blockedReason?'reservation-cancel-review':'',secondaryVariant:'danger',secondaryExtra:existing?`data-id="${esc(existing.id)}" data-fingerprint="${esc(reservationFingerprint(existing))}"`:'',large:true,body:`<form id="reservation-form" class="form-grid"><input id="res-id" type="hidden" value="${esc(existing?.id||'')}"><input id="res-fingerprint" type="hidden" value="${esc(reservationFingerprint(existing))}"><div class="field"><label for="res-room">객실</label><select id="res-room" class="select-control" ${existing?'disabled aria-disabled="true"':''}>${roomOptions}</select><small>${existing?'기존 예약의 객실은 변경하지 않습니다.':'예약 가능한 객실만 표시합니다.'}</small></div><div class="field"><label for="res-checkin">1. 체크인 일시</label><input id="res-checkin" class="input-control" type="datetime-local" step="3600" value="${esc(checkinAt)}" required><small>기본 16:00 · 이보다 빠르면 얼리 체크인</small></div><div class="field"><label for="res-checkout">2. 체크아웃 일시</label><input id="res-checkout" class="input-control" type="datetime-local" step="3600" value="${esc(checkoutAt)}" required><small>기본 11:00 · 이보다 늦으면 레이트 체크아웃</small></div>${reservationPreviewMarkup(checkinAt,checkoutAt)}${managementNotice}${scheduleList}</form>`,confirmLabel:existing?'예약정보 수정 저장':'예약 접수',confirmAction:'save-reservation-v2'};
       }
       function openReservation(roomNo='211',reservationId='') {
         const config=reservationModalConfig(roomNo,reservationId);
@@ -4941,15 +5124,15 @@
         if(!context||context.meta.locked||!['OPEN','PAYING','CHECK'].includes(context.meta.status)){toast(context?.meta.status==='PAID'?'지급 완료 기록은 직접 취소하지 않고 정정·상계로 처리합니다.':'현재 이 메이드의 지급 상태를 변경할 수 없습니다.','error');return;}
         const bindRecordAction=(action,expected=context.meta.status)=>{const target=document.querySelector(`[data-action="${action}"]`);if(target){target.dataset.week=context.cfg.start;target.dataset.maid=context.maid.id;target.dataset.expected=expected;target.dataset.record=paymentRecordFingerprint(context.record);}};
         if(context.meta.status==='PAYING'){
-          showModal({title:`${context.maid.name} 송금 결과를 기록할까요?`,subtitle:`${weekRangeLabel(context.cfg.start,true)} · 지급 진행에서 잠근 전액과 수익 ID를 사용합니다.`,trigger,body:`<div class="notice notice-warning"><div><strong>실제 전액 송금이 끝난 경우에만 완료하세요.</strong><br>송금 여부가 불명확하면 확인 필요로 잠그고, 송금하지 않았다면 필수 사유를 남겨 지급 대기로 돌립니다.</div></div><div class="info-grid"><div class="info-item"><span>메이드</span><strong>${esc(context.maid.name)}</strong></div><div class="info-item"><span>담당 관리자</span><strong>${esc(paymentManagerLabel(context.record))}</strong></div><div class="info-item"><span>잠근 전액</span><strong>${money(context.record.amountSnapshot||0)} · 데모</strong></div><div class="info-item"><span>잠근 수익</span><strong>${context.record.taskIds.length}건</strong></div><div class="info-item"><span>지급 진행 시작</span><strong>${esc(context.record.startedAt||'기록됨')}</strong></div></div><div class="field" style="margin-top:14px"><label for="payment-resolution-reason">송금하지 않음 사유</label><textarea id="payment-resolution-reason" class="input-control" rows="3" placeholder="예: 계좌 확인 전이라 송금하지 않음"></textarea><small>지급 대기(OPEN)로 복귀할 때 필수이며 감사 이력에 남습니다.</small></div><div class="job-actions" style="margin-top:12px">${button('송금 여부 확인 필요','mark-payment-check','outline')}${button('송금하지 않음 · 대기 복귀','confirm-payment-open-v2','outline')}</div>`,confirmLabel:'외부 송금 완료 기록',confirmAction:'confirm-finish-payment',confirmVariant:'success'});
+          showModal({title:`${context.maid.name} 송금 결과를 기록할까요?`,subtitle:`${weekRangeLabel(context.cfg.start,true)} · 이번 지급액과 청소 내역을 확인합니다.`,trigger,body:`<div class="notice notice-warning"><div><strong>실제 전액 송금이 끝난 경우에만 완료하세요.</strong><br>송금 여부가 불명확하면 확인 필요로 두고, 송금하지 않았다면 사유를 남겨 지급 대기로 돌립니다.</div></div><div class="info-grid"><div class="info-item"><span>메이드</span><strong>${esc(context.maid.name)}</strong></div><div class="info-item"><span>담당 관리자</span><strong>${esc(paymentManagerLabel(context.record))}</strong></div><div class="info-item"><span>이번 지급액</span><strong>${money(context.record.amountSnapshot||0)} · 데모</strong></div><div class="info-item"><span>청소 내역</span><strong>${context.record.taskIds.length}건</strong></div><div class="info-item"><span>지급 진행 시작</span><strong>${esc(context.record.startedAt||'기록됨')}</strong></div></div><div class="field" style="margin-top:14px"><label for="payment-resolution-reason">송금하지 않음 사유</label><textarea id="payment-resolution-reason" class="input-control" rows="3" placeholder="예: 계좌 확인 전이라 송금하지 않음"></textarea><small>지급 대기로 돌아갈 때 필수이며 변경 이력에 남습니다.</small></div><div class="job-actions" style="margin-top:12px">${button('송금 여부 확인 필요','mark-payment-check','outline')}${button('송금하지 않음 · 대기 복귀','confirm-payment-open-v2','outline')}</div>`,confirmLabel:'외부 송금 완료 기록',confirmAction:'confirm-finish-payment',confirmVariant:'success'});
           bindRecordAction('confirm-finish-payment','PAYING');bindRecordAction('mark-payment-check','PAYING');bindRecordAction('confirm-payment-open-v2','PAYING');return;
         }
         if(context.meta.status==='CHECK'){
-          showModal({title:`${context.maid.name} 지급 결과를 다시 확인하세요`,subtitle:`${weekRangeLabel(context.cfg.start,true)} · 확인 필요 상태에서는 자동으로 지급 대기로 돌아가지 않습니다.`,trigger,body:`<div class="notice notice-danger"><div><strong>외부 송금 결과를 확인한 뒤 한 가지 결과만 기록하세요.</strong><br>완료라면 잠근 금액과 수익 ID로 지급 완료를 기록하고, 미송금이면 사유를 남겨 지급 대기로 복귀합니다.</div></div><div class="info-grid"><div class="info-item"><span>담당 관리자</span><strong>${esc(paymentManagerLabel(context.record))}</strong></div><div class="info-item"><span>잠근 전액</span><strong>${money(context.record.amountSnapshot||0)} · 데모</strong></div><div class="info-item"><span>잠근 수익</span><strong>${context.record.taskIds.length}건</strong></div><div class="info-item"><span>지급 진행 시작</span><strong>${esc(context.record.startedAt||'기록됨')}</strong></div></div><div class="field" style="margin-top:14px"><label for="payment-resolution-reason">송금하지 않음 사유</label><textarea id="payment-resolution-reason" class="input-control" rows="3" placeholder="예: 계좌 오류를 확인해 송금하지 않음"></textarea><small>지급 대기(OPEN)로 복귀할 때 필수이며 감사 이력에 남습니다.</small></div><div class="job-actions" style="margin-top:12px">${button('송금하지 않음 · 대기 복귀','confirm-payment-open-v2','outline')}</div>`,confirmLabel:'외부 송금 완료 재기록',confirmAction:'confirm-finish-payment',confirmVariant:'success'});
+          showModal({title:`${context.maid.name} 지급 결과를 다시 확인하세요`,subtitle:`${weekRangeLabel(context.cfg.start,true)} · 송금 결과를 확인해 상태를 정합니다.`,trigger,body:`<div class="notice notice-danger"><div><strong>외부 송금 결과를 확인한 뒤 한 가지 결과만 기록하세요.</strong><br>완료라면 이번 지급액과 청소 내역으로 지급 완료를 기록하고, 미송금이면 사유를 남겨 지급 대기로 돌아갑니다.</div></div><div class="info-grid"><div class="info-item"><span>담당 관리자</span><strong>${esc(paymentManagerLabel(context.record))}</strong></div><div class="info-item"><span>이번 지급액</span><strong>${money(context.record.amountSnapshot||0)} · 데모</strong></div><div class="info-item"><span>청소 내역</span><strong>${context.record.taskIds.length}건</strong></div><div class="info-item"><span>지급 진행 시작</span><strong>${esc(context.record.startedAt||'기록됨')}</strong></div></div><div class="field" style="margin-top:14px"><label for="payment-resolution-reason">송금하지 않음 사유</label><textarea id="payment-resolution-reason" class="input-control" rows="3" placeholder="예: 계좌 오류를 확인해 송금하지 않음"></textarea><small>지급 대기로 돌아갈 때 필수이며 변경 이력에 남습니다.</small></div><div class="job-actions" style="margin-top:12px">${button('송금하지 않음 · 대기 복귀','confirm-payment-open-v2','outline')}</div>`,confirmLabel:'외부 송금 완료 재기록',confirmAction:'confirm-finish-payment',confirmVariant:'success'});
           bindRecordAction('confirm-finish-payment','CHECK');bindRecordAction('confirm-payment-open-v2','CHECK');return;
         }
         const confirmedTasks=context.tasks.filter(task=>task.stage==='confirmed'),bombTasks=confirmedTasks.filter(task=>task.bombBonus>0),bombText=bombTasks.length?bombTasks.map(task=>`${task.room} · ${money(task.baseAmount)} + ${money(task.bombBonus)} = ${money(task.amount)}`).join('<br>'):'해당 없음';
-        showModal({title:`${context.maid.name} 지급 진행을 시작할까요?`,subtitle:`${weekRangeLabel(context.cfg.start,true)} · 외부 송금 직전의 전액과 수익 ID를 잠급니다.`,trigger,body:`<div class="notice notice-warning"><div><strong>앱은 송금하지 않고 지급 진행 스냅샷만 기록합니다.</strong><br>잠근 뒤 외부 전액 송금을 마치고 같은 메이드 스위치에서 지급 완료를 기록하세요. 다른 메이드 상태는 바뀌지 않습니다.</div></div><div class="info-grid"><div class="info-item"><span>메이드</span><strong>${esc(context.maid.name)}</strong></div><div class="info-item"><span>지급 주차</span><strong>${weekRangeLabel(context.cfg.start)}</strong></div><div class="info-item"><span>잠글 전액</span><strong>${money(context.totals.confirmed)} · 데모</strong></div><div class="info-item"><span>확정 청소</span><strong>${confirmedTasks.length}건</strong></div><div class="info-item field-full"><span>폭탄방 포함 내역</span><strong>${bombText}</strong></div></div>`,confirmLabel:'지급 진행 시작',confirmAction:'confirm-toggle-payment',confirmVariant:'primary'});
+        showModal({title:`${context.maid.name} 지급 진행을 시작할까요?`,subtitle:`${weekRangeLabel(context.cfg.start,true)} · 이번 지급액과 청소 내역을 확정합니다.`,trigger,body:`<div class="notice notice-warning"><div><strong>앱은 송금하지 않고 지급 여부만 기록합니다.</strong><br>외부 송금을 마친 뒤 같은 메이드 스위치에서 지급 완료를 기록하세요. 다른 메이드 상태는 바뀌지 않습니다.</div></div><div class="info-grid"><div class="info-item"><span>메이드</span><strong>${esc(context.maid.name)}</strong></div><div class="info-item"><span>지급 주차</span><strong>${weekRangeLabel(context.cfg.start)}</strong></div><div class="info-item"><span>이번 지급액</span><strong>${money(context.totals.confirmed)} · 데모</strong></div><div class="info-item"><span>확정 청소</span><strong>${confirmedTasks.length}건</strong></div><div class="info-item field-full"><span>폭탄방 포함 내역</span><strong>${bombText}</strong></div></div>`,confirmLabel:'지급 진행 시작',confirmAction:'confirm-toggle-payment',confirmVariant:'primary'});
         const confirm=document.querySelector('[data-action="confirm-toggle-payment"]');if(confirm){confirm.dataset.week=context.cfg.start;confirm.dataset.maid=context.maid.id;confirm.dataset.expected='OPEN';confirm.dataset.amount=String(context.totals.confirmed);confirm.dataset.tasks=paymentTaskFingerprint(context);}
       }
 
@@ -5039,11 +5222,20 @@
         showModal({title:'알림 현황 · 데모',subtitle:'푸시 수신 여부와 관계없이 해결 전 사건은 앱 안에 남습니다.',large:true,trigger,body:`<div class="rail-list">${items.map(([title,detail])=>`<div class="rail-row">${icon('bell','icon-sm')}<strong>${esc(title)}</strong><span>${esc(detail)}</span></div>`).join('')}</div>`});
       }
 
+      function adminAuditSummary(detail) {
+        if(/실제 서버 작업|브라우저 시뮬레이션/.test(String(detail||'')))return '데모 초기 상태';
+        const parts=String(detail||'').split(' · ').map(part=>part.trim()).filter(Boolean).filter(part=>!/(?:\b(?:CL|ATT|SUB|PAY|LEASE|work|target|manual|auto)-[A-Za-z0-9-]+\b|스냅샷|fingerprint|수익 ID|fixture|템플릿 ID|수행 회차 ID|회차 [A-Za-z0-9-]+)/i.test(part));
+        const summary=parts.map(part=>part.replace(/PIN lease|lease/gi,'PIN 조회').replace(/\b(?:OPEN|PAYING|CHECK|PAID)\b/g,'')).filter(Boolean).slice(0,3).join(' · ');
+        return summary||'변경 내용 확인';
+      }
+      function adminAuditTitle(title) {
+        return String(title||'').replace('지급 진행 선점','지급 진행 시작').replace('데모 상태 초기화','데모 초기화').replace(/종결/g,'조치 완료');
+      }
       function openActionAuditLog(trigger=document.activeElement) {
         const maid=signedInMaid();
         const visibleEvents=state.role==='maid'?state.events.filter(event=>Array.isArray(event.maidIds)&&event.maidIds.includes(maid.id)):state.events;
-        const events=visibleEvents.length?visibleEvents:[{title:state.role==='maid'?'내 업무 기록 없음':'기록 없음',time:state.time,detail:state.role==='maid'?'이 브라우저 세션에서 본인에게 연결된 변경이 없습니다.':'아직 이 브라우저 세션에서 발생한 변경이 없습니다.'}];
-        showModal({title:state.role==='maid'?'내 업무 이력 · 데모':'최근 감사 이력 · 데모',subtitle:`${state.role==='maid'?'본인 담당·수행·응답 기록만 표시합니다. · ':''}PIN 원문·로그인 비밀번호·휴대폰 원문은 기록하지 않습니다.`,large:true,trigger,body:`<ol class="timeline">${events.map(event=>`<li><strong>${esc(event.title)}</strong><span>${esc(event.time)} · ${esc(event.detail)}</span></li>`).join('')}</ol>`});
+        const events=visibleEvents.length?visibleEvents:[{title:state.role==='maid'?'내 업무 기록 없음':'기록 없음',time:state.time,detail:state.role==='maid'?'아직 표시할 업무 변경이 없습니다.':'아직 표시할 변경이 없습니다.'}];
+        showModal({title:state.role==='maid'?'내 업무 이력':'최근 변경 이력',subtitle:state.role==='maid'?'':'PIN·비밀번호·휴대폰 번호는 표시하지 않습니다.',large:true,trigger,body:`<ol class="timeline">${events.map(event=>`<li><strong>${esc(adminAuditTitle(event.title))}</strong><span>${esc(event.time)} · ${esc(adminAuditSummary(event.detail))}</span></li>`).join('')}</ol>`});
       }
 
       function openActionRates(trigger=document.activeElement) {
@@ -5051,8 +5243,8 @@
       }
 
       function openAccountStatus(trigger=document.activeElement) {
-        const account=state.role==='admin'?'관리자 데모':`${signedInMaidName()} · 메이드 데모`;
-        showModal({title:'계정·로그인 상태',subtitle:'로그인 비밀번호와 객실 4자리 PIN은 서로 다른 자격 정보입니다.',trigger,body:`<div class="info-grid"><div class="info-item"><span>현재 계정</span><strong>${esc(account)}</strong></div><div class="info-item"><span>세션</span><strong>${state.loggedIn?'로그인됨':'로그아웃됨'}</strong></div><div class="info-item"><span>로그인 비밀번호</span><strong>개인 숫자 6자리 이상</strong></div><div class="info-item"><span>객실 PIN</span><strong>객실별 숫자 4자리 · 별도 관리</strong></div></div><div class="notice notice-info" style="margin:12px 0 0">이 정적 데모에서는 실제 계정 종료나 자격 정보 변경을 수행하지 않습니다.</div>`});
+        const account=state.role==='admin'?'관리자':signedInMaidName();
+        showModal({title:'계정·로그인 상태',subtitle:'로그인 비밀번호와 객실 4자리 PIN은 서로 다릅니다.',trigger,body:`<div class="info-grid"><div class="info-item"><span>현재 계정</span><strong>${esc(account)}</strong></div><div class="info-item"><span>로그인 상태</span><strong>${state.loggedIn?'로그인됨':'로그아웃됨'}</strong></div><div class="info-item"><span>로그인 비밀번호</span><strong>개인 숫자 6자리 이상</strong></div><div class="info-item"><span>객실 PIN</span><strong>객실별 숫자 4자리 · 별도 관리</strong></div></div>`});
       }
 
       function openDemoInformation(trigger=document.activeElement) {
@@ -5071,7 +5263,7 @@
       function openCancelRequestV2(no,trigger=document.activeElement) {
         const room=ROOMS.find(item=>item.no===no), existing=state.cancelRequests?.[no],attemptId=state.currentAttemptByRoom?.[no],attempt=attemptId?state.cleaningAttempts?.[attemptId]:null;
         if(!room){toast('담당 취소를 요청할 객실을 찾지 못했습니다.','error');return;}
-        if(!attempt||attempt.id!==attemptId||attempt.room!==no||attempt.kind==='재청소'){toast('재청소 또는 유효하지 않은 수행 회차는 담당 취소나 이관을 요청할 수 없습니다.','error');return;}
+        if(!attempt||attempt.id!==attemptId||attempt.room!==no||attempt.kind==='재청소'){toast('현재 업무에서는 담당 취소를 요청할 수 없습니다.','error');return;}
         if(existing?.status==='requested'){
           showModal({title:`${no}호 담당 취소 요청 상태`,subtitle:'관리자 결정 전까지 현재 담당과 작업 접근은 유지됩니다.',trigger,body:`<div class="info-grid"><div class="info-item"><span>상태</span><strong>관리자 확인 요청</strong></div><div class="info-item"><span>요청 시각</span><strong>${esc(existing.requestedAt)}</strong></div></div><div class="notice notice-warning" style="margin-top:12px">사유: ${esc(existing.reason)}</div>`});
           return;
@@ -5082,16 +5274,20 @@
 
       function openConflictResolutionV2(trigger=document.activeElement) {
         const record=state.conflictRecord;
-        showModal({title:'332호 영향 확인·충돌 해결',subtitle:'예약 보정·수행 회차·PIN lease 영향을 확인하고 세 항목을 모두 완료하세요.',large:true,trigger,body:`<div class="notice notice-danger"><div><strong>기존 사건 삭제 금지</strong><br>${record.autoCheckoutAt} 자동 체크아웃은 그대로 보존하고 ${record.afterCheckout} 체크아웃 점유 재개 보정을 추가합니다.</div></div><div class="info-grid"><div class="info-item"><span>체크아웃 전 → 후</span><strong>${record.beforeCheckout} → ${record.afterCheckout}</strong></div><div class="info-item"><span>청소 담당·단계</span><strong>${record.assignee} · ${record.stage}</strong></div><div class="info-item"><span>PIN 조회</span><strong>${record.pinViewedAt} · 원문 미표시</strong></div><div class="info-item"><span>lease 영향</span><strong>${record.leaseId} 종료 필요</strong></div></div><div class="choice-list" style="margin-top:14px"><label class="choice"><input type="checkbox" data-control="conflict-step-v2" value="coordinate" ${state.conflictSteps.coordinate?'checked':''} ${isLocked()?'disabled':''}><span><strong>현장 조율 완료</strong><span>투숙객·${record.assignee}에게 점유 재개와 출입 중단을 확인</span></span></label><label class="choice"><input type="checkbox" data-control="conflict-step-v2" value="replan" ${state.conflictSteps.replan?'checked':''} ${isLocked()?'disabled':''}><span><strong>작업 재계획 완료</strong><span>기존 수행 회차는 중단 이력으로 보존하고 ${record.afterCheckout} 새 회차 생성</span></span></label><label class="choice"><input type="checkbox" data-control="conflict-step-v2" value="pin" ${state.conflictSteps.pin?'checked':''} ${isLocked()?'disabled':''}><span><strong>필요 PIN 교체·lease 종료 완료</strong><span>${record.leaseId}를 끝내고 새 PIN이 필요하면 교체 완료를 확인</span></span></label></div>`,confirmLabel:'충돌 종결·상태 재계산',confirmAction:'confirm-conflict-v2',confirmVariant:'danger'});
+        showModal({title:'332호 영향 확인·충돌 해결',subtitle:'변경된 체크아웃과 현재 청소·PIN 조회 영향을 확인하세요.',large:true,trigger,body:`<div class="notice notice-danger"><div><strong>현재 상태 확인</strong><br>${record.autoCheckoutAt} 자동 체크아웃 기록은 남기고 ${record.afterCheckout}까지 투숙 중으로 표시합니다.</div></div><div class="info-grid"><div class="info-item"><span>체크아웃 전 → 후</span><strong>${record.beforeCheckout} → ${record.afterCheckout}</strong></div><div class="info-item"><span>청소 담당·단계</span><strong>${record.assignee} · ${record.stage}</strong></div><div class="info-item"><span>PIN 조회</span><strong>${record.pinViewedAt}</strong></div><div class="info-item"><span>PIN 조회 처리</span><strong>기존 조회 종료 후 다시 확인</strong></div></div><div class="choice-list" style="margin-top:14px"><label class="choice"><input type="checkbox" data-control="conflict-step-v2" value="coordinate" ${state.conflictSteps.coordinate?'checked':''} ${isLocked()?'disabled':''}><span><strong>현장 조율 완료</strong><span>투숙객·${record.assignee}에게 변경된 체크아웃과 출입 중단을 확인</span></span></label><label class="choice"><input type="checkbox" data-control="conflict-step-v2" value="replan" ${state.conflictSteps.replan?'checked':''} ${isLocked()?'disabled':''}><span><strong>청소 일정 변경 완료</strong><span>진행 중 청소를 중단 처리하고 ${record.afterCheckout} 새 청소 생성</span></span></label><label class="choice"><input type="checkbox" data-control="conflict-step-v2" value="pin" ${state.conflictSteps.pin?'checked':''} ${isLocked()?'disabled':''}><span><strong>도어락 PIN 확인 완료</strong><span>기존 PIN 조회를 끝내고 필요하면 PIN을 변경합니다.</span></span></label></div>`,confirmLabel:'조치 완료',confirmAction:'confirm-conflict-v2',confirmVariant:'danger'});
         const confirm=document.querySelector('[data-action="confirm-conflict-v2"]');
         if(confirm)confirm.disabled=isLocked()||!Object.values(state.conflictSteps).every(Boolean);
       }
 
       function openMaidDeactivationV2(trigger=document.activeElement) {
         const currentApproved=maidPayAmount('김민지1'),future=notifiedAssignmentEntriesForMaid('m1').length;
-        showModal({title:'김민지1 비활성 영향 확인',subtitle:'신규 권한은 즉시 잠그고 진행 중 자료·검수·수익은 정책대로 보존합니다.',large:true,trigger,body:`<div class="info-grid"><div class="info-item"><span>다음 근무일 통보</span><strong>${future}건 · 완료 전 변경 통보 필요</strong></div><div class="info-item"><span>진행 중</span><strong>1건 · 처리 방식 선택</strong></div><div class="info-item"><span>현장 완료·업로드</span><strong>1건 · 자료 보존</strong></div><div class="info-item"><span>검수 대기</span><strong>0건 · 새 제출은 결정 후 종결</strong></div><div class="info-item"><span>미지급 수익</span><strong>${money(currentApproved)} · 객실별 지급 이력 보존</strong></div><div class="info-item"><span>활성 PIN lease</span><strong>1건 · 종결 필요</strong></div></div><div class="notice notice-danger" style="margin-top:14px"><div><strong>처리 시작 즉시 잠금</strong><br>김민지1의 신규 업무 확인 · 신규 직접 배정 · 새 PIN lease 발급을 차단합니다. 검수 대기 제출은 승인·반려를 결정하고, 반려 시 본인 무급 재청소까지 끝내야 비활성을 완료할 수 있습니다.</div></div><fieldset class="choice-list" style="margin-top:14px"><legend class="sr-only">진행 중 작업 처리 방식</legend><label class="choice"><input type="radio" name="maid-deactivation-choice" value="finish" checked><span><strong>마무리 후 비활성</strong><span>현재 작업 한 건의 전체 제출·관리자 검수 결정까지 허용</span></span></label><label class="choice"><input type="radio" name="maid-deactivation-choice" value="stop"><span><strong>즉시 중단·인계</strong><span>현재 수행 회차를 중단으로 보존하고 새 담당 회차로 인계</span></span></label></fieldset>`,confirmLabel:'비활성 처리 시작',confirmAction:'confirm-start-deactivation-v2',confirmVariant:'danger'});
+        showModal({title:'김민지1 비활성 영향 확인',subtitle:'새 업무를 막고 진행 중인 일과 지급 예정 금액을 확인하세요.',large:true,trigger,body:`<div class="info-grid"><div class="info-item"><span>다음 근무일 통보</span><strong>${future}건 · 완료 전 변경 통보 필요</strong></div><div class="info-item"><span>진행 중</span><strong>1건 · 처리 방식 선택</strong></div><div class="info-item"><span>현장 완료·업로드</span><strong>1건 · 자료 보존</strong></div><div class="info-item"><span>검수 대기</span><strong>0건 · 새 제출은 먼저 검수</strong></div><div class="info-item"><span>미지급 청소비</span><strong>${money(currentApproved)} · 지급 이력 유지</strong></div><div class="info-item"><span>활성 PIN 조회</span><strong>1건 · 종료 필요</strong></div></div><div class="notice notice-danger" style="margin-top:14px"><div><strong>처리 시작 즉시 잠금</strong><br>김민지1의 신규 업무 확인·직접 배정·새 PIN 조회를 차단합니다. 검수 대기 제출은 승인·반려를 결정하고, 반려 시 본인 무급 재청소까지 끝내야 비활성을 완료할 수 있습니다.</div></div><fieldset class="choice-list" style="margin-top:14px"><legend class="sr-only">진행 중 작업 처리 방식</legend><label class="choice"><input type="radio" name="maid-deactivation-choice" value="finish" checked><span><strong>마무리 후 비활성</strong><span>현재 작업 한 건의 전체 제출·관리자 검수 결정까지 허용</span></span></label><label class="choice"><input type="radio" name="maid-deactivation-choice" value="stop"><span><strong>즉시 중단·인계</strong><span>진행 중 청소를 중단 처리하고 새 담당에게 인계</span></span></label></fieldset>`,confirmLabel:'비활성 처리 시작',confirmAction:'confirm-start-deactivation-v2',confirmVariant:'danger'});
         const confirm=document.querySelector('[data-action="confirm-start-deactivation-v2"]');if(confirm)confirm.disabled=isLocked();
       }
+
+      document.addEventListener('click',event=>{const trigger=event.target.closest?.('[data-info-tip]');if(trigger){event.preventDefault();toggleInfoTip(trigger);return;}if(!event.target.closest?.('.info-tip'))closeInfoTips();},true);
+      document.addEventListener('focusin',event=>{if(!event.target.closest?.('.info-tip'))closeInfoTips();},true);
+      document.addEventListener('keydown',event=>{if(event.key!=='Escape'||document.querySelector('#modal-root .modal, .calendar-dialog'))return;if(closeInfoTips({restoreFocus:true})){event.preventDefault();event.stopImmediatePropagation();}},true);
 
       const rebuiltActions=new Set(['toggle-demo','reset','switch-role','nav','filter-rooms','back','close-modal','backdrop-close','room-detail','cleaning-detail','maid-detail','complaint-detail','pay-detail','admin-pay-detail','template','template-detail','template-back-list','template-edit','template-cancel-edit','template-review','template-save','inspection-photo','open-room-export','export-rooms-csv','export-rooms-xls','open-calendar','open-pay-calendar','open-work-history-calendar','calendar-backdrop','calendar-close','calendar-month','calendar-select','calendar-today','date-shift','date-today','toggle-section','clear-room-filters','edit-room-info','save-room-info','manual-checkout','confirm-manual-checkout','manual-checkin','confirm-manual-checkin','pin-show','pin-hide','pin-edit','pin-clear','pin-random','pin-review','pin-back','pin-save','reservation-edit','new-reservation','save-reservation-v2','create-stayover','confirm-stayover','operation-status','confirm-operation-stop','resume-operation','candle-change','task-candle-change','direct-assign','confirm-direct-assign','cleaning-tab','assignment-type-filter','admin-maid-tab','go-today','go-workforce','go-work-history','go-payroll','go-complaints','go-cleaning-drafts','go-cleaning-assignment','go-inspection','go-open','go-schedule','go-my','go-maid-pay','toggle-maid-pay-week','clear-maid-pay-week','new-cleaning','confirm-new-cleaning','toggle-week-day','submit-week-availability','edit-week-availability','request-availability-change','move-assignment-order','save-assignments','set-availability','change-availability','confirm-off-active','claim-job','confirm-claim','start-cleaning','confirm-start','capture-task-photo','choose-task-photo','remove-task-photo','retry-task-photo','retry-all-task-photos','field-complete-v2','submit-cleaning-v2','approve-inspection-v2','reject-inspection-v2','confirm-approve-v2','confirm-reject-v2','toggle-payment','confirm-toggle-payment','confirm-finish-payment','mark-payment-check','confirm-payment-open-v2','confirm-reverse-payment','delete-complaint','undo-complaint','publish-selected','confirm-publish','retry-network','alerts','audit-log','rates','logout','request-cancel','confirm-request-cancel','cancel-review','confirm-cancel','rule-complaint-v2','ack-complaint','object-complaint','confirm-objection','close-complaint-v2','correct-complaint-v2','confirm-correct-complaint-v2','reclean-existing','demo-info','notification-permission','confirm-notification-permission']);
       ['quick-reservation-edit','quick-month-shift','quick-month-today','quick-reservation-undo','reservation-cancel-review','confirm-reservation-cancel'].forEach(action=>rebuiltActions.add(action));
@@ -5485,7 +5681,7 @@
           render();focusAfterRender('[data-action="edit-week-availability"], [data-action="request-availability-change"]');toast('다음 주 가능일을 관리자에게 제출했습니다.');return;
         }
         if(a==='edit-week-availability'){
-          if(state.role!=='maid'||!signedInMaidIsActive()||!state.availabilitySubmitted||state.availabilityChangeRequested||availabilitySubmissionPhase()!=='open'||isLocked())return;state.availabilitySubmitted=false;state.weeklyAvailability[signedInMaidId()].status='draft';render();focusAfterRender('[data-action="toggle-week-day"]');toast('일요일 제출 시간 안에서 내용을 수정할 수 있습니다. 이전 제출 버전은 이력에 남습니다.');return;
+          if(state.role!=='maid'||!signedInMaidIsActive()||!state.availabilitySubmitted||state.availabilityChangeRequested||availabilitySubmissionPhase()!=='open'||isLocked())return;state.availabilitySubmitted=false;state.weeklyAvailability[signedInMaidId()].status='draft';render();focusAfterRender('[data-action="toggle-week-day"]');toast('일요일 제출 시간 안에서 내용을 수정할 수 있습니다.');return;
         }
         if(a==='request-availability-change'){
           if(state.role!=='maid'||!signedInMaidIsActive()||!state.availabilitySubmitted||state.availabilityChangeRequested||availabilitySubmissionPhase()!=='closed'||isLocked())return;state.availabilityChangeRequested=true;state.weeklyAvailability[signedInMaidId()].status='change-requested';appendEvent(`${signedInMaidName()} 가능일 변경 요청`,'일요일 22:00 마감 후 · 기존 제출 버전 유지 · 관리자 확인 필요',{maidIds:[signedInMaidId()]});render();focusAfterRender();toast('관리자에게 가능일 변경 요청을 보냈습니다.');return;
@@ -5541,7 +5737,7 @@
         }
         if(a==='remove-task-photo'){
           const no=el.dataset.room,photoId=el.dataset.photo,attemptId=el.dataset.attempt,resolved=taskUploadForMutation(no,photoId,attemptId);
-          if(!resolved){render();toast('최신 수행 회차의 본인 촬영 사진만 삭제할 수 있습니다.','error');return;}
+          if(!resolved){render();toast('현재 담당 업무의 사진만 삭제할 수 있습니다.','error');return;}
           if(resolved.upload.status==='uploading'){toast('사진을 확인하는 동안에는 삭제할 수 없습니다.','error');return;}
           const fixture=resolved.upload.image?.fixture||'supply';releaseRoomIssuePhoto(resolved.upload.image);resolved.upload.status='empty';resolved.upload.image={...demoUploadImageFixture(fixture)};render();focusAfterRender(`[data-action="capture-task-photo"][data-room="${no}"][data-photo="${photoId}"]`);toast('이 구역의 현장 사진을 삭제했습니다.');return;
         }
@@ -5588,7 +5784,7 @@
         }
         if(a==='confirm-request-cancel'){
           const no=id||state.detail?.id,room=ROOMS.find(item=>item.no===no),reason=document.getElementById('cancel-request-reason')?.value.trim()||'',jobBefore=state.jobs[no],expectedAttempt=el.dataset.attempt||'',attemptId=state.currentAttemptByRoom?.[no],attempt=attemptId?state.cleaningAttempts?.[attemptId]:null,reclean=attempt?.kind==='재청소';
-          if(!room||reclean||!expectedAttempt||attemptId!==expectedAttempt||attempt?.id!==expectedAttempt||attempt.room!==no||attempt.performerId!==signedInMaidId()||!maidCanEditCleaning(no,['claimed','scheduled','cleaning'])){closeModal();render();toast(reclean?'재청소는 처음 청소한 본인에게 고정되어 취소 요청을 만들 수 없습니다.':'담당·수행 회차 또는 동기화 상태가 바뀌어 취소 요청을 만들지 않았습니다.','error');return;}
+          if(!room||reclean||!expectedAttempt||attemptId!==expectedAttempt||attempt?.id!==expectedAttempt||attempt.room!==no||attempt.performerId!==signedInMaidId()||!maidCanEditCleaning(no,['claimed','scheduled','cleaning'])){closeModal();render();toast(reclean?'재청소는 담당 취소를 요청할 수 없습니다.':'담당이나 업무 상태가 바뀌어 취소 요청을 만들지 않았습니다.','error');return;}
           if(!reason){toast('담당 취소 요청 사유를 입력하세요.','error');document.getElementById('cancel-request-reason')?.focus();return;}
           const requestedAt=`${state.selectedDate} ${state.time}`,workDate=attemptWorkDate(attempt,state.selectedDate);
           state.cancelRequests[no]={status:'requested',reason,requestedAt,workDate,workTargetId:attempt.workTargetId||assignmentHistoryTargetId(no,attempt.kind,workDate),maid:room.assignee,performerId:attempt.performerId,job:jobBefore,attemptId:attempt.id};state.cancelRequest='requested';state.cancelRequestRoom=no;
@@ -5732,7 +5928,7 @@
         e.stopImmediatePropagation();
         if(c==='reservation-cancel-reason'){updateReservationCancelReasonControls(true);return;}
         if(c==='role'){maskPin();closeModal();state.role=e.target.value;state.detail=null;render();requestAnimationFrame(()=>document.querySelector('[data-control="role"]')?.focus());return;}
-        if(c==='maid-account'){if(state.role!=='maid')return;maskPin();closeModal();state.currentMaidId=MAIDS.some(maid=>maid.id===e.target.value)?e.target.value:'m1';syncSignedInMaidAvailability();state.detail=null;render();requestAnimationFrame(()=>document.querySelector('[data-control="maid-account"]')?.focus());toast(`${signedInMaidName()} 메이드 데모 계정으로 전환했습니다.`);return;}
+        if(c==='maid-account'){if(state.role!=='maid')return;maskPin();closeModal();state.currentMaidId=MAIDS.some(maid=>maid.id===e.target.value)?e.target.value:'m1';syncSignedInMaidAvailability();state.detail=null;render();requestAnimationFrame(()=>document.querySelector('[data-control="maid-account"]')?.focus());toast(`${signedInMaidName()} 계정으로 전환했습니다.`);return;}
         if(c==='scenario'){maskPin();releaseRoomIssuePhotoUrls();protectedPinOverrides.clear();closeModal();state=makeScenario(Number(e.target.value));hydrateTemplateSnapshotsForState();render();requestAnimationFrame(()=>document.querySelector('[data-control="scenario"]')?.focus());toast(`${state.scenario}번 시나리오를 불러왔습니다.`);return;}
         if(c==='room-filter'){state.roomFilter=e.target.value;render();requestAnimationFrame(()=>document.querySelector('[data-control="room-filter"]')?.focus());return;}
         if(c==='room-type-filter'){state.roomTypeFilter=e.target.value;render();requestAnimationFrame(()=>document.querySelector('[data-control="room-type-filter"]')?.focus());return;}
@@ -5899,7 +6095,7 @@
         else if(a==='rates')showModal({title:'객실 타입 청소요금·예상시간',subtitle:'청소요금은 객실현황(26.08) 8월 시트 정본이며 예상시간만 데모입니다.',large:true,body:`<div class="rail-list">${Object.values(ROOM_TYPES).map(t=>`<div class="rail-row"><strong>${t.name}</strong><span>${money(t.rate)} · 8월 시트 · 예상 ${t.minutes}분(데모)</span></div>`).join('')}</div>`});
         else if(a==='template')showModal({title:'청소 템플릿 · 데모',subtitle:'객실 타입 × 퇴실·연박·재청소 조합',body:`<div class="notice notice-info">현재 초안 v4 · 미리보기와 필수 항목 검증 전에는 신규 작업에 사용되지 않습니다.</div><div class="check-list"><div class="check-row">${icon('check')}<span><strong>침대·욕실·바닥·문 잠금</strong><span>체크 4개 · 필수 사진 3개 · 선택 사진 1개</span></span></div></div>`,confirmLabel:state.template==='draft'?'미리보기·게시':'확인',confirmAction:'publish-template'});
         else if(a==='publish-template'){state.template='published v4';appendEvent('청소 템플릿 v4 게시','새 작업부터 적용 · 기존 작업 불변');closeModal();render();toast('새 버전을 게시했습니다.');}
-        else if(a==='audit-log')showModal({title:'최근 감사 이력 · 데모',subtitle:'PIN 원문·로그인 비밀번호·휴대폰 원문은 기록하지 않습니다.',large:true,body:`<ol class="timeline">${state.events.map(e=>`<li><strong>${esc(e.title)}</strong><span>${esc(e.time)} · ${esc(e.detail)}</span></li>`).join('')}</ol>`});
+        else if(a==='audit-log')showModal({title:'최근 변경 이력',subtitle:'PIN 원문·로그인 비밀번호·휴대폰 원문은 기록하지 않습니다.',large:true,body:`<ol class="timeline">${state.events.map(e=>`<li><strong>${esc(adminAuditTitle(e.title))}</strong><span>${esc(e.time)} · ${esc(adminAuditSummary(e.detail))}</span></li>`).join('')}</ol>`});
         else if(a==='demo-info')toast('객실번호·타입·엘리베이터·청소요금은 8월 시트 정본이며, 인명·예약·상태·예상시간은 화면 구조 데모입니다.');
         else if(a==='request-cancel')toast('담당 취소 요청을 모든 관리자 오늘 큐에 등록했습니다.');
       });

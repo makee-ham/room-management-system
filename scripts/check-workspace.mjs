@@ -67,6 +67,10 @@ const required = [
   'WIREFRAME/QA/screenshots/maid-type-photo-template-390.png',
   'WIREFRAME/QA/screenshots/maid-zone-camera-1440.png',
   'WIREFRAME/QA/screenshots/maid-zone-camera-390.png',
+  'WIREFRAME/QA/screenshots/admin-copy-cleanup-1440.png',
+  'WIREFRAME/QA/screenshots/admin-info-tooltip-390.png',
+  'WIREFRAME/QA/screenshots/maid-copy-cleanup-390.png',
+  'WIREFRAME/QA/screenshots/maid-info-tooltip-390.png',
   'WIREFRAME/reference/redesign-concepts/admin-inspection.png',
   'WIREFRAME/reference/redesign-concepts/admin-next-day-assignment.png',
   'WIREFRAME/reference/redesign-concepts/maid-weekly-availability.png',
@@ -104,6 +108,30 @@ if (!inlineScripts.length) throw new Error('No inline application script found.'
 for (const script of inlineScripts) new Function(script);
 if (/<(?:script|link)\b[^>]*(?:src|href)=["']https?:\/\//i.test(html)) {
   throw new Error('External script or stylesheet dependency found in WIREFRAME/index.html.');
+}
+for (const contract of [
+  'function infoTip(id,label,text',
+  'data-info-tip aria-label=',
+  'aria-expanded="false"',
+  'aria-controls="${panelId}"',
+  '<span class="info-tip-mark" aria-hidden="true">ⓘ</span>',
+  'role="tooltip" hidden',
+  'function closeInfoTips(',
+  'function toggleInfoTip(trigger)',
+  'function applyAdminCopyPolicy(root)',
+  'function applyMaidCopyPolicy(root)',
+  "if(state.role==='maid'){applyMaidCopyPolicy(root);return;}",
+  "'maid-schedule','근무 가능일'",
+  "'maid-pay','주급 내역'",
+  "'촬영 방법','구역별 체크와 필수 사진을 각각 완료하세요.",
+  '.help-title { display:flex; align-items:center; gap:7px;',
+  '.info-tip-trigger { display:grid; place-items:center; width:44px; height:44px',
+  '.info-tip-mark { display:grid; place-items:center; width:22px; height:22px; border:0; font-size:19px;',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin copy/help contract missing: ${contract}`);
+}
+if (html.includes('<span class="info-tip-mark" aria-hidden="true">!</span>')) {
+  throw new Error('Legacy exclamation help glyph remains; use the ⓘ symbol.');
 }
 const maidSource = html.match(/const MAIDS\s*=\s*\[([\s\S]*?)\n\s*\];/)?.[1];
 const maidIds = [...(maidSource || '').matchAll(/id:'(m\d+)'/g)].map((match) => match[1]);
@@ -270,6 +298,7 @@ if (html.indexOf(reservationCheckinLabel) < 0 || html.indexOf(reservationCheckou
   throw new Error('Single-reservation form must render check-in before check-out.');
 }
 for (const contract of [
+  '체크인부터 체크아웃까지 한 고객의 일정을 입력합니다.',
   'reservationOverlaps(room.no,checkInAt,checkOutAt,id)',
   'quickReservationConflict(room.no,firstNight,lastNight,id,checkInAt,checkOutAt)',
   'reservationFingerprint(existing)',
@@ -283,6 +312,12 @@ for (const contract of [
 ]) {
   if (!html.includes(contract)) throw new Error(`Reservation interval contract missing: ${contract}`);
 }
+const reservationCopyStart = html.indexOf('function reservationModalConfig');
+const reservationCopyEnd = html.indexOf('function openReservationCancellationReview', reservationCopyStart);
+if (reservationCopyStart < 0 || reservationCopyEnd <= reservationCopyStart) {
+  throw new Error('Admin reservation copy scope is missing.');
+}
+const reservationCopy = html.slice(reservationCopyStart, reservationCopyEnd);
 for (const unwantedCopy of [
   '저장 즉시 양방향 반영',
   '카드와 간편 예약표에 동시에 반영됩니다.',
@@ -300,7 +335,7 @@ for (const unwantedCopy of [
   '통보 스냅샷',
   '신규 예약 입력으로 바꾸거나 다른 예약을 덮어쓰지 않았습니다.',
 ]) {
-  if (html.includes(unwantedCopy)) throw new Error(`Admin reservation copy exposes implementation detail: ${unwantedCopy}`);
+  if (reservationCopy.includes(unwantedCopy)) throw new Error(`Admin reservation copy exposes implementation detail: ${unwantedCopy}`);
 }
 for (const contract of [
   'const RESERVATION_CANCEL_REASONS',
@@ -359,6 +394,12 @@ for (const contract of ['체크인 → 체크아웃 입력 순서', '다른 고�
 for (const contract of ['추가 검증 · 메이드 구역별 체크·즉시 카메라', 'maid-zone-camera-1440.png', 'maid-zone-camera-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Maid zone camera QA documentation missing: ${contract}`);
 }
+for (const contract of ['추가 검증 · 관리자 설명 간소화와 도움말', 'ⓘ', 'admin-copy-cleanup-1440.png', 'admin-info-tooltip-390.png']) {
+  if (!qa.includes(contract)) throw new Error(`Admin copy/help QA documentation missing: ${contract}`);
+}
+for (const contract of ['추가 검증 · 메이드 설명 간소화와 도움말', '시나리오 코치 0개', 'maid-copy-cleanup-390.png', 'maid-info-tooltip-390.png']) {
+  if (!qa.includes(contract)) throw new Error(`Maid copy/help QA documentation missing: ${contract}`);
+}
 if (!/(?:실물|실기기)[^\n]{0,80}(?:후면 )?카메라[^\n]{0,120}(?:미검증|검증하지 못|확인하지 못)/.test(qa)) {
   throw new Error('Maid zone camera QA must distinguish static/browser checks from unverified physical-device camera behavior.');
 }
@@ -390,6 +431,8 @@ console.log(`Required files: ${required.length}/${required.length}`);
 console.log(`Inline scripts parsed: ${inlineScripts.length}`);
 console.log(`Large-team assignment fixture: ${maidIds.length} maids`);
 console.log('Per-maid weekly payment static contracts: passed');
+console.log('Admin copy/help static contracts: passed');
+console.log('Maid copy/help static contracts: passed');
 console.log('Portable path scan: passed');
 console.log(`Room master contract: ${catalogIds.length} rooms / ${initialOccupiedIds.length} initially occupied / ${dataIssueIds.length} data issue`);
 console.log(`Final UX audit SHA-256: ${auditHash}`);
