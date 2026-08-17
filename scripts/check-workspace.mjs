@@ -327,9 +327,34 @@ for (const contract of [
   'quickTouchArmTimer=setTimeout',
   'Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)',
   'quickSuppressClickUntil=Date.now()+500',
-  'quickGridScrollLeft:720',
+  'quickGridScrollLeft:700',
+  'state.quickGridScrollLeft=700',
+  '--quick-room-col:112px',
+  'class="quick-room-link"',
+  'tabindex="${rowIndex===0?',
+  '${room.no}호 객실 상세 열기',
+  "if(state.adminView==='quickReservation'&&!state.detail)rememberQuickGridViewport()",
+  '검색어 또는 객실 유형 필터를 바꿔 주세요.',
+  'rowIndex===0&&iso===focusDate',
+  "['ArrowUp','ArrowDown','Home','End'].includes(event.key)",
 ]) {
   if (!html.includes(contract)) throw new Error(`Quick reservation contract missing: ${contract}`);
+}
+for (const removedContract of [
+  'quickReservationElevator',
+  'quick-reservation-elevator',
+  'bookingElevator',
+  'quickRoomCleaner',
+  'quick-room-cleaner',
+]) {
+  if (html.includes(removedContract)) throw new Error(`Removed quick reservation filter or cleaner contract returned: ${removedContract}`);
+}
+const quickGridStart = html.indexOf('function quickCellMarkup');
+const quickGridEnd = html.indexOf('function rememberQuickGridViewport', quickGridStart);
+if (quickGridStart < 0 || quickGridEnd <= quickGridStart) throw new Error('Quick reservation grid scope is missing.');
+const quickGridScope = html.slice(quickGridStart, quickGridEnd);
+for (const removedCopy of ['퇴실 청소 담당','청소 미배정','assignedCount=monthReservations','유형·엘리베이터 필터']) {
+  if (quickGridScope.includes(removedCopy)) throw new Error(`Removed quick reservation grid copy returned: ${removedCopy}`);
 }
 const reservationCheckinLabel = '<label for="res-checkin">1. 체크인 일시</label>';
 const reservationCheckoutLabel = '<label for="res-checkout">2. 체크아웃 일시</label>';
@@ -459,7 +484,7 @@ if (/고객 배정 가능 기준 109개|장기투숙 중 11개|현재 장기투�
 for (const contract of ['초기 투숙 seed 11개', '762호 dataIssue', '객실 정보 수정', '수동 체크아웃', '랜덤 배정', 'admin-room-info-edit-1440.png', 'admin-manual-checkout-390.png', 'admin-random-assignment-1440.png', 'admin-random-assignment-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Room master QA contract missing: ${contract}`);
 }
-for (const contract of ['간편 예약 원장과 터치 오입력 방지', '세로 터치 스크롤', '길게 누른 뒤 가로 선택', 'admin-quick-booking-1440.png', 'admin-quick-booking-390.png']) {
+for (const contract of ['간편 예약 원장과 터치 오입력 방지', '청소 담당 표시 제거', '엘리베이터 필터 제거', '객실 상세 연결·뒤로가기', '세로 터치 스크롤', '길게 누른 뒤 가로 선택', 'admin-quick-booking-1440.png', 'admin-quick-booking-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Quick reservation QA contract missing: ${contract}`);
 }
 for (const contract of ['체크인 → 체크아웃 입력 순서', '다른 고객 일정 비병합', '실제 시각 겹침', '직전 퇴실 청소 재통보']) {
