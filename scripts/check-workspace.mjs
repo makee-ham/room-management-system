@@ -123,7 +123,7 @@ for (const contract of [
   "if(state.role==='maid'){applyMaidCopyPolicy(root);return;}",
   "'maid-schedule','근무 가능일'",
   "'maid-pay','주급 내역'",
-  "'촬영 방법','구역별 체크와 필수 사진을 각각 완료하세요.",
+  "'촬영 방법','구역별 필수 사진을 촬영하세요.",
   '.help-title { display:flex; align-items:center; gap:7px;',
   '.info-tip-trigger { display:grid; place-items:center; width:44px; height:44px',
   '.info-tip-mark { display:grid; place-items:center; width:22px; height:22px; border:0; font-size:19px;',
@@ -170,7 +170,10 @@ for (const removed of ['메이드별 작업량·동선 비교', 'renderAssignmen
   if (html.includes(removed)) throw new Error(`Removed assignment comparison contract remains: ${removed}`);
 }
 for (const contract of [
-  '구역별 청소·촬영',
+  "requirementsMode:'photo-only-v1'",
+  '구역별 사진 촬영',
+  '필수 사진 ${requiredUploads.length}장 · 구역 버튼을 눌러 바로 촬영하세요.',
+  '남은 필수 사진 ${photosLeft}장',
   'taskZoneGroups',
   'capture-task-photo',
   'choose-task-photo',
@@ -183,7 +186,41 @@ for (const contract of [
   'submission.uploads?.forEach(upload=>collect(upload.image))',
   'urls.forEach(url=>URL.revokeObjectURL(url))',
 ]) {
-  if (!html.includes(contract)) throw new Error(`Maid zone camera contract missing: ${contract}`);
+  if (!html.includes(contract)) throw new Error(`Maid photo-only workflow contract missing: ${contract}`);
+}
+const taskRequirementsStart = html.indexOf('function taskRequirements');
+const taskRequirementsSource = html.slice(taskRequirementsStart, html.indexOf('function taskUploadByIdentity', taskRequirementsStart));
+const taskZonesStart = html.indexOf('function taskZoneGroups');
+const taskZonesSource = html.slice(taskZonesStart, html.indexOf('function groupsafe', taskZonesStart));
+const taskSectionsStart = html.indexOf('function renderTaskInputSections');
+const taskSectionsSource = html.slice(taskSectionsStart, html.indexOf('function cleaningPrimary', taskSectionsStart));
+if ([taskRequirementsStart, taskZonesStart, taskSectionsStart].some(index => index < 0)) {
+  throw new Error('Maid photo-only source ranges could not be resolved.');
+}
+const activeTemplateStart = html.indexOf('const TEMPLATE_KIND_DEMO');
+const activeTemplateSource = html.slice(activeTemplateStart, html.indexOf('const LEGACY_TEMPLATE_CHECKLISTS', activeTemplateStart));
+const templateUiStart = html.indexOf('function templateDetailHead');
+const templateUiSource = html.slice(templateUiStart, html.indexOf('function titleForView', templateUiStart));
+if ([activeTemplateStart, templateUiStart].some(index => index < 0) || activeTemplateSource.includes('checklist:') || /필수 체크|체크리스트|data-template-check|template\.checklist/.test(templateUiSource)) {
+  throw new Error('The active cleaning template catalog or admin template UI still exposes checklist requirements.');
+}
+for (const removed of ['requiredChecks', 'req.checked', 'group.checks', 'data-control="task-check"', '필수 체크', '청소 확인', '체크리스트']) {
+  if (`${taskRequirementsSource}${taskZonesSource}${taskSectionsSource}`.includes(removed)) {
+    throw new Error(`Checklist dependency remains in active maid photo-only flow: ${removed}`);
+  }
+}
+const fieldCompleteSource = html.slice(html.indexOf("if(a==='field-complete-v2')"), html.indexOf("if(a==='approve-inspection-v2')"));
+if (fieldCompleteSource.includes('req.checked') || !fieldCompleteSource.includes('!req.requiredDone||req.failed') || !fieldCompleteSource.includes('checklist:{}')) {
+  throw new Error('Maid completion/submission is not exclusively gated by required photo status.');
+}
+if (html.includes('if(!submission.templateSnapshot&&!submission.templateId)return submission;') || !html.includes('submission.templateSnapshot=legacySnapshot;submission.templateId=legacySnapshot.id;submission.templateVersion=legacySnapshot.version;')) {
+  throw new Error('Legacy cleaning submissions can bypass their immutable template/photo validation.');
+}
+if (!html.includes("state.jobs[attempt.room]==='upload'&&!prior.templateId") || !html.includes("upload.required&&upload.status==='empty'")) {
+  throw new Error('Legacy upload-stage fixtures can become permanently blocked after photo-only template migration.');
+}
+for (const contract of ['currentAttemptId(no)!==attemptId', 'currentAttemptId(id)!==attemptId', 'latestTask?.attemptId!==attemptId']) {
+  if (!html.includes(contract)) throw new Error(`Photo retry attempt guard missing: ${contract}`);
 }
 for (const removed of ['add-task-photo', 'add-task-photos', "'add-photo'", "'add-photos'", '파일 전송 없이 슬롯 상태만']) {
   if (html.includes(removed)) throw new Error(`Removed simulated photo completion contract remains: ${removed}`);
@@ -490,8 +527,8 @@ for (const contract of ['간편 예약 원장과 터치 오입력 방지', '청�
 for (const contract of ['체크인 → 체크아웃 입력 순서', '다른 고객 일정 비병합', '실제 시각 겹침', '직전 퇴실 청소 재통보']) {
   if (!qa.includes(contract)) throw new Error(`Reservation interval QA contract missing: ${contract}`);
 }
-for (const contract of ['추가 검증 · 메이드 구역별 체크·즉시 카메라', 'maid-zone-camera-1440.png', 'maid-zone-camera-390.png']) {
-  if (!qa.includes(contract)) throw new Error(`Maid zone camera QA documentation missing: ${contract}`);
+for (const contract of ['추가 검증 · 메이드 체크리스트 제거·구역별 사진 전용', 'maid-zone-camera-1440.png', 'maid-zone-camera-390.png']) {
+  if (!qa.includes(contract)) throw new Error(`Maid photo-only QA documentation missing: ${contract}`);
 }
 for (const contract of ['추가 검증 · 관리자 설명 간소화와 도움말', 'ⓘ', 'admin-copy-cleanup-1440.png', 'admin-info-tooltip-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Admin copy/help QA documentation missing: ${contract}`);
@@ -538,6 +575,7 @@ console.log(`Large-team assignment fixture: ${maidIds.length} maids`);
 console.log('Per-maid weekly payment static contracts: passed');
 console.log('Admin copy/help static contracts: passed');
 console.log('Maid copy/help static contracts: passed');
+console.log('Maid photo-only workflow static contracts: passed');
 console.log('Portable path scan: passed');
 console.log(`Room master contract: ${catalogIds.length} rooms / ${initialOccupiedIds.length} initially occupied / ${dataIssueIds.length} data issue`);
 console.log(`Final UX audit SHA-256: ${auditHash}`);
