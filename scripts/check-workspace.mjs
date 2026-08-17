@@ -44,6 +44,8 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-room-info-edit-1440.png',
   'WIREFRAME/QA/screenshots/admin-room-info-edit-390.png',
   'WIREFRAME/QA/screenshots/admin-manual-checkout-390.png',
+  'WIREFRAME/QA/screenshots/admin-quick-booking-1440.png',
+  'WIREFRAME/QA/screenshots/admin-quick-booking-390.png',
   'WIREFRAME/QA/screenshots/admin-assignment-elevator-1440.png',
   'WIREFRAME/QA/screenshots/admin-assignment-recommendation-1440.png',
   'WIREFRAME/QA/screenshots/admin-assignment-recommendation-390.png',
@@ -60,6 +62,8 @@ const required = [
   'WIREFRAME/reference/redesign-concepts/admin-inspection.png',
   'WIREFRAME/reference/redesign-concepts/admin-next-day-assignment.png',
   'WIREFRAME/reference/redesign-concepts/maid-weekly-availability.png',
+  'WIREFRAME/reference/redesign-concepts/admin-quick-booking-1440.png',
+  'WIREFRAME/reference/redesign-concepts/admin-quick-booking-390.png',
 ];
 
 const missing = required.filter((file) => !existsSync(resolve(root, file)));
@@ -180,6 +184,22 @@ for (const contract of [
   if (!html.includes(contract)) throw new Error(`Manual checkout contract missing: ${contract}`);
 }
 
+for (const contract of [
+  'const INITIAL_RESERVATIONS',
+  "{id:'quickReservation',label:'간편 예약'",
+  "if (state.adminView==='quickReservation') return renderQuickReservation()",
+  'reservationOverlaps(roomNo,checkInAt,checkOutAt,ignoreId',
+  'initialReservationDrafts()',
+  "activeReservationsFor(state).filter(reservation=>reservation.checkOutAt.slice(0,10)===state.assignmentDate)",
+  'cleaningAssignmentForReservation(reservation)',
+  'data-action="quick-reservation-edit"',
+  "'quick-reservation-undo'",
+  'quickTouchArmTimer=setTimeout',
+  'Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)',
+  'quickSuppressClickUntil=Date.now()+500',
+]) {
+  if (!html.includes(contract)) throw new Error(`Quick reservation contract missing: ${contract}`);
+}
 
 const qa = readFileSync(resolve(root, 'WIREFRAME/QA.md'), 'utf8');
 if (/고객 배정 가능 기준 109개|장기투숙 중 11개|현재 장기투숙 11개/.test(qa)) {
@@ -187,6 +207,9 @@ if (/고객 배정 가능 기준 109개|장기투숙 중 11개|현재 장기투�
 }
 for (const contract of ['초기 투숙 seed 11개', '762호 dataIssue', '객실 정보 수정', '수동 체크아웃', 'admin-room-info-edit-1440.png', 'admin-manual-checkout-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Room master QA contract missing: ${contract}`);
+}
+for (const contract of ['간편 예약 원장과 터치 오입력 방지', '세로 터치 스크롤', '길게 누른 뒤 가로 선택', 'admin-quick-booking-1440.png', 'admin-quick-booking-390.png']) {
+  if (!qa.includes(contract)) throw new Error(`Quick reservation QA contract missing: ${contract}`);
 }
 
 const audit = readFileSync(resolve(root, 'DOCS/FINAL_UX_AUDIT.md'));

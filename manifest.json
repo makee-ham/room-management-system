@@ -11,7 +11,7 @@
   "qa_record": "WIREFRAME/QA.md",
   "sha256": {
     "DOCS/FINAL_UX_AUDIT.md": "8c868aa0d3601d58a49209dea1e766155a04edb935246c6b8f44c9741fe0af5b",
-    "WIREFRAME/index.html": "cdaaf02298a7287450f6a2fb17286581679a6b7053e536962559a33d429f5418"
+    "WIREFRAME/index.html": "89a12791cd6d8b13bb169e5c07f6190d1244a11a4fe2f04e0c1cf979ce1bbd74"
   },
   "runtime": {
     "build_required": false,
