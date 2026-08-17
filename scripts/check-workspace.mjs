@@ -143,7 +143,7 @@ for (const contract of [
   'undo-random-assignment',
   '총 청소요금 균형 우선',
   '같은 엘리베이터·가까운 호수',
-  '메이드별 배정 객실·청소 순서',
+  '메이드별 청소 순서 수정',
   'maxAssigned=Math.max(...results.map(result=>result.assigned))',
   'results.filter(result=>result.assigned===maxAssigned).sort((left,right)=>left.payGap-right.payGap||left.payDeviation-right.payDeviation||left.zoneRankTotal-right.zoneRankTotal||left.roomDistanceTotal-right.roomDistanceTotal',
   'assignmentTargetRate(item)',
@@ -153,10 +153,20 @@ for (const contract of [
   'elevatorSnapshot:snapshot.elevator',
   'randomAssignmentStateMatches',
   'data-location="board"',
+  'maid-order-schedule-badges',
+  'scheduleBadges=assignmentSchedulePriorityBadges(item)',
+  '얼리 체크인·레이트 체크아웃의 조정된 예정 시각을 먼저 확인하고',
+  '랜덤 배정 기준 설명',
+  'assignment-rule-tooltip',
+  'aria-describedby="assignment-random-tooltip"',
+  'id="assignment-random-tooltip" role="tooltip"',
+  'assignment-rule-help.is-dismissed',
+  "e.target.closest?.('.assignment-rule-help')",
+  "document.addEventListener('pointerover'",
 ]) {
   if (!html.includes(contract)) throw new Error(`Random assignment contract missing: ${contract}`);
 }
-for (const removed of ['메이드별 작업량·동선 비교', 'renderAssignmentWorkloadOverview', 'toggle-assignment-route']) {
+for (const removed of ['메이드별 작업량·동선 비교', 'renderAssignmentWorkloadOverview', 'toggle-assignment-route', 'class="random-rule"']) {
   if (html.includes(removed)) throw new Error(`Removed assignment comparison contract remains: ${removed}`);
 }
 for (const contract of [
@@ -424,6 +434,24 @@ if (reservationModalSource.includes('퇴실 고객 체크아웃') || reservation
   throw new Error('Turnover labels must not be used as fields in a single-customer reservation form.');
 }
 
+const assignmentDashboardStart = html.indexOf('function renderAssignmentDashboard');
+const assignmentDashboardSource = html.slice(assignmentDashboardStart, html.indexOf('function cleaningTabButton', assignmentDashboardStart));
+const assignmentFlowContracts = ['메이드 주간 근무표', 'renderRandomAssignmentCard()', '객실별 담당 수정', 'renderMaidOrderBoardContent()'];
+let assignmentFlowIndex = -1;
+for (const contract of assignmentFlowContracts) {
+  const nextIndex = assignmentDashboardSource.indexOf(contract);
+  if (nextIndex <= assignmentFlowIndex) throw new Error(`Cleaning assignment flow order is invalid at: ${contract}`);
+  assignmentFlowIndex = nextIndex;
+}
+if (assignmentDashboardSource.includes('assignment-grid')) {
+  throw new Error('Cleaning assignment flow must stay one-column: worktable, random draft, assignee edit, then order edit.');
+}
+const maidOrderItemStart = html.indexOf('function maidOrderItemMarkup');
+const maidOrderItemSource = html.slice(maidOrderItemStart, html.indexOf('function renderRandomAssignmentCard', maidOrderItemStart));
+if (!maidOrderItemSource.includes('assignmentSchedulePriorityBadges(item)') || !maidOrderItemSource.includes('maid-order-schedule-badges')) {
+  throw new Error('Maid order items must repeat early/late schedule priority badges with their adjusted times.');
+}
+
 const qa = readFileSync(resolve(root, 'WIREFRAME/QA.md'), 'utf8');
 if (/고객 배정 가능 기준 109개|장기투숙 중 11개|현재 장기투숙 11개/.test(qa)) {
   throw new Error('Stale 109/11/1 room status contract remains in WIREFRAME/QA.md.');
@@ -454,6 +482,9 @@ for (const contract of ['예약정보 수정·예약 취소', '카드·예약표
 }
 for (const contract of ['객실 카드 4개 주 상태·일정 우선 배지', '연박 진행 배지', '별도 주의 패널 없이', 'admin-room-four-states-1440.png', 'admin-room-stay-progress-390.png', 'admin-assignment-early-late-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Four-state room card QA contract missing: ${contract}`);
+}
+for (const contract of ['근무표 다음 동선 고려 랜덤 배정 흐름', '객실별 담당 수정', '메이드별 청소 순서 수정', '순서 보드 일정 강조', 'admin-maid-order-board-390.png']) {
+  if (!qa.includes(contract)) throw new Error(`Cleaning assignment flow QA contract missing: ${contract}`);
 }
 if (html.includes('내일 청소·일정 주의 한눈에') || html.includes('assignmentAttentionItems()')) {
   throw new Error('Redundant assignment attention panel must stay removed.');
