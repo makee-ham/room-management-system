@@ -1122,10 +1122,10 @@
     .assignment-summary small { display:block; margin-top:2px; color:var(--subtle); font-size:12px; }
     .assignment-summary .summary-good strong { color:var(--green); }
     .assignment-summary .summary-warn strong { color:var(--red); }
-    .assignment-grid { display:grid; grid-template-columns:minmax(330px,.7fr) minmax(680px,1.45fr); gap:14px; align-items:start; }
     .assignment-panel { overflow:hidden; }
     .assignment-panel-head { display:flex; align-items:flex-start; gap:10px; padding:14px 16px; border-bottom:1px solid var(--line); }
     .assignment-panel-head > div { min-width:0; flex:1; }
+    .assignment-step-label { display:block; margin-bottom:4px; color:#2c6b94; font-size:11px; font-weight:900; letter-spacing:.04em; }
     .assignment-panel-head h3 { margin:0 0 2px; }
     .assignment-panel-head p { margin:0; color:var(--muted); font-size:12px; }
     .availability-matrix-wrap, .assignment-table-wrap { overflow:auto; }
@@ -1211,6 +1211,9 @@
     .maid-order-copy { min-width:0; display:grid; gap:2px; }
     .maid-order-copy strong { font-size:13px; line-height:1.35; }
     .maid-order-copy span { color:var(--muted); font-size:11px; line-height:1.4; }
+    .maid-order-item.has-schedule-attention { border-color:#a9c5df; background:#f8fbff; box-shadow:inset 3px 0 0 #245fa6; }
+    .maid-order-schedule-badges { display:flex; flex-wrap:wrap; gap:5px; margin:4px 0 3px; }
+    .maid-order-schedule-badges .schedule-priority-badge { max-width:100%; min-height:32px; padding:5px 8px; border-radius:9px; color:#fff; font-size:10px; white-space:normal; }
     .maid-order-controls { display:flex; gap:4px; }
     .maid-order-assignee { min-width:0; }
     .maid-order-assignee .select-control { width:100%; min-height:44px; font-size:12px; }
@@ -1224,8 +1227,19 @@
     .assignment-random { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(330px,.85fr); gap:14px 18px; padding:18px; border-color:#b9d3e5; background:linear-gradient(135deg,#f7fbfe 0%,#edf6fb 100%); }
     .assignment-random-copy { min-width:0; }
     .random-kicker { display:block; margin-bottom:5px; color:#2c6b94; font-size:11px; font-weight:900; letter-spacing:.04em; }
-    .assignment-random h3 { margin:0 0 5px; font-size:1.05rem; }
+    .assignment-random-title-row { display:flex; align-items:center; justify-content:space-between; gap:7px; }
+    .assignment-random h3 { min-width:0; flex:1; margin:0; font-size:1.05rem; }
     .assignment-random p { margin:0; color:var(--muted); font-size:12px; line-height:1.55; }
+    .assignment-rule-help { position:relative; flex:0 0 auto; }
+    .assignment-rule-help-button { display:inline-grid; place-items:center; width:44px; height:44px; padding:0; border:0; border-radius:999px; color:#315d83; background:transparent; cursor:help; }
+    .assignment-rule-help-button:hover, .assignment-rule-help-button:focus-visible { background:#fff; box-shadow:inset 0 0 0 1px #b9d3e5; }
+    .assignment-rule-help-button:focus-visible { outline:3px solid rgba(31,111,155,.24); outline-offset:1px; }
+    .assignment-rule-tooltip { position:absolute; z-index:30; top:calc(100% + 6px); right:0; width:min(320px,calc(100vw - 40px)); padding:12px 13px; border:1px solid #b9d3e5; border-radius:11px; background:#fff; box-shadow:0 12px 28px rgba(24,45,69,.18); color:#315d83; font-size:12px; line-height:1.5; opacity:0; visibility:hidden; transform:translateY(-4px); transition:opacity .14s ease,transform .14s ease,visibility .14s ease; pointer-events:auto; }
+    .assignment-rule-tooltip::before { content:""; position:absolute; inset:-8px 0 auto; height:8px; }
+    .assignment-rule-tooltip strong { display:block; margin-bottom:5px; color:var(--navy); }
+    .assignment-rule-tooltip span { display:block; }
+    .assignment-rule-help:hover .assignment-rule-tooltip, .assignment-rule-help:focus-within .assignment-rule-tooltip { opacity:1; visibility:visible; transform:translateY(0); }
+    .assignment-rule-help.is-dismissed .assignment-rule-tooltip { opacity:0; visibility:hidden; transform:translateY(-4px); }
     .assignment-random-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); overflow:hidden; border:1px solid #c6dce9; border-radius:12px; background:rgba(255,255,255,.8); }
     .assignment-random-stats > div { min-height:72px; padding:11px 12px; border-right:1px solid #d4e3ed; }
     .assignment-random-stats > div:last-child { border-right:0; }
@@ -1234,8 +1248,6 @@
     .assignment-random-actions { grid-column:1/-1; display:flex; align-items:center; gap:10px; padding-top:2px; }
     .random-live { min-width:0; flex:1; color:#315d83; font-size:12px; font-weight:750; }
     .assignment-random-actions .btn { min-width:190px; min-height:46px; }
-    .random-rule { grid-column:1/-1; display:flex; flex-wrap:wrap; gap:6px; }
-    .random-rule span { display:inline-flex; align-items:center; min-height:30px; padding:5px 9px; border:1px solid #c6dce9; border-radius:999px; color:#315d83; background:#fff; font-size:11px; font-weight:800; }
     .assignment-random-note { display:flex; align-items:flex-start; gap:4px; color:#2b6f94; font-size:11px; font-weight:800; line-height:1.4; }
     .assignment-random-note.is-warning { color:#9b5d09; }
     .assignment-random-note .icon { flex:0 0 auto; margin-top:1px; }
@@ -1306,9 +1318,6 @@
     .assigned-preview-grid span { display:block; color:var(--muted); font-size:12px; }
     .assigned-preview-grid strong { display:block; margin-top:2px; font-size:14px; }
 
-    @media (max-width:1280px) {
-      .assignment-grid { grid-template-columns:1fr; }
-    }
     @media (max-width:900px) {
       .assignment-random { grid-template-columns:1fr; }
       .assignment-random-actions { align-items:stretch; flex-direction:column; }
@@ -1343,8 +1352,6 @@
       .assignment-random { gap:12px; padding:14px; }
       .assignment-random-stats > div { min-height:66px; padding:9px; }
       .assignment-random-stats strong { font-size:.95rem; }
-      .random-rule { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
-      .random-rule span { justify-content:center; border-radius:9px; text-align:center; }
       .maid-order-board { grid-template-columns:1fr; padding:10px; }
       .maid-order-item { grid-template-columns:38px minmax(0,1fr); }
       .maid-order-assignee, .maid-order-controls { grid-column:2; }
@@ -1529,6 +1536,7 @@
         logout: '<path d="M10 17l5-5-5-5M15 12H3"/><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>',
         candle: '<path d="M9 22V9h6v13M8 22h8M12 9c-2-2-1-5 1-7 1 2 3 3 2 5-.5 1-1.5 2-3 2z"/>',
         sync: '<path d="M20 11a8 8 0 0 0-14.8-4M4 3v4h4M4 13a8 8 0 0 0 14.8 4M20 21v-4h-4"/>',
+        info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
         lock: '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>'
       };
 
@@ -2533,7 +2541,7 @@
         root.querySelectorAll('p').forEach(paragraph=>{if(!paragraph.closest('.notice')&&/서버 영속|fixture|스냅샷|불변 사용자 ID|PIN lease|식별값|이력 연결키|원장 비연결|예약 가능과 현재 입실 가능을 별도로 판단|사진 원본은 앱에 저장하지 않음/.test(paragraph.textContent))paragraph.remove();});
         root.querySelectorAll('.meta').forEach(meta=>{if(/데모|스냅샷|정본/.test(meta.textContent))meta.remove();});
         addAdminHelp(root,'총 청소요금을 먼저 맞추고 가까운 객실로 배정','random-assignment','랜덤 배정','근무 가능한 메이드의 총 청소요금이 비슷해지도록 먼저 나누고, 같은 엘리베이터와 가까운 호수를 다음 기준으로 사용합니다. 결과는 저장 전에 담당과 순서를 바꿀 수 있습니다.',{rename:'랜덤 배정'});
-        addAdminHelp(root,'메이드별 배정 객실·청소 순서','assignment-result','배정 결과 수정','객실별 담당 메이드를 바꾸고 위·아래 버튼으로 1번부터 순서를 정하세요. 담당과 순서가 정해진 객실만 저장·통보됩니다.',{rename:'배정 결과 수정'});
+        addAdminHelp(root,'메이드별 청소 순서 수정','assignment-result','청소 순서 수정','얼리 체크인·레이트 체크아웃의 예정 시각을 먼저 확인하고, 객실별 담당 메이드를 바꾸거나 위·아래 버튼으로 1번부터 순서를 정하세요. 담당과 순서가 정해진 객실만 저장·통보됩니다.');
         addAdminHelp(root,'내일 청소 배정','next-day-assignment','내일 청소 배정','근무 가능일을 제출한 메이드에게만 배정할 수 있습니다. 랜덤 배정 뒤에도 객실별 담당과 메이드별 청소 순서를 직접 바꾼 다음 저장·통보하세요.');
         addAdminHelp(root,'주간 근무 기록','work-history','주간 근무 기록','명은 해당 기록이 있는 메이드 수이고, 일은 메이드별 기록 날짜를 합한 값입니다. 가능 제출·담당 통보·실근무 완료를 서로 다른 표시로 확인합니다.');
         addAdminHelp(root,'주별 지급 이력','weekly-pay','주별 지급 이력','월요일부터 일요일까지의 승인 청소를 합산합니다. 검수 대기는 예상액에만, 전체 반려와 본인 재청소는 0원으로 표시됩니다.');
@@ -3962,22 +3970,19 @@
         return `<span class="assignment-route-reference">${esc(maidName(assignment.maidId))} · 순서 보드 ${assignment.order}번째</span>${randomAssignmentNote(item)}`;
       }
       function maidOrderItemMarkup(item,ordered,index) {
-        const assignment=assignmentFor(item),context=assignmentContext(item),name=maidName(assignment.maidId),first=index===0,last=index===ordered.length-1,status=assignment.status==='notified'?'통보 완료':'저장 전';
-        return `<article class="maid-order-item"><span class="maid-order-number" aria-hidden="true">${assignment.order}</span><div class="maid-order-copy"><strong>${assignment.order}번째 · ${item.room}호</strong><span>${esc(context.type.name)} · ${money(context.type.rate)}</span><span>${esc(elevatorLabel(context.room))} · ${esc(item.kind)} · ${status}</span></div><label class="maid-order-assignee"><span class="sr-only">${item.room}호 담당 메이드 변경</span><select class="select-control" data-control="assignment-maid" data-location="board" data-target="${esc(item.id)}" aria-label="${item.room}호 ${esc(item.kind)} 담당 메이드 변경">${assignmentOptions(item)}</select></label><div class="maid-order-controls"><button class="assignment-order-btn" type="button" data-action="move-assignment-order" data-target="${esc(item.id)}" data-direction="up" aria-label="${esc(name)}의 ${item.room}호 청소 순서를 위로 이동" ${first?'disabled':''}>${icon('arrowUp','icon-sm')}</button><button class="assignment-order-btn" type="button" data-action="move-assignment-order" data-target="${esc(item.id)}" data-direction="down" aria-label="${esc(name)}의 ${item.room}호 청소 순서를 아래로 이동" ${last?'disabled':''}>${icon('arrowDown','icon-sm')}</button></div></article>`;
+        const assignment=assignmentFor(item),context=assignmentContext(item),name=maidName(assignment.maidId),first=index===0,last=index===ordered.length-1,status=assignment.status==='notified'?'통보 완료':'저장 전',scheduleBadges=assignmentSchedulePriorityBadges(item);
+        return `<article class="maid-order-item ${scheduleBadges.length?'has-schedule-attention':''}"><span class="maid-order-number" aria-hidden="true">${assignment.order}</span><div class="maid-order-copy"><strong>${assignment.order}번째 · ${item.room}호</strong>${scheduleBadges.length?`<div class="maid-order-schedule-badges" aria-label="${item.room}호 일정 주의">${scheduleBadges.join('')}</div>`:''}<span>${esc(context.type.name)} · ${money(context.type.rate)}</span><span>${esc(elevatorLabel(context.room))} · ${esc(item.kind)} · ${status}</span></div><label class="maid-order-assignee"><span class="sr-only">${item.room}호 담당 메이드 변경</span><select class="select-control" data-control="assignment-maid" data-location="board" data-target="${esc(item.id)}" aria-label="${item.room}호 ${esc(item.kind)} 담당 메이드 변경">${assignmentOptions(item)}</select></label><div class="maid-order-controls"><button class="assignment-order-btn" type="button" data-action="move-assignment-order" data-target="${esc(item.id)}" data-direction="up" aria-label="${esc(name)}의 ${item.room}호 청소 순서를 위로 이동" ${first?'disabled':''}>${icon('arrowUp','icon-sm')}</button><button class="assignment-order-btn" type="button" data-action="move-assignment-order" data-target="${esc(item.id)}" data-direction="down" aria-label="${esc(name)}의 ${item.room}호 청소 순서를 아래로 이동" ${last?'disabled':''}>${icon('arrowDown','icon-sm')}</button></div></article>`;
       }
       function renderRandomAssignmentCard() {
         const eligible=eligibleAssignmentMaids(),unassigned=assignmentTargets().filter(item=>!assignmentFor(item).maidId&&!roomIsOnHold(item.room)),summary=state.randomAssignmentSummary||{assigned:0,skipped:0},active=!!state.randomAssignmentSnapshot,disabled=state.role!=='admin'||isLocked()||!eligible.length||(!active&&!unassigned.length);
-        const actions=active?`${button('다시 랜덤 배정','random-assignments','outline',disabled?'disabled':'')}${button('랜덤 배정 전으로 되돌리기','undo-random-assignment','outline',disabled?'disabled':'')}`:button(`미배정 ${unassigned.length}건 랜덤 배정`,'random-assignments','primary',disabled?'disabled':'');
-        return `<section class="card assignment-random" aria-labelledby="assignment-random-title"><div class="assignment-random-copy"><span class="random-kicker">${MAIDS.length}명 규모 · 저장 전 랜덤 초안</span><h3 id="assignment-random-title">총 청소요금을 먼저 맞추고 가까운 객실로 배정</h3><p>근무 가능·활성 상태와 마감 조건을 통과한 미배정 객실만 처리합니다. 기존 통보와 관리자가 이미 정한 담당은 유지하고, 랜덤 결과만으로는 메이드에게 알리지 않습니다.</p></div><div class="assignment-random-stats"><div><span>근무 가능</span><strong>${eligible.length}명</strong></div><div><span>랜덤 배정</span><strong>${active?`${summary.assigned}객실`:'실행 전'}</strong></div><div><span>남은 미배정</span><strong>${active?`${summary.skipped}객실`:`${unassigned.length}객실`}</strong></div></div><div class="assignment-random-actions"><div class="random-live" aria-live="polite">${active?`${summary.assigned}건을 랜덤 배정했습니다. 아래에서 담당과 순서를 바꾼 뒤 저장·통보하세요.`:'여러 랜덤 후보 중 총 급여 격차가 가장 작은 안을 먼저 고르고, 같은 엘리베이터·가까운 호수를 다음 기준으로 사용합니다.'}</div>${actions}</div><div class="random-rule"><span>사전 조건 · 근무 가능·마감</span><span>1순위 · 총 청소요금 균형</span><span>2순위 · 같은 엘리베이터·가까운 호수</span><span>최종 결정 · 관리자 수정</span></div></section>`;
+        const actions=active?`${button('다시 동선 고려 랜덤 배정','random-assignments','outline',disabled?'disabled':'')}${button('랜덤 배정 전으로 되돌리기','undo-random-assignment','outline',disabled?'disabled':'')}`:button(`미배정 ${unassigned.length}건 동선 고려 랜덤 배정`,'random-assignments','primary',disabled?'disabled':'');
+        return `<section class="card assignment-random" aria-labelledby="assignment-random-title"><div class="assignment-random-copy"><span class="random-kicker">2단계 · 저장 전 랜덤 초안</span><div class="assignment-random-title-row"><h3 id="assignment-random-title">동선 고려 랜덤 배정</h3><div class="assignment-rule-help"><button class="assignment-rule-help-button" type="button" aria-label="랜덤 배정 기준 설명" aria-describedby="assignment-random-tooltip">${icon('info','icon-sm')}</button><div class="assignment-rule-tooltip" id="assignment-random-tooltip" role="tooltip"><strong>랜덤 배정 기준</strong><span>근무 가능·마감을 먼저 확인합니다.</span><span>총 청소요금 균형을 우선합니다.</span><span>같은 점수에서는 같은 엘리베이터·가까운 호수를 봅니다.</span><span>관리자가 담당과 순서를 최종 수정합니다.</span><span>실제 이동시간을 계산하는 경로 최적화는 아닙니다.</span></div></div></div><p>미배정 객실만 저장 전 초안으로 배정합니다.</p></div><div class="assignment-random-stats"><div><span>근무 가능</span><strong>${eligible.length}명</strong></div><div><span>초안 배정</span><strong>${active?`${summary.assigned}객실`:'실행 전'}</strong></div><div><span>남은 미배정</span><strong>${active?`${summary.skipped}객실`:`${unassigned.length}객실`}</strong></div></div><div class="assignment-random-actions"><div class="random-live" aria-live="polite">${active?`${summary.assigned}건을 랜덤 배정했습니다. 아래에서 담당과 순서를 바꾼 뒤 저장·통보하세요.`:'기존 통보와 관리자가 정한 담당은 유지하고 미배정 객실만 채웁니다.'}</div>${actions}</div></section>`;
       }
       function renderMaidOrderBoardContent() {
         const unassigned=assignmentTargets().filter(item=>!assignmentFor(item).maidId),assignedMaids=MAIDS.filter(maid=>orderedAssignmentsForMaid(maid.id).length);
         const lanes=assignedMaids.map(maid=>{const ordered=orderedAssignmentsForMaid(maid.id);return `<section class="maid-order-lane" id="maid-order-${maid.id}" aria-labelledby="maid-order-title-${maid.id}"><div class="maid-order-lane-head"><div><h4 id="maid-order-title-${maid.id}">${esc(maid.name)} 배정 객실·청소 순서</h4><p>각 객실의 담당을 바꾸거나 위·아래 버튼으로 1–N 순서를 조정할 수 있습니다.</p></div>${statusBadge(`${ordered.length}건`,'blue')}</div><div class="maid-order-list">${ordered.map((item,index)=>maidOrderItemMarkup(item,ordered,index)).join('')}</div></section>`;}).join('');
         const unassignedList=unassigned.length?unassigned.map(item=>{const context=assignmentContext(item);return `<span class="maid-order-unassigned-chip">${item.room}호 · ${esc(context.type.name)} · ${esc(elevatorLabel(context.room))} · ${money(context.type.rate)}</span>`;}).join(''):'<span class="maid-order-unassigned-chip">미배정 객실 없음</span>';
-        return `<section class="card maid-order-panel" aria-labelledby="maid-order-board-title"><div class="assignment-panel-head"><div><h3 id="maid-order-board-title">메이드별 배정 객실·청소 순서</h3><p>랜덤 배정 결과를 메이드별로 확인하고, 객실 담당과 1–N 순서를 관리자가 직접 수정합니다.</p></div>${statusBadge(`${unassigned.length}건 미배정`,unassigned.length?'red':'green')}</div><div class="maid-order-board ${lanes?'':'is-empty'}">${lanes||'<div class="maid-order-empty">아직 배정된 객실이 없습니다. 랜덤 배정하거나 위 객실 표에서 담당을 선택하세요.</div>'}</div><div class="maid-order-unassigned"><div><h4>아직 순서가 없는 객실</h4><p>미배정 상태로 남겨 두고 담당이 정해진 객실만 먼저 통보할 수 있습니다.</p></div><div class="maid-order-unassigned-list">${unassignedList}</div></div><div class="assignment-foot"><p>랜덤 배정은 저장 전 초안입니다. 담당과 연속 순서가 정해진 객실만 저장·통보합니다.</p>${button(`배정된 변경 ${assignmentTargets().filter(item=>assignmentHasNetChange(item)&&assignmentFor(item).maidId).length}건 저장·통보`,'save-assignments','primary',assignmentCanSave()?'':'disabled')}</div></section>`;
-      }
-      function renderMaidOrderBoard() {
-        return `${renderRandomAssignmentCard()}${renderMaidOrderBoardContent()}`;
+        return `<section class="card maid-order-panel" aria-labelledby="maid-order-board-title"><div class="assignment-panel-head"><div><span class="assignment-step-label">4단계 · 세부 수정</span><h3 id="maid-order-board-title">메이드별 청소 순서 수정</h3><p>얼리 체크인·레이트 체크아웃의 조정된 예정 시각을 먼저 확인하고, 객실 담당과 1–N 순서를 직접 수정합니다.</p></div>${statusBadge(`${unassigned.length}건 미배정`,unassigned.length?'red':'green')}</div><div class="maid-order-board ${lanes?'':'is-empty'}">${lanes||'<div class="maid-order-empty">아직 배정된 객실이 없습니다. 랜덤 배정하거나 위 객실 표에서 담당을 선택하세요.</div>'}</div><div class="maid-order-unassigned"><div><h4>아직 순서가 없는 객실</h4><p>미배정 상태로 남겨 두고 담당이 정해진 객실만 먼저 통보할 수 있습니다.</p></div><div class="maid-order-unassigned-list">${unassignedList}</div></div><div class="assignment-foot"><p>랜덤 배정은 저장 전 초안입니다. 담당과 연속 순서가 정해진 객실만 저장·통보합니다.</p>${button(`배정된 변경 ${assignmentTargets().filter(item=>assignmentHasNetChange(item)&&assignmentFor(item).maidId).length}건 저장·통보`,'save-assignments','primary',assignmentCanSave()?'':'disabled')}</div></section>`;
       }
       function assignmentCounts() {
         const targets=assignmentTargets(),rows=targets.map(assignmentFor),assigned=rows.filter(item=>item.maidId).length,notified=targets.filter(item=>committedAssignmentFor(item)).length;
@@ -4120,7 +4125,7 @@
         const rows=visibleTargets.map(item=>{const assignment=assignmentFor(item),context=assignmentContext(item),status=assignment.status==='notified'?'통보 완료':assignment.maidId?'저장 전':'미배정',tone=assignment.status==='notified'?'green':assignment.maidId?'amber':'red';return `<tr><td data-label="객실·타입·요금"><div class="assignment-cell-stack"><strong>${item.room}호</strong><span class="assignment-room-type">${esc(context.type.name)}</span><span class="assignment-elevator">${icon('mapPin','icon-sm')}${esc(elevatorLabel(context.room))}</span><span class="assignment-fee">${money(context.type.rate)} · 8월 시트</span></div></td><td data-label="청소 정보"><div class="assignment-cell-stack"><strong>${esc(item.kind)}</strong>${assignmentSourceMarkup(item)}</div></td><td data-label="일정">${assignmentScheduleMarkup(item)}</td><td data-label="담당 메이드"><div class="assignment-assignee"><select class="select-control" data-control="assignment-maid" data-location="table" data-target="${esc(item.id)}" aria-label="${item.room}호 ${esc(item.kind)} 담당 메이드 · 근무 가능 제출자만 표시">${assignmentOptions(item)}</select>${assignmentRouteReference(item)}</div></td><td data-label="상태">${statusBadge(status,tone)}${assignment.maidId?'<span class="cell-sub">순서 보드 반영</span>':''}</td></tr>`;}).join('');
         const history=state.assignmentHistory.map(entry=>`<div class="assignment-history-row"><strong>${esc(entry.time)}</strong><span>${esc(entry.room)}호</span><span>${esc(entry.before)} → ${esc(entry.after)}</span><span>${esc(entry.reason)}</span></div>`).join('');
         const emptyRows=`<tr><td colspan="5"><div class="inline-empty"><h3>이 타입의 청소대상이 없습니다</h3><p>다른 타입을 선택하거나 전체 객실을 확인하세요.</p></div></td></tr>`;
-        return `<div class="assignment-page"><div class="assignment-intro"><div><h2>내일 청소 배정</h2><p>${dateLabel(state.assignmentDate)} · 랜덤 초안을 확인한 뒤 담당과 메이드별 순서를 관리자가 확정합니다.</p></div><div class="job-actions">${button('주간 근무 기록','go-work-history','outline')}${button('청소대상 직접 등록','new-cleaning','outline')}</div></div><section class="card assignment-summary"><div><span>다음 주 가능일 제출</span><strong>${counts.submitted} / ${MAIDS.length}</strong><small>메이드 제출 현황</small></div><div><span>내일 청소 대상 객실</span><strong>${counts.total}</strong><small>자동 ${counts.automatic} · 직접 ${counts.manual}</small></div><div class="summary-good"><span>담당 선택</span><strong>${counts.assigned}</strong><small>통보 완료 ${counts.notified}건</small></div><div class="summary-warn"><span>미배정</span><strong>${counts.unassigned}</strong><small>대기 유지 · 후속 배정 가능</small></div></section><section class="assignment-target-rule" aria-label="청소대상 자동 구성과 랜덤 배정 기준">${icon('sync')}<div><strong>총 청소요금을 먼저 맞추고, 같은 엘리베이터·가까운 호수를 다음 기준으로 배정합니다.</strong><p>내일 체크아웃·연박 신청 객실은 자동 포함됩니다. 랜덤 결과에서 관리자가 담당과 1–N 순서를 바꾼 뒤, 준비된 객실만 저장·통보할 수 있습니다.</p></div><div class="badge-row">${statusBadge(`체크아웃 ${counts.checkout}`,'blue')}${statusBadge(`연박 ${counts.stayover}`,'neutral')}${statusBadge(`직접 ${counts.manual}`,'amber')}</div></section><div class="assignment-grid"><section class="card assignment-panel"><div class="assignment-panel-head"><div><h3>메이드 주간 근무표</h3><p>8월 17일–23일 · Asia/Seoul</p></div>${statusBadge(`${counts.submitted}/${MAIDS.length} 제출`,counts.submitted===MAIDS.length?'green':'amber')}</div>${renderAvailabilityMatrix()}</section><section class="card assignment-panel"><div class="assignment-panel-head"><div><h3>청소대상 객실 · 담당 수정</h3><p>얼리·레이트·연박 청소 일정은 해당 객실 행에서 함께 확인합니다.</p></div>${statusBadge(`${visibleTargets.length}/${targets.length}건 표시`,'blue')}</div>${assignmentTypeFiltersMarkup()}<div class="assignment-filter-context">${icon('filter','icon-sm')}<span><strong>${activeType?esc(activeType.name):'전체 객실 타입'}</strong> ${visibleTargets.length}건 표시 · 전체 ${targets.length}건 현황을 유지하며 배정된 객실만 통보합니다.</span></div><div class="assignment-table-wrap"><table class="assignment-table"><thead><tr><th scope="col">객실·타입·요금</th><th scope="col">청소 정보·등록 근거</th><th scope="col">일정</th><th scope="col">담당 메이드</th><th scope="col">상태</th></tr></thead><tbody>${rows||emptyRows}</tbody></table></div><div class="assignment-foot"><p>담당을 바꾸면 해당 객실이 새 메이드 순서의 마지막으로 이동합니다. 불가·미제출 메이드는 표시하지 않습니다.</p></div></section></div>${renderMaidOrderBoard()}<section class="card assignment-history"><div class="assignment-panel-head"><div><h3>배정·순서 통보 이력</h3><p>담당과 청소 순서의 이전 값을 덮어쓰지 않고 변경 이력을 추가합니다.</p></div>${statusBadge('관리자 전용','neutral')}</div><div class="assignment-history-list">${history}</div></section></div>`;
+        return `<div class="assignment-page"><div class="assignment-intro"><div><h2>내일 청소 배정</h2><p>${dateLabel(state.assignmentDate)} · 근무표 확인 → 동선 고려 랜덤 초안 → 담당·순서 수정 → 저장·통보</p></div><div class="job-actions">${button('주간 근무 기록','go-work-history','outline')}${button('청소대상 직접 등록','new-cleaning','outline')}</div></div><section class="card assignment-summary"><div><span>다음 주 가능일 제출</span><strong>${counts.submitted} / ${MAIDS.length}</strong><small>메이드 제출 현황</small></div><div><span>내일 청소 대상 객실</span><strong>${counts.total}</strong><small>자동 ${counts.automatic} · 직접 ${counts.manual}</small></div><div class="summary-good"><span>담당 선택</span><strong>${counts.assigned}</strong><small>통보 완료 ${counts.notified}건</small></div><div class="summary-warn"><span>미배정</span><strong>${counts.unassigned}</strong><small>대기 유지 · 후속 배정 가능</small></div></section><section class="assignment-target-rule" aria-label="청소대상 자동 구성">${icon('sync')}<div><strong>내일 체크아웃·연박 신청 객실을 자동으로 모읍니다.</strong><p>현장 요청은 직접 등록할 수 있고, 얼리·레이트·연박 일정은 해당 객실 행에서 확인합니다.</p></div><div class="badge-row">${statusBadge(`체크아웃 ${counts.checkout}`,'blue')}${statusBadge(`연박 ${counts.stayover}`,'neutral')}${statusBadge(`직접 ${counts.manual}`,'amber')}</div></section><section class="card assignment-panel"><div class="assignment-panel-head"><div><span class="assignment-step-label">1단계</span><h3>메이드 주간 근무표</h3><p>8월 17일–23일 · Asia/Seoul</p></div>${statusBadge(`${counts.submitted}/${MAIDS.length} 제출`,counts.submitted===MAIDS.length?'green':'amber')}</div>${renderAvailabilityMatrix()}</section>${renderRandomAssignmentCard()}<section class="card assignment-panel"><div class="assignment-panel-head"><div><span class="assignment-step-label">3단계 · 세부 수정</span><h3>객실별 담당 수정</h3><p>랜덤 초안 뒤 필요한 객실만 조정합니다. 얼리·레이트·연박 일정은 해당 객실 행에서 함께 확인합니다.</p></div>${statusBadge(`${visibleTargets.length}/${targets.length}건 표시`,'blue')}</div>${assignmentTypeFiltersMarkup()}<div class="assignment-filter-context">${icon('filter','icon-sm')}<span><strong>${activeType?esc(activeType.name):'전체 객실 타입'}</strong> ${visibleTargets.length}건 표시 · 전체 ${targets.length}건 현황을 유지하며 배정된 객실만 통보합니다.</span></div><div class="assignment-table-wrap"><table class="assignment-table"><thead><tr><th scope="col">객실·타입·요금</th><th scope="col">청소 정보·등록 근거</th><th scope="col">일정</th><th scope="col">담당 메이드</th><th scope="col">상태</th></tr></thead><tbody>${rows||emptyRows}</tbody></table></div><div class="assignment-foot"><p>담당을 바꾸면 해당 객실이 새 메이드 순서의 마지막으로 이동합니다. 불가·미제출 메이드는 표시하지 않습니다.</p></div></section>${renderMaidOrderBoardContent()}<section class="card assignment-history"><div class="assignment-panel-head"><div><h3>배정·순서 통보 이력</h3><p>담당과 청소 순서의 이전 값을 덮어쓰지 않고 변경 이력을 추가합니다.</p></div>${statusBadge('관리자 전용','neutral')}</div><div class="assignment-history-list">${history}</div></section></div>`;
       }
       function cleaningTabButton(id,label,count) { return `<button type="button" role="tab" data-action="cleaning-tab" data-tab="${id}" aria-selected="${state.cleaningTab===id}">${label} ${count}</button>`; }
       function renderCleaningHub() {
@@ -6098,6 +6103,21 @@
         if(!paymentSwitch||paymentSwitch.disabled||!['Enter',' '].includes(e.key))return;
         e.preventDefault();e.stopImmediatePropagation();paymentSwitch.click();
       });
+      document.addEventListener('keydown',e=>{
+        const ruleHelp=e.target.closest?.('.assignment-rule-help')||document.querySelector('.assignment-rule-help:hover');
+        if(!ruleHelp||e.key!=='Escape')return;
+        e.preventDefault();e.stopImmediatePropagation();ruleHelp.classList.add('is-dismissed');
+      });
+      document.addEventListener('pointerover',e=>{
+        const ruleHelp=e.target.closest?.('.assignment-rule-help');
+        if(ruleHelp&&!ruleHelp.contains(e.relatedTarget))ruleHelp.classList.remove('is-dismissed');
+      });
+      document.addEventListener('pointerout',e=>{
+        const ruleHelp=e.target.closest?.('.assignment-rule-help');
+        if(ruleHelp&&!ruleHelp.contains(e.relatedTarget))ruleHelp.classList.remove('is-dismissed');
+      });
+      document.addEventListener('focusin',e=>e.target.closest?.('.assignment-rule-help')?.classList.remove('is-dismissed'));
+      document.addEventListener('click',e=>e.target.closest?.('.assignment-rule-help-button')?.parentElement.classList.remove('is-dismissed'));
       document.addEventListener('visibilitychange',()=>{if(document.hidden&&state.pinVisibleRoom){maskPin();render();}});
       window.addEventListener('pagehide',maskPin);
       document.addEventListener('keydown',e=>{
