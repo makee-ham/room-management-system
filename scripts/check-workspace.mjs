@@ -200,7 +200,12 @@ const dataIssueIds = sourceIds(
 ).sort();
 const catalogSource = html.match(/const ROOM_CATALOG\s*=\s*\[([\s\S]*?)\n\s*\];/)?.[1];
 if (!catalogSource) throw new Error('ROOM_CATALOG source block not found.');
-const catalogIds = [...catalogSource.matchAll(/\['(\d+)'\s*,/g)].map((match) => match[1]);
+const catalogRows = [...catalogSource.matchAll(/\['(\d+)'\s*,\s*'([^']+)'\s*,\s*(null|'([ABC])')\]/g)].map((match) => ({
+  no: match[1],
+  type: match[2],
+  elevator: match[4] || null,
+}));
+const catalogIds = catalogRows.map((room) => room.no);
 const uniqueCatalogIds = new Set(catalogIds);
 const sameIds = (actual, expected) => actual.length === expected.length && actual.every((id, index) => id === expected[index]);
 if (!sameIds(initialOccupiedIds, expectedInitialOccupiedRooms)) {
@@ -212,8 +217,32 @@ if (!sameIds(dataIssueIds, ['762'])) {
 if (catalogIds.length !== 121 || uniqueCatalogIds.size !== 121) {
   throw new Error(`Room catalog contract mismatch: ${catalogIds.length} rows / ${uniqueCatalogIds.size} unique rooms.`);
 }
-if (!/dataIssue:hold\|\|null/.test(html) || !html.includes("'762':'엘리베이터·현재 투숙 상태 확인 필요'")) {
-  throw new Error('Room 762 must remain a dataIssue until elevator and occupancy are confirmed.');
+const expectedElevatorForRoom = (no) => {
+  const suffix = Number(no.slice(-2));
+  if (suffix >= 6 && suffix <= 27) return 'A';
+  if ((suffix >= 1 && suffix <= 5) || (suffix >= 28 && suffix <= 33) || (suffix >= 57 && suffix <= 62)) return 'B';
+  if (suffix >= 34 && suffix <= 56) return 'C';
+  return null;
+};
+const elevatorMismatches = catalogRows.filter((room) => room.elevator !== expectedElevatorForRoom(room.no));
+if (elevatorMismatches.length) {
+  throw new Error(`Building-map elevator mismatch: ${elevatorMismatches.map((room) => `${room.no}:${room.elevator || 'missing'}`).join(', ')}`);
+}
+const elevatorCounts = catalogRows.reduce((counts, room) => ({...counts, [room.elevator]: (counts[room.elevator] || 0) + 1}), {});
+if (elevatorCounts.A !== 33 || elevatorCounts.B !== 29 || elevatorCounts.C !== 59 || catalogRows.some((room) => !room.elevator)) {
+  throw new Error(`Elevator totals mismatch: A ${elevatorCounts.A || 0} / B ${elevatorCounts.B || 0} / C ${elevatorCounts.C || 0} / missing ${catalogRows.filter((room) => !room.elevator).length}`);
+}
+const mappedFormerMissingRooms = {139:'C',358:'B',359:'B',449:'C',458:'B',461:'B',553:'C',559:'B',628:'B',629:'B',762:'B'};
+for (const [no, elevator] of Object.entries(mappedFormerMissingRooms)) {
+  if (catalogRows.find((room) => room.no === no)?.elevator !== elevator) {
+    throw new Error(`Former missing elevator mapping mismatch: ${no} must use ${elevator}.`);
+  }
+}
+if (!html.includes("const ROOM_ELEVATOR_SOURCE = '2026-08-18 사용자 제공 건물 지도';")) {
+  throw new Error('Building-map elevator source is missing.');
+}
+if (!/dataIssue:hold\|\|null/.test(html) || !html.includes("'762':'현재 투숙 상태 확인 필요'")) {
+  throw new Error('Room 762 must remain a dataIssue until occupancy is confirmed.');
 }
 if (!/occupancy:occupiedSeed\?'occupied':'vacant'/.test(html) || !/catalogStatus:hold\?'hold':'available'/.test(html)) {
   throw new Error('Room master must separate initial occupancy from customer assignability.');
