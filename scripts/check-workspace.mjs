@@ -35,7 +35,6 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-maid-order-board-390.png',
   'WIREFRAME/QA/screenshots/admin-partial-assignment-390.png',
   'WIREFRAME/QA/screenshots/admin-weekly-worktable-symbols-390.png',
-  'WIREFRAME/QA/screenshots/admin-maid-type-distribution-1440.png',
   'WIREFRAME/QA/screenshots/admin-weekly-work-history-calendar-1440.png',
   'WIREFRAME/QA/screenshots/admin-weekly-work-history-calendar-390.png',
   'WIREFRAME/QA/screenshots/admin-room-catalog-1440.png',
@@ -47,8 +46,8 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-quick-booking-1440.png',
   'WIREFRAME/QA/screenshots/admin-quick-booking-390.png',
   'WIREFRAME/QA/screenshots/admin-assignment-elevator-1440.png',
-  'WIREFRAME/QA/screenshots/admin-assignment-recommendation-1440.png',
-  'WIREFRAME/QA/screenshots/admin-assignment-recommendation-390.png',
+  'WIREFRAME/QA/screenshots/admin-random-assignment-1440.png',
+  'WIREFRAME/QA/screenshots/admin-random-assignment-390.png',
   'WIREFRAME/QA/screenshots/maid-bomb-room-report-390.png',
   'WIREFRAME/QA/screenshots/admin-bomb-room-inspection-390.png',
   'WIREFRAME/QA/screenshots/admin-bomb-room-payroll-1440.png',
@@ -102,8 +101,26 @@ const maidIds = [...(maidSource || '').matchAll(/id:'(m\d+)'/g)].map((match) => 
 if (maidIds.length !== 9 || new Set(maidIds).size !== 9) {
   throw new Error(`Large-team maid fixture mismatch: ${maidIds.length} rows / ${new Set(maidIds).size} unique IDs.`);
 }
-for (const contract of ['recommend-assignments', 'undo-assignment-recommendation', 'toggle-assignment-route', '마감 위험으로 대기']) {
-  if (!html.includes(contract)) throw new Error(`Assignment recommendation contract missing: ${contract}`);
+for (const contract of [
+  'random-assignments',
+  'undo-random-assignment',
+  '총 청소요금 균형 우선',
+  '같은 엘리베이터·가까운 호수',
+  '메이드별 배정 객실·청소 순서',
+  'maxAssigned=Math.max(...results.map(result=>result.assigned))',
+  'results.filter(result=>result.assigned===maxAssigned).sort((left,right)=>left.payGap-right.payGap||left.payDeviation-right.payDeviation||left.zoneRankTotal-right.zoneRankTotal||left.roomDistanceTotal-right.roomDistanceTotal',
+  'assignmentTargetRate(item)',
+  'assignmentPricingSnapshot(item)',
+  'rateSnapshot:snapshot.rate',
+  'minutesSnapshot:snapshot.minutes',
+  'elevatorSnapshot:snapshot.elevator',
+  'randomAssignmentStateMatches',
+  'data-location="board"',
+]) {
+  if (!html.includes(contract)) throw new Error(`Random assignment contract missing: ${contract}`);
+}
+for (const removed of ['메이드별 작업량·동선 비교', 'renderAssignmentWorkloadOverview', 'toggle-assignment-route']) {
+  if (html.includes(removed)) throw new Error(`Removed assignment comparison contract remains: ${removed}`);
 }
 for (const contract of ['paymentRecords:{}', 'paymentAttemptHistory:[]', 'paymentRecordKey(weekStart,maidId)', 'data-action="toggle-payment" data-week=', 'data-maid=', 'taskFingerprint', "['OPEN','PAYING','CHECK']", 'confirm-finish-payment', 'mark-payment-check', 'confirm-payment-open-v2', 'resolutionReason']) {
   if (!html.includes(contract)) throw new Error(`Per-maid payment contract missing: ${contract}`);
@@ -205,7 +222,7 @@ const qa = readFileSync(resolve(root, 'WIREFRAME/QA.md'), 'utf8');
 if (/고객 배정 가능 기준 109개|장기투숙 중 11개|현재 장기투숙 11개/.test(qa)) {
   throw new Error('Stale 109/11/1 room status contract remains in WIREFRAME/QA.md.');
 }
-for (const contract of ['초기 투숙 seed 11개', '762호 dataIssue', '객실 정보 수정', '수동 체크아웃', 'admin-room-info-edit-1440.png', 'admin-manual-checkout-390.png']) {
+for (const contract of ['초기 투숙 seed 11개', '762호 dataIssue', '객실 정보 수정', '수동 체크아웃', '랜덤 배정', 'admin-room-info-edit-1440.png', 'admin-manual-checkout-390.png', 'admin-random-assignment-1440.png', 'admin-random-assignment-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Room master QA contract missing: ${contract}`);
 }
 for (const contract of ['간편 예약 원장과 터치 오입력 방지', '세로 터치 스크롤', '길게 누른 뒤 가로 선택', 'admin-quick-booking-1440.png', 'admin-quick-booking-390.png']) {
