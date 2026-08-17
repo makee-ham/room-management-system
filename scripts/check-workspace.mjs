@@ -247,7 +247,6 @@ if (html.indexOf(reservationCheckinLabel) < 0 || html.indexOf(reservationCheckou
   throw new Error('Single-reservation form must render check-in before check-out.');
 }
 for (const contract of [
-  '한 고객의 체크인부터 체크아웃까지를 한 예약 ID로 저장',
   'reservationOverlaps(room.no,checkInAt,checkOutAt,id)',
   'quickReservationConflict(room.no,firstNight,lastNight,id,checkInAt,checkOutAt)',
   'reservationFingerprint(existing)',
@@ -260,6 +259,25 @@ for (const contract of [
   '이 예약은 이미 변경되었거나 취소되었습니다.',
 ]) {
   if (!html.includes(contract)) throw new Error(`Reservation interval contract missing: ${contract}`);
+}
+for (const unwantedCopy of [
+  '저장 즉시 양방향 반영',
+  '카드와 간편 예약표에 동시에 반영됩니다.',
+  '카드·예약표 공통 원장',
+  '같은 예약 ID',
+  '예약 식별',
+  '다중 예약 원장',
+  '내부 수동 예약 원장',
+  '현재 탭의 객실 카드·청소 초안과 즉시 연동',
+  '객실 카드와 간편 예약표에 바로 반영',
+  '객실 카드·예약표·청소 상태를 함께 갱신',
+  '예약 후 청소 자동 연결',
+  '수동 예약 복제본',
+  '상태 이력 보존',
+  '통보 스냅샷',
+  '신규 예약 입력으로 바꾸거나 다른 예약을 덮어쓰지 않았습니다.',
+]) {
+  if (html.includes(unwantedCopy)) throw new Error(`Admin reservation copy exposes implementation detail: ${unwantedCopy}`);
 }
 for (const contract of [
   'const RESERVATION_CANCEL_REASONS',
@@ -291,7 +309,7 @@ for (const contract of [
   "'confirm-reservation-cancel'",
   '예약정보 수정 저장',
   '예약 취소 확정',
-  '외부 OTA/PMS 예약 원본은 바뀌지 않습니다.',
+  '외부 예약은 취소되지 않습니다.',
   '체크인이 시작된 예약은 취소하지 않고',
 ]) {
   if (!html.includes(contract)) throw new Error(`Reservation cancellation contract missing: ${contract}`);
@@ -312,7 +330,7 @@ for (const contract of ['초기 투숙 seed 11개', '762호 dataIssue', '객실 
 for (const contract of ['간편 예약 원장과 터치 오입력 방지', '세로 터치 스크롤', '길게 누른 뒤 가로 선택', 'admin-quick-booking-1440.png', 'admin-quick-booking-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Quick reservation QA contract missing: ${contract}`);
 }
-for (const contract of ['체크인 → 체크아웃 입력 순서', '같은 예약 ID', '실제 시각 겹침', '직전 퇴실 청소 재통보']) {
+for (const contract of ['체크인 → 체크아웃 입력 순서', '다른 고객 일정 비병합', '실제 시각 겹침', '직전 퇴실 청소 재통보']) {
   if (!qa.includes(contract)) throw new Error(`Reservation interval QA contract missing: ${contract}`);
 }
 for (const contract of ['추가 검증 · 메이드 구역별 체크·즉시 카메라', 'maid-zone-camera-1440.png', 'maid-zone-camera-390.png']) {
