@@ -217,6 +217,31 @@ for (const contract of [
 ]) {
   if (!html.includes(contract)) throw new Error(`Quick reservation contract missing: ${contract}`);
 }
+const reservationCheckinLabel = '<label for="res-checkin">1. 체크인 일시</label>';
+const reservationCheckoutLabel = '<label for="res-checkout">2. 체크아웃 일시</label>';
+if (html.indexOf(reservationCheckinLabel) < 0 || html.indexOf(reservationCheckoutLabel) <= html.indexOf(reservationCheckinLabel)) {
+  throw new Error('Single-reservation form must render check-in before check-out.');
+}
+for (const contract of [
+  '한 고객의 체크인부터 체크아웃까지를 한 예약 ID로 저장',
+  'reservationOverlaps(room.no,checkInAt,checkOutAt,id)',
+  'quickReservationConflict(room.no,firstNight,lastNight,id,checkInAt,checkOutAt)',
+  'reservationFingerprint(existing)',
+  "historyReservationId=isNew?'__new__'",
+  'syncAdjacentReservationCleaningSchedules',
+  'syncReservationAssignmentScheduleState',
+  "['checkout','checkin','deadline','nextReservationId'].some",
+  'underlyingManualCheckoutTarget',
+  'reservationWorkScheduleFingerprint',
+  '이 예약은 이미 변경되었거나 취소되었습니다.',
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation interval contract missing: ${contract}`);
+}
+const reservationModalStart = html.indexOf('function reservationModalConfig');
+const reservationModalSource = html.slice(reservationModalStart, html.indexOf('function openReservation', reservationModalStart));
+if (reservationModalSource.includes('퇴실 고객 체크아웃') || reservationModalSource.includes('다음 고객 체크인')) {
+  throw new Error('Turnover labels must not be used as fields in a single-customer reservation form.');
+}
 
 const qa = readFileSync(resolve(root, 'WIREFRAME/QA.md'), 'utf8');
 if (/고객 배정 가능 기준 109개|장기투숙 중 11개|현재 장기투숙 11개/.test(qa)) {
@@ -227,6 +252,9 @@ for (const contract of ['초기 투숙 seed 11개', '762호 dataIssue', '객실 
 }
 for (const contract of ['간편 예약 원장과 터치 오입력 방지', '세로 터치 스크롤', '길게 누른 뒤 가로 선택', 'admin-quick-booking-1440.png', 'admin-quick-booking-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Quick reservation QA contract missing: ${contract}`);
+}
+for (const contract of ['체크인 → 체크아웃 입력 순서', '같은 예약 ID', '실제 시각 겹침', '직전 퇴실 청소 재통보']) {
+  if (!qa.includes(contract)) throw new Error(`Reservation interval QA contract missing: ${contract}`);
 }
 
 const audit = readFileSync(resolve(root, 'DOCS/FINAL_UX_AUDIT.md'));
