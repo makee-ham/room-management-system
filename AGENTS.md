@@ -5,12 +5,13 @@
 ## 작업 전 필독 순서
 
 1. `DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md`를 끝까지 읽는다. 청소 근무 가능일·담당 결정 방식의 최신 정본이다.
-2. `DOCS/FINAL_UX_AUDIT.md`를 끝까지 읽는다. 이 파일은 그 밖의 최종 제품 정책 정본이며 사용자의 명시적 요청 없이는 수정하지 않는다.
-3. `DOCS/14_CLICKABLE_WIREFRAME_HANDOFF.md`를 끝까지 읽는다.
-4. `WIREFRAME/README.md`와 `WIREFRAME/QA.md`를 읽어 현재 구현·검증 상태를 확인한다.
-5. `DOCS/WIREFRAME_TASK_PROMPT.md`의 실행 계약을 확인한다.
+2. `DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md`를 끝까지 읽는다. 객실 기준정보·점유·카드 주 상태·수동 체크아웃의 최신 정본이다.
+3. `DOCS/FINAL_UX_AUDIT.md`를 끝까지 읽는다. 이 파일은 그 밖의 최종 제품 정책 정본이며 사용자의 명시적 요청 없이는 수정하지 않는다.
+4. `DOCS/14_CLICKABLE_WIREFRAME_HANDOFF.md`를 끝까지 읽는다.
+5. `WIREFRAME/README.md`와 `WIREFRAME/QA.md`를 읽어 현재 구현·검증 상태를 확인한다.
+6. `DOCS/WIREFRAME_TASK_PROMPT.md`의 실행 계약을 확인한다.
 
-충돌 시 `현재 사용자의 명시적 결정 → 16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY(청소 배정 범위) → FINAL_UX_AUDIT → 14_CLICKABLE_WIREFRAME_HANDOFF → WIREFRAME README/QA → 이전 문서·시안` 순서로 따른다. `CURRENT/`, `HISTORY/`, `DOCS/01`~`DOCS/13`은 감사 근거와 시각 참고일 뿐 현재 제품 정책의 정본이 아니다.
+충돌 시 `현재 사용자의 명시적 결정 → 16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY(청소 배정 범위) → 17_ROOM_CATALOG_LONG_STAY_DECISIONS(객실 기준정보·점유·카드 주 상태 범위) → FINAL_UX_AUDIT → 14_CLICKABLE_WIREFRAME_HANDOFF → WIREFRAME README/QA → 이전 문서·시안` 순서로 따른다. `CURRENT/`, `HISTORY/`, `DOCS/01`~`DOCS/13`은 감사 근거와 시각 참고일 뿐 현재 제품 정책의 정본이 아니다.
 
 ## 구현 범위
 
