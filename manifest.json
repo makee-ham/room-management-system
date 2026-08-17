@@ -1,7 +1,7 @@
 {
   "package": "CASTLE THE ART room management wireframe",
-  "version": "2026-08-17-reservation-checkin-checkout",
-  "generated_at_kst": "2026-08-17T10:22:58+09:00",
+  "version": "2026-08-18-maid-zone-camera",
+  "generated_at_kst": "2026-08-18T04:06:36+09:00",
   "repository": "https://github.com/makee-ham/room-management-system",
   "entrypoint": "WIREFRAME/index.html",
   "policy_source": "DOCS/FINAL_UX_AUDIT.md",
@@ -11,7 +11,7 @@
   "qa_record": "WIREFRAME/QA.md",
   "sha256": {
     "DOCS/FINAL_UX_AUDIT.md": "8c868aa0d3601d58a49209dea1e766155a04edb935246c6b8f44c9741fe0af5b",
-    "WIREFRAME/index.html": "e0963cdae7b59fd4d31b92df578f9f8d6d4cc7429a5b6408109cfec494565534"
+    "WIREFRAME/index.html": "ae1db3a57e4dbc77a578b9168ed0d844e8ca4dafcd3748597ac461643a5f0833"
   },
   "runtime": {
     "build_required": false,
