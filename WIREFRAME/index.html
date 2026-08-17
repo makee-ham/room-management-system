@@ -168,6 +168,19 @@
     .rail-row { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 7px 8px; border-radius: 8px; background: var(--surface-soft); font-size: 12px; }
     .rail-row strong { margin-right: auto; }
     .rail-row input { width: 18px; height: 18px; }
+    .reservation-schedule { display:grid; gap:10px; }
+    .reservation-schedule-window { overflow:hidden; border:1px solid var(--line); border-radius:12px; background:#fff; }
+    .reservation-week-nav { display:grid; grid-template-columns:44px minmax(0,1fr) 44px; align-items:center; gap:8px; padding:10px; border-bottom:1px solid var(--line); background:#f7f9fb; }
+    .reservation-week-nav .icon-btn { width:44px; min-width:44px; height:44px; }
+    .reservation-week-range { display:flex; align-items:center; justify-content:center; gap:8px; min-width:0; min-height:44px; padding:7px 10px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); font-size:14px; font-weight:850; text-align:center; }
+    .reservation-week-range span { color:var(--muted); font-size:12px; white-space:nowrap; }
+    .reservation-week-note { display:flex; align-items:center; gap:7px; margin:0; padding:10px 12px; border-bottom:1px solid var(--line); color:#6d5425; background:var(--amber-soft); font-size:12px; font-weight:750; }
+    .reservation-schedule .rail-list { gap:7px; margin:0; padding:10px; }
+    .reservation-schedule .rail-row { min-height:56px; padding:10px 12px; border:1px solid #d9e1e8; background:var(--surface-soft); font-size:14px; text-align:left; }
+    .reservation-schedule .rail-row[aria-current="true"] { border-color:#69a2d0; box-shadow:0 0 0 2px rgba(44,119,174,.12); background:#f1f7fc; }
+    .reservation-schedule .rail-row > span { display:inline-flex; align-items:center; gap:5px; margin-left:auto; color:var(--muted); font-size:12px; }
+    .reservation-schedule .reservation-history-row { cursor:default; }
+    .reservation-schedule-empty { margin:0; padding:14px 12px; color:var(--muted); font-size:13px; }
 
     .date-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
     .date-current { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-soft); font-weight: 800; }
@@ -395,6 +408,8 @@
       .modal-foot .btn { flex: 1; }
       .modal-foot.has-secondary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .modal-foot.has-secondary .modal-secondary { grid-column: 1 / -1; width: 100%; margin-right: 0; }
+      .reservation-schedule .rail-row { align-items:flex-start; flex-direction:column; }
+      .reservation-schedule .rail-row > span { margin-left:0; }
     }
     @media (max-width: 420px) {
       .demo-label { font-size: 12px; }
@@ -1628,6 +1643,27 @@
       function activeReservationsFor(targetState,roomNo='') {
         return (targetState?.reservations||[]).filter(reservation=>reservation.status==='active'&&(!roomNo||reservation.room===String(roomNo))).sort((left,right)=>left.checkInAt.localeCompare(right.checkInAt)||left.id.localeCompare(right.id));
       }
+      function reservationSevenDayWindow(anchorDate=state.selectedDate) {
+        const startDate=weekStartIso(String(anchorDate||state.selectedDate).slice(0,10)),endDate=shiftIsoDate(startDate,6),endExclusive=shiftIsoDate(startDate,7);
+        return {startDate,endDate,endExclusive,startAt:`${startDate}T00:00`,endAt:`${endExclusive}T00:00`};
+      }
+      function reservationWindowLabel(window=reservationSevenDayWindow()) {
+        const start=dateObject(window.startDate),end=dateObject(window.endDate),startLabel=`${start.getMonth()+1}/${start.getDate()}`,endLabel=`${end.getMonth()+1}/${end.getDate()}`;
+        return `${startLabel}–${endLabel}`;
+      }
+      function reservationBucketsForRoom(targetState,roomNo,anchorDate=targetState?.selectedDate||state.selectedDate) {
+        const window=reservationSevenDayWindow(anchorDate),records=(targetState?.reservations||[]).filter(reservation=>reservation.room===String(roomNo)),active=records.filter(reservation=>reservation.status==='active').sort((left,right)=>left.checkInAt.localeCompare(right.checkInAt)||left.id.localeCompare(right.id));
+        const weekRecords=records.filter(reservation=>reservation.checkInAt<window.endAt&&reservation.checkOutAt>window.startAt).sort((left,right)=>left.checkInAt.localeCompare(right.checkInAt)||left.id.localeCompare(right.id)),withinWeek=weekRecords.filter(reservation=>reservation.status==='active'),future=active.filter(reservation=>reservation.checkInAt>=window.endAt),history=records.filter(reservation=>reservation.status!=='active'||reservation.checkOutAt<=window.startAt).sort((left,right)=>(right.cancelledAt||right.updatedAt||right.checkOutAt).localeCompare(left.cancelledAt||left.updatedAt||left.checkOutAt)||right.id.localeCompare(left.id));
+        return {window,records,active,weekRecords,withinWeek,future,history};
+      }
+      function reservationCurrentMoment() { return `${state.selectedDate}T${state.time}`; }
+      function reservationRecordIsPast(reservation) { return !!reservation&&(reservation.status!=='active'||reservation.checkOutAt<=reservationCurrentMoment()); }
+      function reservationWeekIsPast(start=state.reservationWeekStart) { return weekStartIso(String(start||state.selectedDate).slice(0,10))<weekStartIso(state.selectedDate); }
+      function reservationHistoryStatus(reservation) {
+        if(reservation?.status==='cancelled')return '취소됨';
+        if(reservation?.status==='checked-out')return '체크아웃 완료';
+        return '지난 예약';
+      }
       function reservationNights(reservation) {
         if(!reservation)return 0;
         const start=dateObject(reservation.checkInAt.slice(0,10)),end=dateObject(reservation.checkOutAt.slice(0,10));
@@ -1859,7 +1895,7 @@
         return {
           scenario:Number(scenario), role:cfg.role, currentMaidId:'m1', adminView:cfg.role === 'admin' ? cfg.view : 'today', maidView:cfg.role === 'maid' ? cfg.view : 'my',
           detail:null, returnContext:null, demoOpen:false, time:'10:32', network:'online', listMode:'data', loggedIn:true, loginMode:'normal',
-          selectedDate:'2026-08-15', calendarMonth:'2026-08', roomFilter:'all', roomTypeFilter:'all', roomSearch:'', selectedDrafts:[], reservationSaved:false,
+          selectedDate:'2026-08-15', calendarMonth:'2026-08', calendarContext:null, reservationWeekStart:'2026-08-10', reservationWeekRoom:null, roomFilter:'all', roomTypeFilter:'all', roomSearch:'', selectedDrafts:[], reservationSaved:false,
           quickReservationMonth:'2026-08', quickReservationType:'all', quickReservationElevator:'all', quickReservationSearch:'', quickGridScrollLeft:720, quickGridScrollTop:0, quickLastCreated:null,
           reservationSequence:INITIAL_RESERVATIONS.length, reservations:initialReservationState(),
           publications:{}, cancelRequests:{},
@@ -1944,7 +1980,7 @@
           stayoverCreated:false, maidStatus:'active', maidStatusById:{m1:'active',m2:'active',m3:'active',m4:'active',m5:'active',m6:'active',m7:'active',m8:'active',m9:'active'}, handoff:'pending',
           maidDeactivation:{choice:null,gates:{assignments:false,round:false,lease:false},startedAt:null,completedAt:null},
           paymentRecords:{}, paymentAttemptHistory:[], complaint:'received', template:'draft', notificationsEnabled:false,
-          maidPayFilter:'all', maidPayOpenWeek:'2026-08-03', maidPaySelectedWeek:null, calendarContext:null,
+          maidPayFilter:'all', maidPayOpenWeek:'2026-08-03', maidPaySelectedWeek:null,
           roomStopped:{}, roomMoves:{}, roomStopReasons:{}, complaintType:'complaint', complaints:[{id:'cp1',maid:'김민지1',type:'벌점',reason:'객실 비품 누락 · 데모',points:1,deleted:false,responseStatus:'unread'}],
           events:[
             {title:'데모 상태 초기화',time:'10:32',detail:'실제 서버 작업이 아닌 결정적 브라우저 시뮬레이션입니다.'}
@@ -1986,6 +2022,7 @@
       let restoringHistory = false;
       let historyTraversalPending = false;
       let historyTraversalOverride = null;
+      let reservationWeekHistoryOverride = null;
       let historyReturnFocus = null;
       let historyModalSequence = 0;
       let cleaningAttemptSequence = 0;
@@ -2139,6 +2176,7 @@
           detail:state.detail?{type:String(state.detail.type),id:String(state.detail.id),...(state.detail.mode?{mode:String(state.detail.mode)}:{})}:null,
           date:state.selectedDate,filter:state.roomFilter,typeFilter:state.roomTypeFilter,q:state.roomSearch,
           quickMonth:state.quickReservationMonth,quickType:state.quickReservationType,quickElevator:state.quickReservationElevator,quickQ:state.quickReservationSearch,quickGridLeft:state.quickGridScrollLeft,quickGridTop:state.quickGridScrollTop,
+          reservationWeekStart:state.reservationWeekStart,reservationWeekRoom:state.reservationWeekRoom,
           scrollY:Math.max(0,Math.round(Number(scrollY)||0)),loggedIn:state.loggedIn!==false,
           adminMaidTab:state.adminMaidTab,workHistoryWeek:state.workHistoryWeek,workHistoryMaid:state.workHistoryMaid,calendarContext:state.calendarContext,calendarMonth:state.calendarMonth,cleaningTab:state.cleaningTab,assignmentTypeFilter:state.assignmentTypeFilter,adminPayWeek:state.adminPayWeek,
           maidPayFilter:state.maidPayFilter,maidPayOpenWeek:state.maidPayOpenWeek,maidPaySelectedWeek:state.maidPaySelectedWeek,
@@ -2162,7 +2200,7 @@
       function omitsModalHtml(kind) { return isPinHistoryKind(kind)||kind==='reservation'||kind==='photo-viewer'; }
       function safeModalHistoryPayload(kind,payload) {
         if(isPinHistoryKind(kind))return payload?.room?{room:String(payload.room)}:null;
-        if(kind==='reservation')return payload?.room?{room:String(payload.room),...(payload.reservationId?{reservationId:String(payload.reservationId)}:{})}:null;
+        if(kind==='reservation')return payload?.room?{room:String(payload.room),...(payload.reservationId?{reservationId:String(payload.reservationId)}:{}),...(/^\d{4}-\d{2}-\d{2}$/.test(payload.weekStart||'')?{weekStart:weekStartIso(payload.weekStart)}:{})}:null;
         if(kind==='photo-viewer'&&payload?.room&&payload?.photoId){const source=['bomb-room','inspection'].includes(payload.source)?payload.source:'room-issue';return {source,room:String(payload.room),recordId:payload.recordId?String(payload.recordId):null,photoId:String(payload.photoId)};}
         return cloneHistoryPayload(payload);
       }
@@ -2254,11 +2292,13 @@
         if(['all','A','B','C','none'].includes(route.quickElevator))state.quickReservationElevator=route.quickElevator;
         if(/^\d{0,6}$/.test(route.quickQ||''))state.quickReservationSearch=route.quickQ||'';
         state.quickGridScrollLeft=Math.max(0,Number(route.quickGridLeft)||0);state.quickGridScrollTop=Math.max(0,Number(route.quickGridTop)||0);
+        if(/^\d{4}-\d{2}-\d{2}$/.test(route.reservationWeekStart||''))state.reservationWeekStart=weekStartIso(route.reservationWeekStart);
+        if(ROOMS.some(room=>room.no===String(route.reservationWeekRoom||'')))state.reservationWeekRoom=String(route.reservationWeekRoom);
         if(['workforce','history','pay','complaints'].includes(route.adminMaidTab))state.adminMaidTab=route.adminMaidTab;
         const restoredWorkHistoryWeek=normalizeWorkHistoryWeek(route.workHistoryWeek);
         if(restoredWorkHistoryWeek)state.workHistoryWeek=restoredWorkHistoryWeek;
         if(route.workHistoryMaid==='all'||MAIDS.some(maid=>maid.id===route.workHistoryMaid))state.workHistoryMaid=route.workHistoryMaid;
-        state.calendarContext=['room','admin-pay','maid-pay','work-history'].includes(route.calendarContext)?route.calendarContext:null;
+        state.calendarContext=['room','admin-pay','maid-pay','work-history','reservation-week'].includes(route.calendarContext)?route.calendarContext:null;
         if(/^\d{4}-(0[1-9]|1[0-2])$/.test(route.calendarMonth||''))state.calendarMonth=route.calendarMonth;
         if(['assignment','progress','inspection','done'].includes(route.cleaningTab))state.cleaningTab=route.cleaningTab;
         if(['all',...Object.keys(ROOM_TYPES)].includes(route.assignmentTypeFilter))state.assignmentTypeFilter=route.assignmentTypeFilter;
@@ -2328,7 +2368,18 @@
         }
         if(entry.modalKind==='template-review')pendingTemplateChange=cloneHistoryPayload(entry.modalPayload);
         if(entry.modalKind==='publish-confirm')pendingDraftPublish=cloneHistoryPayload(entry.modalPayload);
-        if(entry.modalKind==='reservation')root.innerHTML=standardModalMarkup(reservationModalConfig(entry.modalPayload?.room||'211',entry.modalPayload?.reservationId||''));
+        if(entry.modalKind==='reservation'){
+          const weekOverride=reservationWeekHistoryOverride&&String(entry.modalPayload?.room||'')===reservationWeekHistoryOverride.room?reservationWeekHistoryOverride:null;
+          reservationWeekHistoryOverride=null;
+          if(weekOverride){
+            state.reservationWeekStart=weekOverride.weekStart;state.reservationWeekRoom=weekOverride.room;
+            const route={...entry.route,reservationWeekStart:weekOverride.weekStart,reservationWeekRoom:weekOverride.room},modalPayload={...entry.modalPayload,room:weekOverride.room,weekStart:weekOverride.weekStart};entry={...entry,route,modalPayload};history.replaceState(entry,'',historyRouteUrl(route));
+          } else {
+            if(/^\d{4}-\d{2}-\d{2}$/.test(entry.modalPayload?.weekStart||''))state.reservationWeekStart=weekStartIso(entry.modalPayload.weekStart);
+            state.reservationWeekRoom=entry.modalPayload?.room?String(entry.modalPayload.room):state.reservationWeekRoom;
+          }
+          root.innerHTML=standardModalMarkup(reservationModalConfig(entry.modalPayload?.room||'211',entry.modalPayload?.reservationId||''));
+        }
         else if(entry.modalKind==='photo-viewer'){
           const viewerMarkup=photoViewerModalMarkup(entry.modalPayload);
           if(!viewerMarkup){rawCloseModal();history.replaceState({...entry,layer:'page',modalKind:undefined,modalPayload:undefined,modalHtml:undefined},'',historyRouteUrl(entry.route));return;}
@@ -3258,8 +3309,8 @@
 
       function calendarMarkup() {
         const [year,month]=state.calendarMonth.split('-').map(Number);
-        const weekMode=['admin-pay','maid-pay','work-history'].includes(state.calendarContext);
-        const weekSelectedStart=state.calendarContext==='admin-pay'?state.adminPayWeek:state.calendarContext==='maid-pay'?(state.maidPaySelectedWeek||state.maidPayOpenWeek||'2026-08-03'):state.workHistoryWeek;
+        const constrainedWeekMode=['admin-pay','maid-pay','work-history'].includes(state.calendarContext),weekMode=constrainedWeekMode||state.calendarContext==='reservation-week';
+        const weekSelectedStart=state.calendarContext==='admin-pay'?state.adminPayWeek:state.calendarContext==='maid-pay'?(state.maidPaySelectedWeek||state.maidPayOpenWeek||'2026-08-03'):state.calendarContext==='reservation-week'?state.reservationWeekStart:state.workHistoryWeek;
         const latestWeek=state.calendarContext==='work-history'?'2026-08-17':'2026-08-10';
         const first=new Date(year,month-1,1), offset=weekMode?(first.getDay()+6)%7:first.getDay(), start=new Date(year,month-1,1-offset);
         const days=Array.from({length:42},(_,i)=>{const d=new Date(start);d.setDate(start.getDate()+i);return d;});
@@ -3267,16 +3318,16 @@
           <div class="calendar-head"><button class="icon-btn" type="button" data-action="calendar-month" data-offset="-1" aria-label="이전 달">${icon('chevronLeft')}</button><strong id="calendar-title">${year}년 ${month}월</strong><button class="icon-btn" type="button" data-action="calendar-month" data-offset="1" aria-label="다음 달">${icon('chevronRight')}</button></div>
           ${weekMode?`<p class="pay-week-calendar-note">날짜를 누르면 그 날짜가 포함된 월요일–일요일 주차를 선택합니다.</p>`:''}
           <div class="calendar-week" aria-hidden="true">${(weekMode?['월','화','수','목','금','토','일']:['일','월','화','수','목','금','토']).map(v=>`<span>${v}</span>`).join('')}</div>
-          <div class="calendar-grid">${days.map(d=>{const iso=dateIso(d), other=d.getMonth()!==month-1, today=iso==='2026-08-15', weekSelected=weekMode&&weekStartIso(iso)===weekSelectedStart, selected=weekMode?iso===weekSelectedStart:iso===state.selectedDate, future=weekMode&&weekStartIso(iso)>latestWeek;return `<button type="button" class="calendar-day ${other?'other':''} ${today?'today':''} ${weekSelected?'week-selected':''} ${selected?'selected':''}" data-action="calendar-select" data-date="${iso}" ${weekMode?`aria-pressed="${weekSelected}"`:`aria-current="${selected?'date':'false'}"`} aria-label="${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일${today?' 오늘':''}${weekSelected?' 선택 주차':''}" ${future?'disabled':''}>${d.getDate()}</button>`;}).join('')}</div>
+          <div class="calendar-grid">${days.map(d=>{const iso=dateIso(d), other=d.getMonth()!==month-1, today=iso==='2026-08-15', weekSelected=weekMode&&weekStartIso(iso)===weekSelectedStart, selected=weekMode?iso===weekSelectedStart:iso===state.selectedDate, future=constrainedWeekMode&&weekStartIso(iso)>latestWeek;return `<button type="button" class="calendar-day ${other?'other':''} ${today?'today':''} ${weekSelected?'week-selected':''} ${selected?'selected':''}" data-action="calendar-select" data-date="${iso}" ${weekMode?`aria-pressed="${weekSelected}"`:`aria-current="${selected?'date':'false'}"`} aria-label="${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일${today?' 오늘':''}${weekSelected?' 선택 주차':''}" ${future?'disabled':''}>${d.getDate()}</button>`;}).join('')}</div>
           <div class="calendar-foot">${button(weekMode?'이번 주':'오늘로 이동','calendar-today','outline')}${button('닫기','calendar-close','soft')}</div>
         </section></div>`;
       }
-      function openCalendar(trigger=document.activeElement,context='room') {
+      function openCalendar(trigger=document.activeElement,context='room',stack=false) {
         state.calendarContext=context;
         modalTrigger=trigger;
         document.getElementById('modal-root').innerHTML=calendarMarkup();
         setModalBackgroundLocked(true);document.body.classList.add('modal-open');
-        registerModalHistory({kind:'calendar',payload:{context,month:state.calendarMonth}});
+        registerModalHistory({stack,kind:'calendar',payload:{context,month:state.calendarMonth,...(context==='reservation-week'&&state.reservationWeekRoom?{room:state.reservationWeekRoom}:{})}});
         requestAnimationFrame(()=>(document.querySelector('.calendar-day.selected:not(:disabled)')||document.querySelector('.calendar-day:not(:disabled)')||document.querySelector('[data-action="calendar-close"]'))?.focus());
       }
       function rerenderCalendar() { document.getElementById('modal-root').innerHTML=calendarMarkup();registerModalHistory({kind:'calendar',payload:{context:state.calendarContext,month:state.calendarMonth}});requestAnimationFrame(()=>(document.querySelector('.calendar-day.selected:not(:disabled)')||document.querySelector('.calendar-day:not(:disabled)')||document.querySelector('[data-action="calendar-close"]'))?.focus()); }
@@ -3374,7 +3425,8 @@
       }
 
       function roomCard(no) {
-        const room=ROOMS.find(item=>item.no===no),type=ROOM_TYPES[room.type],p=roomPresentation(no),job=state.jobs[no],candle=room.occupancy==='occupied'?0:state.candles[no]||0,special=cardReservationStatus(no),issueCount=unresolvedRoomIssueRecords(no).length,reservations=activeReservationsFor(state,no),closestReservation=cardReservationFor(no);
+        const room=ROOMS.find(item=>item.no===no),type=ROOM_TYPES[room.type],p=roomPresentation(no),job=state.jobs[no],candle=room.occupancy==='occupied'?0:state.candles[no]||0,special=cardReservationStatus(no),issueCount=unresolvedRoomIssueRecords(no).length,reservations=activeReservationsFor(state,no),upcomingReservations=reservations.filter(item=>!reservationRecordIsPast(item)),closestReservation=upcomingReservations[0]||null;
+        const cardWeekAnchor=closestReservation&&closestReservation.checkInAt.slice(0,10)>state.selectedDate?closestReservation.checkInAt.slice(0,10):state.selectedDate,reservationBuckets=reservationBucketsForRoom(state,no,cardWeekAnchor),weekReservations=reservationBuckets.withinWeek.filter(item=>!reservationRecordIsPast(item)),laterReservationCount=upcomingReservations.filter(item=>item.checkInAt>=reservationBuckets.window.endAt).length,pastReservationCount=reservationBuckets.records.filter(reservationRecordIsPast).length,closestCleaner=cleaningAssignmentForReservation(closestReservation);
         const stayProgress=roomStayProgress(room,reservations),earlyTime=special.checkin||DEFAULT_CHECKIN_TIME,lateTime=special.checkout||DEFAULT_CHECKOUT_TIME,checkinDisplay=closestReservation?reservationMomentLabel(closestReservation.checkInAt):'일정 없음',checkoutDisplay=closestReservation?reservationMomentLabel(closestReservation.checkOutAt):'일정 없음';
         const scheduleBadges=[stayProgress?`<span class="schedule-priority-badge stayover">${icon('calendar','icon-sm')}${esc(stayProgress.label)}</span>`:'',special.early?`<span class="schedule-priority-badge">${icon('clock','icon-sm')}얼리 체크인 ${esc(earlyTime)} · ${esc(special.earlyOffset)} 빠름</span>`:'',special.late?`<span class="schedule-priority-badge late">${icon('clock','icon-sm')}레이트 체크아웃 ${esc(lateTime)} · ${esc(special.lateOffset)} 늦음</span>`:''].filter(Boolean).join('');
         const detailBadges=[roomIsOnHold(no)?'<span class="room-detail-badge">정보 확인 필요</span>':'',state.roomStopped[no]?'<span class="room-detail-badge">운영 중지</span>':'',no==='332'&&state.conflict==='active'?'<span class="room-detail-badge">출입·PIN 충돌</span>':'',candle?`<span class="room-detail-badge">${icon('candle','icon-sm')}촛불 ${candle}개</span>`:'',issueCount?`<span class="room-detail-badge">특이사항 ${issueCount}건</span>`:''].filter(Boolean).join('');
@@ -3383,9 +3435,9 @@
         return `<article class="card room-card-v2 tone-${p.tone}" data-room="${no}"><div class="room-card-main"><div class="room-card-head"><div><h3>${no}호</h3><p>${esc(type.name)}</p><span class="room-location-line">${icon('mapPin','icon-sm')}${esc(elevatorLabel(room))}</span></div><div class="badge-row room-schedule-badges">${scheduleBadges}${detailBadges}</div></div>
           <div class="time-band" aria-label="한 고객 예약의 체크인부터 체크아웃까지">${icon('clock','icon-sm')}<span>체크인 <strong>${esc(checkinDisplay)}</strong></span><span aria-hidden="true">→</span><span>체크아웃 <strong>${esc(checkoutDisplay)}</strong></span></div>
           <div class="concept-status-panel ${p.tone}"><span class="status-symbol">${icon(statusIcon)}</span><div class="concept-status-copy"><strong>${esc(p.status)}</strong><span>${esc(p.reason)}</span>${subBadges}</div></div>
-          ${closestReservation?`<button class="room-work-line concept-cleaning-row" type="button" data-action="quick-reservation-edit" data-id="${esc(closestReservation.id)}" data-room="${no}"><span class="concept-cleaning-icon">${icon('calendar')}</span><div><strong>예약 ${reservations.length}건 · 가장 가까운 일정 ${reservationNights(closestReservation)}박</strong><span>${esc(quickRangeLabel(closestReservation))}</span></div>${icon('chevronRight')}</button>`:`<button class="room-work-line concept-cleaning-row" type="button" data-action="reservation-edit" data-id="${no}"><span class="concept-cleaning-icon">${icon('calendar')}</span><div><strong>예약 없음 · 바로 등록</strong><span>체크인·체크아웃을 입력하세요.</span></div>${icon('chevronRight')}</button>`}
+          ${closestReservation?`<button class="room-work-line concept-cleaning-row" type="button" data-action="quick-reservation-edit" data-id="${esc(closestReservation.id)}" data-room="${no}"><span class="concept-cleaning-icon">${icon('calendar')}</span><div><strong>${esc(reservationWindowLabel(reservationBuckets.window))} 예약 ${weekReservations.length}건 · 가장 가까운 일정 ${reservationNights(closestReservation)}박</strong><span>${esc(quickRangeLabel(closestReservation))} · ${esc(closestCleaner.assigned?`청소 ${closestCleaner.name} · ${closestCleaner.status}`:'청소 미배정')}${laterReservationCount?` · 이후 ${laterReservationCount}건`:''}</span></div>${icon('chevronRight')}</button>`:`<button class="room-work-line concept-cleaning-row" type="button" data-action="reservation-edit" data-id="${no}"><span class="concept-cleaning-icon">${icon('calendar')}</span><div><strong>${pastReservationCount?`지난 예약 기록 ${pastReservationCount}건`:'예약 없음 · 바로 등록'}</strong><span>${pastReservationCount?'지난 기록은 조회만 가능합니다.':'체크인·체크아웃을 입력하세요.'}</span></div>${icon('chevronRight')}</button>`}
           ${roomIsOnHold(no)?'':renderPinRow(no)}</div>
-          <div class="room-quick-actions"><button class="btn btn-ghost" type="button" data-action="${closestReservation?'quick-reservation-edit':'reservation-edit'}" data-id="${closestReservation?esc(closestReservation.id):no}" ${closestReservation?`data-room="${no}"`:''}>${icon('calendar')}${reservations.length?`예약 ${reservations.length}건`:'예약 등록'}</button><button class="btn btn-ghost" type="button" data-action="${operationAction}" data-id="${no}">${icon('shield')}${operationLabel}</button><button class="btn btn-ghost" type="button" data-action="${cleaningAction}" data-id="${no}">${icon('briefcase')}${cleaningActionLabel}</button><button class="btn btn-ghost" type="button" data-action="room-detail" data-id="${no}">${icon('list')}전체 상세</button></div></article>`;
+          <div class="room-quick-actions"><button class="btn btn-ghost" type="button" data-action="${closestReservation?'quick-reservation-edit':'reservation-edit'}" data-id="${closestReservation?esc(closestReservation.id):no}" ${closestReservation?`data-room="${no}"`:''}>${icon('calendar')}${weekReservations.length?`${esc(reservationWindowLabel(reservationBuckets.window))} ${weekReservations.length}건`:pastReservationCount?`예약 기록 ${pastReservationCount}건`:'예약 등록'}</button><button class="btn btn-ghost" type="button" data-action="${operationAction}" data-id="${no}">${icon('shield')}${operationLabel}</button><button class="btn btn-ghost" type="button" data-action="${cleaningAction}" data-id="${no}">${icon('briefcase')}${cleaningActionLabel}</button><button class="btn btn-ghost" type="button" data-action="room-detail" data-id="${no}">${icon('list')}전체 상세</button></div></article>`;
       }
       function cleaningLabel(job) { return ({scheduled:'퇴실 청소 · 시작 예정',inspection:'퇴실 청소 · 검수 대기',cleaning:'퇴실 청소 · 청소 중',upload:'퇴실 청소 · 업로드 대기',approved:'현재 청소 작업 없음',reclean:'재청소 · 시작 예정',public:'청소 · 관리자 배정 대기',unassigned:'청소 · 관리자 배정 대기',claimed:'퇴실 청소 · 관리자 배정 확정',hold:'관리자 조치 대기',draft:'배정 준비 청소 작업',future:'미래 퇴실 청소 예정','stayover-requested':'연박 청소 요청'})[job]||'현재 청소 작업 없음'; }
       function filteredRooms() {
@@ -3534,6 +3586,7 @@
         const room=ROOMS.find(item=>item.no===reservation.room),checkoutDate=reservation.checkOutAt.slice(0,10),expectedTargetId=`checkout-${reservation.room}-${checkoutDate}`,manualTarget=underlyingManualCheckoutTarget(reservation.room,checkoutDate),assignmentEntry=reservationAssignmentEntryForDate(reservation,checkoutDate),assignmentRecord=manualTarget&&state.assignments?.[manualTarget.id]?state.assignments[manualTarget.id]:assignmentEntry.record,assignmentItem=manualTarget||assignmentEntry.item,notifiedMaidId=notifiedMaidForAssignment(assignmentRecord),selectedMaidId=assignmentRecord?.maidId||assignmentRecord?.previousMaidId||null,drafts=(state.drafts||[]).filter(draft=>draft.reservationId===reservation.id),draftIsPublished=draft=>{const publication=state.publications?.[draft.id];return draft.visibility==='public'||!!publication&&(typeof publication!=='object'||publication.status!=='cancelled');},publishedDrafts=drafts.filter(draftIsPublished),privateDrafts=drafts.filter(draft=>!draftIsPublished(draft)),publicCleaningLinked=!!publishedDrafts.length||state.jobs[reservation.room]==='public',randomAssignmentActive=!!state.randomAssignmentSnapshot,actualStayStarted=room?.occupancy==='occupied'&&room.reservationProjectionId===reservation.id&&!!room.actualCheckinAt,stayStarted=actualStayStarted,attempt=activeUnfinishedAttempt(reservation.room),connectedAttempt=reservationAutomaticCleaningAttempt(reservation,attempt),pinViewed=!!connectedAttempt&&roomPinWasViewed(reservation.room,connectedAttempt.id),adjacentChanges=reservationCancellationAdjacentChanges(reservation);
         let blockedReason='';
         if(!adminCanMutate())blockedReason='관리자 최신 온라인 상태에서만 예약을 취소할 수 있습니다.';
+        else if(reservationRecordIsPast(reservation))blockedReason='지난 예약 기록은 조회만 가능하며 수정하거나 취소할 수 없습니다.';
         else if(stayStarted)blockedReason='체크인이 시작된 예약은 취소하지 않고 객실 상세의 지금 체크아웃으로 처리해야 합니다.';
         else if(connectedAttempt)blockedReason=pinViewed?'연결된 청소 수행 회차에서 PIN을 이미 조회해 현장 영향 확인이 필요합니다.':'연결된 청소 수행 회차가 이미 만들어져 먼저 청소 담당·회차를 조율해야 합니다.';
         else if(publicCleaningLinked)blockedReason='연결된 청소 작업이 이미 공개되어 예약을 바로 취소할 수 없습니다. 청소 화면에서 공개를 중단하거나 담당 영향을 먼저 조율해 주세요.';
@@ -3593,6 +3646,8 @@
         const previous=id?state.reservations.find(item=>item.id===id&&item.status==='active')||null:null,before=previous?{...previous}:null,room=ROOMS.find(item=>item.no===String(roomNo)),beforeReservations=activeReservationsFor(state,String(roomNo)).map(item=>({...item}));
         if(!room)return {error:'객실 정보를 찾을 수 없습니다.'};
         if(id&&!previous)return {error:'이 예약은 이미 변경되었거나 취소되었습니다. 최신 예약을 다시 열어 주세요.'};
+        if(previous&&reservationRecordIsPast(previous))return {error:'지난 예약 기록은 조회만 가능하며 수정할 수 없습니다.'};
+        if(checkOutAt<=reservationCurrentMoment())return {error:'이미 지난 일정은 예약으로 새로 등록하거나 옮길 수 없습니다. 과거 예약 기록은 조회만 가능합니다.'};
         const scheduleChanged=!!before&&(before.checkInAt!==checkInAt||before.checkOutAt!==checkOutAt),beforeImpact=before?reservationCancellationImpact(before):null;
         if(scheduleChanged&&beforeImpact?.publicCleaningLinked)return {error:`${room.no}호의 연결 청소 작업이 이미 공개되어 예약 일정을 바로 바꿀 수 없습니다. 청소 화면에서 공개·담당 영향을 먼저 조율해 주세요.`};
         if(scheduleChanged&&beforeImpact?.randomAssignmentActive)return {error:'랜덤 배정 초안이 적용된 동안에는 예약 일정을 바꿀 수 없습니다. 전날 배정에서 랜덤 초안을 되돌린 뒤 다시 저장해 주세요.'};
@@ -5097,18 +5152,34 @@
         showModal({title:`${no}호 투숙 시작`,subtitle:'현재 객실에 손님이 들어온 사실만 기록합니다.',trigger,body:`<div class="notice notice-info"><div><strong>고객 개인정보는 입력하지 않습니다.</strong><br>${dateLabel(state.selectedDate)} ${esc(state.time)}부터 객실 상태를 투숙 중으로 바꿉니다.</div></div>`,confirmLabel:'투숙 중으로 변경',confirmAction:'confirm-manual-checkin'});
         const confirm=document.querySelector('[data-action="confirm-manual-checkin"]');if(confirm){confirm.dataset.id=no;confirm.dataset.fingerprint=roomMasterFingerprint(room);}
       }
+      function reservationWeekScheduleMarkup(room,existing,buckets) {
+        const weekPast=reservationWeekIsPast(buckets.window.startDate),records=buckets.weekRecords,countLabel=weekPast?`기록 ${records.length}건`:`예약 ${records.filter(item=>item.status==='active'&&!reservationRecordIsPast(item)).length}건`,rows=records.map(reservation=>{
+          const readOnly=weekPast||reservationRecordIsPast(reservation),assignment=cleaningAssignmentForReservation(reservation),status=readOnly?reservationHistoryStatus(reservation):(assignment.assigned?`${assignment.name} · ${assignment.status}`:'청소 미배정'),content=`<strong>${esc(quickRangeLabel(reservation))} · ${reservationNights(reservation)}박</strong><span>${esc(status)}${readOnly?'':` ${icon('chevronRight','icon-sm')}`}</span>`;
+          return readOnly?`<div class="rail-row reservation-history-row" aria-label="${esc(`${quickRangeLabel(reservation)} ${reservationNights(reservation)}박 ${status}`)}">${content}</div>`:`<button class="rail-row" type="button" data-action="quick-reservation-edit" data-id="${esc(reservation.id)}" data-room="${room.no}" data-week="${buckets.window.startDate}" ${existing?.id===reservation.id?'aria-current="true"':''}>${content}</button>`;
+        }).join('');
+        return `<div class="field field-full reservation-schedule"><section class="reservation-schedule-window" aria-label="${room.no}호 ${esc(weekRangeLabel(buckets.window.startDate))} 예약"><div class="reservation-week-nav"><button class="icon-btn" type="button" data-action="reservation-week-shift" data-room="${room.no}" data-offset="-1" aria-label="이전 주 예약 보기">${icon('chevronLeft')}</button><button class="reservation-week-range" type="button" data-action="open-reservation-week-calendar" data-room="${room.no}" aria-haspopup="dialog" aria-label="${esc(weekRangeLabel(buckets.window.startDate,true))} 주차 선택, ${countLabel}"><strong>${esc(weekRangeLabel(buckets.window.startDate))}</strong><span>${countLabel}</span></button><button class="icon-btn" type="button" data-action="reservation-week-shift" data-room="${room.no}" data-offset="1" aria-label="다음 주 예약 보기">${icon('chevronRight')}</button></div>${weekPast?`<p class="reservation-week-note">${icon('lock','icon-sm')}지난 예약 기록 · 조회만 가능</p>`:''}${rows?`<div class="rail-list">${rows}</div>`:`<p class="reservation-schedule-empty">이 주의 예약 기록이 없습니다.</p>`}</section></div>`;
+      }
       function reservationModalConfig(roomNo='211',reservationId='') {
-        const isNew=reservationId==='__new__',requestedId=reservationId&&!isNew?reservationId:'',requested=requestedId?state.reservations.find(item=>item.id===requestedId&&item.status==='active')||null:null,stale=!!(requestedId&&!requested);
-        const room=ROOMS.find(item=>item.no===(requested?.room||String(roomNo)))||ROOMS.find(item=>item.no==='211')||ROOMS[0],roomReservations=activeReservationsFor(state,room.no),pivot=`${state.selectedDate}T00:00`,existing=requested||(!reservationId?(roomReservations.find(item=>item.checkOutAt>pivot)||roomReservations[0]||null):null),defaultDate=state.selectedDate,checkinAt=existing?.checkInAt||`${defaultDate}T${DEFAULT_CHECKIN_TIME}`,checkoutAt=existing?.checkOutAt||`${shiftIsoDate(defaultDate,1)}T${DEFAULT_CHECKOUT_TIME}`,cancelImpact=existing?reservationCancellationImpact(existing):null,historyReservationId=isNew?'__new__':requestedId||existing?.id||'';
+        const isNew=reservationId==='__new__',requestedId=reservationId&&!isNew?reservationId:'',requested=requestedId?state.reservations.find(item=>item.id===requestedId)||null:null,stale=!!(requestedId&&!requested);
+        const room=ROOMS.find(item=>item.no===(requested?.room||String(roomNo)))||ROOMS.find(item=>item.no==='211')||ROOMS[0],selectedWeek=weekStartIso(state.reservationWeekStart||state.selectedDate),buckets=reservationBucketsForRoom(state,room.no,selectedWeek),requestedVisible=requested&&requested.checkInAt<buckets.window.endAt&&requested.checkOutAt>buckets.window.startAt?requested:null,editableInWeek=buckets.withinWeek.filter(item=>!reservationRecordIsPast(item)),existing=requestedVisible||(!reservationId?editableInWeek[0]||null:null),weekPast=reservationWeekIsPast(selectedWeek),readOnly=weekPast||!!existing&&reservationRecordIsPast(existing),defaultDate=selectedWeek===weekStartIso(state.selectedDate)?state.selectedDate:selectedWeek,checkinAt=existing?.checkInAt||`${defaultDate}T${DEFAULT_CHECKIN_TIME}`,checkoutAt=existing?.checkOutAt||`${shiftIsoDate(defaultDate,1)}T${DEFAULT_CHECKOUT_TIME}`,cancelImpact=existing&&!readOnly?reservationCancellationImpact(existing):null,historyReservationId=isNew?'__new__':existing?.id||'';
         const roomOptions=ROOMS.filter(item=>item.no===room.no||!quickRoomBlockReason(item)).map(item=>`<option value="${item.no}" ${item.no===room.no?'selected':''}>${item.no}호 · ${esc(ROOM_TYPES[item.type].name)} · ${esc(item.elevator||'미기재')}</option>`).join('');
-        const scheduleList=roomReservations.length?`<div class="field field-full"><div class="section-head" style="margin:0 0 8px"><h3 style="margin:0">${room.no}호 예약 ${roomReservations.length}건</h3></div><div class="rail-list" style="margin:0">${roomReservations.map(reservation=>{const assignment=cleaningAssignmentForReservation(reservation);return `<button class="rail-row" type="button" data-action="quick-reservation-edit" data-id="${esc(reservation.id)}" data-room="${room.no}" ${existing?.id===reservation.id?'aria-current="true"':''}><strong>${esc(quickRangeLabel(reservation))} · ${reservationNights(reservation)}박</strong><span>${esc(assignment.assigned?`${assignment.name} · ${assignment.status}`:'청소 미배정')} ${icon('chevronRight','icon-sm')}</span></button>`;}).join('')}</div></div>`:'';
-        const managementNotice=existing?`<div class="field field-full"><div class="notice ${cancelImpact.blockedReason?'notice-warning':'notice-info'}"><div><strong>${cancelImpact.blockedReason?'예약 취소 불가':'예약정보 수정 또는 취소'}</strong><br>${cancelImpact.blockedReason?esc(cancelImpact.blockedReason):'날짜·시각은 위에서 수정하고, 예약을 없앨 때만 예약 취소를 누르세요.'}</div></div></div>`:'';
+        const scheduleList=reservationWeekScheduleMarkup(room,existing,buckets);
+        const managementNotice=existing&&!readOnly?`<div class="field field-full"><div class="notice ${cancelImpact.blockedReason?'notice-warning':'notice-info'}"><div><strong>${cancelImpact.blockedReason?'예약 취소 불가':'예약정보 수정 또는 취소'}</strong><br>${cancelImpact.blockedReason?esc(cancelImpact.blockedReason):'날짜·시각은 위에서 수정하고, 예약을 없앨 때만 예약 취소를 누르세요.'}</div></div></div>`:'';
         if(stale)return {room:room.no,reservationId:requestedId,title:`${room.no}호 예약을 다시 확인해 주세요`,subtitle:'열어 둔 예약이 이미 변경되었거나 취소되었습니다.',closeLabel:'닫기',large:true,body:`<div class="notice notice-warning"><div><strong>최신 예약 목록에서 다시 선택해 주세요.</strong></div></div>${scheduleList}`,confirmLabel:'',confirmAction:''};
+        if(readOnly)return {room:room.no,reservationId:historyReservationId,title:`${room.no}호 지난 예약 기록`,subtitle:`${weekRangeLabel(selectedWeek,true)} · 지난 기록은 수정하거나 취소할 수 없습니다.`,closeLabel:'닫기',large:true,body:scheduleList,confirmLabel:'',confirmAction:''};
         return {room:room.no,reservationId:historyReservationId,title:`${room.no}호 ${existing?'예약 상세·변경':'예약 등록'}`,subtitle:'체크인부터 체크아웃까지 한 고객의 일정을 입력합니다.',closeLabel:'닫기',secondaryLabel:existing&&!cancelImpact.blockedReason?'예약 취소':'',secondaryAction:existing&&!cancelImpact.blockedReason?'reservation-cancel-review':'',secondaryVariant:'danger',secondaryExtra:existing?`data-id="${esc(existing.id)}" data-fingerprint="${esc(reservationFingerprint(existing))}"`:'',large:true,body:`<form id="reservation-form" class="form-grid"><input id="res-id" type="hidden" value="${esc(existing?.id||'')}"><input id="res-fingerprint" type="hidden" value="${esc(reservationFingerprint(existing))}"><div class="field"><label for="res-room">객실</label><select id="res-room" class="select-control" ${existing?'disabled aria-disabled="true"':''}>${roomOptions}</select><small>${existing?'기존 예약의 객실은 변경하지 않습니다.':'예약 가능한 객실만 표시합니다.'}</small></div><div class="field"><label for="res-checkin">1. 체크인 일시</label><input id="res-checkin" class="input-control" type="datetime-local" step="3600" value="${esc(checkinAt)}" required><small>기본 16:00 · 이보다 빠르면 얼리 체크인</small></div><div class="field"><label for="res-checkout">2. 체크아웃 일시</label><input id="res-checkout" class="input-control" type="datetime-local" step="3600" value="${esc(checkoutAt)}" required><small>기본 11:00 · 이보다 늦으면 레이트 체크아웃</small></div>${reservationPreviewMarkup(checkinAt,checkoutAt)}${managementNotice}${scheduleList}</form>`,confirmLabel:existing?'예약정보 수정 저장':'예약 접수',confirmAction:'save-reservation-v2'};
       }
-      function openReservation(roomNo='211',reservationId='') {
+      function openReservation(roomNo='211',reservationId='',options={}) {
+        const room=ROOMS.find(item=>item.no===String(roomNo))||ROOMS[0],requested=reservationId&&!['__new__',''].includes(reservationId)?state.reservations.find(item=>item.id===reservationId)||null:null,allRoomRecords=(state.reservations||[]).filter(item=>item.room===room.no),upcoming=activeReservationsFor(state,room.no).filter(item=>!reservationRecordIsPast(item)),latestRecord=[...allRoomRecords].sort((left,right)=>(right.cancelledAt||right.updatedAt||right.checkOutAt).localeCompare(left.cancelledAt||left.updatedAt||left.checkOutAt))[0]||null;
+        if(options.weekStart)state.reservationWeekStart=weekStartIso(options.weekStart);
+        else if(requested){const requestDate=!reservationRecordIsPast(requested)&&requested.checkInAt.slice(0,10)<=state.selectedDate?state.selectedDate:requested.checkInAt.slice(0,10);state.reservationWeekStart=weekStartIso(requestDate);}
+        else if(reservationId==='__new__')state.reservationWeekStart=weekStartIso(state.selectedDate);
+        else if(upcoming[0]){reservationId=upcoming[0].id;const requestDate=upcoming[0].checkInAt.slice(0,10)<=state.selectedDate?state.selectedDate:upcoming[0].checkInAt.slice(0,10);state.reservationWeekStart=weekStartIso(requestDate);}
+        else if(latestRecord){reservationId=latestRecord.id;state.reservationWeekStart=weekStartIso(latestRecord.checkInAt.slice(0,10));}
+        else state.reservationWeekStart=weekStartIso(state.selectedDate);
+        state.reservationWeekRoom=room.no;
         const config=reservationModalConfig(roomNo,reservationId);
-        showModal({...config,historyKind:'reservation',historyPayload:{room:config.room,...(config.reservationId?{reservationId:config.reservationId}:{})}});
+        showModal({...config,historyKind:'reservation',historyPayload:{room:config.room,weekStart:state.reservationWeekStart,...(config.reservationId?{reservationId:config.reservationId}:{})}});
       }
       function openReservationCancellationReview(reservationId,expectedFingerprint,trigger=document.activeElement) {
         const reservation=state.reservations.find(item=>item.id===reservationId&&item.status==='active')||null;
@@ -5290,7 +5361,7 @@
       document.addEventListener('keydown',event=>{if(event.key!=='Escape'||document.querySelector('#modal-root .modal, .calendar-dialog'))return;if(closeInfoTips({restoreFocus:true})){event.preventDefault();event.stopImmediatePropagation();}},true);
 
       const rebuiltActions=new Set(['toggle-demo','reset','switch-role','nav','filter-rooms','back','close-modal','backdrop-close','room-detail','cleaning-detail','maid-detail','complaint-detail','pay-detail','admin-pay-detail','template','template-detail','template-back-list','template-edit','template-cancel-edit','template-review','template-save','inspection-photo','open-room-export','export-rooms-csv','export-rooms-xls','open-calendar','open-pay-calendar','open-work-history-calendar','calendar-backdrop','calendar-close','calendar-month','calendar-select','calendar-today','date-shift','date-today','toggle-section','clear-room-filters','edit-room-info','save-room-info','manual-checkout','confirm-manual-checkout','manual-checkin','confirm-manual-checkin','pin-show','pin-hide','pin-edit','pin-clear','pin-random','pin-review','pin-back','pin-save','reservation-edit','new-reservation','save-reservation-v2','create-stayover','confirm-stayover','operation-status','confirm-operation-stop','resume-operation','candle-change','task-candle-change','direct-assign','confirm-direct-assign','cleaning-tab','assignment-type-filter','admin-maid-tab','go-today','go-workforce','go-work-history','go-payroll','go-complaints','go-cleaning-drafts','go-cleaning-assignment','go-inspection','go-open','go-schedule','go-my','go-maid-pay','toggle-maid-pay-week','clear-maid-pay-week','new-cleaning','confirm-new-cleaning','toggle-week-day','submit-week-availability','edit-week-availability','request-availability-change','move-assignment-order','save-assignments','set-availability','change-availability','confirm-off-active','claim-job','confirm-claim','start-cleaning','confirm-start','capture-task-photo','choose-task-photo','remove-task-photo','retry-task-photo','retry-all-task-photos','field-complete-v2','submit-cleaning-v2','approve-inspection-v2','reject-inspection-v2','confirm-approve-v2','confirm-reject-v2','toggle-payment','confirm-toggle-payment','confirm-finish-payment','mark-payment-check','confirm-payment-open-v2','confirm-reverse-payment','delete-complaint','undo-complaint','publish-selected','confirm-publish','retry-network','alerts','audit-log','rates','logout','request-cancel','confirm-request-cancel','cancel-review','confirm-cancel','rule-complaint-v2','ack-complaint','object-complaint','confirm-objection','close-complaint-v2','correct-complaint-v2','confirm-correct-complaint-v2','reclean-existing','demo-info','notification-permission','confirm-notification-permission']);
-      ['quick-reservation-edit','quick-month-shift','quick-month-today','quick-reservation-undo','reservation-cancel-review','confirm-reservation-cancel'].forEach(action=>rebuiltActions.add(action));
+      ['quick-reservation-edit','quick-month-shift','quick-month-today','quick-reservation-undo','reservation-week-shift','open-reservation-week-calendar','reservation-cancel-review','confirm-reservation-cancel'].forEach(action=>rebuiltActions.add(action));
       ['random-assignments','undo-random-assignment'].forEach(action=>rebuiltActions.add(action));
       ['resolve-conflict-v2','confirm-conflict-v2','deactivate-maid-v2','confirm-start-deactivation-v2','complete-deactivation-v2','admin-pay-week','export-rooms-xlsx','room-issue-photo','choose-room-issue-files','remove-room-issue-photo','save-room-issue','bomb-room-photo','choose-bomb-room-files','remove-bomb-room-photo','add-demo-bomb-room-photos','save-bomb-room-report','approve-bomb-room','reject-bomb-room','confirm-approve-bomb-room','confirm-reject-bomb-room'].forEach(action=>rebuiltActions.add(action));
       const deprecatedStateActions=new Set(['retry-photo','field-complete','submit-cleaning','approve-inspection','reject-inspection','confirm-approve','confirm-reject','recover-candle','confirm-candle','save-reservation','show-pin','hide-pin','resolve-conflict','confirm-conflict','deactivate-maid','confirm-deactivate','start-payment','confirm-payment','finish-payment','payment-check','payment-open','rule-complaint','confirm-ruling','close-complaint','correct-complaint','publish-template','change-availability','confirm-off-active']);
@@ -5315,7 +5386,14 @@
         }
         if(a==='quick-reservation-edit'){
           if(state.role!=='admin'){toast('간편 예약 상세는 관리자만 볼 수 있습니다.','error');return;}
-          const reservation=state.reservations.find(item=>item.id===id&&item.status==='active');if(!reservation){toast('예약이 취소되었거나 최신 목록에 없습니다.','error');return;}rememberQuickGridViewport();openReservation(reservation.room,reservation.id);return;
+          const reservation=state.reservations.find(item=>item.id===id&&item.status==='active');if(!reservation){toast('예약이 취소되었거나 최신 목록에 없습니다.','error');return;}rememberQuickGridViewport();openReservation(reservation.room,reservation.id,{weekStart:el.dataset.week||''});return;
+        }
+        if(a==='reservation-week-shift'){
+          if(state.role!=='admin')return;const room=el.dataset.room||state.reservationWeekRoom||'211',nextStart=shiftIsoDate(weekStartIso(state.reservationWeekStart||state.selectedDate),7*Number(el.dataset.offset||0));
+          openReservation(room,'',{weekStart:nextStart});requestAnimationFrame(()=>document.querySelector(`[data-action="reservation-week-shift"][data-offset="${el.dataset.offset}"]`)?.focus());return;
+        }
+        if(a==='open-reservation-week-calendar'){
+          if(state.role!=='admin')return;state.reservationWeekRoom=el.dataset.room||state.reservationWeekRoom||'211';state.calendarMonth=weekStartIso(state.reservationWeekStart||state.selectedDate).slice(0,7);openCalendar(el,'reservation-week',true);return;
         }
         if(a==='reservation-cancel-review'){openReservationCancellationReview(id,el.dataset.fingerprint||'',el);return;}
         if(a==='confirm-reservation-cancel'){
@@ -5490,6 +5568,9 @@
         if(a==='calendar-month'){const [y,m]=state.calendarMonth.split('-').map(Number),d=new Date(y,m-1+Number(el.dataset.offset),1);state.calendarMonth=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;rerenderCalendar();return;}
         if(a==='calendar-select'){
           const context=state.calendarContext;
+          if(context==='reservation-week'){
+            const start=weekStartIso(el.dataset.date),room=state.reservationWeekRoom||'211';state.reservationWeekStart=start;state.calendarMonth=start.slice(0,7);state.calendarContext=null;reservationWeekHistoryOverride={room:String(room),weekStart:start};dismissModal();toast(`${weekRangeLabel(start)} 예약을 표시합니다.`);return;
+          }
           if(context==='admin-pay'||context==='maid-pay'||context==='work-history'){
             if(context==='work-history'&&!workHistoryCalendarAllowed()){closeModal();state.calendarContext=null;render();toast('관리자 근무 기록 화면에서만 주차를 바꿀 수 있습니다.','error');return;}
             const start=context==='work-history'?normalizeWorkHistoryWeek(el.dataset.date):weekStartIso(el.dataset.date);
@@ -5503,6 +5584,9 @@
         }
         if(a==='calendar-today'){
           const context=state.calendarContext;
+          if(context==='reservation-week'){
+            const start=weekStartIso(state.selectedDate),room=state.reservationWeekRoom||'211';state.reservationWeekStart=start;state.calendarMonth=start.slice(0,7);state.calendarContext=null;reservationWeekHistoryOverride={room:String(room),weekStart:start};dismissModal();return;
+          }
           if(context==='admin-pay'||context==='maid-pay'||context==='work-history'){
             if(context==='work-history'&&!workHistoryCalendarAllowed()){closeModal();state.calendarContext=null;render();toast('관리자 근무 기록 화면에서만 주차를 바꿀 수 있습니다.','error');return;}
             const start='2026-08-10';
@@ -5574,11 +5658,16 @@
         if(a==='confirm-publish'){
           pendingDraftPublish=null;closeModal();pushPageTransition(()=>{state.detail=null;state.adminView='cleaning';state.cleaningTab='assignment';});toast('공개 전환은 중단되었습니다. 담당 메이드를 관리자 배정 화면에서 지정해 주세요.');return;
         }
-        if(a==='reservation-edit'||a==='new-reservation'){if(!adminCanMutate()){toast('관리자 최신 상태에서만 예약을 등록·변경할 수 있습니다.','error');return;}const block=id?quickRoomBlockReason(ROOMS.find(room=>room.no===id)):'' ,hasExisting=id?activeReservationsFor(state,id).length>0:false;if(block&&(a==='new-reservation'||!hasExisting)){toast(`${id}호는 ${block} 상태라 새 예약을 등록할 수 없습니다.`,'error');return;}openReservation(id||'211',a==='new-reservation'?'__new__':'');return;}
+        if(a==='reservation-edit'||a==='new-reservation'){
+          const roomRecords=id?(state.reservations||[]).filter(reservation=>reservation.room===String(id)):[],historyOnly=roomRecords.length>0&&roomRecords.every(reservationRecordIsPast);
+          if(!adminCanMutate()&&!(a==='reservation-edit'&&historyOnly)){toast('관리자 최신 상태에서만 예약을 등록·변경할 수 있습니다.','error');return;}
+          const block=id?quickRoomBlockReason(ROOMS.find(room=>room.no===id)):'' ,hasExisting=id?activeReservationsFor(state,id).length>0:false;if(block&&(a==='new-reservation'||!hasExisting)&&!historyOnly){toast(`${id}호는 ${block} 상태라 새 예약을 등록할 수 없습니다.`,'error');return;}openReservation(id||'211',a==='new-reservation'?'__new__':'');return;
+        }
         if(a==='save-reservation-v2'){
           if(!adminCanMutate()){closeModal();render();toast('관리자 권한 또는 최신 상태가 바뀌어 예약을 저장하지 않았습니다.','error');return;}
           const reservationId=document.getElementById('res-id')?.value||'',existing=reservationId?state.reservations.find(item=>item.id===reservationId&&item.status==='active')||null:null,no=existing?.room||document.getElementById('res-room')?.value||'211',room=ROOMS.find(item=>item.no===no);
           if(reservationId&&!existing){closeModal();render();toast('이 예약은 이미 변경되었거나 취소되었습니다. 최신 예약을 다시 열어 주세요.','error');return;}
+          if(reservationWeekIsPast()||reservationRecordIsPast(existing)){closeModal();render();toast('지난 예약 기록은 조회만 가능하며 수정할 수 없습니다.','error');return;}
           if(existing&&reservationFingerprint(existing)!==(document.getElementById('res-fingerprint')?.value||'')){closeModal();render();toast('예약 일정이 다른 화면에서 바뀌었습니다. 최신 예약을 다시 확인해 주세요.','error');return;}
           if(!room||!existing&&quickRoomBlockReason(room)){closeModal();render();toast(`${no}호는 ${quickRoomBlockReason(room)||'객실 정보 없음'} 상태라 새 예약을 저장하지 않았습니다.`,'error');return;}
           const checkinAt=document.getElementById('res-checkin')?.value||'', checkoutAt=document.getElementById('res-checkout')?.value||'';
@@ -6002,6 +6091,8 @@
       });
 
       document.addEventListener('keydown',e=>{
+        const reservationWeekControl=e.target.closest?.('button[data-action="reservation-week-shift"],button[data-action="open-reservation-week-calendar"]');
+        if(reservationWeekControl&&!reservationWeekControl.disabled&&['Enter',' '].includes(e.key)){e.preventDefault();e.stopImmediatePropagation();reservationWeekControl.click();return;}
         const paymentSwitch=e.target.closest?.('button[data-action="toggle-payment"][role="switch"]');
         if(!paymentSwitch||paymentSwitch.disabled||!['Enter',' '].includes(e.key))return;
         e.preventDefault();e.stopImmediatePropagation();paymentSwitch.click();

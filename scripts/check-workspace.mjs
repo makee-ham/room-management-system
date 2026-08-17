@@ -318,6 +318,23 @@ if (reservationCopyStart < 0 || reservationCopyEnd <= reservationCopyStart) {
   throw new Error('Admin reservation copy scope is missing.');
 }
 const reservationCopy = html.slice(reservationCopyStart, reservationCopyEnd);
+for (const contract of [
+  'reservationWeekScheduleMarkup',
+  'reservationWeekIsPast',
+  'reservationRecordIsPast',
+  'data-action="reservation-week-shift"',
+  'data-action="open-reservation-week-calendar"',
+  "state.calendarContext==='reservation-week'",
+  '지난 예약 기록 · 조회만 가능',
+  'reservation.checkInAt<window.endAt&&reservation.checkOutAt>window.startAt',
+  'checkOutAt<=reservationCurrentMoment()',
+  'weekStart:state.reservationWeekStart',
+  'entry.modalPayload?.weekStart',
+  'historyOnly=roomRecords.length>0&&roomRecords.every(reservationRecordIsPast)',
+  'reservationWeekHistoryOverride',
+]) {
+  if (!html.includes(contract)) throw new Error(`Weekly reservation history contract missing: ${contract}`);
+}
 for (const unwantedCopy of [
   '저장 즉시 양방향 반영',
   '카드와 간편 예약표에 동시에 반영됩니다.',
@@ -411,6 +428,9 @@ for (const contract of ['객실 카드 4개 주 상태·일정 우선 배지', '
 }
 if (html.includes('내일 청소·일정 주의 한눈에') || html.includes('assignmentAttentionItems()')) {
   throw new Error('Redundant assignment attention panel must stay removed.');
+}
+for (const contract of ['객실별 주간 예약 탐색과 과거 기록', '이전·다음 주 이동', '주차 선택 달력', '과거 예약 기록 읽기 전용', 'admin-reservation-week-1440.png', 'admin-reservation-week-390.png', 'admin-reservation-week-calendar-1440.png', 'admin-reservation-week-calendar-390.png']) {
+  if (!qa.includes(contract)) throw new Error(`Weekly reservation QA contract missing: ${contract}`);
 }
 
 const audit = readFileSync(resolve(root, 'DOCS/FINAL_UX_AUDIT.md'));
