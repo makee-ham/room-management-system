@@ -45,6 +45,8 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-manual-checkout-390.png',
   'WIREFRAME/QA/screenshots/admin-quick-booking-1440.png',
   'WIREFRAME/QA/screenshots/admin-quick-booking-390.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-cancel-1440.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-cancel-390.png',
   'WIREFRAME/QA/screenshots/admin-assignment-elevator-1440.png',
   'WIREFRAME/QA/screenshots/admin-random-assignment-1440.png',
   'WIREFRAME/QA/screenshots/admin-random-assignment-390.png',
@@ -235,6 +237,7 @@ for (const contract of [
   'quickTouchArmTimer=setTimeout',
   'Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)',
   'quickSuppressClickUntil=Date.now()+500',
+  'quickGridScrollLeft:720',
 ]) {
   if (!html.includes(contract)) throw new Error(`Quick reservation contract missing: ${contract}`);
 }
@@ -257,6 +260,41 @@ for (const contract of [
   '이 예약은 이미 변경되었거나 취소되었습니다.',
 ]) {
   if (!html.includes(contract)) throw new Error(`Reservation interval contract missing: ${contract}`);
+}
+for (const contract of [
+  'const RESERVATION_CANCEL_REASONS',
+  "other:'기타'",
+  'reservation-cancel-other',
+  'reservationCancelReasonError',
+  'Object.hasOwn(RESERVATION_CANCEL_REASONS,code)',
+  'maxlength="120"',
+  '기타 운영 사유는 120자 이하로 입력해 주세요.',
+  '4자리 PIN은 기록하지 마세요.',
+  'reservationCancellationImpact(reservation)',
+  'reservationCancellationImpactFingerprint(reservation',
+  'reservationAutomaticCleaningAttempt',
+  'privateDrafts',
+  'publishedDrafts',
+  'publicCleaningLinked',
+  'randomAssignmentActive',
+  'actualStayStarted',
+  'cancelReservationAssignmentRecord(record',
+  'cancelReservationRecord({reservationId',
+  'clearOrphanedReservationDraftJob',
+  "reservation.status='cancelled'",
+  'state.selectedDrafts=state.selectedDrafts.filter',
+  'cancelledTarget:targetSnapshot',
+  'targetSnapshot:targetSnapshot?{...targetSnapshot}:null',
+  'previousMaidId:null,previousOrder:null,committedTarget:null',
+  'historyStack:true',
+  "'reservation-cancel-review'",
+  "'confirm-reservation-cancel'",
+  '예약정보 수정 저장',
+  '예약 취소 확정',
+  '외부 OTA/PMS 예약 원본은 바뀌지 않습니다.',
+  '체크인이 시작된 예약은 취소하지 않고',
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation cancellation contract missing: ${contract}`);
 }
 const reservationModalStart = html.indexOf('function reservationModalConfig');
 const reservationModalSource = html.slice(reservationModalStart, html.indexOf('function openReservation', reservationModalStart));
@@ -282,6 +320,9 @@ for (const contract of ['추가 검증 · 메이드 구역별 체크·즉시 카
 }
 if (!/(?:실물|실기기)[^\n]{0,80}(?:후면 )?카메라[^\n]{0,120}(?:미검증|검증하지 못|확인하지 못)/.test(qa)) {
   throw new Error('Maid zone camera QA must distinguish static/browser checks from unverified physical-device camera behavior.');
+}
+for (const contract of ['예약정보 수정·예약 취소', '카드·예약표 공통 설정', '기타 사유 상세', '같은 날짜 재예약 격리', '다중 예약 중 한 건', '독립 현장 청소 요청', '비공개 초안·현재 카드 정리', '예정 시각 경과·실제 투숙 경계', '공개·수행·랜덤 초안 경계', '최신 상태 재검사', 'admin-reservation-cancel-1440.png', 'admin-reservation-cancel-390.png']) {
+  if (!qa.includes(contract)) throw new Error(`Reservation cancellation QA contract missing: ${contract}`);
 }
 
 const audit = readFileSync(resolve(root, 'DOCS/FINAL_UX_AUDIT.md'));
