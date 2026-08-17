@@ -1965,7 +1965,7 @@
             'bomb-639-v2':{id:'bomb-639-v2',attemptId:'attempt-639-20260815-a',submissionId:'submission-639-20260815-v2',room:'639',status:'pending',reportedStage:'청소 중',reportedAt:'2026.08.15 10:31',reportedBy:'이서연',reportedById:'m3',note:'침구와 욕실 오염이 심해 일반 청소보다 시간이 크게 더 걸렸습니다.',baseRateSnapshot:20000,submittedVersion:'v2',decidedAt:null,decidedBy:null,decisionReason:'',photos:[{id:'bomb-639-p1',label:'폭탄방 증빙 1',image:{...demoUploadImageFixture('bed')}},{id:'bomb-639-p2',label:'폭탄방 증빙 2',image:{...demoUploadImageFixture('bath')}}]}
           },
           pinVisibleRoom:null, pinVisibleUntil:0, activeCleaning:'332', activeCleaningByMaid:{m1:'332',m2:null,m3:null,m4:null,m5:null,m6:null,m7:null,m8:null,m9:null},
-          availabilityDraft:[0,1,3,4], availabilitySubmitted:true, availabilityChangeRequested:false,
+          availabilityDraft:[0,1,3,4], availabilitySubmitted:true, availabilityEditing:false, availabilityChangeRequested:false,
           weeklyAvailability:{
             m1:{days:[0,1,3,4],status:'submitted',submittedAt:'8/16 21:10'},
             m2:{days:[1,2,3,4,5],status:'submitted',submittedAt:'8/16 20:42'},
@@ -2157,7 +2157,7 @@
       }
       function activeCleaningFor(maidId=signedInMaidId()) { return state.activeCleaningByMaid?.[maidId]??(maidId==='m1'?state.activeCleaning:null); }
       function setActiveCleaningFor(maidId,no) { if(!state.activeCleaningByMaid)state.activeCleaningByMaid=Object.fromEntries(MAIDS.map(maid=>[maid.id,maid.id==='m1'?state.activeCleaning||null:null]));state.activeCleaningByMaid[maidId]=no||null;if(maidId==='m1')state.activeCleaning=no||null; }
-      function syncSignedInMaidAvailability() { const record=state.weeklyAvailability?.[signedInMaidId()]||{days:[],status:'unsubmitted'};state.availabilityDraft=[...(record.days||[])];state.availabilitySubmitted=record.status==='submitted';state.availabilityChangeRequested=record.status==='change-requested'; }
+      function syncSignedInMaidAvailability() { const record=state.weeklyAvailability?.[signedInMaidId()]||{days:[],status:'unsubmitted'};state.availabilityDraft=[...(record.days||[])];state.availabilitySubmitted=record.status==='submitted';state.availabilityEditing=false;state.availabilityChangeRequested=record.status==='change-requested'; }
       function appendEvent(title, detail, {maidIds=[],roomId=null,attemptId=null}={}) {
         const audience=[...new Set(maidIds.filter(id=>MAIDS.some(maid=>maid.id===id)))];
         state.events.unshift({title,time:state.time,detail,maidIds:audience,roomId:roomId||null,attemptId:attemptId||null});
@@ -4743,23 +4743,24 @@
         showModal({...config,trigger,historyKind:'photo-viewer',historyPayload:payload});
       }
       function renderAvailabilityCard() {
-        const selected=state.availabilityDraft||[];
-        return `<section class="card availability-card"><div class="availability-result">${statusBadge(state.availabilitySubmitted?'다음 주 제출 완료':'다음 주 미제출',state.availabilitySubmitted?'green':'amber')}<div><strong>8월 17일–23일 · 가능 ${selected.length}일</strong><span>${availabilitySubmissionWindowLabel()} 제출 · 객실 담당은 관리자만 배정</span></div>${button('근무 일정 열기','go-schedule','outline')}</div></section>`;
+        const saved=state.weeklyAvailability?.[signedInMaidId()]?.days||[],hasCommitted=state.availabilitySubmitted||state.availabilityChangeRequested,selected=hasCommitted?saved:state.availabilityDraft||[],statusLabel=state.availabilityChangeRequested?'다음 주 변경 요청':state.availabilitySubmitted?'다음 주 제출 완료':'다음 주 미제출';
+        return `<section class="card availability-card"><div class="availability-result">${statusBadge(statusLabel,state.availabilitySubmitted?'green':'amber')}<div><strong>8월 17일–23일 · 가능 ${selected.length}일</strong><span>${availabilitySubmissionWindowLabel()} 제출 · 객실 담당은 관리자만 배정</span></div>${button('근무 일정 열기','go-schedule','outline')}</div></section>`;
       }
       function renderMaidSchedule() {
-        const maidId=signedInMaidId(),accountActive=signedInMaidIsActive(),dayNames=[['월','17'],['화','18'],['수','19'],['목','20'],['금','21'],['토','22'],['일','23']],selected=state.availabilityDraft||[],phase=availabilitySubmissionPhase(),submitted=state.availabilitySubmitted,availableCount=selected.length;
+        const maidId=signedInMaidId(),accountActive=signedInMaidIsActive(),dayNames=[['월','17'],['화','18'],['수','19'],['목','20'],['금','21'],['토','22'],['일','23']],phase=availabilitySubmissionPhase(),submitted=state.availabilitySubmitted,editing=!!state.availabilityEditing&&phase==='open',savedSelected=state.weeklyAvailability?.[maidId]?.days||[],selected=editing||!submitted?state.availabilityDraft||[]:savedSelected,availableCount=selected.length;
         const assigned=notifiedAssignmentEntriesForMaid(maidId);
         const assignedCards=assigned.length?assigned.map(({item})=>`<div class="assigned-preview-grid"><div><span>근무일</span><strong>월 17</strong></div><div><span>객실</span><strong>${item.room}호</strong></div><div><span>업무</span><strong>${esc(item.kind)}</strong></div><div><span>시작 가능</span><strong>${item.checkout} 이후</strong></div></div>`).join(''):`<div class="inline-empty"><h3>배정된 업무가 없습니다</h3><p>관리자가 근무일 전날 밤 객실 담당을 확정하면 여기에 표시됩니다.</p></div>`;
         const submissionWindow=availabilitySubmissionWindowLabel(),phaseText=!accountActive?'비활성 계정 · 과거 제출 읽기 전용':phase==='before'?`${submissionWindow} 제출 가능`:phase==='open'?`${submissionWindow} · 지금 제출 가능`:`${submissionWindow} 마감 · 변경은 관리자 확인 필요`;
-        const editorLocked=!accountActive||submitted||state.availabilityChangeRequested||phase!=='open'||isLocked();
+        const editorLocked=!accountActive||submitted&&!editing||state.availabilityChangeRequested||phase!=='open'||isLocked();
         let actionMarkup='';
         if(!accountActive)actionMarkup='<div class="notice notice-warning" style="margin:0"><div><strong>가능일 수정 잠금</strong><br>비활성 처리 중이거나 비활성인 계정은 과거 제출만 조회할 수 있습니다.</div></div>';
         else if(state.availabilityChangeRequested)actionMarkup='<div class="notice notice-warning" style="margin:0"><div><strong>관리자 확인 요청됨</strong><br>기존 제출은 유지되고 변경 요청이 관리자 알림에 남았습니다.</div></div>';
+        else if(editing)actionMarkup=button('수정 내용 다시 제출','submit-week-availability','primary',isLocked()?'disabled':'');
         else if(submitted&&phase==='open')actionMarkup=button('제출 내용 수정','edit-week-availability','primary',isLocked()?'disabled':'');
         else if(submitted&&phase==='closed')actionMarkup=button('가능일 변경 요청','request-availability-change','outline',isLocked()?'disabled':'');
         else if(submitted)actionMarkup=button('제출 기간 아님','edit-week-availability','outline','disabled');
         else actionMarkup=button(phase==='open'?'다음 주 가능일 제출':phase==='before'?`${submissionWindow} 제출`:'제출 마감','submit-week-availability','primary',phase==='open'&&!isLocked()?'':'disabled');
-        return renderCoach()+renderNetworkNotice()+`<div class="weekly-availability"><section class="card week-card"><div class="week-card-head"><div><h2>8월 17일 (월)–8월 23일 (일)</h2><p>다음 주에 근무 가능한 요일을 모두 선택해 주세요.</p></div>${statusBadge(state.availabilityChangeRequested?'변경 요청':submitted?'제출 완료':'미제출',state.availabilityChangeRequested?'amber':submitted?'green':'amber')}</div><div class="deadline-bar">${icon('clock','icon-sm')}<span>${phaseText}</span></div><div class="week-days" aria-label="다음 주 근무 가능일">${dayNames.map((day,index)=>{const active=selected.includes(index);return `<button class="week-day" type="button" data-action="toggle-week-day" data-day="${index}" aria-pressed="${active}" ${editorLocked?'disabled':''}><strong>${day[0]} ${day[1]}</strong><span>${active?'근무 가능':'근무 불가'}</span><i class="week-toggle" aria-hidden="true"></i></button>`;}).join('')}</div><div class="week-total">${icon('calendar','icon-sm')}가능 ${availableCount}일 · 불가 ${7-availableCount}일</div><div class="week-submit-actions">${actionMarkup}</div><div class="assignment-notice">${icon('user')}<p>관리자가 각 근무일 전날 밤 객실을 직접 배정합니다. 메이드는 객실을 선택하거나 다른 메이드에게 배정할 수 없습니다.</p></div></section><section class="card assigned-preview"><div class="section-head"><div><h2>배정된 내 업무</h2><span class="meta">관리자 통보 완료 건만 표시</span></div>${statusBadge(`${assigned.length}건`,'blue')}</div>${assignedCards}<p class="audit-note" style="margin:10px 0 0">배정이 바뀌면 기존 담당 구간은 이력으로 남고 알림에서 변경 내용을 확인할 수 있습니다.</p></section></div>`;
+        return renderCoach()+renderNetworkNotice()+`<div class="weekly-availability"><section class="card week-card"><div class="week-card-head"><div><h2>8월 17일 (월)–8월 23일 (일)</h2><p>다음 주에 근무 가능한 요일을 모두 선택해 주세요.</p></div>${statusBadge(state.availabilityChangeRequested?'변경 요청':editing?'수정 중':submitted?'제출 완료':'미제출',state.availabilityChangeRequested||editing?'amber':submitted?'green':'amber')}</div><div class="deadline-bar">${icon('clock','icon-sm')}<span>${phaseText}</span></div><div class="week-days" aria-label="다음 주 근무 가능일">${dayNames.map((day,index)=>{const active=selected.includes(index);return `<button class="week-day" type="button" data-action="toggle-week-day" data-day="${index}" aria-pressed="${active}" ${editorLocked?'disabled':''}><strong>${day[0]} ${day[1]}</strong><span>${active?'근무 가능':'근무 불가'}</span><i class="week-toggle" aria-hidden="true"></i></button>`;}).join('')}</div><div class="week-total">${icon('calendar','icon-sm')}가능 ${availableCount}일 · 불가 ${7-availableCount}일</div><div class="week-submit-actions">${actionMarkup}</div><div class="assignment-notice">${icon('user')}<p>관리자가 각 근무일 전날 밤 객실을 직접 배정합니다. 메이드는 객실을 선택하거나 다른 메이드에게 배정할 수 없습니다.</p></div></section><section class="card assigned-preview"><div class="section-head"><div><h2>배정된 내 업무</h2><span class="meta">관리자 통보 완료 건만 표시</span></div>${statusBadge(`${assigned.length}건`,'blue')}</div>${assignedCards}<p class="audit-note" style="margin:10px 0 0">배정이 바뀌면 기존 담당 구간은 이력으로 남고 알림에서 변경 내용을 확인할 수 있습니다.</p></section></div>`;
       }
       function publicJobCard(no) {
         const room=ROOMS.find(r=>r.no===no), type=ROOM_TYPES[room?.type||'standard'];
@@ -5803,24 +5804,24 @@
           const unfinished=activeUnfinishedAttempt(no);if(!unfinished)state.jobs[no]='draft';appendEvent(`${no}호 ${kind} 청소대상 직접 등록`,`${dateLabel(state.assignmentDate)} · ${templateSnapshot?.id||'데모 템플릿'} ${templateSnapshot?.version||''} 스냅샷 · 자동 대상과 중복 검사 완료${unfinished?` · 현재 ${unfinished.kind} ${unfinished.id} 상태 유지`:''}`);historyReturnFocus={control:'assignment-maid',target:key};closeModal();render();focusAfterRender(`[data-control="assignment-maid"][data-target="${key}"]`);toast(unfinished?`${no}호 ${kind}을 내일 청소대상에 추가하고 현재 미완료 청소 상태는 유지했습니다.`:`${no}호 ${kind}을 내일 청소대상에 추가했습니다.`);return;
         }
         if(a==='toggle-week-day'){
-          if(state.role!=='maid'||!signedInMaidIsActive()||state.availabilitySubmitted||state.availabilityChangeRequested||availabilitySubmissionPhase()!=='open'||isLocked())return;
+          if(state.role!=='maid'||!signedInMaidIsActive()||state.availabilitySubmitted&&!state.availabilityEditing||state.availabilityChangeRequested||availabilitySubmissionPhase()!=='open'||isLocked())return;
           const day=Number(el.dataset.day);if(!Number.isInteger(day)||day<0||day>6)return;
           state.availabilityDraft=state.availabilityDraft.includes(day)?state.availabilityDraft.filter(value=>value!==day):[...state.availabilityDraft,day].sort((left,right)=>left-right);
           render();focusAfterRender(`[data-action="toggle-week-day"][data-day="${day}"]`);return;
         }
         if(a==='submit-week-availability'){
-          if(state.role!=='maid'||!signedInMaidIsActive()||state.availabilitySubmitted||state.availabilityChangeRequested||availabilitySubmissionPhase()!=='open'||isLocked()){toast(signedInMaidIsActive()?`${availabilitySubmissionWindowLabel()} 메이드 본인 최신 상태에서만 가능일을 제출할 수 있습니다.`:'비활성 처리 중이거나 비활성인 계정은 가능일을 제출할 수 없습니다.','error');return;}
+          if(state.role!=='maid'||!signedInMaidIsActive()||state.availabilitySubmitted&&!state.availabilityEditing||state.availabilityChangeRequested||availabilitySubmissionPhase()!=='open'||isLocked()){toast(signedInMaidIsActive()?`${availabilitySubmissionWindowLabel()} 메이드 본인 최신 상태에서만 가능일을 제출할 수 있습니다.`:'비활성 처리 중이거나 비활성인 계정은 가능일을 제출할 수 없습니다.','error');return;}
           const maidId=signedInMaidId(),maidName=signedInMaidName(),history=state.availabilityHistory||(state.availabilityHistory=[]),version=history.filter(item=>item.maidId===maidId&&item.weekStart==='2026-08-17').length+1,submittedAt=`8/16 ${state.time}`;
-          state.availabilitySubmitted=true;state.availabilityChangeRequested=false;state.weeklyAvailability[maidId]={days:[...state.availabilityDraft],status:'submitted',submittedAt};
+          state.availabilitySubmitted=true;state.availabilityEditing=false;state.availabilityChangeRequested=false;state.weeklyAvailability[maidId]={days:[...state.availabilityDraft],status:'submitted',submittedAt};
           history.push({id:`availability-${maidId}-2026-08-17-v${version}`,maidId,weekStart:'2026-08-17',days:[...state.availabilityDraft],submittedAt,version});
           appendEvent(`${maidName} 다음 주 근무 가능일 제출`,`${state.availabilityDraft.map(index=>['월','화','수','목','금','토','일'][index]).join('·')||'가능일 없음'} · 8월 17일–23일 · 제출 v${version}`,{maidIds:[maidId]});
           render();focusAfterRender('[data-action="edit-week-availability"], [data-action="request-availability-change"]');toast('다음 주 가능일을 관리자에게 제출했습니다.');return;
         }
         if(a==='edit-week-availability'){
-          if(state.role!=='maid'||!signedInMaidIsActive()||!state.availabilitySubmitted||state.availabilityChangeRequested||availabilitySubmissionPhase()!=='open'||isLocked())return;state.availabilitySubmitted=false;state.weeklyAvailability[signedInMaidId()].status='draft';render();focusAfterRender('[data-action="toggle-week-day"]');toast('일요일 제출 시간 안에서 내용을 수정할 수 있습니다.');return;
+          if(state.role!=='maid'||!signedInMaidIsActive()||!state.availabilitySubmitted||state.availabilityEditing||state.availabilityChangeRequested||availabilitySubmissionPhase()!=='open'||isLocked())return;const record=state.weeklyAvailability[signedInMaidId()];state.availabilityDraft=[...(record?.days||[])];state.availabilityEditing=true;render();focusAfterRender('[data-action="toggle-week-day"]');toast('기존 제출은 유지됩니다. 수정한 내용은 다시 제출해야 반영됩니다.');return;
         }
         if(a==='request-availability-change'){
-          if(state.role!=='maid'||!signedInMaidIsActive()||!state.availabilitySubmitted||state.availabilityChangeRequested||availabilitySubmissionPhase()!=='closed'||isLocked())return;state.availabilityChangeRequested=true;state.weeklyAvailability[signedInMaidId()].status='change-requested';appendEvent(`${signedInMaidName()} 가능일 변경 요청`,'일요일 23:59 마감 후 · 기존 제출 버전 유지 · 관리자 확인 필요',{maidIds:[signedInMaidId()]});render();focusAfterRender();toast('관리자에게 가능일 변경 요청을 보냈습니다.');return;
+          if(state.role!=='maid'||!signedInMaidIsActive()||!state.availabilitySubmitted||state.availabilityChangeRequested||availabilitySubmissionPhase()!=='closed'||isLocked())return;const maidId=signedInMaidId(),record=state.weeklyAvailability[maidId];state.availabilityDraft=[...(record?.days||[])];state.availabilityEditing=false;state.availabilityChangeRequested=true;record.status='change-requested';appendEvent(`${signedInMaidName()} 가능일 변경 요청`,'일요일 23:59 마감 후 · 기존 제출 버전 유지 · 관리자 확인 필요',{maidIds:[maidId]});render();focusAfterRender();toast('관리자에게 가능일 변경 요청을 보냈습니다.');return;
         }
         if(a==='random-assignments'){
           if(state.role!=='admin'||isLocked()){toast('관리자 최신 상태에서만 랜덤 배정 초안을 만들 수 있습니다.','error');return;}

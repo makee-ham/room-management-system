@@ -150,6 +150,18 @@ for (const contract of [
 if (availabilityPhaseSource.includes("timeMinutes('22:00')") || /일요일[^\n]{0,40}22:00/.test(html)) {
   throw new Error('Legacy Sunday 22:00 maid availability deadline remains.');
 }
+const availabilityEditStart = html.indexOf("if(a==='edit-week-availability')");
+const availabilityEditSource = html.slice(availabilityEditStart, html.indexOf("if(a==='request-availability-change')", availabilityEditStart));
+if (availabilityEditStart < 0) throw new Error('Maid availability edit handler source could not be resolved.');
+for (const contract of ['state.availabilityEditing=true', "state.availabilityDraft=[...(record?.days||[])]"]) {
+  if (!availabilityEditSource.includes(contract)) throw new Error(`Maid availability edit-draft contract missing: ${contract}`);
+}
+if (/availabilitySubmitted\s*=\s*false|\.status\s*=\s*['"]draft['"]/.test(availabilityEditSource)) {
+  throw new Error('Editing maid availability must not invalidate the last submitted record before resubmission.');
+}
+for (const contract of ['state.availabilitySubmitted&&!state.availabilityEditing', 'state.availabilityEditing=false;state.availabilityChangeRequested=false']) {
+  if (!html.includes(contract)) throw new Error(`Maid availability committed-draft separation missing: ${contract}`);
+}
 const maidSource = html.match(/const MAIDS\s*=\s*\[([\s\S]*?)\n\s*\];/)?.[1];
 const maidIds = [...(maidSource || '').matchAll(/id:'(m\d+)'/g)].map((match) => match[1]);
 if (maidIds.length !== 9 || new Set(maidIds).size !== 9) {
@@ -607,7 +619,7 @@ for (const contract of ['추가 검증 · 관리자 설명 간소화와 도움�
 for (const contract of ['추가 검증 · 메이드 설명 간소화와 도움말', '시나리오 코치 0개', 'maid-copy-cleanup-390.png', 'maid-info-tooltip-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Maid copy/help QA documentation missing: ${contract}`);
 }
-for (const contract of ['추가 검증 · 메이드 근무 가능일 제출 시간', '일요일 12:00부터 23:59까지 제출 가능', '일요일 11:59', '12:00', '22:15', '23:59', 'maid-weekly-availability-390.png']) {
+for (const contract of ['추가 검증 · 메이드 근무 가능일 제출 시간', '일요일 12:00부터 23:59까지 제출 가능', '일요일 11:59', '12:00', '22:15', '23:59', '수정 중 마감', '관리자 집계도 9/9', 'maid-weekly-availability-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Maid availability submission window QA contract missing: ${contract}`);
 }
 if (!/(?:실물|실기기)[^\n]{0,80}(?:후면 )?카메라[^\n]{0,120}(?:미검증|검증하지 못|확인하지 못)/.test(qa)) {
