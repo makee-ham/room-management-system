@@ -58,6 +58,8 @@ const required = [
   'WIREFRAME/QA/screenshots/maid-bomb-room-pay-history-390.png',
   'WIREFRAME/QA/screenshots/admin-type-photo-template-1440.png',
   'WIREFRAME/QA/screenshots/maid-type-photo-template-390.png',
+  'WIREFRAME/QA/screenshots/maid-zone-camera-1440.png',
+  'WIREFRAME/QA/screenshots/maid-zone-camera-390.png',
   'WIREFRAME/reference/redesign-concepts/admin-inspection.png',
   'WIREFRAME/reference/redesign-concepts/admin-next-day-assignment.png',
   'WIREFRAME/reference/redesign-concepts/maid-weekly-availability.png',
@@ -121,6 +123,25 @@ for (const contract of [
 }
 for (const removed of ['메이드별 작업량·동선 비교', 'renderAssignmentWorkloadOverview', 'toggle-assignment-route']) {
   if (html.includes(removed)) throw new Error(`Removed assignment comparison contract remains: ${removed}`);
+}
+for (const contract of [
+  '구역별 청소·촬영',
+  'taskZoneGroups',
+  'capture-task-photo',
+  'choose-task-photo',
+  'remove-task-photo',
+  'task-photo-file',
+  'accept="image/*" capture="environment"',
+  'URL.createObjectURL(file)',
+  'releaseRoomIssuePhoto(upload.image)',
+  'task.uploads?.forEach(upload=>collect(upload.image))',
+  'submission.uploads?.forEach(upload=>collect(upload.image))',
+  'urls.forEach(url=>URL.revokeObjectURL(url))',
+]) {
+  if (!html.includes(contract)) throw new Error(`Maid zone camera contract missing: ${contract}`);
+}
+for (const removed of ['add-task-photo', 'add-task-photos', "'add-photo'", "'add-photos'", '파일 전송 없이 슬롯 상태만']) {
+  if (html.includes(removed)) throw new Error(`Removed simulated photo completion contract remains: ${removed}`);
 }
 for (const contract of ['paymentRecords:{}', 'paymentAttemptHistory:[]', 'paymentRecordKey(weekStart,maidId)', 'data-action="toggle-payment" data-week=', 'data-maid=', 'taskFingerprint', "['OPEN','PAYING','CHECK']", 'confirm-finish-payment', 'mark-payment-check', 'confirm-payment-open-v2', 'resolutionReason']) {
   if (!html.includes(contract)) throw new Error(`Per-maid payment contract missing: ${contract}`);
@@ -255,6 +276,12 @@ for (const contract of ['간편 예약 원장과 터치 오입력 방지', '세�
 }
 for (const contract of ['체크인 → 체크아웃 입력 순서', '같은 예약 ID', '실제 시각 겹침', '직전 퇴실 청소 재통보']) {
   if (!qa.includes(contract)) throw new Error(`Reservation interval QA contract missing: ${contract}`);
+}
+for (const contract of ['추가 검증 · 메이드 구역별 체크·즉시 카메라', 'maid-zone-camera-1440.png', 'maid-zone-camera-390.png']) {
+  if (!qa.includes(contract)) throw new Error(`Maid zone camera QA documentation missing: ${contract}`);
+}
+if (!/(?:실물|실기기)[^\n]{0,80}(?:후면 )?카메라[^\n]{0,120}(?:미검증|검증하지 못|확인하지 못)/.test(qa)) {
+  throw new Error('Maid zone camera QA must distinguish static/browser checks from unverified physical-device camera behavior.');
 }
 
 const audit = readFileSync(resolve(root, 'DOCS/FINAL_UX_AUDIT.md'));
