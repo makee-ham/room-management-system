@@ -9,6 +9,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const required = [
   'AGENTS.md',
   'manifest.json',
+  'SHA256SUMS.txt',
   'DOCS/FINAL_UX_AUDIT.md',
   'DOCS/14_CLICKABLE_WIREFRAME_HANDOFF.md',
   'DOCS/15_TWO_PASS_AUDIT_RESULT.md',
@@ -54,6 +55,9 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-calendar-standard-390.png',
   'WIREFRAME/QA/screenshots/admin-reservation-cancel-1440.png',
   'WIREFRAME/QA/screenshots/admin-reservation-cancel-390.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-guests-1440.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-guests-390.png',
+  'WIREFRAME/QA/screenshots/maid-reservation-guests-390.png',
   'WIREFRAME/QA/screenshots/admin-assignment-elevator-1440.png',
   'WIREFRAME/QA/screenshots/admin-random-assignment-1440.png',
   'WIREFRAME/QA/screenshots/admin-random-assignment-390.png',
@@ -473,6 +477,89 @@ const reservationCheckoutLabel = '<label for="res-checkout">2. 체크아웃 일�
 if (html.indexOf(reservationCheckinLabel) < 0 || html.indexOf(reservationCheckoutLabel) <= html.indexOf(reservationCheckinLabel)) {
   throw new Error('Single-reservation form must render check-in before check-out.');
 }
+const roomTypesStart = html.indexOf('const ROOM_TYPES = {');
+const roomTypesEnd = html.indexOf('};', roomTypesStart);
+if (roomTypesStart < 0 || roomTypesEnd <= roomTypesStart) throw new Error('ROOM_TYPES guest policy source could not be resolved.');
+const roomTypesSource = html.slice(roomTypesStart, roomTypesEnd);
+const expectedReservationGuestPolicies = {
+  standard: [2, 2],
+  premium: [2, 3],
+  oceanPremium: [2, 4],
+  oceanFamily: [4, 6],
+};
+for (const [typeId, expected] of Object.entries(expectedReservationGuestPolicies)) {
+  const match = roomTypesSource.match(new RegExp(`${typeId}:\\s*\\{[^}]*defaultGuestCount:(\\d+)\\s*,\\s*maxGuestCount:(\\d+)`));
+  const actual = match ? [Number(match[1]), Number(match[2])] : [];
+  if (actual.length !== 2 || actual.some((value, index) => value !== expected[index])) {
+    throw new Error(`Reservation guest policy mismatch for ${typeId}: ${actual.join('/') || 'missing'} (expected ${expected.join('/')}).`);
+  }
+}
+for (const contract of [
+  'function guestPolicyForRoom(roomNo)',
+  'function reservationGuestCount(reservation)',
+  "Object.hasOwn(reservation,'guestCount')",
+  'guestCount:guestPolicyForRoom(reservation.room).defaultGuestCount',
+  'reservationGuestCount(reservation),reservation.status',
+  'Number.isInteger(value)&&value>=1?value:policy.defaultGuestCount',
+  "return Number.isInteger(Number(value))&&Number(value)>=1?`${Number(value)}명`:'인원 미기록'",
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation guest data contract missing: ${contract}`);
+}
+const guestUpsertStart = html.indexOf('function upsertReservationRecord');
+const guestUpsertEnd = html.indexOf('function clearOrphanedReservationDraftJob', guestUpsertStart);
+if (guestUpsertStart < 0 || guestUpsertEnd <= guestUpsertStart) throw new Error('Reservation guest upsert source could not be resolved.');
+const guestUpsertSource = html.slice(guestUpsertStart, guestUpsertEnd);
+for (const contract of [
+  'policy.defaultGuestCount):Number(guestCount)',
+  '!Number.isInteger(resolvedGuestCount)||resolvedGuestCount<1||resolvedGuestCount>policy.maxGuestCount',
+  'guestError:true',
+  'guestCountChanged=!!before&&reservationGuestCount(before)!==resolvedGuestCount',
+  'operationalChanged=scheduleChanged||guestCountChanged',
+  'guestCount:resolvedGuestCount',
+  'syncReservationCleaningDraft(reservation,before)',
+]) {
+  if (!guestUpsertSource.includes(contract)) throw new Error(`Reservation guest upsert contract missing: ${contract}`);
+}
+for (const contract of [
+  "upsertReservationRecord({roomNo,checkInAt:range.checkInAt,checkOutAt:range.checkOutAt,source:'grid'})",
+  'reservationGuestCount(result.reservation)}명 예약 접수',
+  "upsertReservationRecord({id:reservationId,roomNo:no,checkInAt:checkinAt,checkOutAt:checkoutAt,guestCount,source:'card'})",
+  "document.getElementById(result.guestError?'reservation-guest-stepper'",
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation guest entry contract missing: ${contract}`);
+}
+const guestModalStart = html.indexOf('function reservationModalConfig');
+const guestModalEnd = html.indexOf('function openReservation', guestModalStart);
+if (guestModalStart < 0 || guestModalEnd <= guestModalStart) throw new Error('Reservation guest modal source could not be resolved.');
+const guestModalSource = html.slice(guestModalStart, guestModalEnd);
+const guestRoomFieldIndex = guestModalSource.indexOf('id="res-room"');
+const guestStepperIndex = guestModalSource.indexOf('id="res-guests"');
+if (guestRoomFieldIndex < 0 || guestStepperIndex <= guestRoomFieldIndex) {
+  throw new Error('Reservation guest stepper must render immediately after the room field in the primary row.');
+}
+for (const contract of [
+  'class="reservation-primary-row field-full"',
+  '<span class="label" id="res-guests-label">인원수</span>',
+  'id="res-guests" type="hidden"',
+  'id="reservation-guest-stepper" role="group" tabindex="-1"',
+  'data-action="reservation-guest-change" data-delta="-1"',
+  'data-action="reservation-guest-change" data-delta="1"',
+  'id="res-guests-value" aria-live="polite"',
+  '기본 ${guestPolicy.defaultGuestCount}명 · 최대 ${guestPolicy.maxGuestCount}명',
+]) {
+  if (!guestModalSource.includes(contract)) throw new Error(`Reservation guest stepper contract missing: ${contract}`);
+}
+for (const contract of [
+  '.reservation-guest-stepper { display:grid; grid-template-columns:44px minmax(44px,1fr) 44px;',
+  '.reservation-guest-stepper button { display:grid; place-items:center; width:44px; min-width:44px; min-height:44px;',
+  'function updateReservationGuestControls(resetToDefault=false)',
+  'resetToDefault?policy.defaultGuestCount:Number(input.value)',
+  "if(c==='reservation-room'){updateReservationGuestControls(true);return;}",
+  "if(a==='reservation-guest-change')",
+  'if(next<1||next>policy.maxGuestCount)return',
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation guest control contract missing: ${contract}`);
+}
 for (const contract of [
   '체크인부터 체크아웃까지 한 고객의 일정을 입력합니다.',
   'reservationOverlaps(room.no,checkInAt,checkOutAt,id)',
@@ -487,6 +574,70 @@ for (const contract of [
   '이 예약은 이미 변경되었거나 취소되었습니다.',
 ]) {
   if (!html.includes(contract)) throw new Error(`Reservation interval contract missing: ${contract}`);
+}
+for (const contract of [
+  'guestCount:reservationGuestCount(reservation),nextReservationId:schedule.nextReservationId',
+  'reservationId:reservation?.id||null,guestCount:reservation?reservationGuestCount(reservation):null',
+  'guestCountChanged=!committed||(item.guestCount??null)!==(committed.guestCount??null)',
+  'record.targetChanged=changed',
+  'assignment.guestCountChanged===true||assignment.reservationChanged===true',
+  'return {item:record.committedTarget||item,assignment:committedAssignmentFor(item)}',
+  'item.guestCount??\'\'',
+  'assignment.committedTarget={...item,type:snapshot.typeId,rateSnapshot:snapshot.rate,minutesSnapshot:snapshot.minutes,elevatorSnapshot:snapshot.elevator}',
+  'assignment.guestCountChanged=false;assignment.reservationChanged=false;assignment.targetChanged=false',
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation guest assignment snapshot contract missing: ${contract}`);
+}
+const randomGuestWeightStart = html.indexOf('function randomAssignmentTrial');
+const randomGuestWeightEnd = html.indexOf('function createRandomAssignment', randomGuestWeightStart);
+const assignmentPricingStart = html.indexOf('function assignmentPricingSnapshot');
+const assignmentPricingEnd = html.indexOf('function assignmentTargetMinutes', assignmentPricingStart);
+if (randomGuestWeightStart < 0 || randomGuestWeightEnd <= randomGuestWeightStart || assignmentPricingStart < 0 || assignmentPricingEnd <= assignmentPricingStart) {
+  throw new Error('Random assignment or pricing source could not be resolved for guest-count isolation.');
+}
+if (/guestCount|assignmentGuest/i.test(html.slice(randomGuestWeightStart, randomGuestWeightEnd)) || /guestCount|assignmentGuest/i.test(html.slice(assignmentPricingStart, assignmentPricingEnd))) {
+  throw new Error('Reservation guest count must invalidate stale assignment drafts but must not change pricing or random-assignment weighting.');
+}
+const cleaningAttemptStart = html.indexOf('function beginCleaningAttempt');
+const cleaningAttemptEnd = html.indexOf('function validatedSubmission', cleaningAttemptStart);
+if (cleaningAttemptStart < 0 || cleaningAttemptEnd <= cleaningAttemptStart) throw new Error('Cleaning attempt guest snapshot source could not be resolved.');
+const cleaningAttemptSource = html.slice(cleaningAttemptStart, cleaningAttemptEnd);
+for (const contract of [
+  'reservationIdSnapshot=undefined,guestCountSnapshot=undefined',
+  'committedTarget=state.assignments?.[resolvedWorkTargetId]?.committedTarget||null',
+  'resolvedReservationId=reservationIdSnapshot??committedTarget?.reservationId??null',
+  'committedTarget?.reservationId===resolvedReservationId?committedTarget?.guestCount:null',
+  'resolvedGuestCount=guestCountSnapshot??committedGuestCount',
+  'guestCountSnapshot:Number.isInteger(Number(resolvedGuestCount))',
+]) {
+  if (!cleaningAttemptSource.includes(contract)) throw new Error(`Cleaning attempt guest snapshot contract missing: ${contract}`);
+}
+for (const contract of [
+  'committedReservationId=state.assignments?.[attempt.workTargetId]?.committedTarget?.reservationId||null',
+  'attemptReservationId=attempt.reservationIdSnapshot||committedReservationId',
+  'reservationMatches=attemptReservationId===reservation.id',
+  'previousAttempt?.guestCountSnapshot??assignmentGuestCount(target)',
+  'guestCountSnapshot:previousAttempt.guestCountSnapshot',
+  'guestCountSnapshot:submission.guestCountSnapshot',
+  '(attempt.guestCountSnapshot??null)===(submission.guestCountSnapshot??null)',
+  'guestCountSnapshot:guestCountForAttempt(attempt)',
+  "guestCountDisplay=guestCount?guestCountLabel(guestCount):'미기록'",
+  '<span>숙박 인원 ${guestCountDisplay}</span>',
+  "<span>숙박 인원</span><strong>${activeGuestCount?guestCountLabel(activeGuestCount):'미기록'}</strong>",
+  'parts.push(`숙박 인원 ${guestCountLabel(assignmentGuestCount(item))}`)',
+  'unstartedAttempt.reservationIdSnapshot===activeReservation.id&&!guestCountForAttempt(unstartedAttempt)',
+  'committedReservationId===attempt.reservationIdSnapshot?guestCountForAttempt(attempt):null',
+  "record?.status==='cancelled'&&freshTarget?.reservationId&&record.cancelledReservationId!==freshTarget.reservationId",
+]) {
+  if (!html.includes(contract)) throw new Error(`Maid reservation guest snapshot contract missing: ${contract}`);
+}
+for (const contract of [
+  'const overCapacity=activeReservationsFor(state,id).find',
+  '!reservationRecordIsPast(reservation)&&reservationGuestCount(reservation)>ROOM_TYPES[type].maxGuestCount',
+  'reservationGuestCount(reservation)>ROOM_TYPES[type].maxGuestCount',
+  '예약이 ${reservationGuestCount(overCapacity)}명이라 최대 ${ROOM_TYPES[type].maxGuestCount}명',
+]) {
+  if (!html.includes(contract)) throw new Error(`Room-type guest capacity guard missing: ${contract}`);
 }
 const reservationCopyStart = html.indexOf('function reservationModalConfig');
 const reservationCopyEnd = html.indexOf('function openReservationCancellationReview', reservationCopyStart);
@@ -595,6 +746,19 @@ const taskPrompt = readFileSync(resolve(root, 'DOCS/WIREFRAME_TASK_PROMPT.md'), 
 for (const contract of ['캘린더 공통 표시 규칙', '일 · 월 · 화 · 수 · 목 · 금 · 토', '공휴일이 겹치면 공휴일 빨간색이 우선', '이후 추가하는 달력도', '우주항공청 2026년 월력요항', '국가법령정보센터 현행 공휴일 규정']) {
   if (!wireframeReadme.includes(contract)) throw new Error(`Future calendar README contract missing: ${contract}`);
 }
+for (const contract of [
+  '데모값이 아니라 사용자가 확정한 운영값',
+  '스탠다드 `2 / 2명`',
+  '프리미엄 `2 / 3명`',
+  '파셜 오션뷰 프리미엄 `2 / 4명`',
+  '패밀리 `4 / 6명`',
+  '연결 예약과 숙박 인원을 통보 스냅샷으로 고정',
+  '메이드의 `근무 일정 / 내 업무 / 알림`에 표시',
+  '그 시점의 인원을 수행 회차 스냅샷으로 다시 고정',
+  '예약과 연결되지 않은 현장 청소는 `인원 미기록`',
+]) {
+  if (!wireframeReadme.includes(contract)) throw new Error(`Reservation guest README contract missing: ${contract}`);
+}
 for (const contract of ['모든 월간 캘린더', '일 · 월 · 화 · 수 · 목 · 금 · 토', '공휴일이 토요일과 겹치면 공휴일 색을 우선', '월요일–일요일 운영 주차 계산은 바꾸지 않고']) {
   if (!taskPrompt.includes(contract)) throw new Error(`Future calendar task contract missing: ${contract}`);
 }
@@ -640,6 +804,9 @@ if (html.includes('내일 청소·일정 주의 한눈에') || html.includes('as
 for (const contract of ['객실별 주간 예약 탐색과 과거 기록', '이전·다음 주 이동', '주차 선택 달력', '과거 예약 기록 읽기 전용', 'admin-reservation-week-1440.png', 'admin-reservation-week-390.png', 'admin-reservation-week-calendar-1440.png', 'admin-reservation-week-calendar-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Weekly reservation QA contract missing: ${contract}`);
 }
+for (const contract of ['추가 검증 · 예약 숙박 인원과 메이드 표시', '객실 유형별 기본·최대 인원', '간편 예약 기본 인원', '최대 인원 초과 차단', '인원수만 수정·최신본 보호', '재통보 전 기존 인원 유지', '재통보 후 메이드 반영', '메이드 내 업무·청소 상세', '과거 예약 읽기 전용', 'admin-reservation-guests-1440.png', 'admin-reservation-guests-390.png', 'maid-reservation-guests-390.png']) {
+  if (!qa.includes(contract)) throw new Error(`Reservation guest QA contract missing: ${contract}`);
+}
 for (const contract of ['전체 캘린더 일요일–토요일 고정 열', '8/15 광복절', '8/17 대체공휴일 빨간색', '일반 토요일 파란색', '선택 주차 두 행 강조', '공휴일 접근성 이름', 'admin-calendar-standard-1440.png', 'admin-calendar-standard-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Korean calendar QA contract missing: ${contract}`);
 }
@@ -650,11 +817,19 @@ const indexHash = createHash('sha256').update(readFileSync(resolve(root, 'WIREFR
 const manifest = JSON.parse(readFileSync(resolve(root, 'manifest.json'), 'utf8'));
 const expectedAuditHash = manifest.sha256?.['DOCS/FINAL_UX_AUDIT.md'];
 const expectedIndexHash = manifest.sha256?.['WIREFRAME/index.html'];
-if (auditHash !== expectedAuditHash || indexHash !== expectedIndexHash) {
+const checksumLines = readFileSync(resolve(root, 'SHA256SUMS.txt'), 'utf8').trim().split(/\r?\n/);
+const checksums = Object.fromEntries(checksumLines.map((line) => {
+  const match = line.match(/^([a-f0-9]{64})\s+\*?(.+)$/);
+  if (!match) throw new Error(`Invalid SHA256SUMS entry: ${line}`);
+  return [match[2], match[1]];
+}));
+if (auditHash !== expectedAuditHash || indexHash !== expectedIndexHash || checksums['DOCS/FINAL_UX_AUDIT.md'] !== auditHash || checksums['WIREFRAME/index.html'] !== indexHash) {
   throw new Error([
     'Canonical file hash mismatch.',
     `Audit: ${auditHash} (expected ${expectedAuditHash})`,
     `Index: ${indexHash} (expected ${expectedIndexHash})`,
+    `SHA256SUMS audit: ${checksums['DOCS/FINAL_UX_AUDIT.md'] || 'missing'}`,
+    `SHA256SUMS index: ${checksums['WIREFRAME/index.html'] || 'missing'}`,
   ].join('\n'));
 }
 
@@ -666,6 +841,7 @@ console.log('Admin copy/help static contracts: passed');
 console.log('Maid copy/help static contracts: passed');
 console.log('Maid photo-only workflow static contracts: passed');
 console.log('Maid availability submission window static contracts: passed');
+console.log('Reservation guest-count static contracts: passed');
 console.log('Portable path scan: passed');
 console.log(`Room master contract: ${catalogIds.length} rooms / ${initialOccupiedIds.length} initially occupied / ${dataIssueIds.length} data issue`);
 console.log(`Final UX audit SHA-256: ${auditHash}`);
