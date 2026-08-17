@@ -50,6 +50,8 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-manual-checkout-390.png',
   'WIREFRAME/QA/screenshots/admin-quick-booking-1440.png',
   'WIREFRAME/QA/screenshots/admin-quick-booking-390.png',
+  'WIREFRAME/QA/screenshots/admin-calendar-standard-1440.png',
+  'WIREFRAME/QA/screenshots/admin-calendar-standard-390.png',
   'WIREFRAME/QA/screenshots/admin-reservation-cancel-1440.png',
   'WIREFRAME/QA/screenshots/admin-reservation-cancel-390.png',
   'WIREFRAME/QA/screenshots/admin-assignment-elevator-1440.png',
@@ -393,6 +395,52 @@ const quickGridScope = html.slice(quickGridStart, quickGridEnd);
 for (const removedCopy of ['퇴실 청소 담당','청소 미배정','assignedCount=monthReservations','유형·엘리베이터 필터']) {
   if (quickGridScope.includes(removedCopy)) throw new Error(`Removed quick reservation grid copy returned: ${removedCopy}`);
 }
+for (const contract of [
+  "const CALENDAR_WEEKDAYS=Object.freeze(['일','월','화','수','목','금','토'])",
+  'const KR_HOLIDAY_FIXTURE=Object.freeze({',
+  "jurisdiction:'KR',mode:'demo-static',coverage:['2026-01-01','2026-12-31']",
+  "'2026-01-01':{name:'신정'",
+  "'2026-05-01':{name:'노동절'",
+  "'2026-06-03':{name:'제9회 전국동시지방선거'",
+  "'2026-07-17':{name:'제헌절'",
+  "'2026-08-15':{name:'광복절'",
+  "'2026-08-17':{name:'광복절 대체공휴일'",
+  "'2026-09-25':{name:'추석'",
+  "'2026-12-25':{name:'기독탄신일'",
+  'function calendarDayMeta(iso)',
+  "tone:holiday?'holiday':isSunday?'sunday':isSaturday?'saturday':'weekday'",
+  'function calendarWeekdayHeaderMarkup()',
+  'function calendarDateAriaLabel(iso',
+  'offset=first.getDay(),start=',
+  'Array.from({length:42}',
+  'calendarWeekdayHeaderMarkup()',
+  'calendarDayMeta(iso)',
+  'calendar-holiday-mark',
+  '.calendar-day.is-saturday:not(.is-holiday)',
+  '.quick-day-header.is-saturday:not(.is-holiday)',
+]) {
+  if (!html.includes(contract)) throw new Error(`Sunday-first Korean calendar contract missing: ${contract}`);
+}
+const calendarStart = html.indexOf('function calendarMarkup');
+const calendarEnd = html.indexOf('function openCalendar', calendarStart);
+if (calendarStart < 0 || calendarEnd <= calendarStart) throw new Error('Shared calendar scope is missing.');
+const calendarScope = html.slice(calendarStart, calendarEnd);
+for (const removedCalendarContract of [
+  "weekMode?['월','화','수','목','금','토','일']",
+  '(first.getDay()+6)%7',
+]) {
+  if (calendarScope.includes(removedCalendarContract)) throw new Error(`Monday-first calendar layout returned: ${removedCalendarContract}`);
+}
+for (const removedQuickCalendarContract of ['.quick-day-header.weekend','weekend=[0,6]']) {
+  if (html.includes(removedQuickCalendarContract)) throw new Error(`Combined red weekend styling returned: ${removedQuickCalendarContract}`);
+}
+for (const businessWeekContract of [
+  'offset=(d.getDay()+6)%7',
+  'mondayOffset=-((date.getUTCDay()+6)%7)',
+  '날짜를 누르면 그 날짜가 포함된 월요일–일요일 주차를 선택합니다.',
+]) {
+  if (!html.includes(businessWeekContract)) throw new Error(`Monday-to-Sunday business-week meaning changed: ${businessWeekContract}`);
+}
 const reservationCheckinLabel = '<label for="res-checkin">1. 체크인 일시</label>';
 const reservationCheckoutLabel = '<label for="res-checkout">2. 체크아웃 일시</label>';
 if (html.indexOf(reservationCheckinLabel) < 0 || html.indexOf(reservationCheckoutLabel) <= html.indexOf(reservationCheckinLabel)) {
@@ -515,6 +563,14 @@ if (!maidOrderItemSource.includes('assignmentSchedulePriorityBadges(item)') || !
 }
 
 const qa = readFileSync(resolve(root, 'WIREFRAME/QA.md'), 'utf8');
+const wireframeReadme = readFileSync(resolve(root, 'WIREFRAME/README.md'), 'utf8');
+const taskPrompt = readFileSync(resolve(root, 'DOCS/WIREFRAME_TASK_PROMPT.md'), 'utf8');
+for (const contract of ['캘린더 공통 표시 규칙', '일 · 월 · 화 · 수 · 목 · 금 · 토', '공휴일이 겹치면 공휴일 빨간색이 우선', '이후 추가하는 달력도', '우주항공청 2026년 월력요항', '국가법령정보센터 현행 공휴일 규정']) {
+  if (!wireframeReadme.includes(contract)) throw new Error(`Future calendar README contract missing: ${contract}`);
+}
+for (const contract of ['모든 월간 캘린더', '일 · 월 · 화 · 수 · 목 · 금 · 토', '공휴일이 토요일과 겹치면 공휴일 색을 우선', '월요일–일요일 운영 주차 계산은 바꾸지 않고']) {
+  if (!taskPrompt.includes(contract)) throw new Error(`Future calendar task contract missing: ${contract}`);
+}
 if (/고객 배정 가능 기준 109개|장기투숙 중 11개|현재 장기투숙 11개/.test(qa)) {
   throw new Error('Stale 109/11/1 room status contract remains in WIREFRAME/QA.md.');
 }
@@ -553,6 +609,9 @@ if (html.includes('내일 청소·일정 주의 한눈에') || html.includes('as
 }
 for (const contract of ['객실별 주간 예약 탐색과 과거 기록', '이전·다음 주 이동', '주차 선택 달력', '과거 예약 기록 읽기 전용', 'admin-reservation-week-1440.png', 'admin-reservation-week-390.png', 'admin-reservation-week-calendar-1440.png', 'admin-reservation-week-calendar-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Weekly reservation QA contract missing: ${contract}`);
+}
+for (const contract of ['전체 캘린더 일요일–토요일 고정 열', '8/15 광복절', '8/17 대체공휴일 빨간색', '일반 토요일 파란색', '선택 주차 두 행 강조', '공휴일 접근성 이름', 'admin-calendar-standard-1440.png', 'admin-calendar-standard-390.png']) {
+  if (!qa.includes(contract)) throw new Error(`Korean calendar QA contract missing: ${contract}`);
 }
 
 const audit = readFileSync(resolve(root, 'DOCS/FINAL_UX_AUDIT.md'));
