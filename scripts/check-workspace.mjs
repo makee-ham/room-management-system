@@ -348,6 +348,21 @@ const roomPresentationOrder = ["if(blockers.length)return", "if(cleaning)return"
 if (roomPresentationOrder.some((index) => index < 0) || roomPresentationOrder.some((index, position) => position && index <= roomPresentationOrder[position - 1])) {
   throw new Error(`Room card priority must remain blocked > cleaning > occupied > available: ${roomPresentationOrder.join(', ')}`);
 }
+const roomCardStart = html.indexOf('function roomCard(no)');
+const roomCardEnd = html.indexOf('function cleaningLabel', roomCardStart);
+if (roomCardStart < 0 || roomCardEnd <= roomCardStart) throw new Error('Room card source block not found.');
+const roomCardSource = html.slice(roomCardStart, roomCardEnd);
+for (const removed of ['room-work-line', 'concept-cleaning-row', '가장 가까운 일정', '예약 없음 · 바로 등록']) {
+  if (roomCardSource.includes(removed)) throw new Error(`Redundant room-card reservation summary returned: ${removed}`);
+}
+for (const contract of [
+  'class="room-quick-actions"',
+  'data-action="${closestReservation?\'quick-reservation-edit\':\'reservation-edit\'}"',
+  'reservationActionLabel=weekReservations.length?`예약 수정 · ${weekReservations.length}건`',
+  ":pastReservationCount?`예약 기록 ${pastReservationCount}건`:'예약 등록'",
+]) {
+  if (!roomCardSource.includes(contract)) throw new Error(`Compact room-card reservation action missing: ${contract}`);
+}
 
 for (const contract of [
   "if(a==='edit-room-info')",
@@ -794,6 +809,9 @@ for (const contract of ['예약정보 수정·예약 취소', '카드·예약표
 }
 for (const contract of ['객실 카드 4개 주 상태·일정 우선 배지', '연박 진행 배지', '별도 주의 패널 없이', 'admin-room-four-states-1440.png', 'admin-room-stay-progress-390.png', 'admin-assignment-early-late-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Four-state room card QA contract missing: ${contract}`);
+}
+for (const contract of ['객실 카드 예약 요약 행 제거', '중복 행 제거', '별도 예약 버튼 유지', '일정 우선 정보 유지', 'admin-room-card-priority-390.png']) {
+  if (!qa.includes(contract)) throw new Error(`Compact room-card reservation QA contract missing: ${contract}`);
 }
 for (const contract of ['근무표 다음 동선 고려 랜덤 배정 흐름', '객실별 담당 수정', '메이드별 청소 순서 수정', '순서 보드 일정 강조', 'admin-maid-order-board-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Cleaning assignment flow QA contract missing: ${contract}`);
