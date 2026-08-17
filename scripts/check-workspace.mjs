@@ -200,8 +200,6 @@ for (const contract of [
   "key:'available',tone:'green',status:'배정 가능'",
   'roomCleaningStageLabel(job)',
   'cardReservationStatus(no)',
-  'assignmentAttentionItems()',
-  '일정 확인만 · 청소 배정 대상 아님',
   "{id:'reservation-demo-142'",
   'label:`연박 ${day}/${total}일차`',
 ]) {
@@ -367,8 +365,11 @@ if (!/(?:실물|실기기)[^\n]{0,80}(?:후면 )?카메라[^\n]{0,120}(?:미검�
 for (const contract of ['예약정보 수정·예약 취소', '카드·예약표 공통 설정', '기타 사유 상세', '같은 날짜 재예약 격리', '다중 예약 중 한 건', '독립 현장 청소 요청', '비공개 초안·현재 카드 정리', '예정 시각 경과·실제 투숙 경계', '공개·수행·랜덤 초안 경계', '최신 상태 재검사', 'admin-reservation-cancel-1440.png', 'admin-reservation-cancel-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Reservation cancellation QA contract missing: ${contract}`);
 }
-for (const contract of ['객실 카드 4개 주 상태·일정 우선 배지', '연박 진행 배지', '일정 확인만 · 청소 배정 대상 아님', 'admin-room-four-states-1440.png', 'admin-room-stay-progress-390.png', 'admin-assignment-early-late-390.png']) {
+for (const contract of ['객실 카드 4개 주 상태·일정 우선 배지', '연박 진행 배지', '별도 주의 패널 없이', 'admin-room-four-states-1440.png', 'admin-room-stay-progress-390.png', 'admin-assignment-early-late-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Four-state room card QA contract missing: ${contract}`);
+}
+if (html.includes('내일 청소·일정 주의 한눈에') || html.includes('assignmentAttentionItems()')) {
+  throw new Error('Redundant assignment attention panel must stay removed.');
 }
 
 const audit = readFileSync(resolve(root, 'DOCS/FINAL_UX_AUDIT.md'));
