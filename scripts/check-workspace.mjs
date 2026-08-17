@@ -40,8 +40,10 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-weekly-work-history-calendar-390.png',
   'WIREFRAME/QA/screenshots/admin-room-catalog-1440.png',
   'WIREFRAME/QA/screenshots/admin-room-catalog-390.png',
-  'WIREFRAME/QA/screenshots/admin-room-status-available-long-stay-1440.png',
   'WIREFRAME/QA/screenshots/admin-available-room-edit-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-info-edit-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-info-edit-390.png',
+  'WIREFRAME/QA/screenshots/admin-manual-checkout-390.png',
   'WIREFRAME/QA/screenshots/admin-assignment-elevator-1440.png',
   'WIREFRAME/QA/screenshots/admin-assignment-recommendation-1440.png',
   'WIREFRAME/QA/screenshots/admin-assignment-recommendation-390.png',
@@ -110,16 +112,12 @@ const sourceIds = (source, label) => {
   if (!source) throw new Error(`${label} source block not found.`);
   return [...source.matchAll(/'(\d+)'\s*:/g)].map((match) => match[1]);
 };
-const expectedLongStayRooms = ['139', '358', '359', '449', '458', '461', '553', '558', '559', '628', '629'];
-const longStayIds = sourceIds(
-  html.match(/const LONG_STAY_ROOMS\s*=\s*Object\.freeze\(\{([\s\S]*?)\}\);/)?.[1],
-  'LONG_STAY_ROOMS',
+const expectedInitialOccupiedRooms = ['139', '358', '359', '449', '458', '461', '553', '558', '559', '628', '629'];
+const initialOccupiedIds = sourceIds(
+  html.match(/const INITIAL_OCCUPIED_ROOMS\s*=\s*Object\.freeze\(\{([\s\S]*?)\}\);/)?.[1],
+  'INITIAL_OCCUPIED_ROOMS',
 ).sort();
-const endedLongStayIds = sourceIds(
-  html.match(/const LONG_STAY_ENDED_ROOMS\s*=\s*Object\.freeze\(\{([\s\S]*?)\}\);/)?.[1],
-  'LONG_STAY_ENDED_ROOMS',
-).sort();
-const holdIds = sourceIds(
+const dataIssueIds = sourceIds(
   html.match(/const ROOM_STATUS_HOLDS\s*=\s*\{([\s\S]*?)\};/)?.[1],
   'ROOM_STATUS_HOLDS',
 ).sort();
@@ -128,29 +126,67 @@ if (!catalogSource) throw new Error('ROOM_CATALOG source block not found.');
 const catalogIds = [...catalogSource.matchAll(/\['(\d+)'\s*,/g)].map((match) => match[1]);
 const uniqueCatalogIds = new Set(catalogIds);
 const sameIds = (actual, expected) => actual.length === expected.length && actual.every((id, index) => id === expected[index]);
-if (!sameIds(longStayIds, expectedLongStayRooms)) {
-  throw new Error(`Active long-stay room contract mismatch: ${longStayIds.join(', ')}`);
+if (!sameIds(initialOccupiedIds, expectedInitialOccupiedRooms)) {
+  throw new Error(`Initial occupied room seed mismatch: ${initialOccupiedIds.join(', ')}`);
 }
-if (!sameIds(endedLongStayIds, ['527'])) {
-  throw new Error(`Ended long-stay room contract mismatch: ${endedLongStayIds.join(', ')}`);
-}
-if (!sameIds(holdIds, ['762'])) {
-  throw new Error(`Room hold contract mismatch: ${holdIds.join(', ')}`);
+if (!sameIds(dataIssueIds, ['762'])) {
+  throw new Error(`Room data issue contract mismatch: ${dataIssueIds.join(', ')}`);
 }
 if (catalogIds.length !== 121 || uniqueCatalogIds.size !== 121) {
   throw new Error(`Room catalog contract mismatch: ${catalogIds.length} rows / ${uniqueCatalogIds.size} unique rooms.`);
 }
-const availableRoomCount = catalogIds.filter((id) => !longStayIds.includes(id) && !holdIds.includes(id)).length;
-if (availableRoomCount !== 109) {
-  throw new Error(`Customer-assignable room contract mismatch: ${availableRoomCount} rooms.`);
+if (!/dataIssue:hold\|\|null/.test(html) || !html.includes("'762':'엘리베이터·현재 투숙 상태 확인 필요'")) {
+  throw new Error('Room 762 must remain a dataIssue until elevator and occupancy are confirmed.');
 }
-if (!/catalogStatus:hold\?'hold':longStay\?'longstay':'available'/.test(html) || /디폴트/.test(html)) {
-  throw new Error('General rooms must use the existing customer-assignable status without a neutral default UI state.');
+if (!/occupancy:occupiedSeed\?'occupied':'vacant'/.test(html) || !/catalogStatus:hold\?'hold':'available'/.test(html)) {
+  throw new Error('Room master must separate initial occupancy from customer assignability.');
+}
+if (/LONG_STAY_(?:ROOMS|ENDED_ROOMS)|long-?stay|장기투숙/i.test(html)) {
+  throw new Error('Legacy long-stay UI or state contracts remain in WIREFRAME/index.html.');
 }
 
+for (const contract of [
+  "if(a==='edit-room-info')",
+  "if(a==='save-room-info')",
+  'id="room-info-number"',
+  'readonly aria-readonly="true"',
+  'id="room-info-type"',
+  'id="room-info-elevator"',
+  'roomMasterFingerprint(room)',
+  'adminCanMutate()',
+  'appendEvent(`${id}호 객실 정보 수정`',
+  '이후 새 작업부터 적용',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin room master edit contract missing: ${contract}`);
+}
+for (const contract of [
+  "if(a==='manual-checkout')",
+  "if(a==='confirm-manual-checkout')",
+  "room.occupancy!=='occupied'",
+  'activeUnfinishedAttempt(id)',
+  'recordManualCheckoutScheduleChange(id,unstartedAttempt,previousWorkDate,previousAccessStart)',
+  'attemptId:currentAttemptId(no)||null',
+  "draft.kind==='퇴실 청소'",
+  "activeReservation.status='checked-out'",
+  'existingDraft.reservationId=activeReservation.id',
+  'projectReservationState(state,id)',
+  "room.occupancy='vacant'",
+  'room.actualCheckoutAt=actualCheckoutAt',
+  'delete room.actualCheckoutAt',
+  '예정 ${plannedCheckout} 보존',
+  '퇴실 청소 초안 1건',
+  'appendEvent(`${id}호 지금 체크아웃`',
+]) {
+  if (!html.includes(contract)) throw new Error(`Manual checkout contract missing: ${contract}`);
+}
+
+
 const qa = readFileSync(resolve(root, 'WIREFRAME/QA.md'), 'utf8');
-if (/운영 상태 미입력|상태 미연결 111개|기준정보만 연결된 112개|디폴트/.test(qa)) {
-  throw new Error('Stale neutral/default room status wording remains in WIREFRAME/QA.md.');
+if (/고객 배정 가능 기준 109개|장기투숙 중 11개|현재 장기투숙 11개/.test(qa)) {
+  throw new Error('Stale 109/11/1 room status contract remains in WIREFRAME/QA.md.');
+}
+for (const contract of ['초기 투숙 seed 11개', '762호 dataIssue', '객실 정보 수정', '수동 체크아웃', 'admin-room-info-edit-1440.png', 'admin-manual-checkout-390.png']) {
+  if (!qa.includes(contract)) throw new Error(`Room master QA contract missing: ${contract}`);
 }
 
 const audit = readFileSync(resolve(root, 'DOCS/FINAL_UX_AUDIT.md'));
@@ -172,7 +208,7 @@ console.log(`Inline scripts parsed: ${inlineScripts.length}`);
 console.log(`Large-team assignment fixture: ${maidIds.length} maids`);
 console.log('Per-maid weekly payment static contracts: passed');
 console.log('Portable path scan: passed');
-console.log(`Room master contract: ${availableRoomCount} customer-assignable / ${longStayIds.length} long-stay / ${holdIds.length} hold`);
+console.log(`Room master contract: ${catalogIds.length} rooms / ${initialOccupiedIds.length} initially occupied / ${dataIssueIds.length} data issue`);
 console.log(`Final UX audit SHA-256: ${auditHash}`);
 console.log(`Wireframe SHA-256: ${indexHash}`);
 console.log('Manifest hashes: passed');
