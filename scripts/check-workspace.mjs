@@ -85,6 +85,9 @@ const required = [
   'WIREFRAME/QA/screenshots/maid-cleaning-rollover-390.png',
   'WIREFRAME/QA/screenshots/admin-occupied-reservation-1440.png',
   'WIREFRAME/QA/screenshots/admin-occupied-reservation-390.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-day-tabs-1440.png',
+  'WIREFRAME/QA/screenshots/admin-same-day-adjustment-390.png',
+  'WIREFRAME/QA/screenshots/maid-same-day-change-notice-390.png',
   'WIREFRAME/reference/redesign-concepts/admin-inspection.png',
   'WIREFRAME/reference/redesign-concepts/admin-next-day-assignment.png',
   'WIREFRAME/reference/redesign-concepts/maid-weekly-availability.png',
@@ -95,6 +98,22 @@ const required = [
 const missing = required.filter((file) => !existsSync(resolve(root, file)));
 if (missing.length) {
   throw new Error(`Required files missing:\n${missing.join('\n')}`);
+}
+
+const requiredPngEvidence = [
+  'WIREFRAME/QA/screenshots/admin-reservation-cancel-1440.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-cancel-390.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-day-tabs-1440.png',
+  'WIREFRAME/QA/screenshots/admin-same-day-adjustment-390.png',
+  'WIREFRAME/QA/screenshots/maid-same-day-change-notice-390.png',
+];
+const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const invalidPngEvidence = requiredPngEvidence.filter((file) => {
+  const bytes = readFileSync(resolve(root, file));
+  return bytes.length < pngSignature.length || !bytes.subarray(0, pngSignature.length).equals(pngSignature);
+});
+if (invalidPngEvidence.length) {
+  throw new Error(`Required PNG evidence has an invalid file signature:\n${invalidPngEvidence.join('\n')}`);
 }
 
 const portableDocs = [
@@ -338,6 +357,9 @@ if (!/!\s*attempt(?:\?\.)?\.startedAt/.test(rolloverSource) || !/attempt(?:\?\.)
 }
 if (!/maidId\s*[:=]\s*['\"]{2}/.test(rolloverSource) || !/order\s*[:=]\s*null/.test(rolloverSource)) {
   throw new Error('Assigned-but-unstarted carryover must reopen without a current maid or order.');
+}
+if (!rolloverSource.includes("assignment.status==='notified'?assignment.maidId:assignment.previousMaidId||null") || !rolloverSource.includes("carryReason=notifiedMaidId?'not-started':'unassigned'")) {
+  throw new Error('Unsaved assignment drafts must not be recorded as previously notified maids during rollover.');
 }
 if (!/\[\s*['\"]upload['\"]\s*,\s*['\"]inspection['\"]\s*\]\.includes\(/.test(rolloverSource) || !/completedAt/.test(rolloverSource)) {
   throw new Error('Upload, inspection, and field-completed work must not re-enter next-day assignment carryover.');
@@ -785,7 +807,7 @@ for (const contract of [
   'guestCountChanged=!committed||(item.guestCount??null)!==(committed.guestCount??null)',
   'record.targetChanged=changed',
   'assignment.guestCountChanged===true||assignment.reservationChanged===true',
-  'return {item:record.committedTarget||item,assignment:committedAssignmentFor(item)}',
+  'return {item:record.committedTarget,assignment}',
   'item.guestCount??\'\'',
   'assignment.committedTarget={...item,type:snapshot.typeId,rateSnapshot:snapshot.rate,minutesSnapshot:snapshot.minutes,elevatorSnapshot:snapshot.elevator}',
   'assignment.guestCountChanged=false;assignment.reservationChanged=false;assignment.targetChanged=false',
@@ -832,7 +854,7 @@ for (const contract of [
   'parts.push(`숙박 인원 ${guestCountLabel(assignmentGuestCount(item))}`)',
   'unstartedAttempt.reservationIdSnapshot===activeReservation.id&&!guestCountForAttempt(unstartedAttempt)',
   'committedReservationId===attempt.reservationIdSnapshot?guestCountForAttempt(attempt):null',
-  "record?.status==='cancelled'&&freshTarget?.reservationId&&record.cancelledReservationId!==freshTarget.reservationId",
+  'reopenCancelledAssignmentForNewReservation(state,{...freshTarget,id},{allowSameReservation:reopenSameReservation})',
 ]) {
   if (!html.includes(contract)) throw new Error(`Maid reservation guest snapshot contract missing: ${contract}`);
 }
@@ -888,13 +910,12 @@ for (const unwantedCopy of [
 }
 for (const contract of [
   'const RESERVATION_CANCEL_REASONS',
-  "other:'기타'",
-  'reservation-cancel-other',
-  'reservationCancelReasonError',
+  "other:'기타 운영 사유'",
+  'reservationCancelReasonError(reasonCode)',
   'Object.hasOwn(RESERVATION_CANCEL_REASONS,code)',
-  'maxlength="120"',
-  '기타 운영 사유는 120자 이하로 입력해 주세요.',
-  '4자리 PIN은 기록하지 마세요.',
+  "if(c==='reservation-cancel-reason')",
+  'confirm.disabled=!!reservationCancelReasonError(e.target.value)',
+  '고객 개인정보를 적지 않는 정해진 운영 사유만 이력과 알림에 남깁니다.',
   'reservationCancellationImpact(reservation)',
   'reservationCancellationImpactFingerprint(reservation',
   'reservationAutomaticCleaningAttempt',
@@ -909,6 +930,7 @@ for (const contract of [
   "reservation.status='cancelled'",
   'state.selectedDrafts=state.selectedDrafts.filter',
   'cancelledTarget:targetSnapshot',
+  "cancelledBy:'관리자 · 데모'",
   'targetSnapshot:targetSnapshot?{...targetSnapshot}:null',
   'previousMaidId:null,previousOrder:null,committedTarget:null',
   'historyStack:true',
@@ -920,6 +942,26 @@ for (const contract of [
   '체크인이 시작된 예약은 취소하지 않고',
 ]) {
   if (!html.includes(contract)) throw new Error(`Reservation cancellation contract missing: ${contract}`);
+}
+if (html.includes('id="reservation-cancel-other"') || html.includes('normalizedReservationCancelOther') || html.includes('reasonDetail')) {
+  throw new Error('Reservation cancellation must not expose or persist a free-form reason field.');
+}
+const reservationAssignmentCancelStart = html.indexOf('function cancelReservationAssignmentRecord');
+const reservationAssignmentCancelSource = html.slice(reservationAssignmentCancelStart, html.indexOf('function syncAdjacentReservationCleaningSchedules', reservationAssignmentCancelStart));
+for (const contract of [
+  "if(record.status==='cancelled')return",
+  'alreadyCancelled:true',
+  'state.cleaningTargets[targetId]',
+  'closed:true',
+  'closedAt:cancelledAt',
+  "closedBy:'관리자 · 데모'",
+  "closeReasonCode:'reservation'",
+  "closeStatus:'cancelled'",
+]) {
+  if (!reservationAssignmentCancelSource.includes(contract)) throw new Error(`Reservation cancellation cleaning-ledger tombstone contract missing: ${contract}`);
+}
+if (!html.includes("if(cancelled.alreadyCancelled)cleaningEffect='퇴실 청소 대상 이미 취소됨 · 기존 취소 이력 보존'")) {
+  throw new Error('Reservation cancellation must distinguish an already-cancelled cleaning target from a newly released assignee.');
 }
 const reservationModalStart = html.indexOf('function reservationModalConfig');
 const reservationModalSource = html.slice(reservationModalStart, html.indexOf('function openReservation', reservationModalStart));
@@ -944,10 +986,317 @@ const maidOrderItemSource = html.slice(maidOrderItemStart, html.indexOf('functio
 if (!maidOrderItemSource.includes('assignmentSchedulePriorityBadges(item)') || !maidOrderItemSource.includes('maid-order-schedule-badges')) {
   throw new Error('Maid order items must repeat early/late schedule priority badges with their adjusted times.');
 }
+for (const contract of ['previous=ordered[index-1]', 'next=ordered[index+1]', '!cleaningTargetCanAdjust(previous)', '!cleaningTargetCanAdjust(next)']) {
+  if (!maidOrderItemSource.includes(contract)) throw new Error(`Maid order controls must not cross a locked adjacent target: ${contract}`);
+}
+
+const cleaningHubStart = html.indexOf('function renderCleaningHub');
+const cleaningHubSource = html.slice(cleaningHubStart, html.indexOf('function taskRow', cleaningHubStart));
+const cleaningDayTabContracts = [
+  "cleaningTabButton('assignment-today','오늘 배정'",
+  "cleaningTabButton('assignment-tomorrow','내일 배정'",
+  "cleaningTabButton('progress','진행 중'",
+  "cleaningTabButton('inspection','검수 대기'",
+  "cleaningTabButton('done','완료'",
+  'assignmentCountsForDate(todayDate).total',
+  'assignmentCountsForDate(tomorrowDate).total',
+];
+let cleaningDayTabIndex = -1;
+for (const contract of cleaningDayTabContracts.slice(0, 5)) {
+  const nextIndex = cleaningHubSource.indexOf(contract);
+  if (nextIndex <= cleaningDayTabIndex) throw new Error(`Today/tomorrow cleaning tab order is invalid at: ${contract}`);
+  cleaningDayTabIndex = nextIndex;
+}
+for (const contract of cleaningDayTabContracts.slice(5)) {
+  if (!cleaningHubSource.includes(contract)) throw new Error(`Cleaning day tab count contract missing: ${contract}`);
+}
+for (const removed of ['전날 배정에서 보기', '전날 배정에서 확인', '전날 관리자 배정으로 이동']) {
+  if (html.includes(removed)) throw new Error(`Legacy single-day cleaning assignment label remains: ${removed}`);
+}
+for (const contract of [
+  "function assignmentDateForCleaningTab(targetState=state,tab=targetState.cleaningTab)",
+  "tab==='assignment-tomorrow'||tab==='assignment'?addIsoDays(targetState.selectedDate,1):targetState.selectedDate",
+  "params.set('cleaningDay','today')",
+  "params.set('cleaningDay','tomorrow')",
+  "if(tab===state.cleaningTab){el.focus();return;}",
+  'rememberCurrentHistoryRoute();state.cleaningTab=tab',
+  'pushHistoryOnNextRender();render()',
+]) {
+  if (!html.includes(contract)) throw new Error(`Today/tomorrow route contract missing: ${contract}`);
+}
+for (const contract of [
+  "find(item=>!item.cancelled&&item.room===roomNo&&item.kind==='퇴실 청소'",
+  'manual=(targetState.manualAssignmentTargets||[]).filter(item=>!item.cancelled&&targetEffectiveDate(item,assignmentDate)===assignmentDate)',
+  'independentTarget=(state.manualAssignmentTargets||[]).some(target=>!target.cancelled&&target.room===roomNo)',
+]) {
+  if (!html.includes(contract)) throw new Error(`Cancelled manual cleaning targets must stay out of active assignment lookup: ${contract}`);
+}
+
+const activationStart = html.indexOf('function activateNotifiedAssignmentsForDate');
+const activationSource = html.slice(activationStart, html.indexOf('function assignmentFor', activationStart));
+for (const contract of [
+  "assignment?.status!=='notified'",
+  'attemptForCleaningTarget(item)',
+  'activeUnfinishedAttempt(item.room)',
+  'roomAttemptBlocksActivation=!!roomAttempt',
+  'assignment.activationBlockedBy',
+  "appendEvent('내 청소 시작 보류 안내'",
+  '{maidIds:[assignment.maidId]}',
+  "appendEvent('내 청소 시작 가능 안내'",
+  "reason:'사전 통보 청소 당일 활성화'",
+  'beginCleaningAttempt(item.room',
+  "state.jobs[item.room]=item.kind==='재청소'?'reclean':'scheduled'",
+]) {
+  if (!activationSource.includes(contract)) throw new Error(`Future assignment activation contract missing: ${contract}`);
+}
+if (!html.includes('if(targetState===state&&toDate>=previousDate)activateNotifiedAssignmentsForDate(toDate)')) {
+  throw new Error('Operational date advancement must activate previously notified cleaning assignments.');
+}
+for (const routeFunction of ['function applyHistoryRoute', 'function applyHashParameters']) {
+  const routeStart = html.indexOf(routeFunction);
+  const routeEnd = html.indexOf('\n      function ', routeStart + routeFunction.length);
+  const routeSource = html.slice(routeStart, routeEnd > routeStart ? routeEnd : undefined);
+  if (!routeSource.includes("if(state.cleaningTab==='assignment-today')activateNotifiedAssignmentsForDate(state.selectedDate)")) {
+    throw new Error(`${routeFunction} must reconcile today assignments after all route fields are restored.`);
+  }
+}
+if (!html.includes('closeModal();activateNotifiedAssignmentsForDate(state.selectedDate);render();toast(')) {
+  throw new Error('Inspection completion must reconcile same-day assignments that were explicitly held for an earlier room task.');
+}
+
+const adjustmentBlockStart = html.indexOf('function cleaningTargetAdjustmentBlock');
+const adjustmentBlockSource = html.slice(adjustmentBlockStart, html.indexOf('function cleaningTargetCanAdjust', adjustmentBlockStart));
+for (const contract of ['roomAttempt.workTargetId!==target.id', "roomAttempt.status==='submitted'", 'attempt.startedAt', 'attempt.completedAt', "!['active','scheduled'].includes(attempt.status)"]) {
+  if (!adjustmentBlockSource.includes(contract)) throw new Error(`Cleaning adjustment stage lock contract missing: ${contract}`);
+}
+
+const sameDayAddStart = html.indexOf("if(a==='new-cleaning')");
+const sameDayAddSource = html.slice(sameDayAddStart, html.indexOf("if(a==='cancel-cleaning-target')", sameDayAddStart));
+for (const contract of [
+  'state.assignmentDate!==state.selectedDate||!activeUnfinishedAttempt(r.no)',
+  'state.assignmentDate===state.selectedDate&&activeUnfinishedAttempt(no)',
+  "state.assignments[key]={maidId:'',order:null,status:'unassigned'",
+  "reopenReason:'관리자 직접 다시 추가'",
+  'cancellationHistory:[...(cancelledAssignment.cancellationHistory||[]),cancellationRevision]',
+  'closeHistory:[...(closedTarget.closeHistory||[]),closeRevision]',
+  'priorJobState:state.jobs[no]??null',
+]) {
+  if (!sameDayAddSource.includes(contract)) throw new Error(`Same-day cleaning add/reopen contract missing: ${contract}`);
+}
+
+const cancelledReservationReopenStart = html.indexOf('function reopenCancelledAssignmentForNewReservation');
+const cancelledReservationReopenSource = html.slice(cancelledReservationReopenStart, html.indexOf('function initializeCleaningTargetLedger', cancelledReservationReopenStart));
+for (const contract of [
+  'cancellationHistory:[...(record.cancellationHistory||[]),cancellationRevision]',
+  'record.cancelledNotifiedAt||record.notifiedAt||null',
+  'record.cancelledNotificationRevision??record.notificationRevision??null',
+  'record.cancelledTarget||record.committedTarget||null',
+  'cancelledStatus:record.cancelledStatus||null',
+  'closeStatus:ledger.closeStatus||null',
+  'cleaningTargetOperationalSnapshot(ledger',
+  'closeHistory:[...(ledger?.closeHistory||[])',
+  "reopenReason:'새 예약 청소 의무'",
+]) {
+  if (!cancelledReservationReopenSource.includes(contract)) throw new Error(`New-reservation cleaning reopen history contract missing: ${contract}`);
+}
+for (const contract of [
+  'reopenCancelledAssignmentForNewReservation(targetState,item)===record',
+  'reopenCancelledAssignmentForNewReservation(state,item)',
+  'reopenCancelledAssignmentForNewReservation(state,{...freshTarget,id},{allowSameReservation:reopenSameReservation})',
+]) {
+  if (!html.includes(contract)) throw new Error(`Cancelled target reopen must use the shared history-preserving helper: ${contract}`);
+}
+for (const contract of [
+  "if(record.status==='cancelled')return",
+  'syncReservationAssignmentScheduleState(reservation,checkoutDate,{reopenSameReservation:true})',
+  "['closed','closedAt','closedBy','closeReasonCode','closeReason','closeStatus','closeHistory','reopenedAt','reopenReason']",
+]) {
+  if (!html.includes(contract)) throw new Error(`Cancelled reservation date-revert guard missing: ${contract}`);
+}
+const cancelledManualReopenStart = html.indexOf('function reopenCancelledManualCleaningTarget');
+const cancelledManualReopenSource = html.slice(cancelledManualReopenStart, html.indexOf('function initializeCleaningTargetLedger', cancelledManualReopenStart));
+for (const contract of [
+  "record.status!=='cancelled'",
+  'delete manual.cancelled',
+  'cancellationHistory:[...(record.cancellationHistory||[]),cancellationRevision]',
+  'record.cancelledNotifiedAt||record.notifiedAt||null',
+  'record.cancelledNotificationRevision??record.notificationRevision??null',
+  'cleaningTargetOperationalSnapshot(closedTarget',
+  'closeHistory:[...(closedTarget.closeHistory||[]),closeRevision]',
+  'reopenReason',
+]) {
+  if (!cancelledManualReopenSource.includes(contract)) throw new Error(`Cancelled manual cleaning target reopen contract missing: ${contract}`);
+}
+if (!html.includes("reopened=reopenCancelledManualCleaningTarget(manualTarget,'실제 체크아웃으로 퇴실 청소 다시 생성')") || !html.includes('if(!reopened){if(existingTarget)Object.assign(existingTarget,manualTarget)')) {
+  throw new Error('Repeated same-day manual checkout must reopen its cancelled cleaning target before replacing the ledger snapshot.');
+}
+for (const contract of [
+  'filter(reservation=>reservation.id!==activeReservation?.id).find(reservation=>reservation.checkInAt>=actualCheckoutAt)',
+  'nextCheckinSnapshot=sameDayNext?nextReservation.checkInAt.slice(11,16):DEFAULT_CHECKIN_TIME',
+  'checkin:nextCheckinSnapshot,deadline:nextDeadlineSnapshot',
+  'checkinSnapshot:nextCheckinSnapshot,deadlineSnapshot:nextDeadlineSnapshot',
+]) {
+  if (!html.includes(contract)) throw new Error(`Manual checkout must derive cleaning deadlines from the actual next reservation: ${contract}`);
+}
+if (html.includes("checkin:room.nextCheckinAt?.slice(11,16)||room.checkin")) {
+  throw new Error('Manual checkout must not reuse the departing stay check-in time as the next reservation deadline.');
+}
+const reservationDraftSyncStart = html.indexOf('function syncReservationCleaningDraft');
+const reservationDraftSyncSource = html.slice(reservationDraftSyncStart, html.indexOf('function reservationWorkScheduleFingerprint', reservationDraftSyncStart));
+for (const contract of [
+  'targetRecord=reservationAssignmentEntryForDate(reservation,date).record',
+  "targetRecord?.status==='cancelled'",
+  '(targetRecord.cancelledReservationId||null)===reservation.id',
+  'oldDate===date',
+  'state.drafts=state.drafts.filter(draft=>draft.id!==draftId)',
+  'state.selectedDrafts=state.selectedDrafts.filter(id=>id!==draftId)',
+]) {
+  if (!reservationDraftSyncSource.includes(contract)) throw new Error(`Cancelled same-date reservation draft guard missing: ${contract}`);
+}
+
+const sameDayCancelStart = html.indexOf("if(a==='confirm-cancel-cleaning-target')");
+const sameDayCancelSource = html.slice(sameDayCancelStart, html.indexOf("if(a==='toggle-week-day')", sameDayCancelStart));
+for (const contract of [
+  'cleaningCancelReasonError(reasonCode)',
+  'cleaningCancelReasonLabel(reasonCode)',
+  'cancelReasonCode:reasonCode',
+  "status:'cancelled'",
+  "cancelledBy:'관리자 · 데모'",
+  'cancelledMaidId:selectedMaidId',
+  'cancelledNotifiedMaidId:notifiedMaidId',
+  'cancelledOrder:assignment.order??null',
+  'cancelledPreviousOrder:notifiedOrder??null',
+  "cancelledStatus:assignment.status||'unassigned'",
+  'cancelledNotifiedAt:assignment.notifiedAt||null',
+  'cancelledNotificationRevision:assignment.notificationRevision||null',
+  'cancelledReservationId:item.reservationId||null',
+  'cancelledObligationKey:cleaningTargetObligationKey(item)',
+  'draft.reservationId===item.reservationId',
+  "draft.visibility!=='public'",
+  'state.selectedDrafts=state.selectedDrafts.filter',
+  'commitRemainingNotifiedOrdersAfterCancellation',
+  "appendEvent('내 청소 취소 통보'",
+  '${reason} · ${routeText}',
+  '{maidIds:[notifiedMaidId]}',
+  'item.priorJobState',
+]) {
+  if (!sameDayCancelSource.includes(contract)) throw new Error(`Same-day cleaning cancellation contract missing: ${contract}`);
+}
+for (const contract of [
+  'cancelledNotifiedMaidId:cancelledAssignment.cancelledNotifiedMaidId||null',
+  'cancelledPreviousOrder:cancelledAssignment.cancelledPreviousOrder??null',
+  'cancelledStatus:cancelledAssignment.cancelledStatus||null',
+  'cancelledAssignment.cancelledNotifiedAt||cancelledAssignment.notifiedAt||null',
+  'cancelledAssignment.cancelledNotificationRevision??cancelledAssignment.notificationRevision??null',
+]) {
+  if (!sameDayAddSource.includes(contract)) throw new Error(`Reopened manual cleaning target must retain the full cancellation revision: ${contract}`);
+}
+if (!html.includes('const CLEANING_CANCEL_REASONS=Object.freeze') || !html.includes('Object.entries(CLEANING_CANCEL_REASONS)') || !html.includes('<select id="cleaning-cancel-reason"')) {
+  throw new Error('Same-day cleaning cancellation must use controlled reason choices.');
+}
+const manualCheckoutStayoverStart = html.indexOf('function cancelPendingStayoverTargetsAfterCheckout');
+const manualCheckoutStayoverSource = html.slice(manualCheckoutStayoverStart, html.indexOf('function assignmentTypeId', manualCheckoutStayoverStart));
+for (const contract of [
+  "item.kind!=='연박 청소'",
+  "targetEffectiveDate(item,'')<state.selectedDate",
+  'Object.values(state.cleaningTargets||{}).forEach(addCandidate)',
+  'Object.values(state.assignments||{}).forEach(record=>addCandidate(record?.committedTarget))',
+  'Object.values(state.cleaningAttempts||{}).forEach',
+  'closed:true',
+  "closeStatus:'cancelled'",
+  "attempt.status='superseded'",
+  "status:'cancelled'",
+  'cancelledNotifiedAt:assignment.notifiedAt||null',
+  'commitRemainingNotifiedOrdersAfterCancellation',
+  "appendEvent('내 투숙 중 청소 요청 취소'",
+]) {
+  if (!manualCheckoutStayoverSource.includes(contract)) throw new Error(`Manual checkout must close every future unstarted stayover target: ${contract}`);
+}
+for (const contract of [
+  'cancelPendingStayoverTargetsAfterCheckout(id)',
+  'cancelledStayoverDraftIds',
+  'state.selectedDrafts=state.selectedDrafts.filter',
+]) {
+  if (!html.includes(contract)) throw new Error(`Manual checkout stayover cancellation contract missing: ${contract}`);
+}
+if (html.includes('<textarea id="cleaning-cancel-reason"') || html.includes('<input id="cleaning-cancel-reason"')) {
+  throw new Error('Same-day cleaning cancellation must not persist free-form reasons that can contain personal data.');
+}
+if (sameDayCancelSource.includes('delete state.assignments') || sameDayCancelSource.includes('delete state.cleaningTargets')) {
+  throw new Error('Same-day cleaning cancellation must preserve assignment and target history as tombstones.');
+}
+if (sameDayCancelSource.includes('manualAssignmentTargets=') || sameDayCancelSource.includes('manualAssignmentTargets.splice')) {
+  throw new Error('Same-day cleaning cancellation must not delete the manual target tombstone.');
+}
+const maidCancelNoticeStart = sameDayCancelSource.indexOf("if(notifiedMaidId)");
+const maidCancelNoticeSource = sameDayCancelSource.slice(maidCancelNoticeStart, sameDayCancelSource.indexOf('historyReturnFocus', maidCancelNoticeStart));
+if (!sameDayCancelSource.includes('reason=cleaningCancelReasonLabel(reasonCode)') || !maidCancelNoticeSource.includes('${reason}')) {
+  throw new Error('Maid cancellation notifications must use the selected controlled reason label.');
+}
+
+const assignmentSaveStart = html.indexOf("if(a==='save-assignments')");
+const assignmentSaveSource = html.slice(assignmentSaveStart, html.indexOf("if(a==='set-availability')", assignmentSaveStart));
+const assignmentOrderMoveStart = html.indexOf("if(a==='move-assignment-order')");
+const assignmentOrderMoveSource = html.slice(assignmentOrderMoveStart, assignmentSaveStart);
+for (const contract of ['needsAttemptBridge', 'beginCleaningAttempt(item.room', 'sameDay&&existingAttempt&&!existingAttempt.startedAt', 'assignment.notifiedAt=', 'assignment.notificationRevision=']) {
+  if (!assignmentSaveSource.includes(contract)) throw new Error(`Same-day assignment execution bridge contract missing: ${contract}`);
+}
+for (const contract of ['affectedMaidIds.forEach', 'if(assignment.maidId!==maidId)return', '{maidIds:[maidId]}', '미배정 객실 정보 제외']) {
+  if (!assignmentSaveSource.includes(contract)) throw new Error(`Old/new maid notification audience contract missing: ${contract}`);
+}
+if (!assignmentOrderMoveSource.includes('if(!cleaningTargetCanAdjust(other))')) {
+  throw new Error('Maid order swaps must recheck the adjacent target before changing either order.');
+}
+
+const notifiedEntriesStart = html.indexOf('function notifiedAssignmentEntriesForMaid');
+const notifiedEntriesSource = html.slice(notifiedEntriesStart, html.indexOf('function assignmentGuestCount', notifiedEntriesStart));
+for (const contract of ['ledger?.closed', 'workDate<state.selectedDate', 'workDate>addIsoDays(state.selectedDate,1)', 'attempt?.completedAt', "['submitted','approved','rejected','superseded']", 'activationBlockedBy:record.activationBlockedBy']) {
+  if (!notifiedEntriesSource.includes(contract)) throw new Error(`Current maid schedule boundary contract missing: ${contract}`);
+}
+
+const maidAlertsStart = html.indexOf('function renderMaidAlerts');
+const maidAlertsSource = html.slice(maidAlertsStart, html.indexOf('function renderMaidPayFromLedger', maidAlertsStart));
+for (const contract of [
+  '(state.events||[]).filter(event=>event.maidIds?.includes(maid.id))',
+  '담당·순서 변경과 취소 알림은 업무가 사라진 뒤에도 남습니다.',
+  '현재 통보 일정',
+  '앱 내부 알림',
+]) {
+  if (!maidAlertsSource.includes(contract)) throw new Error(`Maid persistent change notification contract missing: ${contract}`);
+}
+const directAssignStart = html.indexOf('function openDirectAssign');
+const directAssignSource = html.slice(directAssignStart, html.indexOf('function reservationPreviewMarkup', directAssignStart));
+if (!directAssignSource.includes('if(roomTarget){pushPageTransition') || !directAssignSource.includes("state.cleaningTab=targetEffectiveDate(roomTarget)===state.selectedDate?'assignment-today':'assignment-tomorrow'")) {
+  throw new Error('Ledger-backed cleaning targets must be adjusted through the today/tomorrow assignment board.');
+}
 
 const qa = readFileSync(resolve(root, 'WIREFRAME/QA.md'), 'utf8');
 const wireframeReadme = readFileSync(resolve(root, 'WIREFRAME/README.md'), 'utf8');
 const taskPrompt = readFileSync(resolve(root, 'DOCS/WIREFRAME_TASK_PROMPT.md'), 'utf8');
+for (const contract of [
+  '추가 검증 · 오늘·내일 배정과 당일 추가·취소·변경 알림',
+  '숫자는 미배정 수가 아니라 날짜별 전체 청소대상 수',
+  '같은 대상 한 건',
+  '정확히 한 번',
+  '이전 담당 알림에는 새 메이드 이름이 없었고',
+  '남은 순서 1.352호',
+  '활성화 보류 / 관리자 확인 대기 · 시작 불가',
+  '검수 대기 2→1',
+  '이전 취소 이력은 남았다',
+  '실제 체크아웃의 미래 연박 취소',
+  '남은 순서 1.350호',
+  '같은 날 재투숙·재체크아웃',
+  '준비 마감 14:30',
+  '통보 시각·revision 스냅샷',
+  '자유입력 사유 없이 선택형 라벨',
+  '취소한 예약의 퇴실 청소는 전일 이월로 다시 나타나지 않았다',
+  '실제 푸시·SMS·전화 발송이 아니다',
+  'admin-cleaning-day-tabs-1440.png',
+  'admin-same-day-adjustment-390.png',
+  'maid-same-day-change-notice-390.png',
+]) {
+  if (!qa.includes(contract)) throw new Error(`Today/tomorrow cleaning QA documentation missing: ${contract}`);
+}
 for (const contract of ['캘린더 공통 표시 규칙', '일 · 월 · 화 · 수 · 목 · 금 · 토', '공휴일이 겹치면 공휴일 빨간색이 우선', '이후 추가하는 달력도', '우주항공청 2026년 월력요항', '국가법령정보센터 현행 공휴일 규정']) {
   if (!wireframeReadme.includes(contract)) throw new Error(`Future calendar README contract missing: ${contract}`);
 }
@@ -1010,7 +1359,7 @@ for (const contract of [
 if (!/(?:실물|실기기)[^\n]{0,80}(?:후면 )?카메라[^\n]{0,120}(?:미검증|검증하지 못|확인하지 못)/.test(qa)) {
   throw new Error('Maid zone camera QA must distinguish static/browser checks from unverified physical-device camera behavior.');
 }
-for (const contract of ['예약정보 수정·예약 취소', '카드·예약표 공통 설정', '기타 사유 상세', '같은 날짜 재예약 격리', '다중 예약 중 한 건', '독립 현장 청소 요청', '비공개 초안·현재 카드 정리', '예정 시각 경과·실제 투숙 경계', '공개·수행·랜덤 초안 경계', '최신 상태 재검사', 'admin-reservation-cancel-1440.png', 'admin-reservation-cancel-390.png']) {
+for (const contract of ['예약정보 수정·예약 취소', '카드·예약표 공통 설정', '취소 사유 선택', '같은 날짜 재예약 격리', '다중 예약 중 한 건', '독립 현장 청소 요청', '비공개 초안·현재 카드 정리', '예정 시각 경과·실제 투숙 경계', '공개·수행·랜덤 초안 경계', '최신 상태 재검사', 'admin-reservation-cancel-1440.png', 'admin-reservation-cancel-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Reservation cancellation QA contract missing: ${contract}`);
 }
 for (const contract of ['객실 카드 4개 주 상태·일정 우선 배지', '연박 진행 배지', '별도 주의 패널 없이', 'admin-room-four-states-1440.png', 'admin-room-stay-progress-390.png', 'admin-assignment-early-late-390.png']) {
