@@ -74,6 +74,8 @@ const required = [
   'WIREFRAME/QA/screenshots/maid-type-photo-template-390.png',
   'WIREFRAME/QA/screenshots/maid-zone-camera-1440.png',
   'WIREFRAME/QA/screenshots/maid-zone-camera-390.png',
+  'WIREFRAME/QA/screenshots/maid-tv-on-required-390.png',
+  'WIREFRAME/QA/screenshots/admin-tv-on-inspection-1440.png',
   'WIREFRAME/QA/screenshots/admin-copy-cleanup-1440.png',
   'WIREFRAME/QA/screenshots/admin-info-tooltip-390.png',
   'WIREFRAME/QA/screenshots/maid-copy-cleanup-390.png',
@@ -258,6 +260,49 @@ if (fieldCompleteSource.includes('req.checked') || !fieldCompleteSource.includes
   throw new Error('Maid completion/submission is not exclusively gated by required photo status.');
 }
 
+const typePhotoGroupsStart = html.indexOf('const TYPE_PHOTO_GROUPS=');
+const typePhotoGroupsEnd = html.indexOf('const TEMPLATE_KIND_DEMO=', typePhotoGroupsStart);
+const typePhotoGroupsSource = html.slice(typePhotoGroupsStart, typePhotoGroupsEnd);
+const typePhotoObjectStart = typePhotoGroupsSource.indexOf('{');
+const typePhotoObjectEnd = typePhotoGroupsSource.lastIndexOf('};');
+if ([typePhotoGroupsStart, typePhotoGroupsEnd, typePhotoObjectStart, typePhotoObjectEnd].some(index => index < 0)) {
+  throw new Error('TV-required checkout photo template source could not be resolved.');
+}
+const typePhotoGroups = Function(`"use strict";return (${typePhotoGroupsSource.slice(typePhotoObjectStart, typePhotoObjectEnd + 1)});`)();
+const expectedCheckoutPhotoCounts = {
+  standard:{total:10,required:9},
+  premium:{total:11,required:10},
+  oceanPremium:{total:13,required:12},
+  oceanFamily:{total:11,required:10},
+};
+for (const [typeId, expected] of Object.entries(expectedCheckoutPhotoCounts)) {
+  const rules = typePhotoGroups[typeId] || [];
+  const tvRules = rules.filter(rule => rule.id === 'tv-on');
+  if (rules.length !== expected.total || rules.filter(rule => rule.required).length !== expected.required) {
+    throw new Error(`${typeId} checkout photo counts do not include the required TV-on evidence slot.`);
+  }
+  if (tvRules.length !== 1 || tvRules[0].zone !== 'TV' || tvRules[0].label !== 'TV 켜짐·화면 출력 확인' || tvRules[0].required !== true || tvRules[0].fixture !== 'tv') {
+    throw new Error(`${typeId} must have exactly one distinct required TV-on photo rule.`);
+  }
+}
+for (const contract of [
+  "checkout:{name:'퇴실 청소',version:'v7'",
+  'function legacyCheckoutTemplateSnapshotFor',
+  "version:'v6',photos:Object.freeze(current.photos.filter(item=>item.id!=='tv-on')",
+  "if(rule.id==='tv-on')return {status:'empty',upload:null};",
+  "draft.kind==='퇴실 청소'?legacyCheckoutTemplateSnapshotFor(draft.room)",
+  "templateVersionSeed:'v7'",
+  "attempt.templateVersionSeed!=='v7'?legacyCheckoutTemplateSnapshotFor(attempt.room)",
+  "snapshot.version==='v6'&&state.jobs[attempt.room]==='upload'&&!prior.templateId",
+  'TV 켜짐·화면 출력 확인',
+  'TV는 켜고 계정·QR·알림 없는 기본 화면',
+]) {
+  if (!html.includes(contract)) throw new Error(`TV-on photo version/safety contract missing: ${contract}`);
+}
+for (const removed of ['TV 화면은 끕니다', 'TV는 끄고', '켜진 TV 화면은 촬영하지 않습니다', '켜진 TV 화면은 사진에서 제외']) {
+  if (html.includes(removed)) throw new Error(`Stale TV-off photo instruction remains: ${removed}`);
+}
+
 const rolloverAttemptStart = html.indexOf('function attemptForCleaningTarget');
 const rolloverAttemptEnd = html.indexOf('\n      function ', rolloverAttemptStart + 20);
 const rolloverAttemptSource = html.slice(rolloverAttemptStart, rolloverAttemptEnd < 0 ? rolloverAttemptStart + 2500 : rolloverAttemptEnd);
@@ -353,7 +398,7 @@ if (/attempt\.workDate\s*&&\s*attempt\.workDate\s*!==\s*completedDate/.test(vali
 if (html.includes('if(!submission.templateSnapshot&&!submission.templateId)return submission;') || !html.includes('submission.templateSnapshot=legacySnapshot;submission.templateId=legacySnapshot.id;submission.templateVersion=legacySnapshot.version;')) {
   throw new Error('Legacy cleaning submissions can bypass their immutable template/photo validation.');
 }
-if (!html.includes("state.jobs[attempt.room]==='upload'&&!prior.templateId") || !html.includes("upload.required&&upload.status==='empty'")) {
+if (!html.includes("snapshot.version==='v6'&&state.jobs[attempt.room]==='upload'&&!prior.templateId") || !html.includes("upload.required&&upload.status==='empty'")) {
   throw new Error('Legacy upload-stage fixtures can become permanently blocked after photo-only template migration.');
 }
 for (const contract of ['currentAttemptId(no)!==attemptId', 'currentAttemptId(id)!==attemptId', 'latestTask?.attemptId!==attemptId']) {
@@ -896,6 +941,9 @@ for (const contract of ['체크인 → 체크아웃 입력 순서', '다른 고�
 for (const contract of ['추가 검증 · 메이드 체크리스트 제거·구역별 사진 전용', 'maid-zone-camera-1440.png', 'maid-zone-camera-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Maid photo-only QA documentation missing: ${contract}`);
 }
+for (const contract of ['추가 검증 · 켜진 TV 화면 필수 촬영', 'TV 켜짐·화면 출력 확인', '기존 `v6` 작업·제출·검수', '새 작업만 `v7`', 'maid-tv-on-required-390.png', 'admin-tv-on-inspection-1440.png']) {
+  if (!qa.includes(contract)) throw new Error(`Required TV-on photo QA documentation missing: ${contract}`);
+}
 for (const contract of ['추가 검증 · 관리자 설명 간소화와 도움말', 'ⓘ', 'admin-copy-cleanup-1440.png', 'admin-info-tooltip-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Admin copy/help QA documentation missing: ${contract}`);
 }
@@ -975,6 +1023,7 @@ console.log('Per-maid weekly payment static contracts: passed');
 console.log('Admin copy/help static contracts: passed');
 console.log('Maid copy/help static contracts: passed');
 console.log('Maid photo-only workflow static contracts: passed');
+console.log('Required TV-on checkout photo static contracts: passed');
 console.log('Maid availability submission window static contracts: passed');
 console.log('Cleaning rollover static contracts: passed');
 console.log('Reservation guest-count static contracts: passed');
