@@ -83,6 +83,8 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-cleaning-rollover-1440.png',
   'WIREFRAME/QA/screenshots/admin-cleaning-rollover-390.png',
   'WIREFRAME/QA/screenshots/maid-cleaning-rollover-390.png',
+  'WIREFRAME/QA/screenshots/admin-occupied-reservation-1440.png',
+  'WIREFRAME/QA/screenshots/admin-occupied-reservation-390.png',
   'WIREFRAME/reference/redesign-concepts/admin-inspection.png',
   'WIREFRAME/reference/redesign-concepts/admin-next-day-assignment.png',
   'WIREFRAME/reference/redesign-concepts/maid-weekly-availability.png',
@@ -507,8 +509,8 @@ for (const removed of ['room-work-line', 'concept-cleaning-row', '가장 가까�
 for (const contract of [
   'class="room-quick-actions"',
   'data-action="${closestReservation?\'quick-reservation-edit\':\'reservation-edit\'}"',
-  'reservationActionLabel=weekReservations.length?`예약 수정 · ${weekReservations.length}건`',
-  ":pastReservationCount?`예약 기록 ${pastReservationCount}건`:'예약 등록'",
+  "reservationActionLabel=weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`",
+  ":pastReservationCount?`예약 기록 ${pastReservationCount}건`:room.occupancy==='occupied'&&!occupiedReservationEnd(room)?'투숙 정보 입력':'예약 등록'",
 ]) {
   if (!roomCardSource.includes(contract)) throw new Error(`Compact room-card reservation action missing: ${contract}`);
 }
@@ -678,7 +680,10 @@ for (const contract of [
   '!Number.isInteger(resolvedGuestCount)||resolvedGuestCount<1||resolvedGuestCount>policy.maxGuestCount',
   'guestError:true',
   'guestCountChanged=!!before&&reservationGuestCount(before)!==resolvedGuestCount',
-  'operationalChanged=scheduleChanged||guestCountChanged',
+  'cleaningChanges=reservationCleaningChanges(beforeReservations,prospectiveReservations)',
+  'roomCleaningChanged=cleaningChanges.length>0',
+  'reservationCleaningChangeTouchesPublic(cleaningChanges,room.no)',
+  'reservationCleaningChangeTouchesRandom(cleaningChanges)',
   'guestCount:resolvedGuestCount',
   'syncReservationCleaningDraft(reservation,before)',
 ]) {
@@ -687,7 +692,7 @@ for (const contract of [
 for (const contract of [
   "upsertReservationRecord({roomNo,checkInAt:range.checkInAt,checkOutAt:range.checkOutAt,source:'grid'})",
   'reservationGuestCount(result.reservation)}명 예약 접수',
-  "upsertReservationRecord({id:reservationId,roomNo:no,checkInAt:checkinAt,checkOutAt:checkoutAt,guestCount,source:'card'})",
+  "upsertReservationRecord({id:reservationId,roomNo:no,checkInAt:checkinAt,checkOutAt:checkoutAt,guestCount,source:'card',currentStay})",
   "document.getElementById(result.guestError?'reservation-guest-stepper'",
 ]) {
   if (!html.includes(contract)) throw new Error(`Reservation guest entry contract missing: ${contract}`);
@@ -727,9 +732,9 @@ for (const contract of [
 for (const contract of [
   '체크인부터 체크아웃까지 한 고객의 일정을 입력합니다.',
   'reservationOverlaps(room.no,checkInAt,checkOutAt,id)',
-  'quickReservationConflict(room.no,firstNight,lastNight,id,checkInAt,checkOutAt)',
+  'quickReservationConflict(room.no,firstNight,lastNight,id,checkInAt,checkOutAt,registeringCurrentStay)',
   'reservationFingerprint(existing)',
-  "historyReservationId=isNew?'__new__'",
+  "historyReservationId=currentEntry?'__current__':isNew?'__new__'",
   'syncAdjacentReservationCleaningSchedules',
   'syncReservationAssignmentScheduleState',
   "['checkout','checkin','deadline','nextReservationId'].some",
@@ -738,6 +743,41 @@ for (const contract of [
   '이 예약은 이미 변경되었거나 취소되었습니다.',
 ]) {
   if (!html.includes(contract)) throw new Error(`Reservation interval contract missing: ${contract}`);
+}
+for (const contract of [
+  "{id:'reservation-demo-117'",
+  'function reservationHardBlockReason(room)',
+  'function currentOccupiedReservation(room)',
+  'linked=room.currentStayReservationId?reservations.find(reservation=>reservation.id===room.currentStayReservationId):null',
+  'function occupiedReservationEnd(room)',
+  'function occupiedStayNeedsCheckoutUpdate(room)',
+  'function suggestedReservationStartDate(roomNo)',
+  "requestedCurrent=reservationId==='__current__'",
+  "needsCurrentStayDetails=!existing&&room.occupancy==='occupied'&&!occupiedReservationEnd(room)",
+  'data-action="reservation-add"',
+  '현재 예약 수정 가능 · 예약 취소 불가',
+  'registeringCurrentStay',
+  'linkedCurrentStay',
+  'room.currentStayReservationId=reservation.id',
+  "if(room?.occupancy==='occupied'&&currentOccupiedReservation(room)?.id===reservation.id)return false",
+  'requestedCurrentStay=!!requested&&currentOccupiedReservation(room)?.id===requested.id',
+  'readOnly=weekPast&&!requestedCurrentStay||!!existing&&reservationRecordIsPast(existing)',
+  'delete room.currentStayReservationId',
+  'function syncUnstartedReservationCleaningAttempt(reservation,linkedAttempt=null)',
+  'attempt.startedAt||roomPinWasViewed(reservation.room,attempt.id)||attempt.accessReviewRequired',
+  "checkoutSnapshot:target.checkout||''",
+  'guestCountSnapshot:assignmentGuestCount(target)',
+  'function reservationCleaningChanges(beforeReservations,afterReservations)',
+  'function ensureQuickDateCellVisible(cell)',
+  '예정 체크아웃이 지났습니다. 현재 예약의 체크아웃을 갱신하거나 지금 체크아웃을 먼저 처리해 주세요.',
+]) {
+  if (!html.includes(contract)) throw new Error(`Occupied-room reservation contract missing: ${contract}`);
+}
+const reservationHardBlockStart = html.indexOf('function reservationHardBlockReason(room)');
+const reservationHardBlockEnd = html.indexOf('function quickRoomBlockReason', reservationHardBlockStart);
+const reservationHardBlockSource = html.slice(reservationHardBlockStart, reservationHardBlockEnd);
+if (reservationHardBlockStart < 0 || reservationHardBlockEnd <= reservationHardBlockStart || reservationHardBlockSource.includes('room.occupancy')) {
+  throw new Error('Occupied state must not return as a reservation hard-block reason.');
 }
 for (const contract of [
   'guestCount:reservationGuestCount(reservation),nextReservationId:schedule.nextReservationId',
@@ -769,9 +809,10 @@ const cleaningAttemptSource = html.slice(cleaningAttemptStart, cleaningAttemptEn
 for (const contract of [
   'reservationIdSnapshot=undefined,guestCountSnapshot=undefined',
   'committedTarget=state.assignments?.[resolvedWorkTargetId]?.committedTarget||null',
-  'resolvedReservationId=reservationIdSnapshot??committedTarget?.reservationId??null',
-  'committedTarget?.reservationId===resolvedReservationId?committedTarget?.guestCount:null',
-  'resolvedGuestCount=guestCountSnapshot??committedGuestCount',
+  'resolvedReservationId=reservationIdSnapshot===undefined?(committedTarget?.reservationId??null):reservationIdSnapshot',
+  'lineageMatches=!resolvedReservationId||committedTarget?.reservationId===resolvedReservationId',
+  'committedGuestCount=lineageMatches?committedTarget?.guestCount:null',
+  'resolvedGuestCount=guestCountSnapshot===undefined?committedGuestCount:guestCountSnapshot',
   'guestCountSnapshot:Number.isInteger(Number(resolvedGuestCount))',
 ]) {
   if (!cleaningAttemptSource.includes(contract)) throw new Error(`Cleaning attempt guest snapshot contract missing: ${contract}`);
@@ -989,6 +1030,12 @@ for (const contract of ['객실별 주간 예약 탐색과 과거 기록', '이�
 }
 for (const contract of ['추가 검증 · 예약 숙박 인원과 메이드 표시', '객실 유형별 기본·최대 인원', '간편 예약 기본 인원', '최대 인원 초과 차단', '인원수만 수정·최신본 보호', '재통보 전 기존 인원 유지', '재통보 후 메이드 반영', '메이드 내 업무·청소 상세', '과거 예약 읽기 전용', 'admin-reservation-guests-1440.png', 'admin-reservation-guests-390.png', 'maid-reservation-guests-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Reservation guest QA contract missing: ${contract}`);
+}
+for (const contract of ['추가 검증 · 투숙 중 현재 예약 수정과 다음 예약 등록', '현재 예약 수정·취소 분리', '다음 예약 별도 등록', '실제 반개구간 겹침', '예정 체크아웃 경과·실제 점유', '체크아웃 미입력 투숙', '청소 출입·업무일 보호', 'admin-occupied-reservation-1440.png', 'admin-occupied-reservation-390.png']) {
+  if (!qa.includes(contract)) throw new Error(`Occupied-room reservation QA contract missing: ${contract}`);
+}
+for (const contract of ['투숙 중`이어도 현재 예약의 일정과 숙박 인원은 수정', '다음 예약은 별도 예약 ID', '예정 체크아웃이 지났는데 실제 점유가 계속되면', '새 예약은 체크아웃을 미래로 갱신하거나 `지금 체크아웃`을 처리할 때까지 잠급니다']) {
+  if (!wireframeReadme.includes(contract)) throw new Error(`Occupied-room reservation README contract missing: ${contract}`);
 }
 for (const contract of ['전체 캘린더 일요일–토요일 고정 열', '8/15 광복절', '8/17 대체공휴일 빨간색', '일반 토요일 파란색', '선택 주차 두 행 강조', '공휴일 접근성 이름', 'admin-calendar-standard-1440.png', 'admin-calendar-standard-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Korean calendar QA contract missing: ${contract}`);
