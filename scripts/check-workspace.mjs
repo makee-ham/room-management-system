@@ -78,6 +78,9 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-info-tooltip-390.png',
   'WIREFRAME/QA/screenshots/maid-copy-cleanup-390.png',
   'WIREFRAME/QA/screenshots/maid-info-tooltip-390.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-rollover-1440.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-rollover-390.png',
+  'WIREFRAME/QA/screenshots/maid-cleaning-rollover-390.png',
   'WIREFRAME/reference/redesign-concepts/admin-inspection.png',
   'WIREFRAME/reference/redesign-concepts/admin-next-day-assignment.png',
   'WIREFRAME/reference/redesign-concepts/maid-weekly-availability.png',
@@ -254,6 +257,99 @@ const fieldCompleteSource = html.slice(html.indexOf("if(a==='field-complete-v2')
 if (fieldCompleteSource.includes('req.checked') || !fieldCompleteSource.includes('!req.requiredDone||req.failed') || !fieldCompleteSource.includes('checklist:{}')) {
   throw new Error('Maid completion/submission is not exclusively gated by required photo status.');
 }
+
+const rolloverAttemptStart = html.indexOf('function attemptForCleaningTarget');
+const rolloverAttemptEnd = html.indexOf('\n      function ', rolloverAttemptStart + 20);
+const rolloverAttemptSource = html.slice(rolloverAttemptStart, rolloverAttemptEnd < 0 ? rolloverAttemptStart + 2500 : rolloverAttemptEnd);
+if (rolloverAttemptStart < 0 || !rolloverAttemptSource.includes('currentAttemptByRoom') || !rolloverAttemptSource.includes("attempt.status!=='superseded'") || !rolloverAttemptSource.includes('.reverse().find(')) {
+  throw new Error('Repeated rollover must resolve the current/latest non-superseded attempt for the same cleaning target.');
+}
+
+const rolloverFunctionMatches = [...html.matchAll(/(?:function\s+[\w$]*(?:rollover|carryover)[\w$]*\s*\(|const\s+[\w$]*(?:rollover|carryover)[\w$]*\s*=\s*(?:async\s*)?\([^)]*\)\s*=>)/gi)];
+const rolloverCandidates = rolloverFunctionMatches.map((match) => {
+  const start = match.index;
+  const nextFunction = html.slice(start + match[0].length).search(/\n\s*(?:function\s+|const\s+[\w$]+\s*=\s*(?:async\s*)?\([^)]*\)\s*=>)/);
+  const end = nextFunction < 0 ? Math.min(html.length, start + 16000) : start + match[0].length + nextFunction;
+  return html.slice(start, end);
+});
+const rolloverSource = rolloverCandidates.find((source) => ['unassigned', 'not-started', 'started-unfinished']
+  .every((reason) => new RegExp(`carryReason\\s*[:=]\\s*['\"]${reason}['\"]`).test(source)));
+if (!rolloverSource) throw new Error('Cleaning rollover source with all three unresolved classifications could not be resolved.');
+for (const contract of ['planDate', 'effectiveDate', 'carriedFromDate', 'rolloverCount', 'lastRolloverDate']) {
+  if (!html.includes(contract)) throw new Error(`Cleaning planned/effective rollover field missing: ${contract}`);
+}
+for (const reason of ['unassigned', 'not-started', 'started-unfinished']) {
+  if (!new RegExp(`carryReason\\s*[:=]\\s*['\"]${reason}['\"]`).test(rolloverSource)) {
+    throw new Error(`Cleaning rollover classification missing: ${reason}`);
+  }
+}
+if (!/!\s*attempt(?:\s|\)|&&|\|\||\{)/.test(rolloverSource)) {
+  throw new Error('Cleaning rollover must explicitly classify a target that had no prior maid attempt.');
+}
+if (!/!\s*attempt(?:\?\.)?\.startedAt/.test(rolloverSource) || !/attempt(?:\?\.)?\.startedAt\s*&&\s*!\s*attempt(?:\?\.)?\.completedAt/.test(rolloverSource)) {
+  throw new Error('Cleaning rollover must distinguish assigned-not-started from started-unfinished work.');
+}
+if (!/maidId\s*[:=]\s*['\"]{2}/.test(rolloverSource) || !/order\s*[:=]\s*null/.test(rolloverSource)) {
+  throw new Error('Assigned-but-unstarted carryover must reopen without a current maid or order.');
+}
+if (!/\[\s*['\"]upload['\"]\s*,\s*['\"]inspection['\"]\s*\]\.includes\(/.test(rolloverSource) || !/completedAt/.test(rolloverSource)) {
+  throw new Error('Upload, inspection, and field-completed work must not re-enter next-day assignment carryover.');
+}
+if (!/(?:target|item|record|entry)\.id/.test(rolloverSource) || /(?:Date\.now\(|Math\.random\(|randomUUID\(|crypto\.randomUUID\()/.test(rolloverSource)) {
+  throw new Error('Cleaning rollover must keep the original target ID instead of generating a replacement target.');
+}
+const rolloverCountIncrements = /rolloverCount\s*[:=][^;\n]{0,120}\+\s*1/.test(rolloverSource)
+  || /nextCount\s*=\s*[^;\n]{0,160}rolloverCount[^;\n]{0,80}\+\s*1/.test(rolloverSource) && /rolloverCount\s*[:=]\s*nextCount/.test(rolloverSource);
+if (!rolloverCountIncrements || !/lastRolloverDate/.test(rolloverSource)) {
+  throw new Error('Repeated cleaning rollover must be counted once per destination date.');
+}
+
+const assignmentTargetsStart = html.indexOf('function assignmentTargets');
+const assignmentTargetsEnd = html.indexOf('\n      function ', assignmentTargetsStart + 20);
+const assignmentTargetsSource = html.slice(assignmentTargetsStart, assignmentTargetsEnd < 0 ? assignmentTargetsStart + 5000 : assignmentTargetsEnd);
+if (assignmentTargetsStart < 0 || !/(?:targetEffectiveDate|assignmentTargetDate|effectiveDate)/.test(assignmentTargetsSource) || !assignmentTargetsSource.includes('state.assignmentDate')) {
+  throw new Error('Assignment board must project unresolved targets by effective date, not only their original plan date.');
+}
+const assignmentOptionsStart = html.indexOf('function assignmentOptions');
+const assignmentOptionsEnd = html.indexOf('\n      function ', assignmentOptionsStart + 20);
+const assignmentOptionsSource = html.slice(assignmentOptionsStart, assignmentOptionsEnd < 0 ? assignmentOptionsStart + 3000 : assignmentOptionsEnd);
+if (assignmentOptionsStart < 0 || !assignmentOptionsSource.includes('availabilityForWorkDate') || !/(?:targetEffectiveDate|assignmentTargetDate|effectiveDate)/.test(assignmentOptionsSource)) {
+  throw new Error('Carryover reassignment must revalidate maid availability on the effective work date.');
+}
+const attemptAccessStart = html.indexOf('function attemptAccessStatus');
+const attemptAccessEnd = html.indexOf('\n      function ', attemptAccessStart + 20);
+const attemptAccessSource = html.slice(attemptAccessStart, attemptAccessEnd < 0 ? attemptAccessStart + 3000 : attemptAccessEnd);
+if (attemptAccessStart < 0 || !/(?:attemptEffectiveDate|targetEffectiveDate|effectiveDate)/.test(attemptAccessSource) || /sameDate\s*=\s*state\.selectedDate\s*===\s*workDate/.test(attemptAccessSource)) {
+  throw new Error('A carried started attempt must be accessible on its effective date while preserving its original plan date.');
+}
+for (const contract of ['전일 이월 · 미배정', '전일 이월 · 미완료', '원 계획', '이월']) {
+  if (!html.includes(contract)) throw new Error(`Compact cleaning rollover label missing: ${contract}`);
+}
+
+const confirmStartStart = html.indexOf("if(a==='confirm-start')");
+const confirmStartEnd = html.indexOf("if(a==='capture-task-photo')", confirmStartStart);
+const confirmStartSource = html.slice(confirmStartStart, confirmStartEnd);
+if (confirmStartStart < 0 || !confirmStartSource.includes('`${state.selectedDate} ${state.time}`')) {
+  throw new Error('A cleaning attempt must record its actual start date instead of backdating to the original plan date.');
+}
+if (!fieldCompleteSource.includes('`${state.selectedDate} ${state.time}`')) {
+  throw new Error('Field completion must use the actual selected date and time.');
+}
+const submitCleaningStart = html.indexOf("if(a==='submit-cleaning-v2')");
+const submitCleaningEnd = html.indexOf("if(a==='approve-inspection-v2')", submitCleaningStart);
+const submitCleaningSource = html.slice(submitCleaningStart, submitCleaningEnd);
+if (submitCleaningStart < 0 || !submitCleaningSource.includes('`${state.selectedDate} ${state.time}`') || !/weekStartIso\([^)]*completedAt/.test(submitCleaningSource)) {
+  throw new Error('Cleaning submission time and payroll week must derive from actual completion, not the original plan date.');
+}
+const validatedSubmissionStart = html.indexOf('function validatedSubmission');
+const validatedSubmissionEnd = html.indexOf('\n      function ', validatedSubmissionStart + 20);
+const validatedSubmissionSource = html.slice(validatedSubmissionStart, validatedSubmissionEnd < 0 ? validatedSubmissionStart + 5000 : validatedSubmissionEnd);
+if (validatedSubmissionStart < 0 || !/weekStartIso\(completedDate\)\s*!==\s*submission\.weekStart/.test(validatedSubmissionSource)) {
+  throw new Error('Validated cleaning submissions must derive their payroll week from actual completion date.');
+}
+if (/attempt\.workDate\s*&&\s*attempt\.workDate\s*!==\s*completedDate/.test(validatedSubmissionSource)) {
+  throw new Error('A carried cleaning submission must not require actual completion date to equal original plan date.');
+}
 if (html.includes('if(!submission.templateSnapshot&&!submission.templateId)return submission;') || !html.includes('submission.templateSnapshot=legacySnapshot;submission.templateId=legacySnapshot.id;submission.templateVersion=legacySnapshot.version;')) {
   throw new Error('Legacy cleaning submissions can bypass their immutable template/photo validation.');
 }
@@ -413,7 +509,7 @@ for (const contract of [
   "if (state.adminView==='quickReservation') return renderQuickReservation()",
   'reservationOverlaps(roomNo,checkInAt,checkOutAt,ignoreId',
   'initialReservationDrafts()',
-  "activeReservationsFor(state).filter(reservation=>reservation.checkOutAt.slice(0,10)===state.assignmentDate)",
+  "activeReservationsFor(targetState).filter(reservation=>reservation.checkOutAt.slice(0,10)===assignmentDate)",
   'cleaningAssignmentForReservation(reservation)',
   'data-action="quick-reservation-edit"',
   "'quick-reservation-undo'",
@@ -809,6 +905,19 @@ for (const contract of ['추가 검증 · 메이드 설명 간소화와 도움�
 for (const contract of ['추가 검증 · 메이드 근무 가능일 제출 시간', '일요일 12:00부터 23:59까지 제출 가능', '일요일 11:59', '12:00', '22:15', '23:59', '수정 중 마감', '관리자 집계도 9/9', 'maid-weekly-availability-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Maid availability submission window QA contract missing: ${contract}`);
 }
+for (const contract of [
+  '추가 검증 · 전일 미배정·미완료 청소 이월',
+  '전일 미배정',
+  '배정 후 미시작',
+  '진행 중인 같은 수행 회차',
+  '현장 완료·업로드',
+  '실제 완료일 기준 주급',
+  'admin-cleaning-rollover-1440.png',
+  'admin-cleaning-rollover-390.png',
+  'maid-cleaning-rollover-390.png',
+]) {
+  if (!qa.includes(contract)) throw new Error(`Cleaning rollover QA documentation missing: ${contract}`);
+}
 if (!/(?:실물|실기기)[^\n]{0,80}(?:후면 )?카메라[^\n]{0,120}(?:미검증|검증하지 못|확인하지 못)/.test(qa)) {
   throw new Error('Maid zone camera QA must distinguish static/browser checks from unverified physical-device camera behavior.');
 }
@@ -867,6 +976,7 @@ console.log('Admin copy/help static contracts: passed');
 console.log('Maid copy/help static contracts: passed');
 console.log('Maid photo-only workflow static contracts: passed');
 console.log('Maid availability submission window static contracts: passed');
+console.log('Cleaning rollover static contracts: passed');
 console.log('Reservation guest-count static contracts: passed');
 console.log('Portable path scan: passed');
 console.log(`Room master contract: ${catalogIds.length} rooms / ${initialOccupiedIds.length} initially occupied / ${dataIssueIds.length} data issue`);
