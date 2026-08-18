@@ -1,3 +1,4 @@
+# GitHub Pages deployment for the static WIREFRAME app
 name: Deploy room management app to GitHub Pages
 
 on:
