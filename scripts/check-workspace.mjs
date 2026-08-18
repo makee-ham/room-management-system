@@ -34,6 +34,7 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-room-issue-gallery-1440.png',
   'WIREFRAME/QA/screenshots/admin-assignment-type-filter-1440.png',
   'WIREFRAME/QA/screenshots/admin-maid-order-board-390.png',
+  'WIREFRAME/QA/screenshots/admin-maid-order-total-1440.png',
   'WIREFRAME/QA/screenshots/admin-partial-assignment-390.png',
   'WIREFRAME/QA/screenshots/admin-weekly-worktable-symbols-390.png',
   'WIREFRAME/QA/screenshots/admin-weekly-work-history-calendar-1440.png',
@@ -188,6 +189,13 @@ for (const contract of [
   'data-location="board"',
   'maid-order-schedule-badges',
   'scheduleBadges=assignmentSchedulePriorityBadges(item)',
+  'class="maid-order-lane-total"',
+  'data-maid-id="${maid.id}" data-maid-total="${total}"',
+  '총 청소요금 · ${ordered.length}건',
+  'ordered.reduce((sum,item)=>sum+assignmentTargetRate(item),0)',
+  "isEditingBalance=targets.some(item=>assignmentFor(item).status==='draft')",
+  "eligibleAssignmentMaids().map(maid=>maid.id)",
+  '배정된 객실이 없습니다.',
   '얼리 체크인·레이트 체크아웃의 조정된 예정 시각을 먼저 확인하고',
   '랜덤 배정 기준 설명',
   'assignment-rule-tooltip',
@@ -813,7 +821,7 @@ for (const contract of ['객실 카드 4개 주 상태·일정 우선 배지', '
 for (const contract of ['객실 카드 예약 요약 행 제거', '중복 행 제거', '별도 예약 버튼 유지', '일정 우선 정보 유지', 'admin-room-card-priority-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Compact room-card reservation QA contract missing: ${contract}`);
 }
-for (const contract of ['근무표 다음 동선 고려 랜덤 배정 흐름', '객실별 담당 수정', '메이드별 청소 순서 수정', '순서 보드 일정 강조', 'admin-maid-order-board-390.png']) {
+for (const contract of ['근무표 다음 동선 고려 랜덤 배정 흐름', '객실별 담당 수정', '메이드별 청소 순서 수정', '순서 보드 일정 강조', '메이드 카드 총 청소요금', 'admin-maid-order-board-390.png', 'admin-maid-order-total-1440.png']) {
   if (!qa.includes(contract)) throw new Error(`Cleaning assignment flow QA contract missing: ${contract}`);
 }
 if (html.includes('내일 청소·일정 주의 한눈에') || html.includes('assignmentAttentionItems()')) {
