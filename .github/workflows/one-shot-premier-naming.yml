@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - ".github/workflows/one-shot-premier-naming.yml"
+  workflow_dispatch:
 
 permissions:
   contents: write
