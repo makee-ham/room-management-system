@@ -1,0 +1,96 @@
+name: One-shot premier room type naming
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/one-shot-premier-naming.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  replace-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Replace incorrect naming in active files
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          old = "프리미엄"
+          new = "프리미어"
+          workflow_path = ".github/workflows/one-shot-premier-naming.yml"
+          excluded_prefixes = ("HISTORY/",)
+          tracked = subprocess.check_output(["git", "ls-files", "-z"]).split(b"\0")
+          changed = []
+          total = 0
+
+          for raw_path in tracked:
+              if not raw_path:
+                  continue
+              relative = raw_path.decode("utf-8")
+              if relative == workflow_path or relative.startswith(excluded_prefixes):
+                  continue
+              path = Path(relative)
+              try:
+                  text = path.read_bytes().decode("utf-8")
+              except (OSError, UnicodeDecodeError):
+                  continue
+              count = text.count(old)
+              if not count:
+                  continue
+              path.write_text(text.replace(old, new), encoding="utf-8", newline="")
+              changed.append((relative, count))
+              total += count
+
+          leftovers = []
+          for raw_path in tracked:
+              if not raw_path:
+                  continue
+              relative = raw_path.decode("utf-8")
+              if relative == workflow_path or relative.startswith(excluded_prefixes):
+                  continue
+              path = Path(relative)
+              try:
+                  text = path.read_bytes().decode("utf-8")
+              except (OSError, UnicodeDecodeError):
+                  continue
+              if old in text:
+                  leftovers.append(relative)
+
+          if leftovers:
+              raise SystemExit("정정되지 않은 표기가 남았습니다: " + ", ".join(leftovers))
+
+          print(f"{len(changed)}개 파일에서 {total}건 정정")
+          for relative, count in changed:
+              print(f"- {relative}: {count}건")
+          PY
+
+      - name: Remove one-shot workflow
+        shell: bash
+        run: git rm .github/workflows/one-shot-premier-naming.yml
+
+      - name: Validate workspace
+        shell: bash
+        run: |
+          git diff --check
+          node scripts/check-workspace.mjs
+
+      - name: Commit naming correction
+        shell: bash
+        run: |
+          git add -A
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "fix: 객실 타입명을 프리미어로 통일"
+          git push origin HEAD:main
