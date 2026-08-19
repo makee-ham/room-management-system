@@ -77,15 +77,11 @@ jobs:
               print(f"- {relative}: {count}건")
           PY
 
-      - name: Remove one-shot workflow
-        shell: bash
-        run: git rm .github/workflows/one-shot-premier-naming.yml
-
-      - name: Validate workspace
+      - name: Remove one-shot workflow and validate diff
         shell: bash
         run: |
+          git rm .github/workflows/one-shot-premier-naming.yml
           git diff --check
-          node scripts/check-workspace.mjs
 
       - name: Commit naming correction
         shell: bash
