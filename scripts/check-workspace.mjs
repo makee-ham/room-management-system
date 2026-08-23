@@ -287,7 +287,11 @@ for (const removed of ['requiredChecks', 'req.checked', 'group.checks', 'data-co
   }
 }
 const fieldCompleteSource = html.slice(html.indexOf("if(a==='field-complete-v2')"), html.indexOf("if(a==='approve-inspection-v2')"));
-if (fieldCompleteSource.includes('req.checked') || !fieldCompleteSource.includes('!req.requiredDone||req.failed') || !fieldCompleteSource.includes('checklist:{}')) {
+const delegatedSubmissionStart = html.indexOf('function createCleaningSubmissionRecord');
+const delegatedSubmissionEnd = html.indexOf('function activeBombRoomReport', delegatedSubmissionStart);
+const delegatedSubmissionSource = delegatedSubmissionStart >= 0 && delegatedSubmissionEnd > delegatedSubmissionStart ? html.slice(delegatedSubmissionStart, delegatedSubmissionEnd) : '';
+const submissionStoresEmptyChecklist = fieldCompleteSource.includes('checklist:{}') || fieldCompleteSource.includes('createCleaningSubmissionRecord(id)') && delegatedSubmissionSource.includes('checklist:{}');
+if (fieldCompleteSource.includes('req.checked') || !fieldCompleteSource.includes('!req.requiredDone||req.failed') || !submissionStoresEmptyChecklist) {
   throw new Error('Maid completion/submission is not exclusively gated by required photo status.');
 }
 
@@ -417,7 +421,8 @@ if (!fieldCompleteSource.includes('`${state.selectedDate} ${state.time}`')) {
 const submitCleaningStart = html.indexOf("if(a==='submit-cleaning-v2')");
 const submitCleaningEnd = html.indexOf("if(a==='approve-inspection-v2')", submitCleaningStart);
 const submitCleaningSource = html.slice(submitCleaningStart, submitCleaningEnd);
-if (submitCleaningStart < 0 || !submitCleaningSource.includes('`${state.selectedDate} ${state.time}`') || !/weekStartIso\([^)]*completedAt/.test(submitCleaningSource)) {
+const submissionCompletionSource = `${submitCleaningSource}${delegatedSubmissionSource}`;
+if (submitCleaningStart < 0 || !submissionCompletionSource.includes('`${state.selectedDate} ${state.time}`') || !/weekStartIso\([^)]*completedAt/.test(submissionCompletionSource)) {
   throw new Error('Cleaning submission time and payroll week must derive from actual completion, not the original plan date.');
 }
 const validatedSubmissionStart = html.indexOf('function validatedSubmission');
@@ -1563,6 +1568,52 @@ for (const contract of ['관리자 검수·메이드 청소 템플릿 통일','t
 }
 for (const contract of ['관리자 검수·메이드 청소 템플릿 통일','필수 완료/전체 필수','전송 실패·필수 누락','data-template-version']) {
   if (!qa.includes(contract)) throw new Error(`Inspection-template parity QA contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'function durableLedgerSnapshot(',
+  'function durableLedgerFingerprint(',
+  'function assertNoDuplicateDurableRecords(',
+  "throw new Error('렌더링 중 예약·청소 제출·급여·지급 원장이 변경되었습니다.')",
+  'function reservationPayloadMatches(',
+  'duplicateReservation=!id?',
+  'unchangedReservation=!!previous',
+  'duplicate:true,unchanged:true',
+  'dedupeKey:`reservation:${reservation.id}:${reservationFingerprint(reservation)}`',
+  'function submissionForAttempt(',
+  'function createCleaningSubmissionRecord(',
+  'submissionId=`submission-${attemptId}`',
+  'dedupeKey:`submission:${attemptId}`',
+  'dedupeKey:`approval:${submission.id}:paid`',
+  'if(previous.status===status)return previous.status',
+  'mutationActionLocks=new Set()',
+  'mutationActions=new Set(',
+  'window.__CASTLE_TEST__=Object.freeze',
+  'repeatRender:',
+  'createReservationTest:',
+  'prepareSubmission:',
+  'confirmEarning:',
+  'setPaymentStatus:',
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation/cleaning/payroll idempotency contract missing: ${contract}`);
+}
+const upsertIdempotencyStart=html.indexOf('function upsertReservationRecord');
+const upsertIdempotencyEnd=html.indexOf('function clearOrphanedReservationDraftJob',upsertIdempotencyStart);
+const upsertIdempotencySource=html.slice(upsertIdempotencyStart,upsertIdempotencyEnd);
+if(!upsertIdempotencySource.includes('duplicateReservation')||!upsertIdempotencySource.includes('unchangedReservation')||upsertIdempotencySource.indexOf('duplicateReservation')>upsertIdempotencySource.indexOf('++state.reservationSequence')){
+  throw new Error('Reservation duplicate guard must run before generating a new reservation ID.');
+}
+const submissionIdempotencyStart=html.indexOf('function createCleaningSubmissionRecord');
+const submissionIdempotencyEnd=html.indexOf('function activeBombRoomReport',submissionIdempotencyStart);
+const submissionIdempotencySource=html.slice(submissionIdempotencyStart,submissionIdempotencyEnd);
+if(!submissionIdempotencySource.includes('submissionForAttempt(attemptId)')||/Date\.now\(|\+\+cleaningSubmissionSequence/.test(submissionIdempotencySource)){
+  throw new Error('Cleaning submission identity must be stable per attempt and must not use time/random sequence IDs.');
+}
+for (const contract of ['예약·청소·급여 멱등성과 중복 방지','DB 유니크 제약','API idempotency key']) {
+  if (!wireframeReadme.includes(contract)) throw new Error(`Idempotency README contract missing: ${contract}`);
+}
+for (const contract of ['예약·청소·급여 멱등성·중복 방지 회귀 검사','render()`를 12회','같은 청소 `attemptId`','earningRecords[submissionId]']) {
+  if (!qa.includes(contract)) throw new Error(`Idempotency QA contract missing: ${contract}`);
 }
 
 console.log('Per-maid weekly payment static contracts: passed');
