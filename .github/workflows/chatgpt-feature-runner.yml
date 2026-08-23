@@ -69,6 +69,7 @@ jobs:
           if [ "${GITHUB_HEAD_REF}" = "codex/issue-65-idempotency-guards" ]; then
             python3 .github/automation/issue-65-render-state-ref.py
             python3 .github/automation/issue-65-static-contract-fix.py
+            python3 .github/automation/issue-65-earning-direct-key.py
           fi
 
       - name: Run static workspace checks
@@ -112,6 +113,7 @@ jobs:
           rm -f .github/automation/issue-65-idempotency-guards.mjs
           rm -f .github/automation/issue-65-render-state-ref.py
           rm -f .github/automation/issue-65-static-contract-fix.py
+          rm -f .github/automation/issue-65-earning-direct-key.py
 
       - name: Commit verified changes to the feature branch
         shell: bash
