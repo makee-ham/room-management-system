@@ -1447,6 +1447,30 @@ if (auditHash !== expectedAuditHash || indexHash !== expectedIndexHash || checks
 console.log(`Required files: ${required.length}/${required.length}`);
 console.log(`Inline scripts parsed: ${inlineScripts.length}`);
 console.log(`Large-team assignment fixture: ${maidIds.length} maids`);
+for (const contract of [
+  "if('scrollRestoration' in history)history.scrollRestoration='manual';",
+  'let modalPageScrollY=null,modalScrollRestoreFrame=0,modalHistoryReturnScrollY=null,modalScrollRestoreTimer=0;',
+  "root.style.scrollBehavior='auto';window.scrollTo(0,y);root.style.scrollBehavior=previous;",
+  'modalScrollRestoreTimer=setTimeout(()=>{restore();modalScrollRestoreTimer=0;},90);',
+  'scheduleWindowScrollRestore(Math.max(0,Number(route.scrollY)||0))',
+  "if(isWireframeHistory(current)&&current.layer==='page')history.replaceState({...current,route},'',historyRouteUrl(route));",
+  "else if(a==='close-modal'||a==='backdrop-close')dismissModal();",
+  'modalHistoryReturnScrollY=modalPageScrollY;',
+  'route=modalHistoryReturnScrollY==null?baseRoute:{...baseRoute,scrollY:modalHistoryReturnScrollY}',
+  'function lockModalViewport(scrollY=window.scrollY)',
+  'function restoreModalViewport({restore=true}={})',
+  'function historyRouteSnapshot(scrollY=modalPageScrollY??window.scrollY)',
+  'rawCloseModal({restoreFocus=false,restoreScroll=true}={})',
+  "trigger?.focus?.({preventScroll:true})",
+  "function quickGridUsesInternalVerticalScroll() { return !window.matchMedia('(max-width: 720px)').matches; }",
+  'overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:contain; overscroll-behavior-y:auto;',
+  'data-action="filter-room-type"',
+  "if(a==='filter-room-type')",
+  "state.roomTypeFilter=typeId;state.roomFilter='all';state.roomSearch='';",
+]) {
+  if (!html.includes(contract)) throw new Error(`Modal/quick-booking/type-filter UX contract missing: ${contract}`);
+}
+
 console.log('Per-maid weekly payment static contracts: passed');
 console.log('Admin copy/help static contracts: passed');
 console.log('Maid copy/help static contracts: passed');
