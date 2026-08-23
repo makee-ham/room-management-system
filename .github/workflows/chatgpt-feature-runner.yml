@@ -66,6 +66,9 @@ jobs:
           if [ "${GITHUB_HEAD_REF}" = "codex/issue-63-quick-booking-29-day" ]; then
             python3 .github/automation/issue-63-qa-copy-fix.py
           fi
+          if [ "${GITHUB_HEAD_REF}" = "codex/issue-65-idempotency-guards" ]; then
+            python3 .github/automation/issue-65-render-state-ref.py
+          fi
 
       - name: Run static workspace checks
         shell: bash
@@ -106,6 +109,7 @@ jobs:
           rm -f .github/automation/issue-64-inspection-template-parity.mjs
           rm -f .github/automation/issue-65-idempotency-guards.py
           rm -f .github/automation/issue-65-idempotency-guards.mjs
+          rm -f .github/automation/issue-65-render-state-ref.py
 
       - name: Commit verified changes to the feature branch
         shell: bash
