@@ -1530,6 +1530,41 @@ for (const contract of ['간편 예약 29일 연속 보기', '2026-08-08~2026-09
   if (!qa.includes(contract)) throw new Error(`Quick reservation 29-day QA contract missing: ${contract}`);
 }
 
+for (const contract of [
+  'function inspectionTemplateUploadItems(',
+  'function inspectionTemplateGroups(',
+  'function inspectionTemplatePhotoState(',
+  'function renderInspectionTemplatePhoto(',
+  'function renderInspectionTemplateGroup(',
+  'function renderInspectionTemplateReview(',
+  'template?.photos||[]',
+  'actualById=new Map',
+  "status:actual?.status||'missing'",
+  'data-template-photo=',
+  'data-template-zone=',
+  'data-template-required=',
+  'data-template-status=',
+  '메이드 청소 템플릿 기준 검수',
+  '제출 당시 구역·항목·순서 그대로 확인',
+  '필수 사진 누락',
+  'TV 항목은 켜짐·화면 출력 요구사항까지 확인하세요.',
+  '${renderInspectionTemplateReview(no,submissionTemplate,submission,attempt)}',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin/maid inspection-template parity contract missing: ${contract}`);
+}
+const activeInspectionStart=html.lastIndexOf('function renderInspectionDetail(no)');
+const activeInspectionEnd=html.indexOf('function renderPayDetail()',activeInspectionStart);
+const activeInspectionSource=html.slice(activeInspectionStart,activeInspectionEnd);
+if(activeInspectionStart<0||activeInspectionEnd<=activeInspectionStart||activeInspectionSource.includes('renderInspectionGallery(no)')||activeInspectionSource.includes('submittedUploads.length')){
+  throw new Error('Active admin inspection still uses the legacy flat photo gallery.');
+}
+for (const contract of ['관리자 검수·메이드 청소 템플릿 통일','templateSnapshot','필수 사진 누락','TV 켜짐·화면 출력 항목']) {
+  if (!wireframeReadme.includes(contract)) throw new Error(`Inspection-template parity README contract missing: ${contract}`);
+}
+for (const contract of ['관리자 검수·메이드 청소 템플릿 통일','필수 완료/전체 필수','전송 실패·필수 누락','data-template-version']) {
+  if (!qa.includes(contract)) throw new Error(`Inspection-template parity QA contract missing: ${contract}`);
+}
+
 console.log('Per-maid weekly payment static contracts: passed');
 console.log('Admin copy/help static contracts: passed');
 console.log('Maid copy/help static contracts: passed');
