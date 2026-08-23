@@ -38,6 +38,7 @@ jobs:
           python3 .github/automation/apply-modal-close-routing.py
           python3 .github/automation/apply-modal-parent-route-sync.py
           python3 .github/automation/apply-modal-delayed-scroll-restore.py
+          python3 .github/automation/apply-modal-instant-scroll-restore.py
 
       - name: Run static workspace checks
         shell: bash
@@ -80,6 +81,7 @@ jobs:
           rm -f .github/automation/apply-modal-close-routing.py
           rm -f .github/automation/apply-modal-parent-route-sync.py
           rm -f .github/automation/apply-modal-delayed-scroll-restore.py
+          rm -f .github/automation/apply-modal-instant-scroll-restore.py
           rm -f .github/automation/diagnose-modal-scroll.mjs
           rm -f .github/automation/qa-modal-scroll-quick-booking-ux.mjs
           git config user.name "Ham Arin"
