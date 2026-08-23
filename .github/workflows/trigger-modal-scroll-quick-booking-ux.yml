@@ -64,6 +64,7 @@ jobs:
             curl -fsS http://127.0.0.1:4173/index.html >/dev/null && break
             sleep 1
           done
+          node .github/automation/diagnose-modal-scroll.mjs
           node .github/automation/qa-modal-scroll-quick-booking-ux.mjs
 
       - name: Commit verified changes to the feature branch
@@ -79,6 +80,7 @@ jobs:
           rm -f .github/automation/apply-modal-close-routing.py
           rm -f .github/automation/apply-modal-parent-route-sync.py
           rm -f .github/automation/apply-modal-delayed-scroll-restore.py
+          rm -f .github/automation/diagnose-modal-scroll.mjs
           rm -f .github/automation/qa-modal-scroll-quick-booking-ux.mjs
           git config user.name "Ham Arin"
           git config user.email "79068658+makee-ham@users.noreply.github.com"
