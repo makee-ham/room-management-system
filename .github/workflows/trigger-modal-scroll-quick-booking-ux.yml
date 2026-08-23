@@ -37,6 +37,7 @@ jobs:
           python3 .github/automation/apply-modal-history-return-scroll.py
           python3 .github/automation/apply-modal-close-routing.py
           python3 .github/automation/apply-modal-parent-route-sync.py
+          python3 .github/automation/apply-modal-delayed-scroll-restore.py
 
       - name: Run static workspace checks
         shell: bash
@@ -77,6 +78,7 @@ jobs:
           rm -f .github/automation/apply-modal-history-return-scroll.py
           rm -f .github/automation/apply-modal-close-routing.py
           rm -f .github/automation/apply-modal-parent-route-sync.py
+          rm -f .github/automation/apply-modal-delayed-scroll-restore.py
           rm -f .github/automation/qa-modal-scroll-quick-booking-ux.mjs
           git config user.name "Ham Arin"
           git config user.email "79068658+makee-ham@users.noreply.github.com"
