@@ -2,7 +2,7 @@ name: Trigger modal and quick-booking UX fixes
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, reopened]
     branches:
       - main
 
@@ -29,27 +29,48 @@ jobs:
           git fetch origin main codex/modal-scroll-quick-booking-ux
           git reset --hard origin/main
 
-      - name: Execute the verified one-time workflow scripts
+      - name: Apply targeted UI fixes
         shell: bash
-        run: |
-          ruby -ryaml -e '
-            workflow = YAML.load_file(".github/workflows/apply-modal-scroll-quick-booking-ux.yml")
-            steps = workflow.fetch("jobs").fetch("apply-and-verify").fetch("steps")
-            steps.each do |step|
-              script = step["run"]
-              next unless script
-              puts "::group::#{step["name"]}"
-              ok = system("bash", "-lc", script)
-              puts "::endgroup::"
-              exit 1 unless ok
-            end
-          '
+        run: python3 .github/automation/apply-modal-scroll-quick-booking-ux.py
 
-      - name: Remove the temporary trigger workflow from the feature branch
+      - name: Run static workspace checks
+        shell: bash
+        run: node scripts/check-workspace.mjs
+
+      - name: Install Chromium test runtime
         shell: bash
         run: |
-          git rm -f .github/workflows/trigger-modal-scroll-quick-booking-ux.yml
+          mkdir -p /tmp/castle-playwright
+          cd /tmp/castle-playwright
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+          cd "$GITHUB_WORKSPACE"
+          ln -s /tmp/castle-playwright/node_modules node_modules
+
+      - name: Run rendered interaction QA
+        shell: bash
+        run: |
+          python3 scripts/serve.py --host 127.0.0.1 --port 4173 >/tmp/castle-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:4173/index.html >/dev/null && break
+            sleep 1
+          done
+          node .github/automation/qa-modal-scroll-quick-booking-ux.mjs
+
+      - name: Commit verified changes to the feature branch
+        shell: bash
+        run: |
+          rm -f node_modules
+          rm -f .codex-modal-scroll-quick-booking-trigger
+          rm -f .github/workflows/apply-modal-scroll-quick-booking-ux.yml
+          rm -f .github/workflows/trigger-modal-scroll-quick-booking-ux.yml
+          rm -f .github/automation/apply-modal-scroll-quick-booking-ux.py
+          rm -f .github/automation/qa-modal-scroll-quick-booking-ux.mjs
           git config user.name "Ham Arin"
           git config user.email "79068658+makee-ham@users.noreply.github.com"
-          git commit -m "정리: 임시 UX 수정 실행기를 제거한다"
-          git push origin HEAD:codex/modal-scroll-quick-booking-ux
+          git add -A
+          git commit -m "수정: 예약 화면의 스크롤과 유형 필터를 개선한다"
+          git push --force-with-lease origin HEAD:codex/modal-scroll-quick-booking-ux
