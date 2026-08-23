@@ -1,7 +1,7 @@
 {
   "package": "CASTLE THE ART room management wireframe",
-  "version": "2026-08-24-inspection-template-parity",
-  "generated_at_kst": "2026-08-24T01:54:28+09:00",
+  "version": "2026-08-24-idempotency-guards",
+  "generated_at_kst": "2026-08-24T02:07:38+09:00",
   "repository": "https://github.com/makee-ham/room-management-system",
   "entrypoint": "WIREFRAME/index.html",
   "policy_source": "DOCS/FINAL_UX_AUDIT.md",
@@ -12,7 +12,7 @@
   "qa_record": "WIREFRAME/QA.md",
   "sha256": {
     "DOCS/FINAL_UX_AUDIT.md": "e479e468c32c27ef606a311fd090ed7a4a8718590d363c9634da014960956c78",
-    "WIREFRAME/index.html": "1f487262fb7f1f0413f7cdc2cf633651e5f3b5ea4897b82ccdf87e4bb110a1d5"
+    "WIREFRAME/index.html": "c91b8958b03eb47feb0a901b1edb66664762891f00e9a5a6d91036fe1594b465"
   },
   "runtime": {
     "build_required": false,
