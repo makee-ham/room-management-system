@@ -11,6 +11,21 @@ function observe(page,label){
   page.on('console',message=>{if(message.type()==='error')errors.push(`${label} console: ${message.text()}`);});
 }
 
+async function modalDiagnostics(page,label){
+  const state=await page.evaluate(()=>({
+    label:document.querySelector('#modal-title')?.textContent||'',
+    windowScrollY:window.scrollY,
+    bodyTop:document.body.style.top,
+    bodyPosition:document.body.style.position,
+    historyLayer:history.state?.layer||null,
+    routeScrollY:history.state?.route?.scrollY??null,
+    historyIndex:history.state?.index??null,
+    activeTag:document.activeElement?.tagName||null,
+  }));
+  console.log(`${label} ${JSON.stringify(state)}`);
+  return state;
+}
+
 async function closeModalAndMeasure(page,before){
   await page.locator('#modal-root [data-action="close-modal"]').first().click();
   await page.waitForFunction(()=>!document.querySelector('#modal-root .modal'));
@@ -35,8 +50,10 @@ await desktop.screenshot({path:'WIREFRAME/QA/screenshots/admin-room-type-filter-
 const roomCard=desktop.locator('.room-card-v2').nth(24);
 await roomCard.scrollIntoViewIfNeeded();
 const roomBefore=await desktop.evaluate(()=>window.scrollY);
+console.log(`ROOM_BEFORE ${roomBefore}`);
 await roomCard.locator('[data-action="reservation-edit"], [data-action="quick-reservation-edit"]').first().click();
 await desktop.locator('#modal-root .modal').waitFor();
+await modalDiagnostics(desktop,'ROOM_MODAL_OPEN');
 await closeModalAndMeasure(desktop,roomBefore);
 
 await desktop.goto(`${base}#scenario=0&role=admin&view=quickReservation&date=2026-08-15&filter=all&type=all&q=`,{waitUntil:'networkidle'});
@@ -47,6 +64,7 @@ await desktop.evaluate(()=>window.scrollBy(0,180));
 const quickBefore=await desktop.evaluate(()=>({pageY:window.scrollY,left:document.getElementById('quick-grid-scroller').scrollLeft,top:document.getElementById('quick-grid-scroller').scrollTop}));
 await existingReservation.click();
 await desktop.locator('#modal-root .modal').waitFor();
+await modalDiagnostics(desktop,'QUICK_MODAL_OPEN');
 await closeModalAndMeasure(desktop,quickBefore.pageY);
 const quickAfter=await desktop.evaluate(()=>({left:document.getElementById('quick-grid-scroller').scrollLeft,top:document.getElementById('quick-grid-scroller').scrollTop}));
 assert.ok(Math.abs(quickAfter.left-quickBefore.left)<=2,'quick grid horizontal position changed after modal close');
