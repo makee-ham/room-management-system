@@ -39,6 +39,7 @@ jobs:
           python3 .github/automation/apply-modal-parent-route-sync.py
           python3 .github/automation/apply-modal-delayed-scroll-restore.py
           python3 .github/automation/apply-modal-instant-scroll-restore.py
+          python3 .github/automation/patch-qa-instant-bottom.py
 
       - name: Run static workspace checks
         shell: bash
@@ -65,7 +66,6 @@ jobs:
             curl -fsS http://127.0.0.1:4173/index.html >/dev/null && break
             sleep 1
           done
-          node .github/automation/diagnose-modal-scroll.mjs
           node .github/automation/qa-modal-scroll-quick-booking-ux.mjs
 
       - name: Commit verified changes to the feature branch
@@ -82,6 +82,7 @@ jobs:
           rm -f .github/automation/apply-modal-parent-route-sync.py
           rm -f .github/automation/apply-modal-delayed-scroll-restore.py
           rm -f .github/automation/apply-modal-instant-scroll-restore.py
+          rm -f .github/automation/patch-qa-instant-bottom.py
           rm -f .github/automation/diagnose-modal-scroll.mjs
           rm -f .github/automation/qa-modal-scroll-quick-booking-ux.mjs
           git config user.name "Ham Arin"
