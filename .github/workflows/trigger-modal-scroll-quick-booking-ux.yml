@@ -34,6 +34,7 @@ jobs:
         run: |
           python3 .github/automation/apply-modal-scroll-quick-booking-ux.py
           python3 .github/automation/apply-modal-scroll-history-manual.py
+          python3 .github/automation/apply-modal-history-return-scroll.py
 
       - name: Run static workspace checks
         shell: bash
@@ -71,6 +72,7 @@ jobs:
           rm -f .github/workflows/trigger-modal-scroll-quick-booking-ux.yml
           rm -f .github/automation/apply-modal-scroll-quick-booking-ux.py
           rm -f .github/automation/apply-modal-scroll-history-manual.py
+          rm -f .github/automation/apply-modal-history-return-scroll.py
           rm -f .github/automation/qa-modal-scroll-quick-booking-ux.mjs
           git config user.name "Ham Arin"
           git config user.email "79068658+makee-ham@users.noreply.github.com"
