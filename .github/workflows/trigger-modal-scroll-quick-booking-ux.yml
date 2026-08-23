@@ -1,0 +1,55 @@
+name: Trigger modal and quick-booking UX fixes
+
+on:
+  pull_request:
+    types: [opened]
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  trigger:
+    if: github.head_ref == 'codex/modal-scroll-quick-booking-ux'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Check out the working branch
+        uses: actions/checkout@v4
+        with:
+          ref: codex/modal-scroll-quick-booking-ux
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Start from current main
+        shell: bash
+        run: |
+          git fetch origin main codex/modal-scroll-quick-booking-ux
+          git reset --hard origin/main
+
+      - name: Execute the verified one-time workflow scripts
+        shell: bash
+        run: |
+          ruby -ryaml -e '
+            workflow = YAML.load_file(".github/workflows/apply-modal-scroll-quick-booking-ux.yml")
+            steps = workflow.fetch("jobs").fetch("apply-and-verify").fetch("steps")
+            steps.each do |step|
+              script = step["run"]
+              next unless script
+              puts "::group::#{step["name"]}"
+              ok = system("bash", "-lc", script)
+              puts "::endgroup::"
+              exit 1 unless ok
+            end
+          '
+
+      - name: Remove the temporary trigger workflow from the feature branch
+        shell: bash
+        run: |
+          git rm -f .github/workflows/trigger-modal-scroll-quick-booking-ux.yml
+          git config user.name "Ham Arin"
+          git config user.email "79068658+makee-ham@users.noreply.github.com"
+          git commit -m "정리: 임시 UX 수정 실행기를 제거한다"
+          git push origin HEAD:codex/modal-scroll-quick-booking-ux
