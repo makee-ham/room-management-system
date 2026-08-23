@@ -50,7 +50,9 @@ assert.ok(summary.zones.length>0,'template has no zones');
 assert.equal(summary.zones.reduce((total,zone)=>total+zone.photoCount,0),summary.photoCount);
 assert.equal(summary.zones.reduce((total,zone)=>total+zone.requiredPhotoCount,0),summary.requiredCount);
 assert.ok(summary.photos.every(photo=>photo.id&&photo.zone&&photo.title&&photo.description&&photo.state),'one or more admin photo items lost template metadata');
-assert.ok(summary.photos.some(photo=>/TV 켜짐|화면 출력/.test(`${photo.title} ${photo.description}`)&&photo.required==='true'),'required TV-on evidence item is missing');
+if(summary.templateVersion==='v7'){
+  assert.ok(summary.photos.some(photo=>/TV 켜짐|화면 출력/.test(`${photo.title} ${photo.description}`)&&photo.required==='true'),'required TV-on evidence item is missing from a v7 admin review');
+}
 assert.ok(summary.photos.every(photo=>['done','failed','uploading','missing','empty'].includes(photo.status)),'unknown inspection photo status');
 
 const zoneNames=summary.zones.map(zone=>zone.name);
@@ -86,6 +88,7 @@ assert.ok(await maid.locator('.task-zone-card').count()>0,'maid template zone ca
 assert.ok(await maid.locator('.task-zone-photo').count()>0,'maid template photo items are missing');
 assert.equal(await maid.locator('.task-zone-progress > div').count(),2);
 assert.match((await maid.locator('.photo-template-banner').first().textContent())||'',/필수 사진/);
+assert.match((await maid.locator('.task-zone-grid').textContent())||'',/TV 켜짐·화면 출력 확인/,'current v7 maid template lost its required TV-on item');
 
 for(const width of [390,768,1440]){
   const page=await browser.newPage({viewport:{width,height:1000}});
