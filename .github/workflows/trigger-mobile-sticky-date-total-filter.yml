@@ -40,7 +40,16 @@ jobs:
 
       - name: Apply targeted UI changes
         shell: bash
-        run: python3 .github/automation/apply-mobile-sticky-date-total-filter.py
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('.github/automation/apply-mobile-sticky-date-total-filter.py')
+          text = path.read_text(encoding='utf-8')
+          start = text.index('png_marker = ')
+          end = text.index('contract_marker = ', start)
+          path.write_text(text[:start] + text[end:], encoding='utf-8')
+          PY
+          python3 .github/automation/apply-mobile-sticky-date-total-filter.py
 
       - name: Install Chromium test runtime
         shell: bash
