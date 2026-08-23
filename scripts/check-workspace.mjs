@@ -61,6 +61,8 @@ const required = [
   'WIREFRAME/QA/screenshots/maid-reservation-guests-390.png',
   'WIREFRAME/QA/screenshots/admin-room-card-guest-count-1440.png',
   'WIREFRAME/QA/screenshots/admin-room-card-guest-count-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-390.png',
   'WIREFRAME/QA/screenshots/admin-assignment-elevator-1440.png',
   'WIREFRAME/QA/screenshots/admin-random-assignment-1440.png',
   'WIREFRAME/QA/screenshots/admin-random-assignment-390.png',
@@ -107,6 +109,8 @@ const requiredPngEvidence = [
   'WIREFRAME/QA/screenshots/admin-reservation-cancel-390.png',
   'WIREFRAME/QA/screenshots/admin-room-card-guest-count-1440.png',
   'WIREFRAME/QA/screenshots/admin-room-card-guest-count-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-390.png',
   'WIREFRAME/QA/screenshots/admin-cleaning-day-tabs-1440.png',
   'WIREFRAME/QA/screenshots/admin-same-day-adjustment-390.png',
   'WIREFRAME/QA/screenshots/maid-same-day-change-notice-390.png',
@@ -757,18 +761,27 @@ for (const contract of [
 }
 for (const contract of [
   '.schedule-priority-badge.guests { background:#17314a;',
-  'const cardGuestCount=closestReservation?reservationGuestCount(closestReservation):null;',
+  'function reservationHasExtraGuests(reservation)',
+  'reservationGuestCount(reservation)>guestPolicyForRoom(reservation.room).defaultGuestCount',
+  'function roomHasExtraGuests(no)',
+  'const reservation=activeReservationsFor(state,String(no)).find(item=>!reservationRecordIsPast(item))||null;',
+  'const cardGuestCount=closestReservation&&reservationHasExtraGuests(closestReservation)?reservationGuestCount(closestReservation):null;',
+  "if(state.roomFilter==='extra-guests')return roomHasExtraGuests(r.no);",
+  "'occupied','extra-guests','candle'",
+  'value="extra-guests"',
+  '>인원 추가</option>',
   'class="schedule-priority-badge guests" aria-label="숙박 인원 ${cardGuestCount}명"',
   "${icon('user','icon-sm')}${cardGuestCount}명",
 ]) {
-  if (!html.includes(contract)) throw new Error(`Room-card guest-count contract missing: ${contract}`);
+  if (!html.includes(contract)) throw new Error(`Room-card extra-guest/filter contract missing: ${contract}`);
 }
 const roomCardPolicy = readFileSync(resolve(root, 'DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md'), 'utf8');
 for (const contract of [
-  '총 숙박 인원을 `N명` 형식의 일정 강조 배지로 표시한다.',
-  '추가 인원만 따로 계산한 `+N명` 표기는 사용하지 않으며',
+  '기준인원보다 많을 때만',
+  '`+N명`처럼 초과분만 표시하지 않으며',
+  '객실 상태 필터의 `인원 추가`는 이 동일한 조건',
 ]) {
-  if (!roomCardPolicy.includes(contract)) throw new Error(`Room-card guest-count policy missing: ${contract}`);
+  if (!roomCardPolicy.includes(contract)) throw new Error(`Room-card extra-guest/filter policy missing: ${contract}`);
 }
 for (const contract of [
   '체크인부터 체크아웃까지 한 고객의 일정을 입력합니다.',
