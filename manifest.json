@@ -1,7 +1,7 @@
 {
   "package": "CASTLE THE ART room management wireframe",
-  "version": "2026-08-23-modal-scroll-quick-booking-ux",
-  "generated_at_kst": "2026-08-23T19:18:26+09:00",
+  "version": "2026-08-24-mobile-sticky-date-total-filter",
+  "generated_at_kst": "2026-08-24T00:22:45+09:00",
   "repository": "https://github.com/makee-ham/room-management-system",
   "entrypoint": "WIREFRAME/index.html",
   "policy_source": "DOCS/FINAL_UX_AUDIT.md",
@@ -12,7 +12,7 @@
   "qa_record": "WIREFRAME/QA.md",
   "sha256": {
     "DOCS/FINAL_UX_AUDIT.md": "e479e468c32c27ef606a311fd090ed7a4a8718590d363c9634da014960956c78",
-    "WIREFRAME/index.html": "643d64f74b7ffbe957505221bac5ee787f7dee4d803f54cac2eadd71c24305d1"
+    "WIREFRAME/index.html": "9f54de04527ce5ddd446a6828a08fb4bdb97a9b4fe94014523243d6a71392ab1"
   },
   "runtime": {
     "build_required": false,

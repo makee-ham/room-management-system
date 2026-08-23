@@ -52,6 +52,8 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-manual-checkout-390.png',
   'WIREFRAME/QA/screenshots/admin-quick-booking-1440.png',
   'WIREFRAME/QA/screenshots/admin-quick-booking-390.png',
+  'WIREFRAME/QA/screenshots/admin-quick-booking-sticky-header-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-total-filter-1440.png',
   'WIREFRAME/QA/screenshots/admin-calendar-standard-1440.png',
   'WIREFRAME/QA/screenshots/admin-calendar-standard-390.png',
   'WIREFRAME/QA/screenshots/admin-reservation-cancel-1440.png',
@@ -1467,8 +1469,35 @@ for (const contract of [
   'data-action="filter-room-type"',
   "if(a==='filter-room-type')",
   "state.roomTypeFilter=typeId;state.roomFilter='all';state.roomSearch='';",
+  '.catalog-summary { display:grid; grid-template-columns:minmax(0,1.5fr) repeat(5,minmax(88px,.5fr));',
+  '.catalog-summary-stat[data-type="all"] { grid-column:1/-1; }',
+  "{id:'all',name:'전체 객실',count:ROOMS.length}",
+  'data-type="${item.id}" aria-pressed="${state.roomTypeFilter===item.id}"',
+  "typeId==='all'||ROOM_TYPES[typeId]",
+  'id="quick-grid-mobile-header"',
+  '.quick-grid-mobile-header { position:sticky; top:var(--topbar);',
+  '.quick-grid-scroller .quick-grid-header { display:none; }',
+  'function syncQuickGridHorizontalScroll(source)',
+  "['quick-grid-scroller','quick-grid-mobile-header'].includes(target?.id)",
 ]) {
   if (!html.includes(contract)) throw new Error(`Modal/quick-booking/type-filter UX contract missing: ${contract}`);
+}
+
+for (const contract of [
+  '모바일 고정 날짜 머리글·전체 객실 필터',
+  '날짜 머리글 상단이 앱 바 하단과 2px 이내',
+  'admin-quick-booking-sticky-header-390.png',
+  'admin-room-total-filter-1440.png',
+]) {
+  if (!qa.includes(contract)) throw new Error(`Sticky date/total-room QA documentation missing: ${contract}`);
+}
+for (const contract of [
+  '모바일 고정 날짜 머리글·전체 객실 필터',
+  '고정 날짜 머리글과 객실 예약 본문의 가로 위치는 양방향으로 동기화',
+  '`전체 객실`이다',
+  '121개 객실 전체',
+]) {
+  if (!wireframeReadme.includes(contract)) throw new Error(`Sticky date/total-room README documentation missing: ${contract}`);
 }
 
 console.log('Per-maid weekly payment static contracts: passed');
