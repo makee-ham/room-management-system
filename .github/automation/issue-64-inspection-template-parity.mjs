@@ -70,9 +70,12 @@ assert.match((await review.textContent())||'',/제출 당시 템플릿 기준/);
 
 const photoButton=review.locator('[data-action="inspection-photo"]').first();
 if(await photoButton.count()){
+  const sourceLabel=(await photoButton.locator('.task-zone-photo-copy strong').textContent())?.trim()||'';
   await photoButton.click();
   await desktop.locator('#modal-root .modal').waitFor();
-  assert.match((await desktop.locator('#modal-title').textContent())||'',/사진|촬영|확인/);
+  assert.ok(((await desktop.locator('#modal-title').textContent())||'').trim().length>0,'photo modal title is empty');
+  assert.ok(await desktop.locator('#modal-root .photo-viewer-visual').count()===1,'photo modal visual is missing');
+  assert.match((await desktop.locator('#modal-root').textContent())||'',new RegExp(sourceLabel.split(' · ')[0].replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
   await desktop.locator('#modal-root [data-action="close-modal"]').first().click();
   await desktop.waitForFunction(()=>!document.querySelector('#modal-root .modal'));
 }
