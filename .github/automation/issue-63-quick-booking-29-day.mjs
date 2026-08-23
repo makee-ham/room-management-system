@@ -26,14 +26,12 @@ await waitForWindow(desktop,'2026-08-08','2026-09-05');
 const desktopWindow=await desktop.evaluate(()=>({
   dates:[...document.querySelectorAll('#quick-grid-scroller .quick-day-header')].map(header=>header.dataset.quickDate),
   label:document.querySelector('.quick-month-label')?.textContent.replace(/\s+/g,' ').trim(),
-  summary:document.querySelector('.quick-booking-summary')?.textContent.replace(/\s+/g,' ').trim(),
   scrollLeft:document.getElementById('quick-grid-scroller')?.scrollLeft,
   anchorGap:(()=>{const anchor=document.querySelector('#quick-grid-scroller [data-quick-date="2026-08-15"]'),room=document.querySelector('#quick-grid-scroller .quick-room-header');if(!anchor||!room)return null;return Math.round(anchor.getBoundingClientRect().left-room.getBoundingClientRect().right);})(),
 }));
 assert.equal(desktopWindow.dates.length,29);
 assert.equal(desktopWindow.dates[7],'2026-08-15');
 assert.match(desktopWindow.label,/8\.8–9\.5/);
-assert.match(desktopWindow.summary,/선택한 29일 기준/);
 assert.ok(desktopWindow.scrollLeft>0,'today column was not auto-aligned');
 assert.ok(Math.abs(desktopWindow.anchorGap??999)<=3,`today column gap is ${desktopWindow.anchorGap}px`);
 

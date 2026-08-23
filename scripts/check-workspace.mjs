@@ -595,8 +595,8 @@ for (const contract of [
   'quickTouchArmTimer=setTimeout',
   'Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)',
   'quickSuppressClickUntil=Date.now()+500',
-  'quickGridScrollLeft:700',
-  'state.quickGridScrollLeft=700',
+  'quickGridScrollLeft:null',
+  'state.quickGridScrollLeft=null',
   '--quick-room-col:112px',
   'class="quick-room-link"',
   'tabindex="${rowIndex===0?',
@@ -1498,6 +1498,36 @@ for (const contract of [
   '121개 객실 전체',
 ]) {
   if (!wireframeReadme.includes(contract)) throw new Error(`Sticky date/total-room README documentation missing: ${contract}`);
+}
+
+for (const contract of [
+  'quickReservationAnchorDate',
+  'QUICK_RESERVATION_PAST_DAYS=7',
+  'QUICK_RESERVATION_FUTURE_DAYS=21',
+  'QUICK_RESERVATION_DAY_COUNT=QUICK_RESERVATION_PAST_DAYS+1+QUICK_RESERVATION_FUTURE_DAYS',
+  'function quickWindowBounds(',
+  'function quickWindowDates(',
+  'function reservationInQuickWindow(',
+  'data-offset="-7"',
+  'data-offset="7"',
+  "params.set('bookingAnchor',route.quickAnchor)",
+  '지난 날짜 · 조회만 가능',
+  'is-month-start',
+  'function quickGridAnchorScrollLeft(',
+  'reservation-demo-cross-month-516',
+  'reservation-demo-cross-month-623',
+  '선택한 29일 기준',
+]) {
+  if (!html.includes(contract)) throw new Error(`Quick reservation 29-day contract missing: ${contract}`);
+}
+if (html.includes('function quickMonthDates(') || html.includes('function reservationInMonth(')) {
+  throw new Error('Legacy month-bounded quick reservation helpers remain.');
+}
+for (const contract of ['간편 예약 29일 연속 보기', '`-7일 ~ +21일`', 'bookingAnchor=YYYY-MM-DD']) {
+  if (!wireframeReadme.includes(contract)) throw new Error(`Quick reservation 29-day README contract missing: ${contract}`);
+}
+for (const contract of ['간편 예약 29일 연속 보기', '2026-08-08~2026-09-05', '8/31~9/3 연박']) {
+  if (!qa.includes(contract)) throw new Error(`Quick reservation 29-day QA contract missing: ${contract}`);
 }
 
 console.log('Per-maid weekly payment static contracts: passed');
