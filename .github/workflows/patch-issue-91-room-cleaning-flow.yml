@@ -47,15 +47,61 @@ jobs:
               print('room detail wrapper expression already valid')
           PY
 
+      - name: Update permanent workspace contracts
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path('scripts/check-workspace.mjs')
+          source=path.read_text(encoding='utf-8')
+          old="""const roomPresentationSource = html.slice(html.indexOf('function roomPresentation(no)'), html.indexOf('function renderPinRow', html.indexOf('function roomPresentation(no)')));
+          const roomPresentationOrder = [\"if(blockers.length)return\", \"if(cleaning)return\", \"if(room.occupancy==='occupied')return\", \"key:'available'\"]
+            .map((marker) => roomPresentationSource.indexOf(marker));
+          if (roomPresentationOrder.some((index) => index < 0) || roomPresentationOrder.some((index, position) => position && index <= roomPresentationOrder[position - 1])) {
+            throw new Error(`Room card priority must remain blocked > cleaning > occupied > available: ${roomPresentationOrder.join(', ')}`);
+          }
+          """
+          new="""const roomPresentationSource = html.slice(html.indexOf('function roomPresentation(no)'), html.indexOf('function renderPinRow', html.indexOf('function roomPresentation(no)')));
+          const roomPresentationOrder = [\"if(blockers.length)return\", \"if(room.occupancy==='occupied')return\", \"if(cleaning)return\", \"key:'available'\"]
+            .map((marker) => roomPresentationSource.indexOf(marker));
+          if (roomPresentationOrder.some((index) => index < 0) || roomPresentationOrder.some((index, position) => position && index <= roomPresentationOrder[position - 1])) {
+            throw new Error(`Room card priority must remain blocked > occupied (with subordinate cleaning) > cleaning > available: ${roomPresentationOrder.join(', ')}`);
+          }
+          for (const contract of [
+            'function roomCleaningControl(no)',
+            \"label:'청소 요청'\",
+            \"label:'청소 취소'\",
+            \"confirmLabel:request?'청소 취소':'청소 대기열에 넣기'\",
+            \"if(state.roomFilter==='occupied')return r.occupancy==='occupied'\",
+            \"if(state.roomFilter==='cleaning')return roomNeedsCleaningNow(r.no)\",
+            'data-room-cleaning-control=\\\"${no}\\\"',
+            \"청소 필요 · ${p.cleaningKind||'청소'}\",
+          ]) {
+            if (!html.includes(contract)) throw new Error(`Room cleaning request contract missing: ${contract}`);
+          }
+          for (const forbidden of ['ON으로 변경', 'OFF로 변경', '청소 필요 ON', '청소 필요 OFF']) {
+            if (html.includes(forbidden)) throw new Error(`Legacy cleaning switch copy remains: ${forbidden}`);
+          }
+          """
+          if old in source:
+              source=source.replace(old,new,1)
+              path.write_text(source,encoding='utf-8')
+              print('updated permanent room cleaning contracts')
+          elif 'blocked > occupied (with subordinate cleaning) > cleaning > available' in source:
+              print('permanent room cleaning contracts already updated')
+          else:
+              raise SystemExit('workspace priority contract block not found')
+          PY
+
       - name: Run workspace contract check
         run: node scripts/check-workspace.mjs
 
-      - name: Commit patched product file when changed
+      - name: Commit patched product and permanent checks when changed
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add WIREFRAME/index.html
+          git add WIREFRAME/index.html scripts/check-workspace.mjs
           if git diff --cached --quiet; then
             echo "No product changes to commit"
             exit 0
