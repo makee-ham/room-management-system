@@ -96,9 +96,29 @@ jobs:
       - name: Refresh canonical hashes
         shell: bash
         run: |
-          audit_hash=$(sha256sum DOCS/FINAL_UX_AUDIT.md | awk '{print $1}')
-          index_hash=$(sha256sum WIREFRAME/index.html | awk '{print $1}')
-          printf '%s  DOCS/FINAL_UX_AUDIT.md\n%s  WIREFRAME/index.html\n' "$audit_hash" "$index_hash" > SHA256SUMS.txt
+          python3 - <<'PY'
+          from hashlib import sha256
+          from pathlib import Path
+          import json
+
+          audit_path=Path('DOCS/FINAL_UX_AUDIT.md')
+          index_path=Path('WIREFRAME/index.html')
+          audit_hash=sha256(audit_path.read_bytes()).hexdigest()
+          index_hash=sha256(index_path.read_bytes()).hexdigest()
+
+          Path('SHA256SUMS.txt').write_text(
+              f'{audit_hash}  DOCS/FINAL_UX_AUDIT.md\n{index_hash}  WIREFRAME/index.html\n',
+              encoding='utf-8',
+          )
+
+          manifest_path=Path('manifest.json')
+          manifest=json.loads(manifest_path.read_text(encoding='utf-8'))
+          manifest.setdefault('sha256',{})['DOCS/FINAL_UX_AUDIT.md']=audit_hash
+          manifest['sha256']['WIREFRAME/index.html']=index_hash
+          manifest['version']='2026-08-25-room-cleaning-request-flow'
+          manifest_path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print('refreshed SHA256SUMS.txt and manifest.json')
+          PY
 
       - name: Run workspace contract check
         run: node scripts/check-workspace.mjs
@@ -108,7 +128,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add WIREFRAME/index.html scripts/check-workspace.mjs SHA256SUMS.txt
+          git add WIREFRAME/index.html scripts/check-workspace.mjs SHA256SUMS.txt manifest.json
           if git diff --cached --quiet; then
             echo "No product changes to commit"
             exit 0
