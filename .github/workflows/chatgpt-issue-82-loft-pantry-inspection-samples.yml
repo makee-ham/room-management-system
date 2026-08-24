@@ -1,0 +1,79 @@
+name: ChatGPT issue 82 loft pantry inspection samples
+
+on:
+  pull_request:
+    types: [opened, reopened]
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-verify:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'codex/issue-82-loft-pantry-inspection-samples'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out the feature branch
+        uses: actions/checkout@v6
+        with:
+          ref: codex/issue-82-loft-pantry-inspection-samples
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Start from current main
+        shell: bash
+        run: |
+          git fetch origin main codex/issue-82-loft-pantry-inspection-samples
+          git reset --hard origin/main
+
+      - name: Apply universal template and inspection sample fixes
+        shell: bash
+        run: python3 .github/automation/issue-82-loft-pantry-inspection-samples.py
+
+      - name: Run static workspace checks
+        shell: bash
+        run: node scripts/check-workspace.mjs
+
+      - name: Install Chromium test runtime
+        shell: bash
+        run: |
+          mkdir -p /tmp/castle-playwright
+          cd /tmp/castle-playwright
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+          cd "$GITHUB_WORKSPACE"
+          ln -s /tmp/castle-playwright/node_modules node_modules
+
+      - name: Run rendered interaction QA
+        shell: bash
+        run: |
+          python3 scripts/serve.py --host 127.0.0.1 --port 4173 >/tmp/castle-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:4173/index.html >/dev/null && break
+            sleep 1
+          done
+          node .github/automation/issue-82-loft-pantry-inspection-samples.mjs
+
+      - name: Remove temporary automation files
+        shell: bash
+        run: |
+          rm -f node_modules
+          rm -f .issue-82-trigger
+          rm -f .github/workflows/chatgpt-issue-82-loft-pantry-inspection-samples.yml
+          rm -f .github/automation/issue-82-loft-pantry-inspection-samples.py
+          rm -f .github/automation/issue-82-loft-pantry-inspection-samples.mjs
+
+      - name: Commit verified changes to the feature branch
+        shell: bash
+        run: |
+          git config user.name "Ham Arin"
+          git config user.email "79068658+makee-ham@users.noreply.github.com"
+          git add -A
+          git commit -m "개선: 모든 객실 템플릿에 복층·팬트리와 검수 샘플을 추가한다"
+          git push --force-with-lease origin HEAD:codex/issue-82-loft-pantry-inspection-samples
