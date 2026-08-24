@@ -8,8 +8,8 @@ replacement='''for (const contract of [
   'function roomStateFacets(no)',
   "occupancyLabel=occupied?'투숙 중':next?'공실 · 입실 예정':'공실'",
   'cleaningNeeded=roomNeedsCleaningNow(no)',
-  'checkoutInspectionPending=checkoutInspectionPending(no)',
-  'available=!occupied&&!cleaningNeeded&&!checkoutInspectionPending&&!blocked',
+  'inspectionPending=checkoutInspectionPending(no)',
+  'available=!occupied&&!cleaningNeeded&&!inspectionPending&&!blocked',
   'roomFacetBadgeMarkup(no)',
   'roomFacetSubMarkup(no)',
   'cardReservationStatus(no)',
@@ -28,4 +28,6 @@ if count!=1:
     raise SystemExit(f'legacy four-state static block mismatch: {count}')
 text=text.replace("if(state.roomFilter==='extra-guests')return roomHasExtraGuests(r.no);","if(state.roomFilter==='extra-guests')return roomHasExtraGuests(room.no);")
 text=text.replace("if(state.roomFilter==='candle')return r.occupancy!=='occupied'&&(state.candles[r.no]||0)>0;","if(state.roomFilter==='candle')return !facets.occupied&&(state.candles[room.no]||0)>0;")
+text=text.replace("'checkoutInspectionPending=checkoutInspectionPending(no)'","'inspectionPending=checkoutInspectionPending(no)'")
+text=text.replace("'available=!occupied&&!cleaningNeeded&&!checkoutInspectionPending&&!blocked'","'available=!occupied&&!cleaningNeeded&&!inspectionPending&&!blocked'")
 path.write_text(text,encoding='utf-8')
