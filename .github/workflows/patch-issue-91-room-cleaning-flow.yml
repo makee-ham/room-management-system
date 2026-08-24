@@ -30,6 +30,23 @@ jobs:
             python3 .github/automation/patch-issue-91-room-cleaning-flow.py
           fi
 
+      - name: Repair guarded detail wrapper expression
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path('WIREFRAME/index.html')
+          source=path.read_text(encoding='utf-8')
+          bad="return mergeRoomBasicsPanel(mergeRoomCleaningPanel(mergeRoomIssuesPanel(mergeRoomOperationPanel(renderRoomDetailStandard(no),no),no),no);"
+          good="return mergeRoomBasicsPanel(mergeRoomCleaningPanel(mergeRoomIssuesPanel(mergeRoomOperationPanel(renderRoomDetailStandard(no),no),no),no),no);"
+          if bad in source:
+              source=source.replace(bad,good,1)
+              path.write_text(source,encoding='utf-8')
+              print('repaired room detail wrapper expression')
+          else:
+              print('room detail wrapper expression already valid')
+          PY
+
       - name: Run workspace contract check
         run: node scripts/check-workspace.mjs
 
