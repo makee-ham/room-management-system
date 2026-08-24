@@ -1,7 +1,7 @@
 {
   "package": "CASTLE THE ART room management wireframe",
-  "version": "2026-08-24-idempotency-guards",
-  "generated_at_kst": "2026-08-24T02:07:38+09:00",
+  "version": "2026-08-24-manual-cleaning-toggle",
+  "generated_at_kst": "2026-08-24T11:21:00+09:00",
   "repository": "https://github.com/makee-ham/room-management-system",
   "entrypoint": "WIREFRAME/index.html",
   "policy_source": "DOCS/FINAL_UX_AUDIT.md",
@@ -12,7 +12,7 @@
   "qa_record": "WIREFRAME/QA.md",
   "sha256": {
     "DOCS/FINAL_UX_AUDIT.md": "e479e468c32c27ef606a311fd090ed7a4a8718590d363c9634da014960956c78",
-    "WIREFRAME/index.html": "c91b8958b03eb47feb0a901b1edb66664762891f00e9a5a6d91036fe1594b465"
+    "WIREFRAME/index.html": "2d5f75a19482f8d4150690290c17b1b8169261c3a92de7775992a7fc50639844"
   },
   "runtime": {
     "build_required": false,
