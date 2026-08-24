@@ -31,7 +31,9 @@ jobs:
 
       - name: Apply template parity fixes
         shell: bash
-        run: python3 .github/automation/issue-77-template-parity.py
+        run: |
+          python3 .github/automation/issue-77-template-parity.py
+          python3 .github/automation/issue-77-template-parity-compat.py
 
       - name: Run static workspace checks
         shell: bash
@@ -68,6 +70,7 @@ jobs:
           rm -f .github/workflows/chatgpt-template-parity-runner.yml
           rm -f .github/automation/issue-77-diagnose.py
           rm -f .github/automation/issue-77-template-parity.py
+          rm -f .github/automation/issue-77-template-parity-compat.py
           rm -f .github/automation/issue-77-template-parity.mjs
 
       - name: Commit verified changes to the feature branch
