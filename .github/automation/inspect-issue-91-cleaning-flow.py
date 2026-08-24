@@ -4,7 +4,7 @@ import re
 source = Path("WIREFRAME/index.html").read_text(encoding="utf-8")
 
 
-def section(label: str, needle: str, before: int = 900, after: int = 7000, occurrence: int = 0) -> None:
+def section(label: str, needle: str, before: int = 900, after: int = 8000, occurrence: int = 0) -> None:
     indexes=[]
     start=0
     while True:
@@ -21,7 +21,7 @@ def section(label: str, needle: str, before: int = 900, after: int = 7000, occur
     print(source[max(0,selected-before):min(len(source),selected+after)])
 
 
-def all_contexts(label: str, needle: str, before: int = 500, after: int = 1800) -> None:
+def all_contexts(label: str, needle: str, before: int = 500, after: int = 2200) -> None:
     print(f"\n\n===== {label} =====")
     start=0
     count=0
@@ -41,26 +41,29 @@ for label, needle, occurrence in [
     ("ROOM FILTER", "function filteredRooms()", 0),
     ("MANUAL CLEANING HELPERS", "function activeManualCleaningRequest", 0),
     ("MANUAL CLEANING CONTROL", "function renderManualCleaningToggle", 0),
-    ("CURRENT ROOM DETAIL", "function renderRoomDetail(no)", 0),
-    ("CURRENT ROOM DETAIL SECOND", "function renderRoomDetail(no)", 1),
+    ("ROOM DETAIL STANDARD", "function renderRoomDetailStandard(no)", 0),
+    ("ROOM DETAIL WRAPPER", "function renderRoomDetail(no)", 0),
+    ("MERGE OPERATION PANEL", "function mergeRoomOperationPanel", 0),
+    ("MERGE BASICS PANEL", "function mergeRoomBasicsPanel", 0),
     ("CLICK DELEGATION", "closest('[data-action]')", 0),
-    ("CLICK DELEGATION DOUBLE QUOTE", 'closest("[data-action]")', 0),
     ("RAW CLOSE MODAL", "rawCloseModal", 0),
-    ("MODAL ROOT", "modal-root", 0),
-    ("OPEN DIALOG", "showModal()", 0),
+    ("STANDARD MODAL", "function standardModalMarkup", 0),
+    ("SHOW MODAL", "function showModal", 0),
     ("TEST API", "window.__CASTLE_TEST__=Object.freeze", 0),
 ]:
     section(label,needle,occurrence=occurrence)
 
+all_contexts("ALL RENDER MANUAL CLEANING CONTROL CALLS", "renderManualCleaningToggle(")
+all_contexts("ALL 142 SPECIAL CASES", "no==='142'")
 all_contexts("ALL TOGGLE ACTION OCCURRENCES", "toggle-room-cleaning")
-all_contexts("ALL MODAL CONFIRM OCCURRENCES", "confirm-modal")
-all_contexts("ALL CLEANING MODAL WORDS", "청소 필요 ON")
+all_contexts("ALL CLEANING ON WORDS", "청소 필요 ON")
+all_contexts("ALL CLEANING OFF WORDS", "청소 필요 OFF")
 
 print("\n\n===== FUNCTION NAMES CONTAINING MODAL OR CONFIRM =====")
 for match in re.finditer(r"function\s+([A-Za-z0-9_$]*(?:Modal|modal|Confirm|confirm)[A-Za-z0-9_$]*)\s*\(",source):
     print(match.group(1), match.start())
 
-print("\n\n===== LINES CONTAINING TOGGLE/MODAL ACTION KEYWORDS =====")
+print("\n\n===== LINES CONTAINING CLEANING CONTROL KEYWORDS =====")
 for line_number,line in enumerate(source.splitlines(),1):
-    if any(keyword in line for keyword in ["toggle-room-cleaning","rawCloseModal","showModal","modalState","pendingModal","confirmAction","data-modal","modal-confirm"]):
+    if any(keyword in line for keyword in ["renderManualCleaningToggle(","toggle-room-cleaning","confirm-room-cleaning","청소 필요 ON","청소 필요 OFF","function renderRoomDetailStandard"]):
         print(f"{line_number}: {line}")
