@@ -7,16 +7,21 @@ on:
     paths:
       - '.github/automation/inspect-issue-91-cleaning-flow.py'
       - '.github/workflows/inspect-issue-91-cleaning-flow.yml'
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches:
+      - main
 
 permissions:
   contents: read
 
 jobs:
   inspect:
+    if: github.event_name == 'push' || github.head_ref == 'codex/issue-91-room-cleaning-request-flow'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Check out branch
+      - name: Check out feature branch
         uses: actions/checkout@v6
         with:
           ref: codex/issue-91-room-cleaning-request-flow
