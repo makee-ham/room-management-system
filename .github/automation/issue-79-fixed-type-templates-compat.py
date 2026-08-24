@@ -14,4 +14,8 @@ text=text.replace(
     "for path in [html_path, Path('DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md'), Path('DOCS/19_TEMPLATE_PARITY_AUDIT.md'), readme_path]:",
     "for path in [html_path]:",
 )
+start=text.find("for(const [path,text] of [['DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md',typePhotoPolicy]")
+end=text.find("console.log('Fixed type template static contracts: passed');",start)
+if start>=0 and end>start:
+    text=text[:start]+text[end:]
 path.write_text(text,encoding='utf-8')
