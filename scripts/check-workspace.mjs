@@ -1680,4 +1680,21 @@ for (const contract of [
 if (!html.includes('completeCheckoutInspectionForAttempt(id,attempt)')) throw new Error('Field completion does not clear checkout inspection.');
 console.log('Checkout inspection static contracts: passed');
 
+for (const contract of [
+  'id="scroll-to-top"',
+  'aria-label="맨 위로 이동"',
+  'const SCROLL_TOP_THRESHOLD=600',
+  'function scrollTopButtonShouldShow()',
+  "window.addEventListener('scroll',scheduleScrollTopButtonSync,{passive:true})",
+  "window.matchMedia('(prefers-reduced-motion: reduce)').matches",
+  "window.scrollTo({top:0,left:0,behavior:'smooth'})",
+  "body.modal-open .scroll-top-button",
+  "bottom: calc(var(--bottom-nav) + env(safe-area-inset-bottom) + 14px)",
+]) {
+  if (!html.includes(contract)) throw new Error(`Scroll-to-top contract missing: ${contract}`);
+}
+if ((html.match(/id="scroll-to-top"/g)||[]).length!==1) throw new Error('Scroll-to-top button must exist exactly once.');
+if ((html.match(/window\.addEventListener\('scroll',scheduleScrollTopButtonSync/g)||[]).length!==1) throw new Error('Scroll-to-top listener must be registered exactly once.');
+console.log('Scroll-to-top static contracts: passed');
+
 console.log('Workspace check: passed');

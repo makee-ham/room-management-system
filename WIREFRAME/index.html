@@ -1530,6 +1530,43 @@
       .bottom-nav button span { font-size:10px; }
     }
 
+    .scroll-top-button {
+      position: fixed;
+      right: clamp(16px, 2.4vw, 30px);
+      bottom: 24px;
+      z-index: 65;
+      display: inline-grid;
+      place-items: center;
+      width: 48px;
+      min-width: 48px;
+      height: 48px;
+      padding: 0;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 999px;
+      color: #fff;
+      background: var(--navy);
+      box-shadow: 0 12px 28px rgba(20,36,55,.24);
+      cursor: pointer;
+      transition: transform .16s ease, background .16s ease, box-shadow .16s ease;
+    }
+    .scroll-top-button:hover { transform: translateY(-2px); background: var(--navy-2); box-shadow: 0 15px 32px rgba(20,36,55,.28); }
+    .scroll-top-button:active { transform: translateY(0); }
+    .scroll-top-button[hidden], body.modal-open .scroll-top-button { display: none !important; }
+    .scroll-top-button .icon { width: 22px; height: 22px; }
+    @media (max-width:720px) {
+      .scroll-top-button {
+        right: 14px;
+        bottom: calc(var(--bottom-nav) + env(safe-area-inset-bottom) + 14px);
+        width: 46px;
+        min-width: 46px;
+        height: 46px;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .scroll-top-button { transition: none; }
+    }
+
   </style>
 </head>
 <body>
@@ -1538,6 +1575,9 @@
   <div id="modal-root"></div>
   <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
   <div id="assertive-live" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
+  <button id="scroll-to-top" class="scroll-top-button" type="button" aria-label="맨 위로 이동" aria-hidden="true" title="맨 위로" hidden>
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+  </button>
 
   <script>
     (() => {
@@ -2402,6 +2442,36 @@
         if(restore&&y!=null)scheduleWindowScrollRestore(y);
         return y;
       }
+
+      const SCROLL_TOP_THRESHOLD=600,scrollTopButton=document.getElementById('scroll-to-top');
+      let scrollTopSyncFrame=0;
+      function scrollTopButtonShouldShow() {
+        return window.scrollY>=SCROLL_TOP_THRESHOLD&&!document.body.classList.contains('modal-open')&&!document.querySelector('#modal-root .modal, #modal-root .calendar-dialog');
+      }
+      function syncScrollTopButton() {
+        if(!scrollTopButton)return;
+        const visible=scrollTopButtonShouldShow();
+        scrollTopButton.hidden=!visible;
+        scrollTopButton.setAttribute('aria-hidden',visible?'false':'true');
+      }
+      function scheduleScrollTopButtonSync() {
+        if(scrollTopSyncFrame)return;
+        scrollTopSyncFrame=requestAnimationFrame(()=>{scrollTopSyncFrame=0;syncScrollTopButton();});
+      }
+      window.addEventListener('scroll',scheduleScrollTopButtonSync,{passive:true});
+      window.addEventListener('resize',scheduleScrollTopButtonSync,{passive:true});
+      scrollTopButton?.addEventListener('click',()=>{
+        const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if(reduced){
+          const root=document.documentElement,previous=root.style.scrollBehavior;
+          root.style.scrollBehavior='auto';window.scrollTo(0,0);root.style.scrollBehavior=previous;
+          syncScrollTopButton();
+        } else {
+          window.scrollTo({top:0,left:0,behavior:'smooth'});
+        }
+        requestAnimationFrame(()=>document.getElementById('main-content')?.focus({preventScroll:true}));
+      });
+      syncScrollTopButton();
 
       function render() {
         const durableRenderSameState=durableRenderStateRef===state,durableBefore=durableLedgerFingerprint(state);
