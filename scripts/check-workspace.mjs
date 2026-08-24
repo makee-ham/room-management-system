@@ -830,7 +830,7 @@ for (const contract of [
   'guestCountSnapshot:assignmentGuestCount(target)',
   'function reservationCleaningChanges(beforeReservations,afterReservations)',
   'function ensureQuickDateCellVisible(cell)',
-  '예정 체크아웃이 지났습니다. 현재 예약의 체크아웃을 갱신하거나 지금 체크아웃을 먼저 처리해 주세요.',
+  '예정 체크아웃이 지났습니다. 예약 관리에서 체크아웃 시각을 갱신해 주세요.',
 ]) {
   if (!html.includes(contract)) throw new Error(`Occupied-room reservation contract missing: ${contract}`);
 }
@@ -1647,5 +1647,21 @@ if (!manualCleaningActionSet.includes("'toggle-room-cleaning'") || !manualCleani
   throw new Error('Manual cleaning toggle actions are not registered.');
 }
 console.log('Manual room-cleaning toggle static contracts: passed');
+
+for (const contract of [
+  'function operationalMoment(targetState=state)',
+  'function reservationAtOperationalMoment(roomNo,targetState=state)',
+  'function latestCheckedOutReservationForRoom(roomNo,targetState=state)',
+  'function roomCheckoutCleaningDue(no,targetState=state)',
+  "reservation.checkInAt<=moment&&moment<reservation.checkOutAt",
+  '입실·퇴실은 예약 시각에 자동 반영됩니다.',
+]) {
+  if (!html.includes(contract)) throw new Error(`Automatic occupancy contract missing: ${contract}`);
+}
+const occupancyActionsSource=html.slice(html.indexOf('const rebuiltActions='),html.indexOf('const deprecatedStateActions='));
+for (const removed of ["'manual-checkout'","'confirm-manual-checkout'","'manual-checkin'","'confirm-manual-checkin'"]) {
+  if (occupancyActionsSource.includes(removed)) throw new Error(`Manual occupancy action remains registered: ${removed}`);
+}
+console.log('Automatic reservation occupancy static contracts: passed');
 
 console.log('Workspace check: passed');
