@@ -11,28 +11,27 @@ permissions:
 
 jobs:
   apply-and-verify:
-    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'codex/issue-81-faceted-room-status'
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'codex/issue-85-room-state-conflict-matrix'
     runs-on: ubuntu-latest
     timeout-minutes: 40
 
     steps:
-      - name: Check out the verified feature branch
+      - name: Check out the feature branch
         uses: actions/checkout@v6
         with:
-          ref: codex/issue-81-faceted-room-status
+          ref: codex/issue-85-room-state-conflict-matrix
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Fetch current main automation
+      - name: Start from current main
         shell: bash
         run: |
-          git fetch origin main codex/issue-81-faceted-room-status
-          git show origin/main:.github/automation/issue-81-conflict-product.py >/tmp/issue-81-conflict-product.py
-          git show origin/main:.github/automation/issue-81-conflict-qa.mjs >/tmp/issue-81-conflict-qa.mjs
+          git fetch origin main codex/issue-85-room-state-conflict-matrix
+          git reset --hard origin/main
 
       - name: Apply conflict-matrix fixes
         shell: bash
-        run: python3 /tmp/issue-81-conflict-product.py
+        run: python3 .github/automation/issue-81-conflict-product.py
 
       - name: Run static workspace checks
         shell: bash
@@ -59,14 +58,23 @@ jobs:
             curl -fsS http://127.0.0.1:4173/index.html >/dev/null && break
             sleep 1
           done
-          NODE_PATH=/tmp/castle-playwright/node_modules node /tmp/issue-81-conflict-qa.mjs
+          node .github/automation/issue-81-conflict-qa.mjs
+
+      - name: Remove one-time automation files
+        shell: bash
+        run: |
+          rm -f node_modules
+          rm -f .issue-85-trigger
+          rm -f .github/automation/issue-81-conflict-cases.py
+          rm -f .github/automation/issue-81-conflict-product.py
+          rm -f .github/automation/issue-81-conflict-qa.mjs
+          rm -f .github/workflows/chatgpt-room-conflict-runner.yml
 
       - name: Commit verified conflict cases
         shell: bash
         run: |
-          rm -f node_modules
           git config user.name "Ham Arin"
           git config user.email "79068658+makee-ham@users.noreply.github.com"
           git add -A
           git commit -m "보강: 점유·청소·퇴실점검의 비정상 조합을 차단한다"
-          git push origin HEAD:codex/issue-81-faceted-room-status
+          git push --force-with-lease origin HEAD:codex/issue-85-room-state-conflict-matrix
