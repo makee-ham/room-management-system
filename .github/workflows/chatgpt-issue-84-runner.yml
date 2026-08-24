@@ -1,0 +1,31 @@
+name: ChatGPT issue 84 runner
+
+on:
+  pull_request:
+    types: [opened, reopened]
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'codex/issue-84-universal-loft-inspection-samples'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out current main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Print template and inspection contracts
+        shell: bash
+        run: python3 .github/automation/issue-84-diagnose.py
+
+      - name: Stop after diagnosis
+        shell: bash
+        run: exit 1
