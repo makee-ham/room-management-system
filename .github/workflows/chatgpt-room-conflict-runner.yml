@@ -1,0 +1,72 @@
+name: ChatGPT room conflict matrix runner
+
+on:
+  pull_request:
+    types: [opened, reopened]
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-verify:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'codex/issue-81-faceted-room-status'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Check out the verified feature branch
+        uses: actions/checkout@v6
+        with:
+          ref: codex/issue-81-faceted-room-status
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fetch current main automation
+        shell: bash
+        run: |
+          git fetch origin main codex/issue-81-faceted-room-status
+          git show origin/main:.github/automation/issue-81-conflict-product.py >/tmp/issue-81-conflict-product.py
+          git show origin/main:.github/automation/issue-81-conflict-qa.mjs >/tmp/issue-81-conflict-qa.mjs
+
+      - name: Apply conflict-matrix fixes
+        shell: bash
+        run: python3 /tmp/issue-81-conflict-product.py
+
+      - name: Run static workspace checks
+        shell: bash
+        run: node scripts/check-workspace.mjs
+
+      - name: Install Chromium test runtime
+        shell: bash
+        run: |
+          mkdir -p /tmp/castle-playwright
+          cd /tmp/castle-playwright
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+          cd "$GITHUB_WORKSPACE"
+          ln -s /tmp/castle-playwright/node_modules node_modules
+
+      - name: Run rendered conflict-matrix QA
+        shell: bash
+        run: |
+          python3 scripts/serve.py --host 127.0.0.1 --port 4173 >/tmp/castle-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:4173/index.html >/dev/null && break
+            sleep 1
+          done
+          NODE_PATH=/tmp/castle-playwright/node_modules node /tmp/issue-81-conflict-qa.mjs
+
+      - name: Commit verified conflict cases
+        shell: bash
+        run: |
+          rm -f node_modules
+          git config user.name "Ham Arin"
+          git config user.email "79068658+makee-ham@users.noreply.github.com"
+          git add -A
+          git commit -m "보강: 점유·청소·퇴실점검의 비정상 조합을 차단한다"
+          git push origin HEAD:codex/issue-81-faceted-room-status
