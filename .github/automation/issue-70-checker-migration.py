@@ -22,6 +22,10 @@ for old, new in replacements:
     if count:
         text = text.replace(old, new)
         changed += count
-if changed < 1:
-    raise SystemExit('automatic occupancy checker copy: no obsolete contract was found')
+obsolete = '''if (/data-action="(?:manual-checkout|manual-checkin)"/.test(html)) throw new Error('Manual occupancy button remains in rendered markup.');\n'''
+if text.count(obsolete) == 1:
+    text = text.replace(obsolete, '', 1)
+    changed += 1
+if changed < 2:
+    raise SystemExit(f'automatic occupancy checker migration changed only {changed} contracts')
 path.write_text(text, encoding='utf-8')
