@@ -1697,4 +1697,38 @@ if ((html.match(/id="scroll-to-top"/g)||[]).length!==1) throw new Error('Scroll-
 if ((html.match(/window\.addEventListener\('scroll',scheduleScrollTopButtonSync/g)||[]).length!==1) throw new Error('Scroll-to-top listener must be registered exactly once.');
 console.log('Scroll-to-top static contracts: passed');
 
+for (const contract of [
+  'function templateRooms(template)',
+  'function templatePreviewSnapshot(template,roomNo=templatePreviewRoom(template))',
+  'function photoSlotContract(items=[])',
+  'function templateSlotStats(template)',
+  'data-control="template-preview-room"',
+  'data-template-preview-slot="${esc(item.id)}"',
+  '메이드 실제 촬영 슬롯 미리보기',
+  '기본 규칙 수와 메이드 실제 슬롯 수는 다를 수 있습니다.',
+  '메이드 제출 기준 ${expectedItems.length}개 슬롯 · 관리자 검수 ${items.length}개 슬롯',
+  'data-template-contract-match="${structureMatches?\'true\':\'false\'}"',
+  "snapshot?.photos?.some(item=>item.id==='tv-on'||String(item.id).startsWith('tv-on-'))",
+  '한 슬롯에는 현재 사진 1장만 유지됩니다.',
+  "if(c==='template-preview-room')",
+  'templateVersionAudit:roomNo=>',
+]) {
+  if (!html.includes(contract)) throw new Error(`Template parity contract missing: ${contract}`);
+}
+const templateDetailStart=html.indexOf("function renderTemplateDetail(id,mode='view')");
+const templateDetailEnd=html.indexOf('function readTemplateChange',templateDetailStart);
+const templateDetailSource=html.slice(templateDetailStart,templateDetailEnd);
+if(templateDetailStart<0||templateDetailEnd<=templateDetailStart)throw new Error('Template detail source block not found.');
+if(!templateDetailSource.includes('previewPhotos.map((item,index)=>'))throw new Error('Admin template detail does not render expanded preview slots.');
+if(templateDetailSource.includes('<div class="template-photo-grid">${template.photos.map'))throw new Error('Admin template detail still renders only base rules.');
+const inspectionReviewStart=html.indexOf('function renderInspectionTemplateReview');
+const inspectionReviewEnd=html.indexOf('function openInspectionPhoto',inspectionReviewStart);
+const inspectionReviewSource=html.slice(inspectionReviewStart,inspectionReviewEnd);
+if(!inspectionReviewSource.includes('photoSlotContractSignature(expectedItems)===photoSlotContractSignature(items)'))throw new Error('Admin inspection does not verify the submitted slot contract.');
+for(const removed of ['필수 촬영 구역 ${requiredUploads.length}개','여러 장 허용',"snapshot?.version==='v7'"]){
+  if(html.includes(removed))throw new Error(`Contradictory template copy or logic remains: ${removed}`);
+}
+if(!html.includes("version:'v6'")||!html.includes("filter(item=>item.id!=='tv-on')"))throw new Error('Historical v6 snapshot preservation contract is missing.');
+console.log('Maid/admin template parity static contracts: passed');
+
 console.log('Workspace check: passed');
