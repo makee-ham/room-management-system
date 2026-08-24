@@ -1,6 +1,6 @@
 {
   "package": "CASTLE THE ART room management wireframe",
-  "version": "2026-08-24-fixed-type-templates",
+  "version": "2026-08-25-room-cleaning-request-flow",
   "generated_at_kst": "2026-08-24T21:17:01+09:00",
   "repository": "https://github.com/makee-ham/room-management-system",
   "entrypoint": "WIREFRAME/index.html",
@@ -12,7 +12,7 @@
   "qa_record": "WIREFRAME/QA.md",
   "sha256": {
     "DOCS/FINAL_UX_AUDIT.md": "e479e468c32c27ef606a311fd090ed7a4a8718590d363c9634da014960956c78",
-    "WIREFRAME/index.html": "eea730ff750d51a13b35a692a75c6d3f8e304d8523766140fe3ac8bf72f35fde"
+    "WIREFRAME/index.html": "70fca1ddd5a324410c3af7ca32eac78ca1469911bd10dae8bea444f0ded84211"
   },
   "runtime": {
     "build_required": false,
