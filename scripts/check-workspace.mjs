@@ -1664,4 +1664,20 @@ for (const removed of ["'manual-checkout'","'confirm-manual-checkout'","'manual-
 }
 console.log('Automatic reservation occupancy static contracts: passed');
 
+for (const contract of [
+  'checkoutInspections:{}',
+  'function checkoutInspectionPending(no,targetState=state)',
+  'function completeCheckoutInspection(no,{method=\'manual\',attempt=null}={})',
+  'function completeCheckoutInspectionForAttempt(no,attempt)',
+  'function renderCheckoutInspectionPanel(no)',
+  'data-filter="checkout-inspection"',
+  'value="checkout-inspection"',
+  "'complete-checkout-inspection'",
+  "if(a==='confirm-checkout-inspection')",
+]) {
+  if (!html.includes(contract)) throw new Error(`Checkout inspection contract missing: ${contract}`);
+}
+if (!html.includes('completeCheckoutInspectionForAttempt(id,attempt)')) throw new Error('Field completion does not clear checkout inspection.');
+console.log('Checkout inspection static contracts: passed');
+
 console.log('Workspace check: passed');
