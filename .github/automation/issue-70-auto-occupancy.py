@@ -93,7 +93,7 @@ replace_once(
     'remove manual occupancy actions',
 )
 
-regex_once(r"\n        if\(a==='manual-checkout'\)\{.*?\n        if\(a==='create-stayover'\)\{","\n        if(a==='create-stayover'){",'remove manual check-in/out handlers',re.S)
+# 수동 입퇴실 핸들러는 액션 등록과 화면에서만 차단하고, 기존 예약 저장 흐름을 보존한다.
 
 replace_once(
     "if(wasHeld){room.occupancy=occupancy;room.catalogStatus='available';",
