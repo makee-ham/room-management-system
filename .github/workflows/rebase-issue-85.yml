@@ -1,0 +1,33 @@
+name: Rebase issue 85 branch
+
+on:
+  pull_request:
+    types: [opened, reopened]
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  rebase:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'codex/issue-85-room-state-conflict-matrix'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v6
+        with:
+          ref: codex/issue-85-room-state-conflict-matrix
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Rebase onto current main and remove this runner
+        shell: bash
+        run: |
+          git fetch origin main codex/issue-85-room-state-conflict-matrix
+          git config user.name "Ham Arin"
+          git config user.email "79068658+makee-ham@users.noreply.github.com"
+          git rebase origin/main
+          git rm -f .github/workflows/rebase-issue-85.yml
+          git commit -m "정리: Issue 85 재정렬 실행기를 제거한다"
+          git push --force-with-lease origin HEAD:codex/issue-85-room-state-conflict-matrix
