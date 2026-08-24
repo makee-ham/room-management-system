@@ -1,0 +1,56 @@
+name: QA issue 91 room cleaning request flow
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  browser-qa:
+    if: github.head_ref == 'codex/issue-91-room-cleaning-request-flow'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v6
+        with:
+          ref: codex/issue-91-room-cleaning-request-flow
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Playwright Chromium
+        shell: bash
+        run: |
+          npm install --no-save --no-package-lock playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Run permanent workspace contracts
+        run: node scripts/check-workspace.mjs
+
+      - name: Start wireframe server
+        shell: bash
+        run: |
+          nohup python3 scripts/serve.py > /tmp/castle-wireframe-server.log 2>&1 &
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/index.html > /dev/null; then
+              echo "Wireframe server is ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/castle-wireframe-server.log
+          exit 1
+
+      - name: Run Chromium interaction and responsive QA
+        env:
+          QA_URL: http://127.0.0.1:4173/index.html
+        run: node .github/automation/qa-issue-91-cleaning-flow.mjs
