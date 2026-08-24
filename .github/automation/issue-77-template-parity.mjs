@@ -41,7 +41,13 @@ assert.equal(family645.actualSlotCount,15,'645 room must expand to fifteen maid 
 assert.equal(family645.requiredSlotCount,14,'645 room required slot count is incorrect');
 assert.equal(family645.optionalSlotCount,1,'645 room optional slot count is incorrect');
 assert.equal(family645.verified,true,'645 room must be marked as a verified layout');
-assert.deepEqual(family645.layoutProfile,{bedrooms:2,bathrooms:2,drains:2,pantry:false,source:'청소 사진 16장'});
+assert.equal(family645.layoutProfile.bedrooms,2);
+assert.equal(family645.layoutProfile.bathrooms,2);
+assert.equal(family645.layoutProfile.drains,2);
+assert.equal(family645.layoutProfile.pantry,false);
+assert.equal(family645.layoutProfile.source,'청소 사진 16장');
+assert.equal(family645.layoutProfile.verified,true);
+assert.equal(family645.layoutProfile.status,'사진 표본 확인');
 
 const previewGrid=desktop.locator('[data-template-preview-grid]');
 await previewGrid.waitFor();
