@@ -59,7 +59,8 @@ await mobile.waitForFunction(()=>!document.getElementById('scroll-to-top').hidde
 const buttonBox=await mobileButton.boundingBox();
 const navBox=await mobile.locator('.bottom-nav').boundingBox();
 assert.ok(buttonBox&&navBox,'mobile button or bottom navigation has no layout box');
-assert.ok(buttonBox.bottom<=navBox.y-8,`mobile button overlaps bottom navigation: button bottom ${buttonBox.bottom}, nav top ${navBox.y}`);
+const buttonBottom=buttonBox.y+buttonBox.height;
+assert.ok(buttonBottom<=navBox.y-8,`mobile button overlaps bottom navigation: button bottom ${buttonBottom}, nav top ${navBox.y}`);
 assert.ok(buttonBox.width>=44&&buttonBox.height>=44,`mobile touch target is too small: ${buttonBox.width}×${buttonBox.height}`);
 await mobile.screenshot({path:'/tmp/scroll-to-top-mobile.png',fullPage:false});
 await mobileButton.click();
