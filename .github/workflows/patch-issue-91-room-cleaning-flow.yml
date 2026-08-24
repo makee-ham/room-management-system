@@ -1,0 +1,42 @@
+name: Patch issue 91 room cleaning request flow
+
+on:
+  push:
+    branches:
+      - codex/issue-91-room-cleaning-request-flow
+    paths:
+      - '.github/automation/patch-issue-91-room-cleaning-flow.py'
+      - '.github/workflows/patch-issue-91-room-cleaning-flow.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v6
+        with:
+          ref: codex/issue-91-room-cleaning-request-flow
+          fetch-depth: 0
+
+      - name: Apply guarded source patch
+        run: python3 .github/automation/patch-issue-91-room-cleaning-flow.py
+
+      - name: Run workspace contract check
+        run: node scripts/check-workspace.mjs
+
+      - name: Commit patched product file
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add WIREFRAME/index.html
+          if git diff --cached --quiet; then
+            echo "No product changes to commit"
+            exit 1
+          fi
+          git commit -m "수정: 모든 객실의 청소 요청·취소 흐름을 통일한다"
+          git push origin HEAD:codex/issue-91-room-cleaning-request-flow
