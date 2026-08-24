@@ -1752,6 +1752,15 @@ for (const contract of [
 ]) {
   if (!html.includes(contract)) throw new Error(`Room state facet contract missing: ${contract}`);
 }
+for (const contract of [
+  "if(occupied&&cleaningNeeded&&cleaningKind!=='연박 청소')",
+  "if(!occupied&&cleaningNeeded&&cleaningKind==='연박 청소')",
+  'if(occupied&&inspectionPending)',
+  'blockers=[...new Set([...baseBlockers,...conflictReasons])]',
+]) {
+  if (!html.includes(contract)) throw new Error(`Room-state conflict matrix contract missing: ${contract}`);
+}
+console.log('Room-state conflict matrix static contracts: passed');
 console.log('Room state facet static contracts: passed');
 
 console.log('Workspace check: passed');
