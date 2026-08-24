@@ -2,7 +2,7 @@ name: Rebuild issue 85 clean branch
 
 on:
   pull_request:
-    types: [opened, reopened]
+    types: [opened, reopened, synchronize]
     branches:
       - main
 
