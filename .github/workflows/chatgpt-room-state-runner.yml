@@ -65,6 +65,9 @@ jobs:
           if [ "${GITHUB_HEAD_REF}" = "codex/issue-70-auto-occupancy" ]; then
             python3 .github/automation/issue-70-patch-fix.py
           fi
+          if [ "${GITHUB_HEAD_REF}" = "codex/issue-71-checkout-inspection" ]; then
+            python3 .github/automation/issue-71-patch-fix.py
+          fi
           python3 "${{ steps.feature.outputs.patch }}"
           if [ "${GITHUB_HEAD_REF}" = "codex/issue-70-auto-occupancy" ]; then
             python3 .github/automation/issue-70-checker-migration.py
@@ -110,11 +113,13 @@ jobs:
           rm -f .github/automation/issue-70-patch-fix.py
           rm -f .github/automation/issue-71-checkout-inspection.py
           rm -f .github/automation/issue-71-checkout-inspection.mjs
+          rm -f .github/automation/issue-71-patch-fix.py
 
       - name: Commit verified changes to the feature branch
         shell: bash
         run: |
           rm -f node_modules
+          rm -f .issue-69-trigger .issue-70-trigger .issue-71-trigger
           git config user.name "Ham Arin"
           git config user.email "79068658+makee-ham@users.noreply.github.com"
           git add -A
