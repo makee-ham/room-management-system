@@ -61,7 +61,11 @@ jobs:
 
       - name: Apply targeted feature changes
         shell: bash
-        run: python3 "${{ steps.feature.outputs.patch }}"
+        run: |
+          python3 "${{ steps.feature.outputs.patch }}"
+          if [ "${GITHUB_HEAD_REF}" = "codex/issue-70-auto-occupancy" ]; then
+            python3 .github/automation/issue-70-checker-migration.py
+          fi
 
       - name: Run static workspace checks
         shell: bash
@@ -99,6 +103,7 @@ jobs:
           rm -f .github/automation/issue-69-manual-cleaning-toggle.mjs
           rm -f .github/automation/issue-70-auto-occupancy.py
           rm -f .github/automation/issue-70-auto-occupancy.mjs
+          rm -f .github/automation/issue-70-checker-migration.py
           rm -f .github/automation/issue-71-checkout-inspection.py
           rm -f .github/automation/issue-71-checkout-inspection.mjs
 
