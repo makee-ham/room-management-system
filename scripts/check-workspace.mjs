@@ -519,22 +519,22 @@ if (/LONG_STAY_(?:ROOMS|ENDED_ROOMS)|long-?stay|장기투숙/i.test(html)) {
   throw new Error('Legacy long-stay UI or state contracts remain in WIREFRAME/index.html.');
 }
 for (const contract of [
-  "key:'blocked',tone:'red',status:'배정 불가'",
-  "key:'cleaning',tone:'amber',status:'청소 필요'",
-  "key:'occupied',tone:'neutral',status:'투숙 중'",
-  "key:'available',tone:'green',status:'배정 가능'",
-  'roomCleaningStageLabel(job)',
+  'function roomStateFacets(no)',
+  "occupancyLabel=occupied?'투숙 중':next?'공실 · 입실 예정':'공실'",
+  'cleaningNeeded=roomNeedsCleaningNow(no)',
+  'inspectionPending=checkoutInspectionPending(no)',
+  'available=!occupied&&!cleaningNeeded&&!inspectionPending&&!blocked',
+  'roomFacetBadgeMarkup(no)',
+  'roomFacetSubMarkup(no)',
   'cardReservationStatus(no)',
   "{id:'reservation-demo-142'",
   'label:`연박 ${day}/${total}일차`',
 ]) {
-  if (!html.includes(contract)) throw new Error(`Four-state room card contract missing: ${contract}`);
+  if (!html.includes(contract)) throw new Error(`Independent room-state contract missing: ${contract}`);
 }
-const roomPresentationSource = html.slice(html.indexOf('function roomPresentation(no)'), html.indexOf('function renderPinRow', html.indexOf('function roomPresentation(no)')));
-const roomPresentationOrder = ["if(blockers.length)return", "if(cleaning)return", "if(room.occupancy==='occupied')return", "key:'available'"]
-  .map((marker) => roomPresentationSource.indexOf(marker));
-if (roomPresentationOrder.some((index) => index < 0) || roomPresentationOrder.some((index, position) => position && index <= roomPresentationOrder[position - 1])) {
-  throw new Error(`Room card priority must remain blocked > cleaning > occupied > available: ${roomPresentationOrder.join(', ')}`);
+const roomPresentationSource = html.slice(html.indexOf('function roomStateFacets(no)'), html.indexOf('function renderPinRow', html.indexOf('function roomStateFacets(no)')));
+for (const contract of ['occupied','cleaningNeeded','checkoutInspectionPending','blocked','available','conflict']) {
+  if (!roomPresentationSource.includes(contract)) throw new Error(`Room-state facet source missing: ${contract}`);
 }
 const roomCardStart = html.indexOf('function roomCard(no)');
 const roomCardEnd = html.indexOf('function cleaningLabel', roomCardStart);
@@ -773,7 +773,7 @@ for (const contract of [
   'function roomHasExtraGuests(no)',
   'const reservation=activeReservationsFor(state,String(no)).find(item=>!reservationRecordIsPast(item))||null;',
   'const cardGuestCount=closestReservation&&reservationHasExtraGuests(closestReservation)?reservationGuestCount(closestReservation):null;',
-  "if(state.roomFilter==='extra-guests')return roomHasExtraGuests(r.no);",
+  "if(state.roomFilter==='extra-guests')return roomHasExtraGuests(room.no);",
   "'occupied','extra-guests','candle'",
   'value="extra-guests"',
   '>인원 추가</option>',
@@ -1736,5 +1736,22 @@ for(const removed of ['ROOM_LAYOUT_PROFILES','DEFAULT_LAYOUT_PROFILES','template
 }
 if(!html.includes("version:'v6'")||!html.includes("filter(item=>item.id!=='tv-on')"))throw new Error('Historical v6 snapshot preservation contract is missing.');
 console.log('Fixed type template static contracts: passed');
+
+for (const contract of [
+  'function roomStateFacets(no)',
+  'function roomFacetBadgeMarkup(no)',
+  'function roomFacetSubMarkup(no)',
+  "if(state.roomFilter==='occupied')return facets.occupied;",
+  "if(state.roomFilter==='cleaning')return facets.cleaningNeeded;",
+  'data-cleaning-needed="${facets.cleaningNeeded}"',
+  '상태는 서로 겹칠 수 있습니다',
+  '독립 상태 · 중복 가능',
+  "'청소 유형','청소 단계','퇴실점검','운영·안전 차단'",
+  'roomStateFacets:roomNo=>',
+  'roomsForState:filter=>',
+]) {
+  if (!html.includes(contract)) throw new Error(`Room state facet contract missing: ${contract}`);
+}
+console.log('Room state facet static contracts: passed');
 
 console.log('Workspace check: passed');
