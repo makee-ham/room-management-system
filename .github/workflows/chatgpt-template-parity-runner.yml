@@ -10,22 +10,71 @@ permissions:
   contents: write
 
 jobs:
-  diagnose:
+  apply-and-verify:
     if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'codex/issue-77-template-parity'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 45
 
     steps:
-      - name: Check out current main
+      - name: Check out the feature branch
         uses: actions/checkout@v6
         with:
-          ref: main
+          ref: codex/issue-77-template-parity
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Print template contracts
+      - name: Start from current main
         shell: bash
-        run: python3 .github/automation/issue-77-diagnose.py
+        run: |
+          git fetch origin main codex/issue-77-template-parity
+          git reset --hard origin/main
 
-      - name: Stop after diagnosis
+      - name: Apply template parity fixes
         shell: bash
-        run: exit 1
+        run: python3 .github/automation/issue-77-template-parity.py
+
+      - name: Run static workspace checks
+        shell: bash
+        run: node scripts/check-workspace.mjs
+
+      - name: Install Chromium test runtime
+        shell: bash
+        run: |
+          mkdir -p /tmp/castle-playwright
+          cd /tmp/castle-playwright
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+          cd "$GITHUB_WORKSPACE"
+          ln -s /tmp/castle-playwright/node_modules node_modules
+
+      - name: Run rendered interaction QA
+        shell: bash
+        run: |
+          python3 scripts/serve.py --host 127.0.0.1 --port 4173 >/tmp/castle-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:4173/index.html >/dev/null && break
+            sleep 1
+          done
+          node .github/automation/issue-77-template-parity.mjs
+
+      - name: Remove temporary automation files
+        shell: bash
+        run: |
+          rm -f node_modules
+          rm -f .issue-77-trigger
+          rm -f .github/workflows/chatgpt-template-parity-runner.yml
+          rm -f .github/automation/issue-77-diagnose.py
+          rm -f .github/automation/issue-77-template-parity.py
+          rm -f .github/automation/issue-77-template-parity.mjs
+
+      - name: Commit verified changes to the feature branch
+        shell: bash
+        run: |
+          git config user.name "Ham Arin"
+          git config user.email "79068658+makee-ham@users.noreply.github.com"
+          git add -A
+          git commit -m "개선: 메이드와 관리자 사진 템플릿을 동일한 슬롯 구조로 맞춘다"
+          git push --force-with-lease origin HEAD:codex/issue-77-template-parity
