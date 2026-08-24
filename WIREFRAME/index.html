@@ -3827,8 +3827,8 @@
       function manualCleaningCancelBlockReason(no) {
         const request=activeManualCleaningRequest(no);if(!request)return '현재 취소할 수 있는 수동 청소 요청이 없습니다.';
         if(!adminCanMutate())return '관리자 최신 온라인 상태에서만 청소 요청을 취소할 수 있습니다.';
-        const target=manualCleaningRequestTarget(request),assignment=state.assignments?.[request.targetId],attempt=target?attemptForCleaningTarget(target):activeUnfinishedAttempt(no),publication=state.publications?.[request.targetId];
-        if(attempt||currentSubmission(no))return '이미 청소 수행 회차가 만들어져 청소 상세에서 취소·조정해야 합니다.';
+        const target=manualCleaningRequestTarget(request),assignment=state.assignments?.[request.targetId],attempt=target?attemptForCleaningTarget(target):activeUnfinishedAttempt(no),publication=state.publications?.[request.targetId],submission=currentSubmission(no);
+        if(attempt||submission&&submission.status!=='approved')return '이미 청소 수행 회차가 만들어져 청소 상세에서 취소·조정해야 합니다.';
         if(assignment?.maidId||assignment?.previousMaidId||['draft','notified'].includes(assignment?.status))return '담당 메이드가 지정되었거나 통보된 요청은 청소 배정 화면에서 취소해야 합니다.';
         if(publication&&(typeof publication!=='object'||publication.status!=='cancelled'))return '메이드에게 공개된 요청은 청소 배정 화면에서 취소해야 합니다.';
         return '';
@@ -3838,7 +3838,8 @@
         return !!activeManualCleaningRequest(no)||roomNeedsCleaningNow(no)||!!activeUnfinishedAttempt(no)||!!(submission&&submission.status!=='approved')||['public','unassigned','claimed','scheduled','cleaning','upload','inspection','reclean','hold','draft','future','stayover-requested','extra-requested'].includes(job);
       }
       function roomCleaningControl(no) {
-        no=String(no);const room=ROOMS.find(item=>item.no===no),request=activeManualCleaningRequest(no),cancelBlock=request?manualCleaningCancelBlockReason(no):'',requestBlock=request?'':manualCleaningRequestBlockReason(no),kind=request?.kind||(room?.occupancy==='occupied'?'연박 청소':'추가 청소');
+        no=String(no);const room=ROOMS.find(item=>item.no===no),request=activeManualCleaningRequest(no),job=state.jobs[no],submission=currentSubmission(no),activeSubmission=submission&&submission.status!=='approved'?submission:null,attempt=activeUnfinishedAttempt(no),hasWorkflow=roomHasCleaningWorkflow(no),cancelBlock=request?manualCleaningCancelBlockReason(no):'',requestBlock=request?'':manualCleaningRequestBlockReason(no);
+        const kind=request?.kind||attempt?.kind||activeSubmission?.kind||(hasWorkflow?(job==='reclean'?'재청소':job==='stayover-requested'?'연박 청소':job==='extra-requested'?'추가 청소':'퇴실 청소'):(room?.occupancy==='occupied'?'연박 청소':'추가 청소'));
         if(request&&!cancelBlock)return {action:'toggle-room-cleaning',label:'청소 취소',disabled:false,kind,reason:'배정 전 청소 요청을 취소할 수 있습니다.'};
         if(request||roomHasCleaningWorkflow(no))return {action:'cleaning-detail',label:'청소 진행 보기',disabled:false,kind,reason:cancelBlock||'현재 청소 작업의 단계와 담당을 확인합니다.'};
         return {action:'toggle-room-cleaning',label:'청소 요청',disabled:!!requestBlock,kind,reason:requestBlock||'확인 후 청소 대기열에 등록합니다.'};
@@ -6594,7 +6595,7 @@
           const no=String(id||'');if(manualCleaningRequestFingerprint(no)!==el.dataset.fingerprint){closeModal();render();toast('객실 또는 청소 상태가 바뀌어 요청을 만들지 않았습니다.','error');return;}const result=createManualCleaningRequest(no);if(result.error){closeModal();render();toast(result.error,'error');return;}closeModal();render();focusAfterRender(`[data-action="toggle-room-cleaning"][data-id="${no}"]`);toast(`${no}호 ${result.request.kind}를 청소 대기열에 넣었습니다.`);return;
         }
         if(a==='confirm-room-cleaning-off'){
-          const no=String(id||'');if(manualCleaningRequestFingerprint(no)!==el.dataset.fingerprint){closeModal();render();toast('객실 또는 청소 상태가 바뀌어 요청을 해제하지 않았습니다.','error');return;}const result=cancelManualCleaningRequest(no);if(result.error){closeModal();render();toast(result.error,'error');return;}closeModal();render();focusAfterRender(`[data-action="toggle-room-cleaning"][data-id="${no}"]`);toast(`${no}호 ${result.request.kind} 요청을 취소했습니다.`);return;
+          const no=String(id||'');if(manualCleaningRequestFingerprint(no)!==el.dataset.fingerprint){closeModal();render();toast('객실 또는 청소 상태가 바뀌어 요청을 취소하지 않았습니다.','error');return;}const result=cancelManualCleaningRequest(no);if(result.error){closeModal();render();toast(result.error,'error');return;}closeModal();render();focusAfterRender(`[data-action="toggle-room-cleaning"][data-id="${no}"]`);toast(`${no}호 ${result.request.kind} 요청을 취소했습니다.`);return;
         }
         if(a==='create-stayover'){
           const no=id||'142',room=ROOMS.find(item=>item.no===no),existing=state.drafts.some(d=>d.room===no&&d.kind==='연박 청소');
