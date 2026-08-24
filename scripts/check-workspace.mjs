@@ -531,10 +531,25 @@ for (const contract of [
   if (!html.includes(contract)) throw new Error(`Four-state room card contract missing: ${contract}`);
 }
 const roomPresentationSource = html.slice(html.indexOf('function roomPresentation(no)'), html.indexOf('function renderPinRow', html.indexOf('function roomPresentation(no)')));
-const roomPresentationOrder = ["if(blockers.length)return", "if(cleaning)return", "if(room.occupancy==='occupied')return", "key:'available'"]
+const roomPresentationOrder = ["if(blockers.length)return", "if(room.occupancy==='occupied')return", "if(cleaning)return", "key:'available'"]
   .map((marker) => roomPresentationSource.indexOf(marker));
 if (roomPresentationOrder.some((index) => index < 0) || roomPresentationOrder.some((index, position) => position && index <= roomPresentationOrder[position - 1])) {
-  throw new Error(`Room card priority must remain blocked > cleaning > occupied > available: ${roomPresentationOrder.join(', ')}`);
+  throw new Error(`Room card priority must remain blocked > occupied (with subordinate cleaning) > cleaning > available: ${roomPresentationOrder.join(', ')}`);
+}
+for (const contract of [
+  'function roomCleaningControl(no)',
+  "label:'청소 요청'",
+  "label:'청소 취소'",
+  "confirmLabel:request?'청소 취소':'청소 대기열에 넣기'",
+  "if(state.roomFilter==='occupied')return r.occupancy==='occupied'",
+  "if(state.roomFilter==='cleaning')return roomNeedsCleaningNow(r.no)",
+  'data-room-cleaning-control=\"${no}\"',
+  "청소 필요 · ${p.cleaningKind||'청소'}",
+]) {
+  if (!html.includes(contract)) throw new Error(`Room cleaning request contract missing: ${contract}`);
+}
+for (const forbidden of ['ON으로 변경', 'OFF로 변경', '청소 필요 ON', '청소 필요 OFF']) {
+  if (html.includes(forbidden)) throw new Error(`Legacy cleaning switch copy remains: ${forbidden}`);
 }
 const roomCardStart = html.indexOf('function roomCard(no)');
 const roomCardEnd = html.indexOf('function cleaningLabel', roomCardStart);
