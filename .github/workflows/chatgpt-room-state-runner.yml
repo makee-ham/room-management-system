@@ -66,6 +66,9 @@ jobs:
             python3 .github/automation/issue-70-patch-fix.py
           fi
           python3 "${{ steps.feature.outputs.patch }}"
+          if [ "${GITHUB_HEAD_REF}" = "codex/issue-70-auto-occupancy" ]; then
+            python3 .github/automation/issue-70-checker-migration.py
+          fi
 
       - name: Run static workspace checks
         shell: bash
