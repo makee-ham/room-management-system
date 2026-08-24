@@ -35,6 +35,7 @@ jobs:
           python3 .github/automation/issue-81-room-facets.py
           python3 .github/automation/issue-81-runtime-compat.py
           python3 .github/automation/issue-81-static-compat.py
+          python3 .github/automation/issue-81-qa-compat.py
 
       - name: Run static workspace checks
         shell: bash
@@ -74,6 +75,7 @@ jobs:
           rm -f .github/automation/issue-81-room-facets.mjs
           rm -f .github/automation/issue-81-runtime-compat.py
           rm -f .github/automation/issue-81-static-compat.py
+          rm -f .github/automation/issue-81-qa-compat.py
           rm -f .github/automation/inspect-room-state-and-template.py
           rm -f .github/workflows/inspect-room-state-and-template.yml
           rm -f .github/workflows/chatgpt-room-facet-runner.yml
