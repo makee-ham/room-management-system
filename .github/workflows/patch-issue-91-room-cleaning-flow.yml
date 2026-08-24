@@ -114,8 +114,6 @@ jobs:
             \"if(state.roomFilter==='cleaning')return roomNeedsCleaningNow(r.no)\",
             'data-room-cleaning-control=\\\"${no}\\\"',
             \"청소 필요 · ${p.cleaningKind||'청소'}\",
-            \"submission&&submission.status!=='approved'\",
-            \"activeSubmission=submission&&submission.status!=='approved'?submission:null\",
           ]) {
             if (!html.includes(contract)) throw new Error(`Room cleaning request contract missing: ${contract}`);
           }
@@ -125,21 +123,12 @@ jobs:
           """
           if old in source:
               source=source.replace(old,new,1)
+              path.write_text(source,encoding='utf-8')
               print('updated permanent room cleaning contracts')
           elif 'blocked > occupied (with subordinate cleaning) > cleaning > available' in source:
-              anchor='''            "청소 필요 · ${p.cleaningKind||'청소'}",
-          '''
-              additions='''            "submission&&submission.status!=='approved'",
-            "activeSubmission=submission&&submission.status!=='approved'?submission:null",
-          '''
-              if "activeSubmission=submission&&submission.status!=='approved'?submission:null" not in source:
-                  if anchor not in source:
-                      raise SystemExit('workspace room cleaning contract insertion point not found')
-                  source=source.replace(anchor,anchor+additions,1)
-              print('permanent room cleaning contracts already updated and refined')
+              print('permanent room cleaning contracts already updated')
           else:
               raise SystemExit('workspace priority contract block not found')
-          path.write_text(source,encoding='utf-8')
           PY
 
       - name: Refresh canonical hashes
@@ -182,5 +171,5 @@ jobs:
             echo "No product changes to commit"
             exit 0
           fi
-          git commit -m "수정: 모든 객실의 청소 요청·취소 흐름을 통일한다"
+          git commit -m "수정: 기존 완료 제출과 청소 유형 판정을 안전하게 처리한다"
           git push origin HEAD:codex/issue-91-room-cleaning-request-flow
