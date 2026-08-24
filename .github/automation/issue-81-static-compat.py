@@ -26,4 +26,6 @@ for (const contract of ['occupied','cleaningNeeded','checkoutInspectionPending',
 text,count=re.subn(pattern,replacement,text,count=1,flags=re.S)
 if count!=1:
     raise SystemExit(f'legacy four-state static block mismatch: {count}')
+text=text.replace("if(state.roomFilter==='extra-guests')return roomHasExtraGuests(r.no);","if(state.roomFilter==='extra-guests')return roomHasExtraGuests(room.no);")
+text=text.replace("if(state.roomFilter==='candle')return r.occupancy!=='occupied'&&(state.candles[r.no]||0)>0;","if(state.roomFilter==='candle')return !facets.occupied&&(state.candles[room.no]||0)>0;")
 path.write_text(text,encoding='utf-8')
