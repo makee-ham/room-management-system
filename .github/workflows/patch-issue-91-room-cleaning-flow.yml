@@ -1,18 +1,17 @@
 name: Patch issue 91 room cleaning request flow
 
 on:
-  push:
+  pull_request:
+    types: [opened, reopened, synchronize]
     branches:
-      - codex/issue-91-room-cleaning-request-flow
-    paths:
-      - '.github/automation/patch-issue-91-room-cleaning-flow.py'
-      - '.github/workflows/patch-issue-91-room-cleaning-flow.yml'
+      - main
 
 permissions:
   contents: write
 
 jobs:
   patch:
+    if: github.head_ref == 'codex/issue-91-room-cleaning-request-flow'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -22,13 +21,19 @@ jobs:
           ref: codex/issue-91-room-cleaning-request-flow
           fetch-depth: 0
 
-      - name: Apply guarded source patch
-        run: python3 .github/automation/patch-issue-91-room-cleaning-flow.py
+      - name: Apply guarded source patch once
+        shell: bash
+        run: |
+          if grep -q "function roomCleaningControl(no)" WIREFRAME/index.html; then
+            echo "Product patch already applied"
+          else
+            python3 .github/automation/patch-issue-91-room-cleaning-flow.py
+          fi
 
       - name: Run workspace contract check
         run: node scripts/check-workspace.mjs
 
-      - name: Commit patched product file
+      - name: Commit patched product file when changed
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
@@ -36,7 +41,7 @@ jobs:
           git add WIREFRAME/index.html
           if git diff --cached --quiet; then
             echo "No product changes to commit"
-            exit 1
+            exit 0
           fi
           git commit -m "수정: 모든 객실의 청소 요청·취소 흐름을 통일한다"
           git push origin HEAD:codex/issue-91-room-cleaning-request-flow
