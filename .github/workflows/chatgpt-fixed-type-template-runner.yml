@@ -30,7 +30,9 @@ jobs:
 
       - name: Apply fixed room-type template contracts
         shell: bash
-        run: python3 .github/automation/issue-79-fixed-type-templates.py
+        run: |
+          python3 .github/automation/issue-79-fixed-type-templates-compat.py
+          python3 .github/automation/issue-79-fixed-type-templates.py
 
       - name: Run static workspace checks
         shell: bash
@@ -67,6 +69,7 @@ jobs:
           rm -f .github/workflows/chatgpt-fixed-type-template-runner.yml
           rm -f .github/automation/issue-79-diagnose.py
           rm -f .github/automation/issue-79-fixed-type-templates.py
+          rm -f .github/automation/issue-79-fixed-type-templates-compat.py
           rm -f .github/automation/issue-79-fixed-type-templates.mjs
 
       - name: Commit verified changes to the feature branch
