@@ -1,0 +1,113 @@
+name: ChatGPT room-state feature runner
+
+on:
+  pull_request:
+    types: [opened, reopened]
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-verify:
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (github.head_ref == 'codex/issue-69-manual-cleaning-toggle' ||
+       github.head_ref == 'codex/issue-70-auto-occupancy' ||
+       github.head_ref == 'codex/issue-71-checkout-inspection')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out the feature branch
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Start from current main
+        shell: bash
+        run: |
+          git fetch origin main "${GITHUB_HEAD_REF}"
+          git reset --hard origin/main
+
+      - name: Select feature scripts
+        id: feature
+        shell: bash
+        run: |
+          case "${GITHUB_HEAD_REF}" in
+            codex/issue-69-manual-cleaning-toggle)
+              echo "patch=.github/automation/issue-69-manual-cleaning-toggle.py" >> "$GITHUB_OUTPUT"
+              echo "qa=.github/automation/issue-69-manual-cleaning-toggle.mjs" >> "$GITHUB_OUTPUT"
+              echo "message=기능: 객실 상세에서 청소 필요 상태를 ON OFF 한다" >> "$GITHUB_OUTPUT"
+              ;;
+            codex/issue-70-auto-occupancy)
+              echo "patch=.github/automation/issue-70-auto-occupancy.py" >> "$GITHUB_OUTPUT"
+              echo "qa=.github/automation/issue-70-auto-occupancy.mjs" >> "$GITHUB_OUTPUT"
+              echo "message=개선: 예약 시각에 맞춰 입실과 퇴실을 자동 전환한다" >> "$GITHUB_OUTPUT"
+              ;;
+            codex/issue-71-checkout-inspection)
+              echo "patch=.github/automation/issue-71-checkout-inspection.py" >> "$GITHUB_OUTPUT"
+              echo "qa=.github/automation/issue-71-checkout-inspection.mjs" >> "$GITHUB_OUTPUT"
+              echo "message=기능: 체크아웃 후 청소 전 퇴실점검 상태를 추가한다" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Unsupported branch: ${GITHUB_HEAD_REF}" >&2
+              exit 1
+              ;;
+          esac
+
+      - name: Apply targeted feature changes
+        shell: bash
+        run: python3 "${{ steps.feature.outputs.patch }}"
+
+      - name: Run static workspace checks
+        shell: bash
+        run: node scripts/check-workspace.mjs
+
+      - name: Install Chromium test runtime
+        shell: bash
+        run: |
+          mkdir -p /tmp/castle-playwright
+          cd /tmp/castle-playwright
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+          cd "$GITHUB_WORKSPACE"
+          ln -s /tmp/castle-playwright/node_modules node_modules
+
+      - name: Run rendered interaction QA
+        shell: bash
+        run: |
+          python3 scripts/serve.py --host 127.0.0.1 --port 4173 >/tmp/castle-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:4173/index.html >/dev/null && break
+            sleep 1
+          done
+          node "${{ steps.feature.outputs.qa }}"
+
+      - name: Remove temporary runner after the final feature
+        if: github.head_ref == 'codex/issue-71-checkout-inspection'
+        shell: bash
+        run: |
+          rm -f .github/workflows/chatgpt-room-state-runner.yml
+          rm -f .github/automation/issue-69-manual-cleaning-toggle.py
+          rm -f .github/automation/issue-69-manual-cleaning-toggle.mjs
+          rm -f .github/automation/issue-70-auto-occupancy.py
+          rm -f .github/automation/issue-70-auto-occupancy.mjs
+          rm -f .github/automation/issue-71-checkout-inspection.py
+          rm -f .github/automation/issue-71-checkout-inspection.mjs
+
+      - name: Commit verified changes to the feature branch
+        shell: bash
+        run: |
+          rm -f node_modules
+          git config user.name "Ham Arin"
+          git config user.email "79068658+makee-ham@users.noreply.github.com"
+          git add -A
+          git commit -m "${{ steps.feature.outputs.message }}"
+          git push --force-with-lease origin "HEAD:${GITHUB_HEAD_REF}"
