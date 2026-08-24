@@ -1698,37 +1698,43 @@ if ((html.match(/window\.addEventListener\('scroll',scheduleScrollTopButtonSync/
 console.log('Scroll-to-top static contracts: passed');
 
 for (const contract of [
-  'function templateRooms(template)',
-  'function templatePreviewSnapshot(template,roomNo=templatePreviewRoom(template))',
+  'const TYPE_LAYOUT_PROFILES=Object.freeze({',
+  "composition:'원룸형 메인 공간 1 · 주방 1 · 욕실 1'",
+  "composition:'침실 1 · 거실 1 · 주방 1 · 욕실 1'",
+  "composition:'침실 1 · 거실 1 · 주방 1 · 욕실 1 · 복층 계단 1 · 팬트리 1'",
+  "composition:'주방 1 · 거실 1 · 침실 2 · 욕실 2'",
+  'function templateRepresentativeRoom(template)',
+  'function templateFixedSnapshot(template)',
   'function photoSlotContract(items=[])',
   'function templateSlotStats(template)',
-  'data-control="template-preview-room"',
-  'data-template-preview-slot="${esc(item.id)}"',
-  '메이드 실제 촬영 슬롯 미리보기',
-  '기본 규칙 수와 메이드 실제 슬롯 수는 다를 수 있습니다.',
+  'function typeTemplateParity(typeId,kind=\'퇴실 청소\')',
+  'data-template-fixed-slot="${esc(item.id)}"',
+  'data-template-fixed-grid',
+  '메이드 고정 촬영 슬롯',
+  '객실번호 → 타입 → 타입별 고정 구성 → 고정 사진 슬롯',
   '메이드 제출 기준 ${expectedItems.length}개 슬롯 · 관리자 검수 ${items.length}개 슬롯',
   'data-template-contract-match="${structureMatches?\'true\':\'false\'}"',
   "snapshot?.photos?.some(item=>item.id==='tv-on'||String(item.id).startsWith('tv-on-'))",
   '한 슬롯에는 현재 사진 1장만 유지됩니다.',
-  "if(c==='template-preview-room')",
+  'typeTemplateParity:(typeId,kind=\'퇴실 청소\')=>',
   'templateVersionAudit:roomNo=>',
 ]) {
-  if (!html.includes(contract)) throw new Error(`Template parity contract missing: ${contract}`);
+  if (!html.includes(contract)) throw new Error(`Fixed type template contract missing: ${contract}`);
 }
 const templateDetailStart=html.indexOf("function renderTemplateDetail(id,mode='view')");
 const templateDetailEnd=html.indexOf('function readTemplateChange',templateDetailStart);
 const templateDetailSource=html.slice(templateDetailStart,templateDetailEnd);
 if(templateDetailStart<0||templateDetailEnd<=templateDetailStart)throw new Error('Template detail source block not found.');
-if(!templateDetailSource.includes('previewPhotos.map((item,index)=>'))throw new Error('Admin template detail does not render expanded preview slots.');
-if(templateDetailSource.includes('<div class="template-photo-grid">${template.photos.map'))throw new Error('Admin template detail still renders only base rules.');
+if(!templateDetailSource.includes('fixedPhotos.map((item,index)=>'))throw new Error('Admin template detail does not render fixed type slots.');
+if(templateDetailSource.includes('roomSelector')||templateDetailSource.includes('previewRoomNo'))throw new Error('Admin template detail still contains room-specific preview logic.');
 const inspectionReviewStart=html.indexOf('function renderInspectionTemplateReview');
 const inspectionReviewEnd=html.indexOf('function openInspectionPhoto',inspectionReviewStart);
 const inspectionReviewSource=html.slice(inspectionReviewStart,inspectionReviewEnd);
 if(!inspectionReviewSource.includes('photoSlotContractSignature(expectedItems)===photoSlotContractSignature(items)'))throw new Error('Admin inspection does not verify the submitted slot contract.');
-for(const removed of ['필수 촬영 구역 ${requiredUploads.length}개','여러 장 허용',"snapshot?.version==='v7'"]){
-  if(html.includes(removed))throw new Error(`Contradictory template copy or logic remains: ${removed}`);
+for(const removed of ['ROOM_LAYOUT_PROFILES','DEFAULT_LAYOUT_PROFILES','template-preview-room','templateSlotRange','레이아웃 확인 보류','최소 공통 슬롯','필수 촬영 구역 ${requiredUploads.length}개','여러 장 허용',"snapshot?.version==='v7'"]){
+  if(html.includes(removed))throw new Error(`Obsolete or contradictory template contract remains: ${removed}`);
 }
 if(!html.includes("version:'v6'")||!html.includes("filter(item=>item.id!=='tv-on')"))throw new Error('Historical v6 snapshot preservation contract is missing.');
-console.log('Maid/admin template parity static contracts: passed');
+console.log('Fixed type template static contracts: passed');
 
 console.log('Workspace check: passed');
