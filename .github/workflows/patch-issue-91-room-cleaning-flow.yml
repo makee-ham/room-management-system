@@ -47,6 +47,44 @@ jobs:
               print('room detail wrapper expression already valid')
           PY
 
+      - name: Refine cleaning request control safety
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path('WIREFRAME/index.html')
+          source=path.read_text(encoding='utf-8')
+          changed=False
+
+          old_cancel="const target=manualCleaningRequestTarget(request),assignment=state.assignments?.[request.targetId],attempt=target?attemptForCleaningTarget(target):activeUnfinishedAttempt(no),publication=state.publications?.[request.targetId];\n        if(attempt||currentSubmission(no))return '이미 청소 수행 회차가 만들어져 청소 상세에서 취소·조정해야 합니다.';"
+          new_cancel="const target=manualCleaningRequestTarget(request),assignment=state.assignments?.[request.targetId],attempt=target?attemptForCleaningTarget(target):activeUnfinishedAttempt(no),publication=state.publications?.[request.targetId],submission=currentSubmission(no);\n        if(attempt||submission&&submission.status!=='approved')return '이미 청소 수행 회차가 만들어져 청소 상세에서 취소·조정해야 합니다.';"
+          if old_cancel in source:
+              source=source.replace(old_cancel,new_cancel,1)
+              changed=True
+          elif new_cancel not in source:
+              raise SystemExit('manual cleaning cancellation safety contract not found')
+
+          old_control="no=String(no);const room=ROOMS.find(item=>item.no===no),request=activeManualCleaningRequest(no),cancelBlock=request?manualCleaningCancelBlockReason(no):'',requestBlock=request?'':manualCleaningRequestBlockReason(no),kind=request?.kind||(room?.occupancy==='occupied'?'연박 청소':'추가 청소');"
+          new_control="no=String(no);const room=ROOMS.find(item=>item.no===no),request=activeManualCleaningRequest(no),job=state.jobs[no],submission=currentSubmission(no),activeSubmission=submission&&submission.status!=='approved'?submission:null,attempt=activeUnfinishedAttempt(no),hasWorkflow=roomHasCleaningWorkflow(no),cancelBlock=request?manualCleaningCancelBlockReason(no):'',requestBlock=request?'':manualCleaningRequestBlockReason(no);\n        const kind=request?.kind||attempt?.kind||activeSubmission?.kind||(hasWorkflow?(job==='reclean'?'재청소':job==='stayover-requested'?'연박 청소':job==='extra-requested'?'추가 청소':'퇴실 청소'):(room?.occupancy==='occupied'?'연박 청소':'추가 청소'));"
+          if old_control in source:
+              source=source.replace(old_control,new_control,1)
+              changed=True
+          elif new_control not in source:
+              raise SystemExit('room cleaning control kind contract not found')
+
+          old_stale="toast('객실 또는 청소 상태가 바뀌어 요청을 해제하지 않았습니다.','error')"
+          new_stale="toast('객실 또는 청소 상태가 바뀌어 요청을 취소하지 않았습니다.','error')"
+          if old_stale in source:
+              source=source.replace(old_stale,new_stale,1)
+              changed=True
+
+          if changed:
+              path.write_text(source,encoding='utf-8')
+              print('refined cleaning request control safety')
+          else:
+              print('cleaning request control safety already refined')
+          PY
+
       - name: Update permanent workspace contracts
         shell: bash
         run: |
@@ -76,6 +114,8 @@ jobs:
             \"if(state.roomFilter==='cleaning')return roomNeedsCleaningNow(r.no)\",
             'data-room-cleaning-control=\\\"${no}\\\"',
             \"청소 필요 · ${p.cleaningKind||'청소'}\",
+            \"submission&&submission.status!=='approved'\",
+            \"activeSubmission=submission&&submission.status!=='approved'?submission:null\",
           ]) {
             if (!html.includes(contract)) throw new Error(`Room cleaning request contract missing: ${contract}`);
           }
@@ -88,7 +128,15 @@ jobs:
               path.write_text(source,encoding='utf-8')
               print('updated permanent room cleaning contracts')
           elif 'blocked > occupied (with subordinate cleaning) > cleaning > available' in source:
-              print('permanent room cleaning contracts already updated')
+              for contract in [
+                  \"submission&&submission.status!=='approved'\",
+                  \"activeSubmission=submission&&submission.status!=='approved'?submission:null\",
+              ]:
+                  if contract not in source:
+                      insertion="            \\\"청소 필요 · ${p.cleaningKind||'청소'}\\\",\n"
+                      source=source.replace(insertion,insertion+f'            \\\"{contract}\\\",\n',1)
+              path.write_text(source,encoding='utf-8')
+              print('permanent room cleaning contracts already updated and refined')
           else:
               raise SystemExit('workspace priority contract block not found')
           PY
