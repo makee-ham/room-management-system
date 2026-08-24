@@ -1629,4 +1629,23 @@ console.log(`Room master contract: ${catalogIds.length} rooms / ${initialOccupie
 console.log(`Final UX audit SHA-256: ${auditHash}`);
 console.log(`Wireframe SHA-256: ${indexHash}`);
 console.log('Manifest hashes: passed');
+for (const contract of [
+  'manualCleaningSequence:0, manualCleaningRequests:{}',
+  'function activeManualCleaningRequest(no,targetState=state)',
+  'function createManualCleaningRequest(no)',
+  'function cancelManualCleaningRequest(no)',
+  'function completeManualCleaningRequestForAttempt(no,attempt)',
+  'data-action="toggle-room-cleaning"',
+  "if(a==='confirm-room-cleaning-on')",
+  "if(a==='confirm-room-cleaning-off')",
+  'if(activeManualCleaningRequest(no))return true;',
+]) {
+  if (!html.includes(contract)) throw new Error(`Manual cleaning toggle contract missing: ${contract}`);
+}
+const manualCleaningActionSet = html.slice(html.indexOf('const rebuiltActions='), html.indexOf('const deprecatedStateActions='));
+if (!manualCleaningActionSet.includes("'toggle-room-cleaning'") || !manualCleaningActionSet.includes("'confirm-room-cleaning-on'") || !manualCleaningActionSet.includes("'confirm-room-cleaning-off'")) {
+  throw new Error('Manual cleaning toggle actions are not registered.');
+}
+console.log('Manual room-cleaning toggle static contracts: passed');
+
 console.log('Workspace check: passed');
