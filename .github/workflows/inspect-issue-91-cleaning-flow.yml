@@ -1,0 +1,27 @@
+name: Inspect issue 91 cleaning request flow
+
+on:
+  push:
+    branches:
+      - codex/issue-91-room-cleaning-request-flow
+    paths:
+      - '.github/automation/inspect-issue-91-cleaning-flow.py'
+      - '.github/workflows/inspect-issue-91-cleaning-flow.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v6
+        with:
+          ref: codex/issue-91-room-cleaning-request-flow
+          fetch-depth: 0
+      - name: Print relevant source contracts
+        run: python3 .github/automation/inspect-issue-91-cleaning-flow.py
+      - name: Stop after diagnostic output
+        run: exit 1
