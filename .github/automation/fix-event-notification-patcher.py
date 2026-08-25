@@ -14,6 +14,8 @@ replacements = {
     "  'same 객실',": "  'NOTIFICATION_BUNDLE_WINDOW_MINUTES=10',",
     '이 정적 데모의 브라우저 알림은 화면이 열려 있는 동안만 동작합니다.':
         '이 정적 데모의 브라우저 알림은 화면이 열려 있는 동안만 동작합니다. 실제 백그라운드·모바일 푸시는 서비스 워커와 서버 발송 계층이 필요합니다.',
+    'click_handler_marker = "      document.addEventListener(\'click\',e=>{"':
+        'click_handler_marker = "      function openPublishConfirm() {"',
 }
 for old, new in replacements.items():
     if old not in text:
