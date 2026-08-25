@@ -1085,7 +1085,7 @@ const cleaningDayTabContracts = [
   "cleaningTabButton('assignment-today','오늘 배정'",
   "cleaningTabButton('assignment-tomorrow','내일 배정'",
   "cleaningTabButton('progress','진행 중'",
-  "cleaningTabButton('inspection','검수 대기'",
+  "cleaningTabButton('inspection','검수 대상 목록'",
   "cleaningTabButton('done','완료'",
   'assignmentCountsForDate(todayDate).total',
   'assignmentCountsForDate(tomorrowDate).total',
@@ -1868,3 +1868,32 @@ if (html.includes('__CASTLE_NOTIFICATION_QA__')) {
   throw new Error('Notification QA mutation bridge must not be present in the shipped wireframe.');
 }
 console.log('Maid pay ledger notification regression contracts: passed');
+
+const inspectionWordingContracts = [
+  "cleaningTabButton('inspection','검수 대상 목록',tabCounts.inspection)",
+  "button('검수 대상 목록 열기','go-inspection','outline')",
+  "inspection:'검수 요청됨'",
+  "next:'검수 대상 목록 탭에서 639호 전체 제출을 검수하세요.'",
+  '관리자에게 처리해야 할 업무 큐는 `검수 대상 목록`',
+  '개별 청소 제출 상태는 `검수 요청됨`',
+];
+for (const contract of inspectionWordingContracts) {
+  if (!html.includes(contract) && !wireframeReadme.includes(contract)) {
+    throw new Error(`Inspection target-list wording contract missing: ${contract}`);
+  }
+}
+const inspectionWordingCleaningHubStart = html.lastIndexOf('function renderCleaningHub()');
+const inspectionWordingCleaningHubEnd = html.indexOf('function taskRow(', inspectionWordingCleaningHubStart);
+const inspectionWordingCleaningHubSource = html.slice(inspectionWordingCleaningHubStart, inspectionWordingCleaningHubEnd);
+if (inspectionWordingCleaningHubStart < 0 || inspectionWordingCleaningHubEnd < 0) throw new Error('Current cleaning hub source could not be isolated.');
+if (inspectionWordingCleaningHubSource.includes("cleaningTabButton('inspection','검수 대기'")) {
+  throw new Error('Legacy admin inspection tab wording remains.');
+}
+const currentAdminTodayStartForInspectionWording = html.lastIndexOf('function renderAdminToday()');
+const currentAdminTodayEndForInspectionWording = html.indexOf('\n      function maidName(', currentAdminTodayStartForInspectionWording);
+const currentAdminTodayForInspectionWording = html.slice(currentAdminTodayStartForInspectionWording, currentAdminTodayEndForInspectionWording);
+if (currentAdminTodayForInspectionWording.includes("button('검수 대기 열기'")) {
+  throw new Error('Legacy admin-home inspection entry wording remains.');
+}
+console.log('Inspection target-list wording static contracts: passed');
+

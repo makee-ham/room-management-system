@@ -2128,7 +2128,7 @@
         1: { title:'일요일 다음 주 근무 가능일 제출', role:'maid', view:'schedule', next:'월·화·목·금을 선택하고 다음 주 가능일을 제출하세요.' },
         2: { title:'자동 청소대상 → 담당·순서 지정 → 통보', role:'admin', view:'cleaning', next:'자동·직접 등록 대상을 확인하고 담당과 메이드별 객실 청소 순서를 지정하세요.' },
         3: { title:'구역별 사진 → 업로드 실패/재시도 → 제출', role:'maid', view:'my', next:'528호 청소 상세에서 필수 사진을 완료하세요.' },
-        4: { title:'전체 검수 → 승인 또는 반려·재청소', role:'admin', view:'cleaning', next:'검수 대기 탭에서 639호 전체 제출을 검수하세요.' },
+        4: { title:'전체 검수 → 승인 또는 반려·재청소', role:'admin', view:'cleaning', next:'검수 대상 목록 탭에서 639호 전체 제출을 검수하세요.' },
         5: { title:'촛불 1개 입실 차단 → 회수 → 준비 완료', role:'admin', view:'rooms', next:'350호 상세에서 촛불 1개를 회수하세요.' },
         6: { title:'레이트 체크아웃 → PIN·청소 충돌 해결', role:'admin', view:'rooms', next:'332호 영향 확인에서 조율·재계획·PIN 교체를 완료하세요.' },
         7: { title:'메이드 담당 취소 요청 → 관리자 결정', role:'admin', view:'today', next:'취소 요청 카드에서 승인 또는 거절하고 후속 처리를 고르세요.' },
@@ -3132,7 +3132,7 @@
             ${queueCard('danger','긴급','350호 입실 미준비','1건','미검수 · 촛불 1개','room-detail','입실 차단 해결','350')}
             ${queueCard('warning','대기','관리자 미배정 작업','3건','시작 가능 시각이 지나 재배정이 필요한 작업','view-open-jobs','목록 보기')}
             ${queueCard('warning','주의','마감 위험','2건','예상 소요시간 반영 시 여유 부족','view-open-jobs','목록 보기')}
-            ${queueCard('success','대기','검수 대기','4건','전체 제출 검수가 필요합니다','cleaning-detail','639호 검수','639')}
+            ${queueCard('success','대기','검수 대상 목록','4건','전체 제출 검수가 필요합니다','cleaning-detail','639호 검수','639')}
             ${queueCard('neutral','요청','담당 취소 요청','1건',state.cancelRequest==='requested'?'15분 이내 관리자 결정 필요':'처리 완료 · 타임라인 보존','cancel-review',state.cancelRequest==='requested'?'요청 처리':'결과 보기')}
             ${queueCard('neutral','동기화','동기화·PIN·정산','2건','충돌 또는 확인 필요 사건','alerts','알림 보기')}
           </div>
@@ -3151,7 +3151,7 @@
       function renderDraftRail() {
         return `<section class="card"><div class="section-head"><h3>배정 준비 청소 작업</h3><span class="meta">${state.drafts.length}건</span></div><p class="cell-sub">근무일 전날 관리자 담당 배정을 기다립니다.</p><div class="rail-list">${state.drafts.length?state.drafts.map(d=>`<label class="rail-row"><input type="checkbox" data-control="draft" value="${d.id}" ${state.selectedDrafts.includes(d.id)?'checked':''} ${isLocked()?'disabled':''}><strong>${d.room}호 · ${d.kind}</strong><span>${d.created}</span></label>`).join(''):'<div class="state-panel" style="padding:12px"><p>배정 준비 작업 0건</p></div>'}</div>${button('내일 배정에서 보기','publish-selected','success',`${isLocked()?'disabled':''}`)}</section>`;
       }
-      function renderInspectionRail() { return `<section class="card"><div class="section-head"><h3>검수 대기</h3><span class="meta">4건</span></div><div class="rail-list"><div class="rail-row"><strong>639호 · 전체 제출 v2</strong><span>10:18</span></div><div class="rail-row"><strong>528호 · 업로드 완료</strong><span>10:14</span></div></div>${button('검수 목록 보기','cleaning-detail','outline','data-id="639"')}</section>`; }
+      function renderInspectionRail() { return `<section class="card"><div class="section-head"><h3>검수 대상 목록</h3><span class="meta">4건</span></div><div class="rail-list"><div class="rail-row"><strong>639호 · 전체 제출 v2</strong><span>10:18</span></div><div class="rail-row"><strong>528호 · 업로드 완료</strong><span>10:14</span></div></div>${button('검수 대상 목록 보기','cleaning-detail','outline','data-id="639"')}</section>`; }
       function renderPayRail() { const summary=paymentWeekSummaryFor();return `<section class="card"><div class="section-head"><h3>지난주 지급</h3>${statusBadge(summary.label,summary.tone)}</div><p class="cell-sub">메이드별 외부 전액 송금 완료를 각각 기록합니다. 앱은 송금하지 않습니다.</p>${button('지급 주차 상세','pay-detail','outline')}</section>`; }
 
       function renderRooms() {
@@ -3212,7 +3212,7 @@
         return `<article class="card job-card"><div class="job-card-top"><div class="job-title">${statusBadge(statusLabel(status),tone)}<h3 style="margin-top:10px">${j.room}호 · ${j.kind}</h3><p>${type.name}</p></div></div><div class="schedule-line">${icon('clock','icon-sm')}<span>${j.schedule}</span></div><div class="job-actions"><button class="btn ${tone==='red'?'btn-danger':'btn-primary'}" type="button" data-action="${action}" data-id="${j.room}" ${isLocked()&&action!=='cleaning-detail'?'disabled':''}>${label}</button></div></article>`;
       }
 
-      function statusLabel(s) { return ({public:'관리자 배정 대기',unassigned:'관리자 배정 대기',claimed:'관리자 배정 확정',cleaning:'청소 중',upload:'현장 완료 · 업로드 대기',inspection:'검수 대기',approved:'승인',rejected:'반려',reclean:'재청소'})[s]||'예정'; }
+      function statusLabel(s) { return ({public:'관리자 배정 대기',unassigned:'관리자 배정 대기',claimed:'관리자 배정 확정',cleaning:'청소 중',upload:'현장 완료 · 업로드 대기',inspection:'검수 요청됨',approved:'승인',rejected:'반려',reclean:'재청소'})[s]||'예정'; }
 
       function renderMaidDone() {
         return renderCoach()+`<section class="card room-table"><div class="room-head" style="grid-template-columns:90px 1fr 140px 140px"><div>현장 완료일</div><div>객실·수행</div><div>검수 결과</div><div>주 행동</div></div>${[
@@ -3347,7 +3347,7 @@
 
       function renderInspectionDetail(no) {
         const status=state.inspection.status;
-        return renderCoach()+detailHeader(`${no}호 전체 제출 검수`,'구역별 청소 사진 전체를 확인합니다.')+`<section class="card card-pad"><div class="section-head"><h3>구역별 청소 사진</h3>${statusBadge(status==='approved'?'승인 완료':'검수 대기',status==='approved'?'green':'amber')}</div></section>`;
+        return renderCoach()+detailHeader(`${no}호 전체 제출 검수`,'구역별 청소 사진 전체를 확인합니다.')+`<section class="card card-pad"><div class="section-head"><h3>구역별 청소 사진</h3>${statusBadge(status==='approved'?'승인 완료':'검수 요청됨',status==='approved'?'green':'amber')}</div></section>`;
       }
 
       function maidById(id) { return MAIDS.find(m=>m.id===id); }
@@ -4030,7 +4030,7 @@
       }
 
       function roomCleaningStageLabel(job) {
-        return ({public:'청소 미배정',unassigned:'청소 미배정',claimed:'담당 확정',scheduled:'시작 예정',cleaning:'청소 중',upload:'현장 완료 · 업로드 대기',inspection:'검수 대기',reclean:'재청소',hold:'관리자 조치',draft:'배정 준비',future:'예정','stayover-requested':'연박 청소 요청','extra-requested':'추가 청소 요청'})[job]||'';
+        return ({public:'청소 미배정',unassigned:'청소 미배정',claimed:'담당 확정',scheduled:'시작 예정',cleaning:'청소 중',upload:'현장 완료 · 업로드 대기',inspection:'검수 요청됨',reclean:'재청소',hold:'관리자 조치',draft:'배정 준비',future:'예정','stayover-requested':'연박 청소 요청','extra-requested':'추가 청소 요청'})[job]||'';
       }
       function roomNeedsCleaningNow(no) {
         const room=ROOMS.find(item=>item.no===String(no)),job=state.jobs[no];if(!room)return false;
@@ -4620,7 +4620,7 @@
         const cleaningCost=dashboardCleaningCostSummary(),cleaningCostSection=`<section aria-labelledby="cleaning-cost-title"><div class="mobile-section-title"><div><h2 id="cleaning-cost-title">청소비 예상 지출</h2><p>운영 기준일 ${cleaningCost.todayLabel} · 수익 귀속일 기준 · 데모</p></div></div><button class="card cleaning-cost-card" type="button" data-action="go-payroll" data-week="${cleaningCost.weekStart}" aria-label="오늘 ${cleaningCost.count}건, 검수 통과 시 청소비 예상 ${money(cleaningCost.expected)}, 현재 확정 ${money(cleaningCost.confirmed)}, 검수 대기 최대 ${money(cleaningCost.pending)}. 이번 주 ${cleaningCost.week.count}건, 예상 ${money(cleaningCost.week.expected)}, 현재 확정 ${money(cleaningCost.week.confirmed)}, 검수 대기 최대 ${money(cleaningCost.week.pending)}. 미시작, 청소 중, 업로드 대기는 제외되며 앱은 실제 송금을 실행하지 않습니다. 이번 주 주급 정산 내역 보기"><span class="cleaning-cost-head"><span class="cleaning-cost-kicker">${icon('wallet')}<span><strong>검수 통과 시 예상 지출</strong><small>미시작·청소 중·업로드 대기는 아직 제외</small></span></span><span class="cleaning-cost-link">주급 정산${icon('chevronRight','icon-sm')}</span></span><span class="cleaning-cost-grid"><span class="cleaning-cost-metric" data-dashboard-cost="today"><span class="cleaning-cost-label">오늘 예상 <b>${cleaningCost.count}건</b></span><strong class="cleaning-cost-amount">${money(cleaningCost.expected)}</strong><span class="cleaning-cost-breakdown">현재 확정 ${money(cleaningCost.confirmed)} · 검수 대기 최대 +${money(cleaningCost.pending)}</span></span><span class="cleaning-cost-metric" data-dashboard-cost="week"><span class="cleaning-cost-label">이번 주 예상 <b>${cleaningCost.week.count}건</b></span><strong class="cleaning-cost-amount">${money(cleaningCost.week.expected)}</strong><span class="cleaning-cost-breakdown">현재 확정 ${money(cleaningCost.week.confirmed)} · 검수 대기 최대 +${money(cleaningCost.week.pending)}</span></span></span><span class="cleaning-cost-foot"><b>${cleaningCost.todayLabel} · ${cleaningCost.weekLabel}</b> 수익 귀속 원장 기준 · 다음 지급일 합산 · 앱은 실제 송금을 실행하지 않습니다.</span></button></section>`;
         const schedule=`<div class="schedule-list"><div class="schedule-row"><div class="schedule-room">350호</div><div class="schedule-copy"><strong>얼리 체크인 · 1시간</strong><span>16:00 기준 자동 판정 · 검수 대기</span></div><div class="schedule-time">체크인 8/16 15:00 → 체크아웃 8/17 11:00</div></div><div class="schedule-row"><div class="schedule-room">117호</div><div class="schedule-copy"><strong>레이트 체크아웃 · 2시간</strong><span>11:00 기준 자동 판정 · 청소 13:00 예정</span></div><div class="schedule-time">투숙 중 → 체크아웃 13:00</div></div><div class="schedule-row"><div class="schedule-room">332호</div><div class="schedule-copy"><strong>퇴실 청소 진행 중</strong><span>김민지1 · 완료 후 전체 검수</span></div><div class="schedule-time">체크인 8/16 16:00 → 체크아웃 8/17 13:00</div></div></div>`;
         const draftBody=`<p class="audit-note">날짜별 관리자 배정을 기다리는 비공개 작업입니다.</p>${state.drafts.map(d=>`<div class="rail-row"><strong>${d.room}호 · ${d.kind}</strong><span>${d.date||'오늘'} · ${d.created}</span></div>`).join('')||'<p>배정 준비 작업 0건</p>'}<div style="margin-top:10px">${button('내일 배정에서 보기','go-cleaning-assignment','outline','data-day="tomorrow"')}</div>`;
-        const inspectionBody=`<div class="rail-row"><strong>350호 · 얼리 체크인 우선</strong><span>검수 대기</span></div><div class="rail-row"><strong>639호 · 전체 제출</strong><span>검수 대기</span></div><div style="margin-top:10px">${button('검수 대기 열기','go-inspection','outline')}</div>`;
+        const inspectionBody=`<div class="rail-row"><strong>350호 · 얼리 체크인 우선</strong><span>검수 요청됨</span></div><div class="rail-row"><strong>639호 · 전체 제출</strong><span>검수 요청됨</span></div><div style="margin-top:10px">${button('검수 대상 목록 열기','go-inspection','outline')}</div>`;
         const lastWeekMaidPay=maidPayAmount('김민지1','2026-08-03'),payBody=`<div class="rail-row"><strong>김민지1 지난주 지급 대상</strong><span>${money(lastWeekMaidPay)} · 폭탄방 승인 1건 포함 · 데모</span></div><p class="audit-note">앱은 송금하지 않고 지급 여부만 기록합니다.</p><div style="margin-top:10px">${button('주급 정산 열기','go-payroll','outline')}</div>`;
         const requestedEntry=Object.entries(state.cancelRequests||{}).find(([,request])=>request.status==='requested'), cancelRequested=state.cancelRequest==='requested'||!!requestedEntry, cancelResolved=!!state.cancelDecision;
         const cancelNo=requestedEntry?.[0]||state.cancelRequestRoom||'332', cancelRequest=requestedEntry?.[1], cancelMaid=cancelRequest?.maid||ROOMS.find(room=>room.no===cancelNo)?.assignee||'김민지1';
@@ -5128,7 +5128,7 @@
       }
       function renderCleaningHub() {
         const todayDate=state.selectedDate,tomorrowDate=addIsoDays(state.selectedDate,1),tabCounts={today:assignmentCountsForDate(todayDate).total,tomorrow:assignmentCountsForDate(tomorrowDate).total,progress:cleaningProgressEntries().length,inspection:Object.values(state.jobs).filter(v=>v==='inspection').length,done:Object.values(state.jobs).filter(v=>v==='approved').length};
-        return renderCoach()+renderNetworkNotice()+`<div class="view-stack"><div class="tab-header"><div><h2>청소 관리</h2><p>오늘 운영 조정과 내일 사전 배정을 분리하고, 변경 내용은 해당 메이드에게 다시 알립니다.</p></div></div><div class="tabs" role="tablist" aria-label="청소 상태">${cleaningTabButton('assignment-today','오늘 배정',tabCounts.today)}${cleaningTabButton('assignment-tomorrow','내일 배정',tabCounts.tomorrow)}${cleaningTabButton('progress','진행 중',tabCounts.progress)}${cleaningTabButton('inspection','검수 대기',tabCounts.inspection)}${cleaningTabButton('done','완료',tabCounts.done)}</div>${renderListState(renderCleaningTab())}</div>`;
+        return renderCoach()+renderNetworkNotice()+`<div class="view-stack"><div class="tab-header"><div><h2>청소 관리</h2><p>오늘 운영 조정과 내일 사전 배정을 분리하고, 변경 내용은 해당 메이드에게 다시 알립니다.</p></div></div><div class="tabs" role="tablist" aria-label="청소 상태">${cleaningTabButton('assignment-today','오늘 배정',tabCounts.today)}${cleaningTabButton('assignment-tomorrow','내일 배정',tabCounts.tomorrow)}${cleaningTabButton('progress','진행 중',tabCounts.progress)}${cleaningTabButton('inspection','검수 대상 목록',tabCounts.inspection)}${cleaningTabButton('done','완료',tabCounts.done)}</div>${renderListState(renderCleaningTab())}</div>`;
       }
       function taskRow(no,job,extra='') {
         const room=ROOMS.find(r=>r.no===no),liveType=ROOM_TYPES[room?.type||'standard'],validSubmission=currentSubmission(no),submittedContext=['inspection','approved'].includes(job),submission=submittedContext?(validSubmission||currentSubmissionRecord(no)):validSubmission,submissionMeta=submission?.roomMetaSnapshot,displayType=submittedContext?(ROOM_TYPES[submissionMeta?.typeId]||liveType):liveType,displayTypeName=submittedContext?(submissionMeta?.typeName||displayType.name):displayType.name,displayElevator=submittedContext?(submissionMeta?.elevator?`${submissionMeta.elevator} 엘리베이터`:'엘리베이터 미기재'):elevatorLabel(room),activeAttempt=state.cleaningAttempts?.[currentAttemptId(no)],rollover=rolloverMetaForRoom(no),report=submittedContext?(validSubmission?submittedBombRoomReport(no):rawBombRoomReportForSubmission(submission)):activeBombRoomReport(no),record=submittedContext?earningRecordFor(no):earningRecordForReport(report),wholeRejected=submittedContext&&submission?.status==='rejected',unpaidReclean=submittedContext?submission?.kind==='재청소':activeAttempt?.kind==='재청소',bombMeta=wholeRejected?{label:'청소 전체 반려 · 적립 없음',tone:'red'}:bombRoomStatusMeta(report),fee=record||bombRoomBreakdown(no,{pendingAsBonus:!unpaidReclean&&(submittedContext?submission?.status==='pending':true)&&report?.status==='pending',reportOverride:report,baseOverride:submittedContext?submission?.baseRateSnapshot:activeAttempt?.baseRateSnapshot}),performer=submittedContext?submission?.performerName:room?.assignee;
