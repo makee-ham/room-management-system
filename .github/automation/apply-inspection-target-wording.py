@@ -130,11 +130,11 @@ for (const contract of inspectionWordingContracts) {
     throw new Error(`Inspection target-list wording contract missing: ${contract}`);
   }
 }
-const cleaningHubStart = html.lastIndexOf('function renderCleaningHub()');
-const cleaningHubEnd = html.indexOf('function taskRow(', cleaningHubStart);
-const cleaningHubSource = html.slice(cleaningHubStart, cleaningHubEnd);
-if (cleaningHubStart < 0 || cleaningHubEnd < 0) throw new Error('Current cleaning hub source could not be isolated.');
-if (cleaningHubSource.includes("cleaningTabButton('inspection','검수 대기'")) {
+const inspectionWordingCleaningHubStart = html.lastIndexOf('function renderCleaningHub()');
+const inspectionWordingCleaningHubEnd = html.indexOf('function taskRow(', inspectionWordingCleaningHubStart);
+const inspectionWordingCleaningHubSource = html.slice(inspectionWordingCleaningHubStart, inspectionWordingCleaningHubEnd);
+if (inspectionWordingCleaningHubStart < 0 || inspectionWordingCleaningHubEnd < 0) throw new Error('Current cleaning hub source could not be isolated.');
+if (inspectionWordingCleaningHubSource.includes("cleaningTabButton('inspection','검수 대기'")) {
   throw new Error('Legacy admin inspection tab wording remains.');
 }
 const currentAdminTodayStartForInspectionWording = html.lastIndexOf('function renderAdminToday()');
