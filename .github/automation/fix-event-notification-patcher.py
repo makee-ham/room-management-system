@@ -22,6 +22,29 @@ for old, new in replacements.items():
         raise SystemExit(f'patcher correction marker missing: {old[:100]}')
     text = text.replace(old, new, 1)
 
+old_action_insertion = """html = html.replace(action_marker, notification_actions, 1)
+
+# Add target dispatcher immediately before the delegated click handler.
+"""
+new_action_insertion = """html = html.replace(action_marker, notification_actions, 1)
+
+# The rebuilt delegated click handler ignores actions that are not in this allow-list.
+# Register the new notification controls in the same active router whose branches were patched above.
+rebuilt_actions_marker = \"deprecatedStateActions.forEach(action=>rebuiltActions.add(action));\"
+if rebuilt_actions_marker not in html:
+    raise SystemExit(\"rebuilt action allow-list marker not found\")
+html = html.replace(
+    rebuilt_actions_marker,
+    rebuilt_actions_marker + \"\\n      ['notification-filter','notification-mark-all-read','notification-toggle-push','notification-open'].forEach(action=>rebuiltActions.add(action));\",
+    1,
+)
+
+# Add target dispatcher immediately before the delegated click handler.
+"""
+if old_action_insertion not in text:
+    raise SystemExit('notification action insertion marker missing')
+text = text.replace(old_action_insertion, new_action_insertion, 1)
+
 old_dispatch = """      function dispatchNotificationTarget(event){
         const target=event?.target||{},action=target.action||'alerts',button=document.createElement('button');button.type='button';button.hidden=true;button.dataset.action=action;if(target.id)button.dataset.id=target.id;Object.entries(target.data||{}).forEach(([key,value])=>button.dataset[key]=String(value));document.body.appendChild(button);button.click();button.remove();
       }
@@ -34,7 +57,7 @@ new_dispatch = """      function dispatchNotificationTarget(event){
         if(action==='go-my'){pushPageTransition(()=>{state.detail=null;state.maidView='my';});return;}
         if(action==='go-maid-pay'){pushPageTransition(()=>{state.detail=null;state.maidView='pay';});return;}
         if(action==='go-schedule'){pushPageTransition(()=>{state.detail=null;state.maidView='schedule';});return;}
-        const button=document.createElement('button');button.type='button';button.hidden=true;button.dataset.action=action;if(target.id)button.dataset.id=target.id;Object.entries(target.data||{}).forEach(([key,value])=>button.dataset[key]=String(value));document.body.appendChild(button);button.click();button.remove();
+        const button=document.createElement('button');button.type='button';button.hidden=true;button.dataset.action=action;if(target.id)button.dataset.id=target.id;Object.entries(target.data||{}).forEach(([key,value])=>button.dataset[key]=String(value));document.body.appendChild(button);button.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window}));button.remove();
       }
 """
 if old_dispatch not in text:
