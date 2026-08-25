@@ -1956,3 +1956,32 @@ const finalWorkforceSource=html.slice(finalWorkforceStart,finalWorkforceEnd);
 if (!finalWorkforceSource.includes('accountStatus=maidStatusFor(maid.id)')) throw new Error('Workforce cards do not show per-maid account status.');
 console.log('All-maid lower account-management deactivation contracts: passed');
 
+for (const contract of [
+  "function detailHeader(title,subtitle='')",
+  "${subtitle?`<p>${subtitle}</p>`:''}",
+  '<h2 id="summary-title">오늘 객실 요약</h2></div></div><div class="today-summary">',
+  '<span>투숙 중</span><strong>${occupiedCount}</strong></button>',
+  '<span>청소 필요</span><strong>${cleaningCount}</strong></button>',
+  '<span>배정 가능</span><strong>${availableCount}</strong></button>',
+  '<span>배정 불가</span><strong>${blockedCount}</strong></button>',
+  "detailHeader(`${active?.maid||'김민지1'} ${active?.type||'컴플레인'}`)",
+  '.today-summary .metric-card { min-height:96px;',
+]) {
+  if (!html.includes(contract)) throw new Error(`Essential-copy contract missing: ${contract}`);
+}
+for (const forbidden of [
+  '현재 점유 · 회색',
+  '퇴실·연박 청소 · 주황',
+  '공실·준비 완료 · 초록',
+  '촛불·차단 특이사항 등 · 빨강',
+  '네 가지 주 상태로만 계산 · 데모',
+  '주급 자동 차감 없음 · 삭제 이력 보존',
+]) {
+  if (html.includes(forbidden)) throw new Error(`Redundant UI copy remains: ${forbidden}`);
+}
+if (!html.includes('<span>주급 영향</span><strong>자동 차감 없음</strong>')) {
+  throw new Error('The single operational payroll-impact fact was removed from complaint details.');
+}
+if (!html.includes('<h3>감사 이력</h3>')) throw new Error('Complaint audit history was removed.');
+console.log('Essential-copy-only static contracts: passed');
+

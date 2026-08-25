@@ -1,7 +1,7 @@
 {
   "package": "CASTLE THE ART room management wireframe",
-  "version": "2026-08-26-all-maid-deactivation",
-  "generated_at_kst": "2026-08-26T02:35:44+09:00",
+  "version": "2026-08-26-essential-copy-only",
+  "generated_at_kst": "2026-08-26T04:53:13+09:00",
   "repository": "https://github.com/makee-ham/room-management-system",
   "entrypoint": "WIREFRAME/index.html",
   "policy_source": "DOCS/FINAL_UX_AUDIT.md",
@@ -12,7 +12,7 @@
   "qa_record": "WIREFRAME/QA.md",
   "sha256": {
     "DOCS/FINAL_UX_AUDIT.md": "e479e468c32c27ef606a311fd090ed7a4a8718590d363c9634da014960956c78",
-    "WIREFRAME/index.html": "39d3ea793b81246716f9decfbc78f4eaf754cc50f41d89cd10d817dfd0e1bd5f"
+    "WIREFRAME/index.html": "a928fcb5a5e5a51a195398d712625bb247a228b2d04374ebf1620c95c0362fc0"
   },
   "runtime": {
     "build_required": false,
