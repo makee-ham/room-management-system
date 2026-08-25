@@ -1818,3 +1818,13 @@ if (!actionAlertSource.includes('openNotificationCenter(trigger)')) throw new Er
 if (actionAlertSource.includes('최신 상태') || actionAlertSource.includes('0건')) throw new Error('Static zero/sync alert rows remain in action alert entry point.');
 console.log('Event notification center static contracts: passed');
 
+const maidPayLedgerStart = html.indexOf('function renderMaidPayFromLedger()');
+const maidPayRenderStart = html.indexOf('function renderMaidPay()');
+if (maidPayLedgerStart < 0 || maidPayRenderStart < 0 || maidPayLedgerStart > maidPayRenderStart) {
+  throw new Error('Maid pay ledger renderer was removed while replacing the maid notification screen.');
+}
+if (html.includes('__CASTLE_NOTIFICATION_QA__')) {
+  throw new Error('Notification QA mutation bridge must not be present in the shipped wireframe.');
+}
+console.log('Maid pay ledger notification regression contracts: passed');
+
