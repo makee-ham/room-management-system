@@ -274,6 +274,17 @@ const taskSectionsSource = html.slice(taskSectionsStart, html.indexOf('function 
 if ([taskRequirementsStart, taskZonesStart, taskSectionsStart].some(index => index < 0)) {
   throw new Error('Maid photo-only source ranges could not be resolved.');
 }
+const cleaningSectionHelperStart = html.indexOf('function renderCleaningInputSection');
+const cleaningSectionHelperSource = html.slice(cleaningSectionHelperStart, taskSectionsStart);
+if (cleaningSectionHelperStart < 0 || !cleaningSectionHelperSource.includes('class="cleaning-section"') || !cleaningSectionHelperSource.includes('data-cleaning-section-meta')) {
+  throw new Error('Always-open maid cleaning section markup is missing.');
+}
+if (/<details\b|<summary\b/.test(taskSectionsSource) || html.includes('.cleaning-sections details') || html.includes('.cleaning-sections summary')) {
+  throw new Error('Maid cleaning inputs must stay visible without collapsible details/summary controls.');
+}
+for (const sectionKey of ["'photos'", "'bomb-room'", "'room-issues'", "'candles'"]) {
+  if (!taskSectionsSource.includes(`renderCleaningInputSection(no,${sectionKey}`)) throw new Error(`Always-open maid section missing: ${sectionKey}`);
+}
 const activeTemplateStart = html.indexOf('const TEMPLATE_KIND_DEMO');
 const activeTemplateSource = html.slice(activeTemplateStart, html.indexOf('const LEGACY_TEMPLATE_CHECKLISTS', activeTemplateStart));
 const templateUiStart = html.indexOf('function templateDetailHead');
@@ -293,6 +304,15 @@ const delegatedSubmissionSource = delegatedSubmissionStart >= 0 && delegatedSubm
 const submissionStoresEmptyChecklist = fieldCompleteSource.includes('checklist:{}') || fieldCompleteSource.includes('createCleaningSubmissionRecord(id)') && delegatedSubmissionSource.includes('checklist:{}');
 if (fieldCompleteSource.includes('req.checked') || !fieldCompleteSource.includes('!req.requiredDone||req.failed') || !submissionStoresEmptyChecklist) {
   throw new Error('Maid completion/submission is not exclusively gated by required photo status.');
+}
+if (!delegatedSubmissionSource.includes('bindSubmissionEvidenceSnapshots(submission,attempt)')) throw new Error('Atomic cleaning submission evidence binding is missing.');
+for (const contract of ['bombRoomReportSnapshot', 'roomIssuesSnapshot', 'candleCountSnapshot']) {
+  if (!html.includes(contract)) throw new Error(`Atomic cleaning submission evidence contract missing: ${contract}`);
+}
+const taskInputMigrationStart = html.indexOf('function createTaskInputsFromSnapshot');
+const taskInputMigrationSource = html.slice(taskInputMigrationStart, html.indexOf('function taskState', taskInputMigrationStart));
+if (taskInputMigrationStart < 0 || taskInputMigrationSource.includes('sameFixture') || taskInputMigrationSource.includes('image?.fixture===')) {
+  throw new Error('Cleaning photos must migrate only by exact versioned slot ID, never by a generic image fixture.');
 }
 
 const typePhotoGroupsStart = html.indexOf('const TYPE_PHOTO_GROUPS=');
@@ -324,7 +344,7 @@ for (const contract of [
   "checkout:{name:'퇴실 청소',version:'v7'",
   'function legacyCheckoutTemplateSnapshotFor',
   "version:'v6',photos:Object.freeze(current.photos.filter(item=>item.id!=='tv-on')",
-  "if(rule.id==='tv-on')return {status:'empty',upload:null};",
+  "if(exact)return {status:exact.status||'empty',upload:exact};",
   "draft.kind==='퇴실 청소'?legacyCheckoutTemplateSnapshotFor(draft.room)",
   "templateVersionSeed:'v7'",
   "attempt.templateVersionSeed!=='v7'?legacyCheckoutTemplateSnapshotFor(attempt.room)",
@@ -1442,6 +1462,12 @@ for (const contract of ['투숙 중`이어도 현재 예약의 일정과 숙박 
 }
 for (const contract of ['전체 캘린더 일요일–토요일 고정 열', '8/15 광복절', '8/17 대체공휴일 빨간색', '일반 토요일 파란색', '선택 주차 두 행 강조', '공휴일 접근성 이름', 'admin-calendar-standard-1440.png', 'admin-calendar-standard-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Korean calendar QA contract missing: ${contract}`);
+}
+for (const contract of ['메이드 입력 영역 상시 펼침·제출 자료 수신 정합성', '접기 컨트롤이 0개', '정확한 슬롯 ID', '유형 사진 `12/12장`', '폭탄방 증빙 `2장`', '객실 특이사항 `1건 · 2장`', '읽기 전용으로 표시', 'maid-cleaning-sections-open-390.png', 'maid-evidence-sections-open-390.png', 'admin-inspection-template-parity-1440.png', 'admin-bomb-room-evidence-1440.png']) {
+  if (!qa.includes(contract)) throw new Error(`Always-open cleaning submission QA contract missing: ${contract}`);
+}
+for (const contract of ['메이드 청소 입력 상시 표시와 제출 자료 묶음', '작업 진입 즉시 모든 입력 본문', '일반적인 이미지 종류가 비슷하다는 이유로 다른 슬롯에 사진을 자동 배정하지 않는다', '하나의 제출 자료 묶음', '받은 자료를 숨기지 않고 읽기 전용', '해당 수행 회차에 묶인 특이사항 스냅샷만 표시']) {
+  if (!wireframeReadme.includes(contract)) throw new Error(`Always-open cleaning submission README contract missing: ${contract}`);
 }
 
 const audit = readFileSync(resolve(root, 'DOCS/FINAL_UX_AUDIT.md'));
