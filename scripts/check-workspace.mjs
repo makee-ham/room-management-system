@@ -1926,3 +1926,33 @@ if (!wireframeReadme.includes('브라우저 현재 시각을 `Asia/Seoul`로 환
 }
 console.log('KST daily quick-window static contracts: passed');
 
+for (const contract of [
+  'function setMaidStatusFor(maidId,status)',
+  'function maidDeactivationFor(maidId)',
+  'function ensureMaidDeactivationFor(maidId)',
+  'function maidDeactivationBlockers(maidId)',
+  'function renderMaidAccountManagement(maidId)',
+  'data-maid-account-management="${maidId}"',
+  'data-maid-id="${maidId}"',
+  "openMaidDeactivationV2(maidId,el)",
+  "setMaidStatusFor(maidId,'deactivating')",
+  "setMaidStatusFor(maidId,'inactive')",
+  '모든 메이드에 동일한 계정 관리·이력 보존 규칙 적용',
+]) {
+  if (!html.includes(contract)) throw new Error(`All-maid deactivation contract missing: ${contract}`);
+}
+const maidDetailStartForAccountManagement=html.indexOf('function renderMaidDetail(id)');
+const maidDetailEndForAccountManagement=html.indexOf('function renderComplaintDetail()',maidDetailStartForAccountManagement);
+const maidDetailSourceForAccountManagement=html.slice(maidDetailStartForAccountManagement,maidDetailEndForAccountManagement);
+if (maidDetailSourceForAccountManagement.includes("if(m.id!=='m1')")) throw new Error('Non-m1 early return still hides deactivation controls.');
+const historyIndexForAccountManagement=maidDetailSourceForAccountManagement.indexOf('data-maid-history="${m.id}"');
+const accountManagementIndex=maidDetailSourceForAccountManagement.indexOf('renderMaidAccountManagement(m.id)');
+if (historyIndexForAccountManagement<0||accountManagementIndex<historyIndexForAccountManagement) throw new Error('Maid account management is not below the work-history section.');
+const accountStatusCardEnd=maidDetailSourceForAccountManagement.indexOf('</section><section class="card card-pad"><div class="section-head"><h3>업무 영향 요약');
+if (maidDetailSourceForAccountManagement.slice(0,accountStatusCardEnd).includes('deactivate-maid-v2')) throw new Error('Deactivation button still appears in the upper account-status card.');
+const finalWorkforceStart=html.lastIndexOf('function renderWorkforce()');
+const finalWorkforceEnd=html.indexOf('function payrollDateLabel(',finalWorkforceStart);
+const finalWorkforceSource=html.slice(finalWorkforceStart,finalWorkforceEnd);
+if (!finalWorkforceSource.includes('accountStatus=maidStatusFor(maid.id)')) throw new Error('Workforce cards do not show per-maid account status.');
+console.log('All-maid lower account-management deactivation contracts: passed');
+
