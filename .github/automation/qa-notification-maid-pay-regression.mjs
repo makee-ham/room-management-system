@@ -48,12 +48,15 @@ async function verify(width,height){
   const payText=await page.locator('#main-content').innerText();
   assert.match(payText,/이번 주/);
   assert.match(payText,/지금까지 주급 내역/);
-  assert.match(payText,/객실별 원장/);
+  assert.match(payText,/청소 내역 \d+건/,'maid pay must show the saved week task ledger count');
   const disclosure=page.locator('[data-action="toggle-maid-pay-week"]').first();
   await disclosure.waitFor();
   await disclosure.click();
   assert.equal(await disclosure.getAttribute('aria-expanded'),'true','maid pay week details must expand');
   assert.ok(await page.locator('.maid-pay-task').count()>=1,'maid pay ledger task rows must render');
+  const expandedPayText=await page.locator('#main-content').innerText();
+  assert.match(expandedPayText,/\d{3}호 · (퇴실|연박) 청소/,'expanded ledger must retain room-level cleaning entries');
+  assert.match(expandedPayText,/기본 [\d,]+원 .* = [\d,]+원/,'expanded ledger must retain room-level pay calculations');
 
   await page.getByRole('button',{name:/알림함 열기/}).click();
   dialog=page.getByRole('dialog');
