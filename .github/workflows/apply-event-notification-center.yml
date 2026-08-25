@@ -26,6 +26,7 @@ jobs:
         shell: bash
         run: |
           python3 .github/automation/fix-event-notification-patcher.py
+          python3 .github/automation/add-notification-qa-bridge.py
           python3 -m py_compile .github/automation/apply-event-notification-center.py
           python3 .github/automation/apply-event-notification-center.py
 
@@ -60,6 +61,7 @@ jobs:
         shell: bash
         run: |
           rm -f node_modules
+          rm -f .github/automation/add-notification-qa-bridge.py
           rm -f .github/automation/fix-event-notification-patcher.py
           rm -f .github/automation/apply-event-notification-center.py
           rm -f .github/automation/qa-event-notification-center.mjs
