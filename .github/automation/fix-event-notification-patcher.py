@@ -22,6 +22,25 @@ for old, new in replacements.items():
         raise SystemExit(f'patcher correction marker missing: {old[:100]}')
     text = text.replace(old, new, 1)
 
+old_dispatch = """      function dispatchNotificationTarget(event){
+        const target=event?.target||{},action=target.action||'alerts',button=document.createElement('button');button.type='button';button.hidden=true;button.dataset.action=action;if(target.id)button.dataset.id=target.id;Object.entries(target.data||{}).forEach(([key,value])=>button.dataset[key]=String(value));document.body.appendChild(button);button.click();button.remove();
+      }
+"""
+new_dispatch = """      function dispatchNotificationTarget(event){
+        const target=event?.target||{},action=target.action||'alerts';
+        if(action==='go-inspection'){pushPageTransition(()=>{state.detail=null;state.adminView='cleaning';state.cleaningTab='inspection';});return;}
+        if(action==='go-cleaning-assignment'){const day=target.data?.day==='tomorrow'?'tomorrow':'today';pushPageTransition(()=>{state.detail=null;state.adminView='cleaning';state.cleaningTab=`assignment-${day}`;syncAssignmentDateForCleaningTab(state);});return;}
+        if(action==='go-workforce'){pushPageTransition(()=>{state.detail=null;state.adminView='maids';state.adminMaidTab='workforce';});return;}
+        if(action==='go-my'){pushPageTransition(()=>{state.detail=null;state.maidView='my';});return;}
+        if(action==='go-maid-pay'){pushPageTransition(()=>{state.detail=null;state.maidView='pay';});return;}
+        if(action==='go-schedule'){pushPageTransition(()=>{state.detail=null;state.maidView='schedule';});return;}
+        const button=document.createElement('button');button.type='button';button.hidden=true;button.dataset.action=action;if(target.id)button.dataset.id=target.id;Object.entries(target.data||{}).forEach(([key,value])=>button.dataset[key]=String(value));document.body.appendChild(button);button.click();button.remove();
+      }
+"""
+if old_dispatch not in text:
+    raise SystemExit('notification target dispatcher marker missing')
+text = text.replace(old_dispatch, new_dispatch, 1)
+
 old_checker_line = 'checker = checker_path.read_text(encoding="utf-8").rstrip()'
 new_checker_block = """checker = checker_path.read_text(encoding=\"utf-8\")
 legacy_maid_start_marker = \"const maidAlertsStart = html.indexOf('function renderMaidAlerts');\"
