@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 
-const base='http://127.0.0.1:4173/index.html#scenario=0&role=admin&view=today&date=2026-08-15&filter=all&type=all&q=';
+const base='http://127.0.0.1:4173/index.html?notificationQa=1#scenario=0&role=admin&view=today&date=2026-08-15&filter=all&type=all&q=';
 const browser=await chromium.launch({headless:true});
 const errors=[];
 
@@ -36,6 +36,7 @@ async function verifyDesktop(){
   page.on('console',message=>{if(message.type()==='error')errors.push(`1440px console: ${message.text()}`);});
   await page.goto(base,{waitUntil:'networkidle'});
   await assertHealthy(page,1440);
+  assert.equal(await page.evaluate(()=>typeof window.__CASTLE_NOTIFICATION_QA__),'object','notification QA bridge must be available only on the QA query');
 
   const main=page.locator('#main-content');
   const homeList=main.locator('.accordion-list').first();
@@ -100,11 +101,13 @@ async function verifyDesktop(){
   assert.match(await page.locator('#main-content').innerText(),/내 업무/,'maid correction notification must deep-link to own work');
 
   const selfPushResult=await page.evaluate(()=>{
-    const maidKey=`maid:${signedInMaidId()}`,beforeMaid=notificationUnreadCount(maidKey),beforeAdmin=notificationUnreadCount('admin');
-    appendEvent('528호 청소 시작','본인이 청소를 시작했습니다.',{maidIds:[signedInMaidId()],roomId:'528'});
-    const afterStartMaid=notificationUnreadCount(maidKey),afterStartAdmin=notificationUnreadCount('admin');
-    appendEvent('528호 청소 전체 제출','필수 파일 검증 완료 · 검수 대기',{maidIds:[signedInMaidId()],roomId:'528'});
-    return {beforeMaid,beforeAdmin,afterStartMaid,afterStartAdmin,afterSubmitMaid:notificationUnreadCount(maidKey),afterSubmitAdmin:notificationUnreadCount('admin')};
+    const qa=window.__CASTLE_NOTIFICATION_QA__;
+    if(!qa)throw new Error('notification QA bridge unavailable');
+    const maidId=qa.currentMaidId(),maidKey=`maid:${maidId}`,beforeMaid=qa.unreadCount(maidKey),beforeAdmin=qa.unreadCount('admin');
+    qa.append('528호 청소 시작','본인이 청소를 시작했습니다.',{maidIds:[maidId],roomId:'528'});
+    const afterStartMaid=qa.unreadCount(maidKey),afterStartAdmin=qa.unreadCount('admin');
+    qa.append('528호 청소 전체 제출','필수 파일 검증 완료 · 검수 대기',{maidIds:[maidId],roomId:'528'});
+    return {beforeMaid,beforeAdmin,afterStartMaid,afterStartAdmin,afterSubmitMaid:qa.unreadCount(maidKey),afterSubmitAdmin:qa.unreadCount('admin')};
   });
   assert.equal(selfPushResult.afterStartMaid,selfPushResult.beforeMaid,'maid cleaning start must not create self notification');
   assert.equal(selfPushResult.afterStartAdmin,selfPushResult.beforeAdmin,'normal cleaning start must not push admin');
@@ -112,12 +115,14 @@ async function verifyDesktop(){
   assert.equal(selfPushResult.afterSubmitAdmin,selfPushResult.beforeAdmin+1,'maid inspection request must notify admin');
 
   const bundleResult=await page.evaluate(()=>{
-    const groupKey='admin:issue:516',before=notificationBundlesForKey('admin').length;
-    state.time='10:40';
-    appendEvent('516호 현장 문제 업데이트','도어락 응답을 확인하고 있습니다.',{actorRole:'system',roomId:'516',notification:{audience:['admin'],category:'issue',priority:'high',push:true,actionRequired:true,status:'open',groupKey,target:{action:'room-detail',id:'516'}}});
-    state.time='10:45';
-    appendEvent('516호 현장 문제 업데이트','투숙객 연락 결과를 추가했습니다.',{actorRole:'system',roomId:'516',notification:{audience:['admin'],category:'issue',priority:'high',push:true,actionRequired:true,status:'open',groupKey,target:{action:'room-detail',id:'516'}}});
-    const bundles=notificationBundlesForKey('admin'),bundle=bundles.find(item=>item.groupKey===groupKey);
+    const qa=window.__CASTLE_NOTIFICATION_QA__;
+    if(!qa)throw new Error('notification QA bridge unavailable');
+    const groupKey='admin:issue:516',before=qa.bundles('admin').length;
+    qa.setTime('10:40');
+    qa.append('516호 현장 문제 업데이트','도어락 응답을 확인하고 있습니다.',{actorRole:'system',roomId:'516',notification:{audience:['admin'],category:'issue',priority:'high',push:true,actionRequired:true,status:'open',groupKey,target:{action:'room-detail',id:'516'}}});
+    qa.setTime('10:45');
+    qa.append('516호 현장 문제 업데이트','투숙객 연락 결과를 추가했습니다.',{actorRole:'system',roomId:'516',notification:{audience:['admin'],category:'issue',priority:'high',push:true,actionRequired:true,status:'open',groupKey,target:{action:'room-detail',id:'516'}}});
+    const bundles=qa.bundles('admin'),bundle=bundles.find(item=>item.groupKey===groupKey);
     return {before,after:bundles.length,bundleCount:bundle?.bundleCount||0};
   });
   assert.equal(bundleResult.after,bundleResult.before+1,'two related events must add one notification bundle');
