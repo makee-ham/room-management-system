@@ -77,7 +77,7 @@ observe(desktop,'desktop');
 await openQuick(desktop);
 await expectRange(desktop,{start:'2026-08-18',end:'2026-09-15',mode:'오늘 기준 29일'});
 assert.ok(!desktop.url().includes('bookingAnchor='),'today-following URL must not freeze a booking anchor');
-assert.equal(await desktop.locator('.quick-day-header.today[data-quick-date="2026-08-25"]').count(),1,'real KST today must be highlighted');
+assert.equal(await desktop.locator('#quick-grid-scroller .quick-day-header.today[data-quick-date="2026-08-25"]').count(),1,'real KST today must be highlighted in the data grid');
 assert.ok(await desktop.locator('.quick-date-cell.is-past[data-date="2026-08-24"]').count()>0,'the day before real KST today must be read-only');
 await assertHealthy(desktop,1440);
 await desktop.screenshot({path:'WIREFRAME/QA/screenshots/admin-quick-booking-kst-today-1440.png',fullPage:false});
@@ -87,7 +87,7 @@ await desktop.evaluate(()=>window.__setCastleMockNow('2026-08-26T03:00:00.000Z')
 await desktop.evaluate(()=>window.dispatchEvent(new Event('focus')));
 await expectRange(desktop,{start:'2026-08-19',end:'2026-09-16',mode:'오늘 기준 29일'});
 assert.ok(!desktop.url().includes('bookingAnchor='),'daily rollover must remain in today-following URL mode');
-assert.equal(await desktop.locator('.quick-day-header.today[data-quick-date="2026-08-26"]').count(),1);
+assert.equal(await desktop.locator('#quick-grid-scroller .quick-day-header.today[data-quick-date="2026-08-26"]').count(),1);
 
 // Seven-day browsing becomes an explicit custom range and survives the next date rollover.
 await desktop.locator('[data-action="quick-month-shift"][data-offset="7"]').click();
@@ -102,7 +102,7 @@ await expectRange(desktop,{start:'2026-08-26',end:'2026-09-23',mode:'이동한 2
 await desktop.locator('[data-action="quick-month-today"]').click();
 await expectRange(desktop,{start:'2026-08-20',end:'2026-09-17',mode:'오늘 기준 29일'});
 await desktop.waitForFunction(()=>!location.hash.includes('bookingAnchor='));
-assert.equal(await desktop.locator('.quick-day-header.today[data-quick-date="2026-08-27"]').count(),1);
+assert.equal(await desktop.locator('#quick-grid-scroller .quick-day-header.today[data-quick-date="2026-08-27"]').count(),1);
 
 // The selected demo operating date is independent from the real-day quick window.
 const demoDatePage=await browser.newPage({viewport:{width:768,height:900}});
