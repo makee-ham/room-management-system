@@ -82,7 +82,7 @@ async function verifyDesktop(){
   assert.equal(await dialog.getByRole('button',{name:'푸시 켜짐'}).getAttribute('aria-pressed'),'true');
   assert.equal(allCardsBefore,beforePushCards,'read state must not delete handled or read notifications');
 
-  await dialog.getByRole('button',{name:'닫기'}).click();
+  await dialog.locator('[data-action="close-modal"]').last().click();
   await page.getByRole('button',{name:'메이드 보기'}).click();
   await page.waitForFunction(()=>location.hash.includes('role=maid'));
   await assertHealthy(page,1440);
@@ -140,7 +140,7 @@ async function verifyMobile(){
   assert.equal(await dialog.locator('.notification-toolbar-actions').count(),1);
   assert.ok(await dialog.locator('[data-notification-card]').count()>=4);
   await page.screenshot({path:'/tmp/event-notification-center-admin-390.png',fullPage:false});
-  await dialog.getByRole('button',{name:'닫기'}).click();
+  await dialog.locator('[data-action="close-modal"]').last().click();
   await page.getByRole('button',{name:/메이드 보기/}).click();
   await page.waitForFunction(()=>location.hash.includes('role=maid'));
   dialog=await openBell(page);
