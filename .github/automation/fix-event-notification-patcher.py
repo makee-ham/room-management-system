@@ -59,6 +59,34 @@ new_dispatch = """      function dispatchNotificationTarget(event){
         if(action==='go-schedule'){pushPageTransition(()=>{state.detail=null;state.maidView='schedule';});return;}
         const button=document.createElement('button');button.type='button';button.hidden=true;button.dataset.action=action;if(target.id)button.dataset.id=target.id;Object.entries(target.data||{}).forEach(([key,value])=>button.dataset[key]=String(value));document.body.appendChild(button);button.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window}));button.remove();
       }
+      function closeNotificationModalAndNavigate(notificationEvent){
+        const navigate=()=>requestAnimationFrame(()=>dispatchNotificationTarget(notificationEvent)),entry=history.state;
+        if(isWireframeHistory(entry)&&entry.layer==='modal'){
+          let completed=false;
+          const onPop=()=>{if(completed)return;completed=true;setTimeout(navigate,0);};
+          window.addEventListener('popstate',onPop,{once:true});
+          closeModal();
+          return;
+        }
+        rawCloseModal();navigate();
+      }
+      document.addEventListener('click',browserEvent=>{
+        const el=browserEvent.target.closest?.('[data-action]'),action=el?.dataset.action;
+        if(!['notification-filter','notification-mark-all-read','notification-toggle-push','notification-open'].includes(action))return;
+        browserEvent.preventDefault();browserEvent.stopImmediatePropagation();
+        if(action==='notification-filter'){
+          const filter=el.dataset.filter;if(!['all','unread','action'].includes(filter))return;
+          state.notificationFilter=filter;rawCloseModal();openNotificationCenter(el);return;
+        }
+        if(action==='notification-mark-all-read'){
+          markAllNotificationsRead();render();rawCloseModal();openNotificationCenter(el);toast('현재 계정의 알림을 모두 읽음 처리했습니다.');return;
+        }
+        if(action==='notification-toggle-push'){
+          const enabled=!notificationPushEnabled();setNotificationPushEnabled(enabled);appendEvent('기기 푸시 설정 변경',enabled?'현재 계정 푸시 켜짐 · 앱 내 알림은 항상 유지':'현재 계정 푸시 꺼짐 · 앱 내 알림은 항상 유지',{notification:false});render();rawCloseModal();openNotificationCenter(el);toast(enabled?'행동이 필요한 업데이트의 푸시를 켰습니다.':'푸시를 껐습니다. 앱 내 알림은 계속 남습니다.');return;
+        }
+        const ids=String(el.dataset.eventIds||el.dataset.eventId||'').split(',').filter(Boolean),eventId=el.dataset.eventId||ids[0],notificationEvent=(state.events||[]).find(item=>item.id===eventId);
+        markNotificationRead(ids);render();if(notificationEvent)closeNotificationModalAndNavigate(notificationEvent);
+      },true);
 """
 if old_dispatch not in text:
     raise SystemExit('notification target dispatcher marker missing')
