@@ -21,4 +21,29 @@ for old, new in replacements.items():
     if old not in text:
         raise SystemExit(f'patcher correction marker missing: {old[:100]}')
     text = text.replace(old, new, 1)
+
+old_checker_line = 'checker = checker_path.read_text(encoding="utf-8").rstrip()'
+new_checker_block = """checker = checker_path.read_text(encoding=\"utf-8\")
+legacy_maid_start_marker = \"const maidAlertsStart = html.indexOf('function renderMaidAlerts');\"
+legacy_maid_end_marker = \"const directAssignStart = html.indexOf('function openDirectAssign');\"
+legacy_maid_start = checker.find(legacy_maid_start_marker)
+legacy_maid_end = checker.find(legacy_maid_end_marker, legacy_maid_start)
+if legacy_maid_start < 0 or legacy_maid_end < 0:
+    raise SystemExit(\"legacy maid alert static-check block could not be isolated\")
+new_maid_contract = r'''const maidAlertsStart = html.indexOf('function renderMaidAlerts');
+const maidAlertsSource = html.slice(maidAlertsStart, html.indexOf('function renderMaidPay', maidAlertsStart));
+for (const contract of [
+  \"notificationAudienceKey('maid',signedInMaidId())\",
+  'renderNotificationListMarkup({key',
+  'notificationUnreadCount(key)',
+  '배정·검수 결과·취소·마감·주급 업데이트를 시간순으로 확인합니다.',
+]) {
+  if (!maidAlertsSource.includes(contract)) throw new Error(`Maid event notification contract missing: ${contract}`);
+}
+'''
+checker = checker[:legacy_maid_start] + new_maid_contract + checker[legacy_maid_end:]
+checker = checker.rstrip()"""
+if old_checker_line not in text:
+    raise SystemExit('checker patch marker missing')
+text = text.replace(old_checker_line, new_checker_block, 1)
 path.write_text(text, encoding='utf-8')
