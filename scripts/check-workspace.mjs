@@ -309,6 +309,21 @@ if (!delegatedSubmissionSource.includes('bindSubmissionEvidenceSnapshots(submiss
 for (const contract of ['bombRoomReportSnapshot', 'roomIssuesSnapshot', 'candleCountSnapshot']) {
   if (!html.includes(contract)) throw new Error(`Atomic cleaning submission evidence contract missing: ${contract}`);
 }
+for (const contract of ['evidencePhotoSignature', 'issueLineageOk', 'snapshotIssueIds', 'liveIssuesById', 'evidenceDamageAudit:']) {
+  if (!html.includes(contract)) throw new Error(`Damaged submission evidence guard missing: ${contract}`);
+}
+const rawBombEvidenceStart = html.indexOf('function rawBombRoomReportForSubmission');
+const rawBombEvidenceEnd = html.indexOf('function bombRoomReportForSubmission', rawBombEvidenceStart);
+const rawBombEvidenceSource = html.slice(rawBombEvidenceStart, rawBombEvidenceEnd);
+if (rawBombEvidenceStart < 0 || rawBombEvidenceEnd <= rawBombEvidenceStart || !rawBombEvidenceSource.includes('if(snapshotValid)') || !rawBombEvidenceSource.includes('const preserved=bombRoomReportSnapshot(snapshot)')) {
+  throw new Error('Submitted bomb-room snapshot is not the authoritative evidence fallback.');
+}
+const evidenceViewerStart = html.indexOf('function photoViewerConfig');
+const evidenceViewerEnd = html.indexOf('function photoViewerModalMarkup', evidenceViewerStart);
+const evidenceViewerSource = html.slice(evidenceViewerStart, evidenceViewerEnd);
+for (const contract of ['validatedSubmission(rawSubmission)||rawSubmission', 'linkedSubmission?rawBombRoomReportForSubmission(linkedSubmission)', 'snapshotRecord||roomIssueRecords(no)']) {
+  if (!evidenceViewerSource.includes(contract)) throw new Error(`Read-only submitted evidence viewer fallback missing: ${contract}`);
+}
 const taskInputMigrationStart = html.indexOf('function createTaskInputsFromSnapshot');
 const taskInputMigrationSource = html.slice(taskInputMigrationStart, html.indexOf('function taskState', taskInputMigrationStart));
 if (taskInputMigrationStart < 0 || taskInputMigrationSource.includes('sameFixture') || taskInputMigrationSource.includes('image?.fixture===')) {
@@ -1853,4 +1868,3 @@ if (html.includes('__CASTLE_NOTIFICATION_QA__')) {
   throw new Error('Notification QA mutation bridge must not be present in the shipped wireframe.');
 }
 console.log('Maid pay ledger notification regression contracts: passed');
-

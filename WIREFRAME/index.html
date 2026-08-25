@@ -5446,6 +5446,10 @@
       function evidencePhotoSnapshot(photo) {
         return {...photo,...(photo.image?{image:{...photo.image}}:{})};
       }
+      function evidencePhotoSignature(photo) {
+        const image=photo?.image;
+        return JSON.stringify([String(photo?.id||''),String(photo?.label||''),String(photo?.src||''),!!photo?.objectUrl,Number(photo?.size)||0,String(photo?.type||''),String(image?.src||''),String(image?.fixture||''),String(image?.uploadedAt||''),String(image?.version||''),String(image?.view||''),!!image?.objectUrl]);
+      }
       function roomIssueRecordSnapshot(record) {
         return {...record,photos:(record.photos||[]).map(evidencePhotoSnapshot)};
       }
@@ -5484,10 +5488,24 @@
         if((submissionTemplate.photos||[]).some(item=>item.required&&submission.uploads?.find(upload=>upload.id===item.id)?.status!=='done'))return null;
         if((submission.uploads||[]).some(upload=>['failed','uploading'].includes(upload.status)))return null;
         if(!Array.isArray(submission.roomIssueIds)||!Array.isArray(submission.roomIssuesSnapshot)||!Number.isInteger(Number(submission.candleCountSnapshot))||Number(submission.candleCountSnapshot)<0)return null;
+        const issueIds=submission.roomIssueIds.map(id=>String(id||'')),issueSnapshots=submission.roomIssuesSnapshot,snapshotIssueIds=issueSnapshots.map(record=>String(record?.id||''));
+        if(issueIds.some(id=>!id)||snapshotIssueIds.some(id=>!id)||new Set(issueIds).size!==issueIds.length||new Set(snapshotIssueIds).size!==snapshotIssueIds.length||[...issueIds].sort().join('|')!==[...snapshotIssueIds].sort().join('|'))return null;
+        const liveIssuesById=new Map(roomIssueRecords(submission.room).map(record=>[String(record.id),record]));
+        const issueLineageOk=issueSnapshots.every(record=>{
+          if(!record)return false;
+          const live=liveIssuesById.get(String(record.id));
+          if(!Array.isArray(record.photos)||!live||!Array.isArray(live.photos))return false;
+          const snapshotPhotoIds=record.photos.map(photo=>String(photo?.id||'')),livePhotoIds=live.photos.map(photo=>String(photo?.id||'')),snapshotPhotoSignatures=record.photos.map(evidencePhotoSignature).sort(),livePhotoSignatures=live.photos.map(evidencePhotoSignature).sort();
+          if(snapshotPhotoIds.some(id=>!id)||new Set(snapshotPhotoIds).size!==snapshotPhotoIds.length||[...snapshotPhotoIds].sort().join('|')!==[...livePhotoIds].sort().join('|')||snapshotPhotoSignatures.join('|')!==livePhotoSignatures.join('|'))return false;
+          return record.room===submission.room&&record.attemptId===submission.attemptId&&record.submissionId===submission.id&&record.createdById===submission.performerId&&record.createdBy===submission.performerName&&live.room===submission.room&&live.attemptId===submission.attemptId&&live.submissionId===submission.id&&live.createdById===submission.performerId&&live.createdBy===submission.performerName;
+        });
+        if(!issueLineageOk)return null;
         if(submission.reportId){
           const reportSnapshot=submission.bombRoomReportSnapshot,liveReport=state.bombRoomReports?.[submission.reportId];
-          if(!reportSnapshot||reportSnapshot.id!==submission.reportId||reportSnapshot.submissionId!==submission.id||reportSnapshot.attemptId!==submission.attemptId||reportSnapshot.room!==submission.room||!reportSnapshot.photos?.length)return null;
-          if(!liveReport||liveReport.id!==submission.reportId||liveReport.submissionId!==submission.id||liveReport.attemptId!==submission.attemptId||liveReport.room!==submission.room||!liveReport.photos?.length)return null;
+          if(!reportSnapshot||reportSnapshot.id!==submission.reportId||reportSnapshot.submissionId!==submission.id||reportSnapshot.attemptId!==submission.attemptId||reportSnapshot.room!==submission.room||reportSnapshot.reportedById!==submission.performerId||reportSnapshot.reportedBy!==submission.performerName||reportSnapshot.baseRateSnapshot!==submission.baseRateSnapshot||!Array.isArray(reportSnapshot.photos)||!reportSnapshot.photos.length)return null;
+          if(!liveReport||liveReport.id!==submission.reportId||liveReport.submissionId!==submission.id||liveReport.attemptId!==submission.attemptId||liveReport.room!==submission.room||liveReport.reportedById!==submission.performerId||liveReport.reportedBy!==submission.performerName||liveReport.baseRateSnapshot!==submission.baseRateSnapshot||!Array.isArray(liveReport.photos)||!liveReport.photos.length)return null;
+          const snapshotReportPhotoIds=reportSnapshot.photos.map(photo=>String(photo?.id||'')),liveReportPhotoIds=liveReport.photos.map(photo=>String(photo?.id||''));
+          if(snapshotReportPhotoIds.some(id=>!id)||new Set(snapshotReportPhotoIds).size!==snapshotReportPhotoIds.length||[...snapshotReportPhotoIds].sort().join('|')!==[...liveReportPhotoIds].sort().join('|')||reportSnapshot.photos.map(evidencePhotoSignature).sort().join('|')!==liveReport.photos.map(evidencePhotoSignature).sort().join('|'))return null;
         }
         return submission;
       }
@@ -5555,10 +5573,14 @@
       }
       function rawBombRoomReportForSubmission(submission) {
         if(!submission?.reportId)return null;
-        const report=state.bombRoomReports?.[submission.reportId]||null;
-        if(report&&report.id===submission.reportId&&report.room===submission.room&&report.submissionId===submission.id&&report.attemptId===submission.attemptId)return report;
-        const snapshot=submission.bombRoomReportSnapshot;
-        return snapshot?.id===submission.reportId&&snapshot.room===submission.room&&snapshot.submissionId===submission.id&&snapshot.attemptId===submission.attemptId?snapshot:null;
+        const report=state.bombRoomReports?.[submission.reportId]||null,snapshot=submission.bombRoomReportSnapshot,linked=record=>record?.id===submission.reportId&&record.room===submission.room&&record.submissionId===submission.id&&record.attemptId===submission.attemptId,snapshotValid=linked(snapshot)&&Array.isArray(snapshot.photos)&&snapshot.photos.length,liveValid=linked(report),snapshotPhotoSignatures=Array.isArray(snapshot?.photos)?snapshot.photos.map(evidencePhotoSignature).sort():[],livePhotoSignatures=Array.isArray(report?.photos)?report.photos.map(evidencePhotoSignature).sort():[],liveEvidenceMatches=liveValid&&Array.isArray(report.photos)&&snapshotPhotoSignatures.length===livePhotoSignatures.length&&snapshotPhotoSignatures.join('|')===livePhotoSignatures.join('|');
+        if(snapshotValid&&liveEvidenceMatches)return report;
+        if(snapshotValid){
+          const preserved=bombRoomReportSnapshot(snapshot);
+          if(liveValid)for(const key of ['status','decidedAt','decidedBy','decisionReason','attemptStatus','supersededAt','supersededReason'])if(report[key]!==undefined)preserved[key]=report[key];
+          return preserved;
+        }
+        return liveValid&&Array.isArray(report.photos)?bombRoomReportSnapshot(report):null;
       }
       function bombRoomReportForSubmission(submission) {
         submission=validatedSubmission(submission);const report=rawBombRoomReportForSubmission(submission);if(!submission?.reportId||!report)return null;return report.reportedById===submission.performerId&&report.reportedBy===submission.performerName&&report.baseRateSnapshot===submission.baseRateSnapshot?report:null;
@@ -5719,19 +5741,19 @@
         const no=String(payload?.room||''),room=ROOMS.find(item=>item.no===no);
         if(!room)return null;
         if(payload?.source==='inspection'){
-          const submission=validatedSubmission(state.cleaningSubmissions?.[payload?.recordId]||null),upload=submission?.uploads?.find(item=>item.id===payload.photoId);
-          if(!submission||submission.room!==no||!upload||state.role!=='admin'&&submission.performerId!==signedInMaidId())return null;
+          const rawSubmission=state.cleaningSubmissions?.[payload?.recordId]||null,submission=validatedSubmission(rawSubmission)||rawSubmission,upload=submission?.uploads?.find(item=>item.id===payload.photoId);
+          if(!rawSubmission||state.cleaningSubmissions?.[rawSubmission.id]!==rawSubmission||submission.room!==no||!upload||state.role!=='admin'&&submission.performerId!==signedInMaidId())return null;
           const captured=!!upload.image?.objectUrl;
           return {title:`${no}호 · ${upload.label}`,subtitle:captured?'메이드가 전체 제출에 포함한 현장 촬영 이미지':'메이드가 전체 제출에 포함한 데모 이미지',large:true,body:`<div class="photo-viewer-visual">${inspectionPhotoSvg(upload,`${no}호 ${upload.label}`)}</div><div class="photo-meta"><div class="info-item"><span>구분</span><strong>${upload.required?'필수 사진':'선택 사진'}</strong></div><div class="info-item"><span>촬영</span><strong>${esc(upload.image?.uploadedAt||'시각 없음')}</strong></div><div class="info-item"><span>제출 버전</span><strong>${esc(upload.image?.version||'현장 촬영')} · ${upload.status==='failed'?'검증 실패':'검증 완료'}</strong></div></div><p class="audit-note" style="margin:12px 0 0">확대 보기는 검수 참고용이며 사진별 승인·반려는 제공하지 않습니다. 사진 원문과 파일명은 URL·브라우저 이력에 저장하지 않습니다.</p>`};
         }
         if(payload?.source==='bomb-room'){
-          const report=state.bombRoomReports?.[payload?.recordId]||bombRoomReport(no),photo=report?.photos?.find(item=>item.id===payload.photoId),meta=bombRoomStatusMeta(report),submission=report?.submissionId?validatedSubmission(state.cleaningSubmissions?.[report.submissionId]||null):null;
+          const linkedSubmission=Object.values(state.cleaningSubmissions||{}).find(item=>item.room===no&&item.reportId===payload?.recordId)||null,report=linkedSubmission?rawBombRoomReportForSubmission(linkedSubmission):state.bombRoomReports?.[payload?.recordId]||bombRoomReport(no),photo=report?.photos?.find(item=>item.id===payload.photoId),meta=bombRoomStatusMeta(report),submission=linkedSubmission||(report?.submissionId?state.cleaningSubmissions?.[report.submissionId]||null:null);
           if(!report||report.room!==no||!photo||state.role!=='admin'&&report.reportedById!==signedInMaidId()&&submission?.performerId!==signedInMaidId())return null;
           const decision=report.attemptStatus==='superseded'?`회차 종료 · ${esc(report.supersededAt||'시각 없음')} · ${esc(report.supersededReason||'담당 변경')}`:report.status==='pending'?'관리자 결정 대기':`${esc(report.decidedAt||'결정 시각 없음')} · ${esc(report.decisionReason|| (report.status==='approved'?'폭탄방 인정':'일반 청소 범위'))}`;
           return {title:`${no}호 · 폭탄방 증빙`,subtitle:`${report.reportedBy} 신고 · ${meta.label} · 데모 메모리 이미지`,large:true,body:`<div class="photo-viewer-visual">${roomIssuePhotoVisual(photo,`${no}호 폭탄방 증빙 이미지`)}</div><div class="photo-meta"><div class="info-item"><span>신고자</span><strong>${esc(report.reportedBy)}</strong></div><div class="info-item"><span>신고 시각</span><strong>${esc(report.reportedAt)}</strong></div><div class="info-item"><span>검수 상태</span><strong>${esc(meta.label)}</strong></div><div class="info-item"><span>관리자 결정·회차</span><strong>${decision}</strong></div></div>${report.note?`<div class="notice notice-info" style="margin-top:12px"><div><strong>신고 메모</strong><br>${esc(report.note)}</div></div>`:''}<p class="audit-note" style="margin:12px 0 0">사진 파일명과 원본은 URL·알림·감사 이력·브라우저 영속 저장소에 남기지 않습니다.</p>`};
         }
-        const record=roomIssueRecords(no).find(item=>item.id===payload?.recordId),photo=record?.photos?.find(item=>item.id===payload?.photoId);
-        if(!record||!photo||state.role!=='admin'&&record.createdById!==signedInMaidId())return null;
+        const linkedSubmission=Object.values(state.cleaningSubmissions||{}).find(item=>item.room===no&&item.roomIssuesSnapshot?.some(record=>record.id===payload?.recordId))||null,snapshotRecord=linkedSubmission?.roomIssuesSnapshot?.find(item=>item.id===payload?.recordId)||null,record=snapshotRecord||roomIssueRecords(no).find(item=>item.id===payload?.recordId),photo=record?.photos?.find(item=>item.id===payload?.photoId);
+        if(!record||!photo||state.role!=='admin'&&record.createdById!==signedInMaidId()&&linkedSubmission?.performerId!==signedInMaidId())return null;
         return {title:`${no}호 · ${record.type||'객실 특이사항'}`,subtitle:`${record.createdBy} 등록 · 관리자 조회 가능 · 데모 메모리 이미지`,large:true,body:`<div class="photo-viewer-visual">${roomIssuePhotoVisual(photo,`${no}호 ${record.type} 특이사항 이미지`)}</div><div class="photo-meta"><div class="info-item"><span>등록자</span><strong>${esc(record.createdBy)}</strong></div><div class="info-item"><span>등록 시각</span><strong>${esc(record.createdAt)}</strong></div><div class="info-item"><span>보존 상태</span><strong>현재 탭 메모리 · 데모</strong></div></div><p class="audit-note" style="margin:12px 0 0">사진 파일명과 원본은 URL·알림·감사 이력·브라우저 영속 저장소에 남기지 않습니다.</p>`};
       }
       function photoViewerModalMarkup(payload) {
@@ -7462,6 +7484,7 @@
           maidTemplateParity:roomNo=>{const no=String(roomNo),task=taskState(no),snapshot=task.templateSnapshot||snapshotForAttempt(no,state.cleaningAttempts?.[task.attemptId]),expected=photoSlotContract(snapshot?.photos||[]),actual=photoSlotContract(task.uploads||[]);return {room:no,version:snapshot?.version||null,expected,actual,same:JSON.stringify(expected)===JSON.stringify(actual)};},
           inspectionTemplateParity:roomNo=>{const no=String(roomNo),submission=currentSubmission(no),attempt=submission?.attemptId?state.cleaningAttempts?.[submission.attemptId]:null,template=templateSnapshotForSubmission(no,submission,attempt),expected=photoSlotContract(template?.photos||[]),actual=photoSlotContract(inspectionTemplateUploadItems(no,template,submission,attempt));return {room:no,submissionId:submission?.id||null,version:template?.version||null,expected,actual,same:JSON.stringify(expected)===JSON.stringify(actual)};},
           submissionEvidenceParity:roomNo=>{const no=String(roomNo),raw=currentSubmissionRecord(no),submission=currentSubmission(no),template=raw?.templateSnapshot,report=rawBombRoomReportForSubmission(raw),expectedIds=(template?.photos||[]).map(item=>item.id),actualIds=(raw?.uploads||[]).map(item=>item.id),issues=raw?.roomIssuesSnapshot||[];return {room:no,submissionId:raw?.id||null,valid:!!submission,templateTypeId:template?.typeId||null,templateVersion:template?.version||null,expectedIds,actualIds,slotsMatch:JSON.stringify(expectedIds)===JSON.stringify(actualIds),photoCount:actualIds.length,donePhotoCount:(raw?.uploads||[]).filter(item=>item.status==='done').length,bombPhotoCount:report?.photos?.length||0,issueCount:issues.length,issuePhotoCount:issues.reduce((total,item)=>total+(item.photos?.length||0),0),candleCount:raw?.candleCountSnapshot??null};},
+          evidenceDamageAudit:(roomNo='639')=>{const no=String(roomNo),raw=currentSubmissionRecord(no),liveReport=raw?.reportId?state.bombRoomReports?.[raw.reportId]||null:null;if(!raw||!liveReport)throw new Error(`${no}호 제출 증빙 점검 대상을 찾을 수 없습니다.`);const priorRole=state.role,liveReportPhotos=liveReport.photos,firstLivePhoto=liveReportPhotos?.[0]||null,firstLivePhotoBackup=firstLivePhoto?{...firstLivePhoto}:null,issueSnapshots=raw.roomIssuesSnapshot,liveIssues=state.roomIssues?.[no];try{state.role='admin';liveReport.photos=[];const preservedReport=rawBombRoomReportForSubmission(raw),inspectionPhotoId=raw.uploads?.find(upload=>upload.image)?.id,bombPhotoId=preservedReport?.photos?.[0]?.id,bombFallback={submissionValid:!!validatedSubmission(raw),photoCount:preservedReport?.photos?.length||0,inspectionViewer:!!photoViewerConfig({source:'inspection',room:no,recordId:raw.id,photoId:inspectionPhotoId}),bombViewer:!!photoViewerConfig({source:'bomb-room',room:no,recordId:raw.reportId,photoId:bombPhotoId})};liveReport.photos=liveReportPhotos;if(firstLivePhoto){delete firstLivePhoto.image;delete firstLivePhoto.src;}const payloadReport=rawBombRoomReportForSubmission(raw),payloadFallback={submissionValid:!!validatedSubmission(raw),photoCount:payloadReport?.photos?.length||0,preservedVisual:!!(payloadReport?.photos?.[0]?.image||payloadReport?.photos?.[0]?.src),viewer:!!photoViewerConfig({source:'bomb-room',room:no,recordId:raw.reportId,photoId:payloadReport?.photos?.[0]?.id})};if(firstLivePhoto){Object.keys(firstLivePhoto).forEach(key=>delete firstLivePhoto[key]);Object.assign(firstLivePhoto,firstLivePhotoBackup);}raw.roomIssuesSnapshot=[];const issueMismatchRejected=!validatedSubmission(raw);raw.roomIssuesSnapshot=issueSnapshots;if(state.roomIssues)state.roomIssues[no]=[];const issue=issueSnapshots?.[0],issueViewer=!!photoViewerConfig({source:'room-issue',room:no,recordId:issue?.id,photoId:issue?.photos?.[0]?.id});return {bombFallback,payloadFallback,issueMismatchRejected,issueViewer};}finally{state.role=priorRole;liveReport.photos=liveReportPhotos;if(firstLivePhoto&&firstLivePhotoBackup){Object.keys(firstLivePhoto).forEach(key=>delete firstLivePhoto[key]);Object.assign(firstLivePhoto,firstLivePhotoBackup);}raw.roomIssuesSnapshot=issueSnapshots;if(state.roomIssues)state.roomIssues[no]=liveIssues;}},
           showInspection:roomNo=>{const no=String(roomNo);state.role='admin';state.detail={type:'cleaning',id:no};render();return {room:no,job:state.jobs[no],submissionId:currentSubmission(no)?.id||null};},
           templateVersionAudit:roomNo=>{const no=String(roomNo),current=templateSnapshotFor(no,'퇴실 청소'),legacy=legacyCheckoutTemplateSnapshotFor(no);return {current:{version:current?.version||null,count:current?.photos?.length||0,tv:!!current?.photos?.some(item=>item.id==='tv-on')},legacy:{version:legacy?.version||null,count:legacy?.photos?.length||0,tv:!!legacy?.photos?.some(item=>item.id==='tv-on')}};},
           counts:()=>({reservations:(state.reservations||[]).length,drafts:(state.drafts||[]).length,submissions:Object.keys(state.cleaningSubmissions||{}).length,earnings:Object.keys(state.earningRecords||{}).length,earningTotal:Object.values(state.earningRecords||{}).reduce((total,item)=>total+Number(item.total||0),0),payments:Object.keys(state.paymentRecords||{}).length,events:(state.events||[]).length}),
