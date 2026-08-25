@@ -1897,3 +1897,32 @@ if (currentAdminTodayForInspectionWording.includes("button('검수 대기 열기
 }
 console.log('Inspection target-list wording static contracts: passed');
 
+for (const pr94KstDailyContract of [
+  "timeZone:'Asia/Seoul'",
+  'function kstTodayIso(now=new Date())',
+  'quickReservationFollowsToday:true',
+  'function refreshQuickReservationActualToday({rerender=false}={})',
+  "window.setInterval(()=>refreshQuickReservationActualToday({rerender:true}),30000)",
+  "state.quickReservationFollowsToday=false;state.quickReservationAnchorDate=shiftIsoDate",
+  "state.quickReservationFollowsToday=true;state.quickReservationAnchorDate=kstTodayIso()",
+  "quickAnchor:state.quickReservationFollowsToday===false?state.quickReservationAnchorDate:null",
+  "today=iso===actualToday,isPast=iso<actualToday",
+  "isPast=iso<todayIso",
+  '오늘 기준 29일',
+  '이동한 29일',
+]) {
+  if (!html.includes(pr94KstDailyContract)) throw new Error(`KST daily quick-window contract missing: ${pr94KstDailyContract}`);
+}
+for (const pr94LegacyQuickWindowContract of [
+  's.quickReservationAnchorDate=s.selectedDate',
+  'quickWindowFollowedToday=targetState.quickReservationAnchorDate===previousDate',
+  'state.quickReservationAnchorDate=state.selectedDate',
+  'today=iso===state.selectedDate,isPast=iso<state.selectedDate',
+]) {
+  if (html.includes(pr94LegacyQuickWindowContract)) throw new Error(`Legacy operating-date quick-window coupling remains: ${pr94LegacyQuickWindowContract}`);
+}
+if (!wireframeReadme.includes('브라우저 현재 시각을 `Asia/Seoul`로 환산한 실제 오늘')) {
+  throw new Error('KST daily quick-window README policy is missing.');
+}
+console.log('KST daily quick-window static contracts: passed');
+
