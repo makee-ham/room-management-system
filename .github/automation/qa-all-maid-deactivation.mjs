@@ -17,7 +17,6 @@ async function assertHealthy(page,width){
 }
 
 async function openMaidDetail(page,maidId){
-  if(!location.href?.includes('noop')){}
   if(!page.url().includes('view=maids')||page.url().includes('detail=')){
     await page.goto(base,{waitUntil:'networkidle'});
   }
