@@ -1567,6 +1567,53 @@
       .scroll-top-button { transition: none; }
     }
 
+  
+
+    /* Event-based notification center */
+    .notification-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+    .notification-filter-group { display:flex; align-items:center; gap:6px; padding:4px; border:1px solid var(--line); border-radius:12px; background:var(--surface-soft); }
+    .notification-filter-group .btn { min-height:38px; padding:7px 11px; }
+    .notification-filter-group .btn[aria-pressed="true"] { color:#fff; background:var(--navy); border-color:var(--navy); }
+    .notification-toolbar-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .notification-list { display:grid; gap:9px; }
+    .notification-card { position:relative; display:grid; grid-template-columns:12px minmax(0,1fr) auto; align-items:start; gap:12px; width:100%; min-height:92px; padding:14px; border:1px solid var(--line); border-radius:13px; color:var(--ink); background:#fff; text-align:left; }
+    .notification-card:hover { border-color:var(--line-strong); background:#fbfdff; }
+    .notification-card.unread { border-color:#bfd4e5; background:#f5faff; box-shadow:inset 3px 0 0 var(--blue); }
+    .notification-card.urgent { border-color:#efb5ba; background:var(--red-soft); box-shadow:inset 3px 0 0 var(--red); }
+    .notification-dot { width:9px; height:9px; margin-top:7px; border-radius:50%; background:transparent; }
+    .notification-card.unread .notification-dot { background:var(--blue); box-shadow:0 0 0 4px rgba(40,108,168,.12); }
+    .notification-card.urgent .notification-dot { background:var(--red); box-shadow:0 0 0 4px rgba(207,51,64,.12); }
+    .notification-copy { min-width:0; }
+    .notification-title-line { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px; }
+    .notification-title-line strong { font-size:14px; }
+    .notification-copy p { margin:0 0 7px; color:var(--muted); font-size:13px; overflow-wrap:anywhere; }
+    .notification-meta { display:flex; align-items:center; gap:7px; flex-wrap:wrap; color:var(--subtle); font-size:12px; }
+    .notification-chip { display:inline-flex; align-items:center; min-height:24px; padding:2px 7px; border-radius:999px; color:var(--navy); background:#eef3f7; font-size:11px; font-weight:800; }
+    .notification-chip.action { color:#8a5400; background:var(--amber-soft); }
+    .notification-chip.handled { color:#17644d; background:var(--green-soft); }
+    .notification-cta { display:flex; align-items:center; gap:5px; align-self:center; color:var(--navy); font-size:12px; font-weight:800; white-space:nowrap; }
+    .notification-empty { padding:26px 18px; border:1px dashed var(--line-strong); border-radius:13px; background:var(--surface-soft); text-align:center; }
+    .notification-empty h3 { margin-bottom:5px; }
+    .notification-empty p { margin:0; color:var(--muted); font-size:13px; }
+    .notification-activity { margin-top:18px; padding-top:16px; border-top:1px solid var(--line); }
+    .notification-activity h3 { margin-bottom:4px; }
+    .notification-activity > p { margin-bottom:10px; color:var(--muted); font-size:12px; }
+    .notification-activity-list { display:grid; gap:7px; }
+    .notification-activity-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; padding:10px 12px; border-radius:10px; background:var(--surface-soft); }
+    .notification-activity-row strong { display:block; font-size:13px; }
+    .notification-activity-row span { color:var(--muted); font-size:12px; }
+    .notification-push-note { margin:0 0 12px; }
+
+    @media (max-width: 720px) {
+      .notification-toolbar { align-items:stretch; }
+      .notification-filter-group { width:100%; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
+      .notification-toolbar-actions { width:100%; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .notification-toolbar-actions .btn { width:100%; }
+      .notification-card { grid-template-columns:10px minmax(0,1fr); padding:13px 12px; }
+      .notification-cta { grid-column:2; justify-self:start; }
+      .notification-activity-row { grid-template-columns:1fr; gap:3px; }
+    }
+
   </style>
 </head>
 <body>
@@ -2357,10 +2404,71 @@
       function activeCleaningFor(maidId=signedInMaidId()) { return state.activeCleaningByMaid?.[maidId]??(maidId==='m1'?state.activeCleaning:null); }
       function setActiveCleaningFor(maidId,no) { if(!state.activeCleaningByMaid)state.activeCleaningByMaid=Object.fromEntries(MAIDS.map(maid=>[maid.id,maid.id==='m1'?state.activeCleaning||null:null]));state.activeCleaningByMaid[maidId]=no||null;if(maidId==='m1')state.activeCleaning=no||null; }
       function syncSignedInMaidAvailability() { const record=state.weeklyAvailability?.[signedInMaidId()]||{days:[],status:'unsubmitted'};state.availabilityDraft=[...(record.days||[])];state.availabilitySubmitted=record.status==='submitted';state.availabilityEditing=false;state.availabilityChangeRequested=record.status==='change-requested'; }
-      function appendEvent(title, detail, {maidIds=[],roomId=null,attemptId=null,dedupeKey=null}={}) {
-        const audience=[...new Set(maidIds.filter(id=>MAIDS.some(maid=>maid.id===id)))];
-        if(dedupeKey){const existing=(state.events||[]).find(event=>event.dedupeKey===dedupeKey);if(existing)return existing;}
-        const event={title,time:state.time,detail,maidIds:audience,roomId:roomId||null,attemptId:attemptId||null,...(dedupeKey?{dedupeKey}:{})};state.events.unshift(event);return event;
+      const NOTIFICATION_SCHEMA_VERSION=1;
+      const NOTIFICATION_BUNDLE_WINDOW_MINUTES=10;
+      const NOTIFICATION_CATEGORY_LABELS={inspection:'청소 검수',assignment:'청소 배정',cancellation:'담당 취소',issue:'현장 문제',delay:'마감·지연',availability:'근무 가능일',complaint:'컴플레인·이의',conflict:'충돌·동기화',payroll:'주급',general:'업무 업데이트'};
+
+      function notificationAudienceKey(role=state.role,maidId=role==='maid'?signedInMaidId():null){return role==='admin'?'admin':`maid:${maidId||signedInMaidId()}`;}
+      function notificationPushKey(role=state.role,maidId=role==='maid'?signedInMaidId():null){return notificationAudienceKey(role,maidId);}
+      function notificationSeedEvents(){return [
+        {id:'notification-seed-admin-inspection',title:'639호 청소 검수 요청',time:'10:18',createdAt:'2026-08-15 10:18',detail:'이서연이 전체 청소 제출을 완료했습니다.',roomId:'639',maidIds:[],notify:true,audience:['admin'],category:'inspection',priority:'high',push:true,actionRequired:true,status:'open',target:{action:'go-inspection'},groupKey:'admin:inspection:639',readBy:[]},
+        {id:'notification-seed-admin-cancel',title:'332호 담당 취소 요청',time:'10:07',createdAt:'2026-08-15 10:07',detail:'김민지1 · 투숙객이 객실에 머물고 있음 · 결정 전 담당 유지',roomId:'332',maidIds:['m1'],notify:true,audience:['admin'],category:'cancellation',priority:'high',push:true,actionRequired:true,status:'open',target:{action:'cancel-review'},groupKey:'admin:cancellation:332',readBy:[]},
+        {id:'notification-seed-admin-availability',title:'다음 주 가능일 미제출 2명',time:'09:30',createdAt:'2026-08-15 09:30',detail:'마감 전 한 번만 묶어 알립니다.',maidIds:[],notify:true,audience:['admin'],category:'availability',priority:'normal',push:true,actionRequired:true,status:'open',target:{action:'go-workforce'},groupKey:'admin:availability:next-week',readBy:[]},
+        {id:'notification-seed-admin-handled',title:'350호 미배정 청소 조치 완료',time:'08:55',createdAt:'2026-08-15 08:55',detail:'담당 지정 완료 · 사건 기록 보존',roomId:'350',maidIds:[],notify:true,audience:['admin'],category:'assignment',priority:'normal',push:false,actionRequired:false,status:'handled',target:{action:'go-cleaning-assignment',data:{day:'today'}},groupKey:'admin:assignment:350',readBy:['admin']},
+        {id:'notification-seed-maid-correction',title:'350호 보완 청소 요청',time:'10:05',createdAt:'2026-08-15 10:05',detail:'욕실 거울과 TV 전원 사진을 다시 확인해 주세요.',roomId:'350',maidIds:['m1'],notify:true,audience:['maid:m1'],category:'inspection',priority:'high',push:true,actionRequired:true,status:'open',target:{action:'go-my'},groupKey:'maid:m1:inspection:350',readBy:[]},
+        {id:'notification-seed-maid-reminder',title:'332호 청소 시작 60분 전',time:'09:55',createdAt:'2026-08-15 09:55',detail:'오늘 10:55 시작 예정 · 예정 업무를 확인하세요.',roomId:'332',maidIds:['m1'],notify:true,audience:['maid:m1'],category:'delay',priority:'normal',push:true,actionRequired:false,status:'open',target:{action:'go-my'},groupKey:'maid:m1:delay:332',readBy:[]},
+        {id:'notification-seed-maid-order',title:'117호 청소 순서 변경',time:'09:45',createdAt:'2026-08-15 09:45',detail:'2번째에서 1번째 청소로 변경되었습니다.',roomId:'117',maidIds:['m1'],notify:true,audience:['maid:m1'],category:'assignment',priority:'normal',push:true,actionRequired:true,status:'open',target:{action:'go-my'},groupKey:'maid:m1:assignment:117',readBy:[]},
+        {id:'notification-seed-maid-assignment',title:'117호 퇴실 청소 배정',time:'09:40',createdAt:'2026-08-15 09:40',detail:'오늘 13:00까지 완료해 주세요.',roomId:'117',maidIds:['m1'],notify:true,audience:['maid:m1'],category:'assignment',priority:'normal',push:true,actionRequired:true,status:'open',target:{action:'go-my'},groupKey:'maid:m1:assignment:117',readBy:[]},
+        {id:'notification-seed-maid-payroll',title:'이번 주 주급 정산 확정',time:'09:20',createdAt:'2026-08-15 09:20',detail:'객실별 승인 합계가 주급 내역에 반영되었습니다.',maidIds:['m1'],notify:true,audience:['maid:m1'],category:'payroll',priority:'normal',push:false,pushOptional:true,actionRequired:false,status:'handled',target:{action:'go-maid-pay'},groupKey:'maid:m1:payroll:2026-08-10',readBy:['maid:m1']}
+      ];}
+      function nextNotificationEventId(){state.notificationSequence=Number(state.notificationSequence||0)+1;return `notification-${state.selectedDate||'demo'}-${state.time?.replace(':','')||'0000'}-${state.notificationSequence}`;}
+      function notificationMinuteValue(event){const text=String(event?.createdAt||`${state.selectedDate||'2026-08-15'} ${event?.time||'00:00'}`),match=text.match(/(\d{4})-(\d{2})-(\d{2})[^\d]?(\d{2}):(\d{2})/);if(!match)return 0;return Math.floor(Date.UTC(Number(match[1]),Number(match[2])-1,Number(match[3]),Number(match[4]),Number(match[5]))/60000);}
+      function notificationRoomFromText(title,detail,roomId=null){if(roomId)return String(roomId);return String(title||'').match(/(\d{3})호/)?.[1]||String(detail||'').match(/(\d{3})호/)?.[1]||null;}
+      function notificationMaidIdsForRoom(roomId){if(!roomId)return [];const submission=typeof currentSubmission==='function'?currentSubmission(String(roomId)):null,attempt=typeof currentAttemptId==='function'?state.cleaningAttempts?.[currentAttemptId(String(roomId))]:null,assignee=ROOMS.find(room=>room.no===String(roomId))?.assignee,assigneeId=MAIDS.find(maid=>maid.name===assignee)?.id;return [...new Set([submission?.performerId,attempt?.performerId,assigneeId].filter(id=>MAIDS.some(maid=>maid.id===id)))];}
+      function notificationMaidIdsForComplaint(){const item=(state.complaints||[]).find(entry=>!entry.deleted&&['unread','ruled','objected'].includes(entry.responseStatus))||(state.complaints||[])[0],maidId=MAIDS.find(maid=>maid.name===item?.maid)?.id;return maidId?[maidId]:[];}
+      function notificationCategoryFromText(text){if(/검수|전체 제출|보완|재청소/.test(text))return 'inspection';if(/배정|담당 변경|순서 변경|청소 취소 통보/.test(text))return 'assignment';if(/취소 요청|취소 승인|취소 거절|담당 취소/.test(text))return 'cancellation';if(/입실 불가|투숙객|도어락|파손|분실|비품 부족|안전 문제|문제 보고/.test(text))return 'issue';if(/마감|지연|미시작|60분 전|시작 시각/.test(text))return 'delay';if(/가능일/.test(text))return 'availability';if(/컴플레인|이의|판정/.test(text))return 'complaint';if(/충돌|동기화 실패|저장 충돌|오래된 데이터/.test(text))return 'conflict';if(/주급|지급|정산/.test(text))return 'payroll';return 'general';}
+      function notificationTargetFor(category,recipientRole,roomId,options={}){if(options.target)return options.target;if(recipientRole==='admin'){if(category==='inspection')return {action:'go-inspection'};if(category==='assignment'||category==='delay')return {action:'go-cleaning-assignment',data:{day:'today'}};if(category==='cancellation')return {action:'cancel-review'};if(category==='issue'||category==='conflict')return roomId?{action:'room-detail',id:roomId}:{action:'alerts'};if(category==='availability')return {action:'go-workforce'};if(category==='complaint')return {action:'complaint-detail'};if(category==='payroll')return {action:'go-payroll'};return {action:'alerts'};}if(category==='payroll')return {action:'go-maid-pay'};if(category==='availability')return {action:'go-schedule'};if(category==='complaint')return {action:'complaint-detail'};return {action:'go-my'};}
+      function notificationPolicyForEvent(title,detail,options={}){
+        if(options.notification===false)return null;
+        const actorRole=options.actorRole||state.role||'system',actorMaidId=options.actorMaidId||(actorRole==='maid'?signedInMaidId():null),text=`${title||''} ${detail||''}`,roomId=notificationRoomFromText(title,detail,options.roomId),requestedMaidIds=[...new Set((options.maidIds||[]).filter(id=>MAIDS.some(maid=>maid.id===id)))],category=options.category||notificationCategoryFromText(text);
+        if(options.notification&&typeof options.notification==='object'){
+          const explicit=options.notification,audience=[...new Set(explicit.audience||[])];if(!audience.length)return null;const recipientRole=audience[0]==='admin'?'admin':'maid';return {...explicit,audience,category:explicit.category||category,roomId,priority:explicit.priority||'normal',push:explicit.push!==false,actionRequired:explicit.actionRequired!==false,status:explicit.status||'open',target:notificationTargetFor(explicit.category||category,recipientRole,roomId,explicit),groupKey:explicit.groupKey||`${audience.join('|')}:${explicit.category||category}:${roomId||'general'}`,actorRole,actorMaidId};
+        }
+        if(actorRole==='maid'){
+          if(/청소 전체 제출|검수 요청|재검수 요청/.test(text))return {audience:['admin'],category:'inspection',roomId,priority:'high',push:true,actionRequired:true,status:'open',target:notificationTargetFor('inspection','admin',roomId),groupKey:`admin:inspection:${roomId||'general'}`,actorRole,actorMaidId};
+          if(/담당 취소 요청|취소 요청/.test(text))return {audience:['admin'],category:'cancellation',roomId,priority:'high',push:true,actionRequired:true,status:'open',target:notificationTargetFor('cancellation','admin',roomId),groupKey:`admin:cancellation:${roomId||actorMaidId||'general'}`,actorRole,actorMaidId};
+          if(/이의 제출|입실 불가|투숙객|도어락|파손|분실|비품 부족|안전 문제|문제 보고/.test(text)){const adminCategory=/이의/.test(text)?'complaint':'issue';return {audience:['admin'],category:adminCategory,roomId,priority:'high',push:true,actionRequired:true,status:'open',target:notificationTargetFor(adminCategory,'admin',roomId),groupKey:`admin:${adminCategory}:${roomId||actorMaidId||'general'}`,actorRole,actorMaidId};}
+          if(/시작 지연|완료 지연|마감 초과/.test(text))return {audience:['admin'],category:'delay',roomId,priority:'high',push:true,actionRequired:true,status:'open',target:notificationTargetFor('delay','admin',roomId),groupKey:`admin:delay:${roomId||actorMaidId||'general'}`,actorRole,actorMaidId};
+          return null;
+        }
+        if(actorRole==='admin'){
+          let targetMaidIds=[...requestedMaidIds];
+          if(/전체 제출 승인|검수 승인|전체 제출 반려|보완 청소|재청소/.test(text)&&!targetMaidIds.length)targetMaidIds=notificationMaidIdsForRoom(roomId);
+          if(/컴플레인 판정|이의 답변/.test(text)&&!targetMaidIds.length)targetMaidIds=notificationMaidIdsForComplaint();
+          const maidNotice=/^내 |통보|안내|배정|담당 변경|순서 변경|취소|시작 시각|보류|시작 가능|전체 제출 승인|검수 승인|전체 제출 반려|보완|재청소|컴플레인 판정|이의 답변|주급|지급|마감|지연|비활성/.test(text);
+          if(targetMaidIds.length&&maidNotice){const audience=targetMaidIds.map(id=>`maid:${id}`),informational=/승인|종결|확정|지급 완료|처리 결과|비활성 완료/.test(text)&&!/보완|재청소|지연|마감/.test(text),priority=/긴급|보완|재청소|반려|지연|마감|취소/.test(text)?'high':'normal',pushOptional=category==='payroll'&&/정산 확정/.test(text);return {audience,category,roomId,priority,push:!pushOptional,pushOptional,actionRequired:!informational,status:informational?'handled':'open',target:notificationTargetFor(category,'maid',roomId),groupKey:`${audience.join('|')}:${category}:${roomId||'general'}`,actorRole,actorMaidId};}
+          if(/미배정.*남|미배정 청소|가능일.*미제출|동기화 실패|저장 충돌|주급.*오류|지급.*예외/.test(text)){return {audience:['admin'],category,roomId,priority:'high',push:true,actionRequired:true,status:'open',target:notificationTargetFor(category,'admin',roomId),groupKey:`admin:${category}:${roomId||'general'}`,actorRole,actorMaidId};}
+          return null;
+        }
+        return null;
+      }
+      function normalizeNotificationEvent(event,index=0){if(!event||typeof event!=='object')return event;event.id=event.id||`event-${index}-${String(event.time||'0000').replace(/\D/g,'')}`;event.time=event.time||state.time;event.createdAt=event.createdAt||`${state.selectedDate||'2026-08-15'} ${event.time}`;event.maidIds=Array.isArray(event.maidIds)?event.maidIds:[];event.audience=Array.isArray(event.audience)?event.audience:[];event.readBy=Array.isArray(event.readBy)?event.readBy:[];event.notify=event.notify===true;if(event.notify){event.category=event.category||notificationCategoryFromText(`${event.title} ${event.detail}`);event.priority=event.priority||'normal';event.status=event.status||'open';event.actionRequired=event.actionRequired!==false;event.groupKey=event.groupKey||`${event.audience.join('|')}:${event.category}:${event.roomId||'general'}`;event.target=event.target||notificationTargetFor(event.category,event.audience[0]==='admin'?'admin':'maid',event.roomId);}return event;}
+      function ensureNotificationState(){state.events=Array.isArray(state.events)?state.events:[];state.notificationPushSettings=state.notificationPushSettings&&typeof state.notificationPushSettings==='object'?state.notificationPushSettings:{};state.notificationFilter=['all','unread','action'].includes(state.notificationFilter)?state.notificationFilter:'all';if(state.notificationSchemaVersion!==NOTIFICATION_SCHEMA_VERSION){const existingIds=new Set(state.events.map(event=>event?.id).filter(Boolean)),seeds=notificationSeedEvents().filter(event=>!existingIds.has(event.id));state.events=[...seeds,...state.events];state.notificationSchemaVersion=NOTIFICATION_SCHEMA_VERSION;}state.notificationSequence=Number(state.notificationSequence||state.events.length);state.events.forEach(normalizeNotificationEvent);return state.events;}
+      function notificationEventsForKey(key=notificationAudienceKey()){ensureNotificationState();return state.events.filter(event=>event.notify&&event.audience.includes(key)).sort((left,right)=>notificationMinuteValue(right)-notificationMinuteValue(left));}
+      function notificationBundlesForKey(key=notificationAudienceKey()){
+        const bundles=[];for(const event of notificationEventsForKey(key)){const stamp=notificationMinuteValue(event),groupKey=event.groupKey||event.id,existing=bundles.find(bundle=>bundle.groupKey===groupKey&&Math.abs(bundle.latestStamp-stamp)<=NOTIFICATION_BUNDLE_WINDOW_MINUTES);if(existing){existing.events.push(event);existing.eventIds.push(event.id);existing.bundleCount+=1;existing.unread=existing.unread||!event.readBy.includes(key);existing.actionRequired=existing.actionRequired||event.actionRequired&&event.status!=='handled';existing.latestStamp=Math.max(existing.latestStamp,stamp);if(stamp>=notificationMinuteValue(existing.latest)){existing.latest=event;existing.title=event.title;existing.detail=event.detail;}}else bundles.push({id:event.id,groupKey,latest:event,events:[event],eventIds:[event.id],bundleCount:1,title:event.title,detail:event.detail,latestStamp:stamp,unread:!event.readBy.includes(key),actionRequired:event.actionRequired&&event.status!=='handled'});}return bundles.sort((left,right)=>right.latestStamp-left.latestStamp);
+      }
+      function notificationUnreadCount(key=notificationAudienceKey()){return notificationBundlesForKey(key).filter(bundle=>bundle.unread).length;}
+      function markNotificationRead(ids,key=notificationAudienceKey()){ensureNotificationState();const targetIds=new Set(Array.isArray(ids)?ids:[ids]);state.events.forEach(event=>{if(targetIds.has(event.id)&&event.notify&&!event.readBy.includes(key))event.readBy.push(key);});}
+      function markAllNotificationsRead(key=notificationAudienceKey()){notificationEventsForKey(key).forEach(event=>{if(!event.readBy.includes(key))event.readBy.push(key);});}
+      function notificationPushEnabled(key=notificationPushKey()){ensureNotificationState();if(!(key in state.notificationPushSettings))state.notificationPushSettings[key]=!!state.notificationsEnabled;return !!state.notificationPushSettings[key];}
+      function setNotificationPushEnabled(enabled,key=notificationPushKey()){ensureNotificationState();state.notificationPushSettings[key]=!!enabled;state.notificationsEnabled=!!enabled;}
+      function queueForegroundNotification(event){if(!event?.notify||!event.push)return;const currentKey=notificationAudienceKey(),actorKey=event.actorRole==='admin'?'admin':event.actorRole==='maid'&&event.actorMaidId?`maid:${event.actorMaidId}`:null;if(!event.audience.includes(currentKey)||actorKey===currentKey||!notificationPushEnabled(currentKey))return;event.pushState='foreground';event.pushDeliveredAt=`${state.selectedDate} ${state.time}`;if(typeof Notification!=='undefined'&&Notification.permission==='granted'){try{new Notification(event.title,{body:event.detail||'CASTLE THE ART 업무 업데이트'});}catch(error){event.pushState='in-app-fallback';}}}
+      function resolveRelatedAdminNotification(title,roomId){if(state.role!=='admin'||!/승인|반려|거절|종결|처리 완료|취소 승인|취소 거절/.test(String(title||'')))return;const category=/취소/.test(title)?'cancellation':/컴플레인|이의|판정/.test(title)?'complaint':'inspection';notificationEventsForKey('admin').forEach(event=>{if(event.category===category&&(!roomId||event.roomId===roomId)&&event.status!=='handled'){event.status='handled';event.actionRequired=false;event.resolvedAt=`${state.selectedDate} ${state.time}`;}});}
+      function appendEvent(title,detail,options={}){
+        ensureNotificationState();const maidIds=[...new Set((options.maidIds||[]).filter(id=>MAIDS.some(maid=>maid.id===id)))],roomId=notificationRoomFromText(title,detail,options.roomId),attemptId=options.attemptId||null,dedupeKey=options.dedupeKey||null;if(dedupeKey){const existing=(state.events||[]).find(event=>event.dedupeKey===dedupeKey);if(existing)return existing;}
+        resolveRelatedAdminNotification(title,roomId);const actorRole=options.actorRole||state.role||'system',actorMaidId=options.actorMaidId||(actorRole==='maid'?signedInMaidId():null),policy=notificationPolicyForEvent(title,detail,{...options,maidIds,roomId,actorRole,actorMaidId}),event={id:nextNotificationEventId(),title,time:state.time,createdAt:`${state.selectedDate} ${state.time}`,detail,maidIds:[...maidIds],roomId:roomId||null,attemptId,actorRole,actorMaidId,...(dedupeKey?{dedupeKey}:{})};
+        if(policy){Object.assign(event,{notify:true,audience:policy.audience,category:policy.category,priority:policy.priority,push:policy.push,pushOptional:!!policy.pushOptional,actionRequired:policy.actionRequired,status:policy.status,target:policy.target,groupKey:policy.groupKey,readBy:[]});for(const key of policy.audience){if(key.startsWith('maid:')){const id=key.slice(5);if(!event.maidIds.includes(id))event.maidIds.push(id);}}}else Object.assign(event,{notify:false,audience:[],readBy:[]});state.events.unshift(event);queueForegroundNotification(event);return event;
       }
       function durableLedgerSnapshot(targetState=state) {
         const sortedEntries=(record,project)=>Object.entries(record||{}).sort(([left],[right])=>left.localeCompare(right)).map(([key,value])=>[key,project(value,key)]),sortedValues=(values,project)=>[...(values||[])].map(project).sort((left,right)=>String(left.id||left[0]||'').localeCompare(String(right.id||right[0]||'')));
@@ -3107,6 +3215,12 @@
         ].map(r=>`<article class="room-row" style="grid-template-columns:90px 1fr 140px 140px"><div><strong>${r[0]}</strong></div><div><strong>${r[1]}</strong><span class="cell-sub">계획일과 현장 완료일 분리</span></div><div>${statusBadge(r[2],r[2].startsWith('승인')?'green':'amber')}</div><div>${button('결과 보기','cleaning-detail','outline',`data-id="${r[3]}"`)}</div></article>`).join('')}</section>`;
       }
 
+      function renderMaidPayFromLedger() {
+        const currentMaid=signedInMaid(),weeks=adminPayWeeks().map((week,index)=>{const tasks=week.tasksByMaid?.[currentMaid.id]||[],totals=payrollTaskTotals(tasks),payment=paymentStatusMeta(week.start,currentMaid.id,totals.confirmed),record=paymentRecordFor(week.start,currentMaid.id),displayAmount=paymentDisplayAmount(record,totals.confirmed),paymentDrift=displayAmount!==totals.confirmed,paidAt=payment.status==='PAID'?(record.paidAt||`${payrollDateLabel(addIsoDays(week.start,7))} 지급 기록`):['PAYING','CHECK'].includes(record.status)?payment.label:index===0?'다음 월요일 지급 예정':payment.label;return {id:week.start,group:index===0?'current':index===1?'last':'older',label:index===0?'이번 주':index===1?'지난주':'이전 주',period:weekRangeLabel(week.start),confirmed:displayAmount,ledgerConfirmed:totals.confirmed,pending:totals.pending,paymentDrift,status:payment.label,tone:payment.tone,paidAt,tasks};}),current=weeks[0],selectedWeek=state.maidPaySelectedWeek,shown=selectedWeek?weeks.filter(week=>week.id===selectedWeek):weeks;
+        const weekCard=week=>{const open=state.maidPayOpenWeek===week.id;return `<article class="card maid-pay-week"><div class="maid-pay-week-head"><div><span class="maid-pay-week-label">${week.label} · ${week.period}</span><strong>${money(week.confirmed)}</strong><small>${week.paymentDrift?'잠근 지급 기록액':'승인 확정'} · ${esc(currentMaid.name)} 데모 지급 이력</small></div>${statusBadge(week.status,week.tone)}</div>${week.paymentDrift?`<div class="notice notice-danger" style="margin:10px 0 0"><div><strong>현재 원장 ${money(week.ledgerConfirmed)}</strong><br>지급 기록액과의 차이는 관리자 정정·상계 대상으로 분리됩니다.</div></div>`:''}<div class="maid-pay-week-stats"><div><span>현재 원장 예상</span><strong>${money(week.ledgerConfirmed+week.pending)}</strong></div><div><span>검수 대기</span><strong>${money(week.pending)}</strong></div><div><span>지급 기록</span><strong>${week.paidAt}</strong></div></div><button class="maid-pay-disclosure" type="button" data-action="toggle-maid-pay-week" data-id="${week.id}" aria-expanded="${open}" aria-controls="maid-pay-week-${week.id}"><span>작업 상세 ${week.tasks.length}건</span><span>${open?'접기':'자세히 보기'} ${icon('chevronRight','icon-sm')}</span></button><div id="maid-pay-week-${week.id}" class="maid-pay-task-list" ${open?'':'hidden'}>${week.tasks.map(task=>`<div class="maid-pay-task"><div><strong>${esc(task.room)} · ${esc(task.kind)}</strong><span>${esc(task.date)} · ${esc(task.typeName)} · ${esc(task.elevator)}${task.roundLabel?` · 제출/회차 ${esc(task.roundLabel)}`:''}</span><span class="bomb-room-pay-breakdown">${esc(payrollTaskFormula(task))}</span>${task.reportId&&task.photoId?button('폭탄방 증빙 보기','bomb-room-photo','outline',`data-room="${task.roomNo}" data-report="${task.reportId}" data-photo="${task.photoId}"`):''}</div><div><b>${task.stage==='pending'?'승인 시 ':''}${money(task.stage==='excluded'?0:task.amount)}</b>${statusBadge(task.status,task.tone)}</div></div>`).join('')}</div></article>`;};
+        const selectedLabel=selectedWeek?weekRangeLabel(selectedWeek,true):'달력에서 주차 선택',historyBody=shown.length?shown.map(weekCard).join(''):`<section class="inline-empty"><h3>${weekRangeLabel(selectedWeek,true)} 주급 기록이 없습니다</h3><p>해당 월요일–일요일 주차에는 저장된 데모 작업 이력이 없습니다.</p></section>`;
+        return renderCoach()+renderNetworkNotice()+`<div class="view-stack"><section class="card pay-hero"><span>이번 주 · ${weekRangeLabel(current.id)} · 데모 지급 이력</span><strong>${money(current.confirmed)}</strong><div class="pay-hero-grid"><div><span>검수 전 예상 포함</span><b>${money(current.confirmed+current.pending)}</b></div><div><span>검수 대기</span><b>${money(current.pending)}</b></div></div></section><div class="notice notice-warning"><div><strong>앱은 송금하지 않고 지급 여부만 기록합니다.</strong></div></div><div class="pay-week-toolbar"><div><h2>지금까지 주급 내역</h2><p>관리자와 같은 객실별 원장을 월요일–일요일 주차로 표시합니다.</p></div><button class="pay-week-picker" type="button" data-action="open-pay-calendar" data-context="maid-pay" aria-haspopup="dialog">${icon('calendar','icon-sm')}<span>${selectedLabel}</span>${icon('chevronRight','icon-sm')}</button></div><div class="maid-pay-history-head"><div><h2>${selectedWeek?'선택한 주차':'저장된 전체 주차'}</h2><p>${selectedWeek?weekRangeLabel(selectedWeek,true):`데모 ${weeks.length}주 · 최신순`}</p></div>${selectedWeek?button('전체 주차 보기','clear-maid-pay-week','outline'):''}</div><div class="maid-pay-history">${historyBody}</div><p class="maid-pay-footnote">객실 타입·기본 청소요금은 8월 운영 시트 정본이고, 인명·예약·과거 지급 이력은 기능 확인용 데모입니다. 컴플레인·벌점은 주급에서 자동 차감되지 않습니다.</p></div>`;
+      }
       function renderMaidPay() {
         return `<div class="settings-grid">${settingCard('wallet','이번 주 예상','승인 확정 52,000원 · 검수 대기 20,000원',button('상세 보기','demo-info','outline'))}${settingCard('check','지난주 지급 예정',paymentStatusFor('2026-08-03',signedInMaidId())==='PAID'?'138,000원 · 지급 완료':'138,000원 · 다음 월요일 외부 지급',button('지급 이력','pay-detail','outline'))}</div><div class="notice notice-warning" style="margin-top:14px">청소요금은 8월 운영 시트 정본입니다. 벌점·컴플레인은 평가 참고 기록이며 주급을 자동 차감하지 않습니다.</div>`;
       }
@@ -3347,14 +3461,55 @@
         showModal({title:'예약 등록 · 데모',subtitle:'체크인과 체크아웃 일정을 입력하세요.',large:true,body:`<form id="reservation-form" class="form-grid"><div class="field"><label for="res-room">객실</label><select id="res-room" class="select-control"><option>211호 · 데모</option></select></div><div class="field"><label for="res-customer">고객 이름 · 선택</label><input id="res-customer" class="input-control" value="홍길동 (데모)"><small>관리자 예약 상세에서만 표시</small></div><div class="field"><label for="res-checkin">예정 체크인</label><input id="res-checkin" class="input-control" type="datetime-local" value="2026-08-15T16:00"></div><div class="field"><label for="res-checkout">예정 체크아웃</label><input id="res-checkout" class="input-control" type="datetime-local" value="2026-08-16T11:00"></div><div class="field"><label for="early">얼리 체크인</label><select id="early" class="select-control"><option>없음</option><option>1시간</option><option>2시간</option></select></div><div class="field"><label for="late">레이트 체크아웃</label><select id="late" class="select-control"><option>없음</option><option>1시간</option><option>2시간</option></select></div></form>`,confirmLabel:'예약 저장',confirmAction:'save-reservation',historyKind:'reservation',historyPayload:{room:'211'}});
       }
 
-      function openAlerts() {
-        if(state.role==='maid'){
-          const maidId=signedInMaidId(),events=(state.events||[]).filter(event=>event.maidIds?.includes(maidId));
-          showModal({title:'내 알림함',subtitle:'담당·순서 변경과 취소 통보를 앱 안에 보존합니다.',large:true,body:`<div class="rail-list">${events.length?events.map(event=>`<div class="rail-row">${icon('bell','icon-sm')}<strong>${esc(event.title)}</strong><span>${esc(event.time)} · ${esc(event.detail)}</span></div>`).join(''):'<div class="state-panel" style="padding:12px"><p>새 변경 알림이 없습니다.</p></div>'}</div><p class="audit-note" style="margin:12px 0 0">이 데모는 앱 내부 알림만 시뮬레이션하며 실제 푸시·문자 메시지를 발송하지 않습니다.</p>`,closeLabel:'닫기'});return;
-        }
-        const items=[['350호 입실 미준비','room','350','검수·촛불 차단'],['639호 검수 대기','cleaning','639','전체 제출 v2'],['김민지1 취소 요청','maid','m1','15분 내 결정'],['레이트 체크아웃 출입 충돌','room','332','PIN 조회 뒤 일정 변경'],['지난주 지급 확인','pay','week','OPEN'],['컴플레인 메이드 이의','complaint','c1','재검토 필요']];
-        showModal({title:'알림함',subtitle:'푸시를 놓쳐도 사건이 해결될 때까지 앱 안에 남습니다.',large:true,body:`<div class="rail-list">${items.map(i=>`<button class="rail-row" type="button" data-action="alert-link" data-type="${i[1]}" data-id="${i[2]}">${icon('bell','icon-sm')}<strong>${i[0]}</strong><span>${i[3]} ${icon('chevronRight','icon-sm')}</span></button>`).join('')}</div>`});
+      function notificationCategoryLabel(category){return NOTIFICATION_CATEGORY_LABELS[category]||NOTIFICATION_CATEGORY_LABELS.general;}
+      function notificationFilterLabel(filter){return filter==='unread'?'안 읽음':filter==='action'?'처리 필요':'전체';}
+      function renderNotificationListMarkup({key=notificationAudienceKey(),filter=state.notificationFilter,includeActivity=true}={}){
+        ensureNotificationState();const bundles=notificationBundlesForKey(key),filtered=bundles.filter(bundle=>filter==='unread'?bundle.unread:filter==='action'?bundle.actionRequired:true),activity=(state.events||[]).filter(event=>!event.notify).slice(0,5),pushEnabled=notificationPushEnabled(key),filterButtons=[['all','전체'],['unread','안 읽음'],['action','처리 필요']].map(([value,label])=>`<button class="btn btn-ghost" type="button" data-action="notification-filter" data-filter="${value}" aria-pressed="${filter===value}">${label}${value==='unread'?` ${notificationUnreadCount(key)}`:''}</button>`).join('');
+        const cards=filtered.map(bundle=>{const event=bundle.latest,priority=event.priority==='urgent'?'urgent':'',status=event.status==='handled'&&!bundle.actionRequired?'처리 완료':bundle.actionRequired?'확인 필요':'안내',statusClass=status==='처리 완료'?'handled':bundle.actionRequired?'action':'',bundleText=bundle.bundleCount>1?` · 업데이트 ${bundle.bundleCount}건`:'';return `<button class="notification-card ${bundle.unread?'unread':''} ${priority}" type="button" data-action="notification-open" data-event-id="${esc(event.id)}" data-event-ids="${esc(bundle.eventIds.join(','))}" data-notification-card="${esc(event.category)}"><span class="notification-dot" aria-hidden="true"></span><span class="notification-copy"><span class="notification-title-line"><strong>${esc(event.title)}</strong>${bundle.bundleCount>1?`<span class="notification-chip">업데이트 ${bundle.bundleCount}건</span>`:''}</span><p>${esc(event.detail||'업무 상태가 변경되었습니다.')}</p><span class="notification-meta"><span>${esc(event.time)}</span><span>${esc(notificationCategoryLabel(event.category))}</span><span class="notification-chip ${statusClass}">${status}</span>${event.pushOptional?'<span>푸시 선택</span>':event.push?'<span>푸시 대상</span>':'<span>앱 내 기록</span>'}${bundleText}</span></span><span class="notification-cta">관련 화면 ${icon('chevronRight','icon-sm')}</span></button>`;}).join('');
+        const activityMarkup=includeActivity?`<section class="notification-activity"><h3>최근 활동 기록</h3><p>정상 청소 시작·사진 업로드·가능일 제출·관리자 직접 저장처럼 푸시하지 않는 활동입니다.</p><div class="notification-activity-list">${activity.length?activity.map(event=>`<div class="notification-activity-row"><span><strong>${esc(event.title)}</strong><span>${esc(event.detail||'')}</span></span><span>${esc(event.time||'')}</span></div>`).join(''):'<div class="notification-empty"><p>기록된 일반 활동이 없습니다.</p></div>'}</div></section>`:'';
+        return `<div class="notification-toolbar"><div class="notification-filter-group" role="group" aria-label="알림 필터">${filterButtons}</div><div class="notification-toolbar-actions"><button class="btn btn-outline" type="button" data-action="notification-mark-all-read" ${notificationUnreadCount(key)?'':'disabled'}>모두 읽음</button><button class="btn btn-outline" type="button" data-action="notification-toggle-push" aria-pressed="${pushEnabled}">${pushEnabled?'푸시 켜짐':'푸시 꺼짐'}</button></div></div><div class="notice notice-info notification-push-note"><div><strong>앱 내 알림은 항상 보존됩니다.</strong><br>푸시는 지금 확인하거나 행동해야 하는 상태 변경만 대상으로 하며, 이 정적 데모의 브라우저 알림은 화면이 열려 있는 동안만 동작합니다. 실제 백그라운드·모바일 푸시는 서비스 워커와 서버 발송 계층이 필요합니다.</div></div><div class="notification-list" data-notification-list="${esc(key)}" data-filter="${esc(filter)}">${cards||`<section class="notification-empty"><h3>${notificationFilterLabel(filter)} 알림이 없습니다</h3><p>새 상태 변경이 생기면 발생 시각 순서로 표시됩니다.</p></section>`}</div>${activityMarkup}`;
       }
+      function openNotificationCenter(trigger=document.activeElement){const roleLabel=state.role==='admin'?'관리자 알림':'내 알림';showModal({title:roleLabel,subtitle:'업데이트를 시간순으로 보존하고 관련 업무 화면으로 바로 연결합니다.',large:true,trigger,body:renderNotificationListMarkup(),closeLabel:'닫기'});}
+      function openAlerts(){openNotificationCenter(document.activeElement);}
+
+      function dispatchNotificationTarget(event){
+        const target=event?.target||{},action=target.action||'alerts';
+        if(action==='go-inspection'){pushPageTransition(()=>{state.detail=null;state.adminView='cleaning';state.cleaningTab='inspection';});return;}
+        if(action==='go-cleaning-assignment'){const day=target.data?.day==='tomorrow'?'tomorrow':'today';pushPageTransition(()=>{state.detail=null;state.adminView='cleaning';state.cleaningTab=`assignment-${day}`;syncAssignmentDateForCleaningTab(state);});return;}
+        if(action==='go-workforce'){pushPageTransition(()=>{state.detail=null;state.adminView='maids';state.adminMaidTab='workforce';});return;}
+        if(action==='go-my'){pushPageTransition(()=>{state.detail=null;state.maidView='my';});return;}
+        if(action==='go-maid-pay'){pushPageTransition(()=>{state.detail=null;state.maidView='pay';});return;}
+        if(action==='go-schedule'){pushPageTransition(()=>{state.detail=null;state.maidView='schedule';});return;}
+        const button=document.createElement('button');button.type='button';button.hidden=true;button.dataset.action=action;if(target.id)button.dataset.id=target.id;Object.entries(target.data||{}).forEach(([key,value])=>button.dataset[key]=String(value));document.body.appendChild(button);button.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window}));button.remove();
+      }
+      function closeNotificationModalAndNavigate(notificationEvent){
+        const navigate=()=>requestAnimationFrame(()=>dispatchNotificationTarget(notificationEvent)),entry=history.state;
+        if(isWireframeHistory(entry)&&entry.layer==='modal'){
+          let completed=false;
+          const onPop=()=>{if(completed)return;completed=true;setTimeout(navigate,0);};
+          window.addEventListener('popstate',onPop,{once:true});
+          closeModal();
+          return;
+        }
+        rawCloseModal();navigate();
+      }
+      document.addEventListener('click',browserEvent=>{
+        const el=browserEvent.target.closest?.('[data-action]'),action=el?.dataset.action;
+        if(!['notification-filter','notification-mark-all-read','notification-toggle-push','notification-open'].includes(action))return;
+        browserEvent.preventDefault();browserEvent.stopImmediatePropagation();
+        if(action==='notification-filter'){
+          const filter=el.dataset.filter;if(!['all','unread','action'].includes(filter))return;
+          state.notificationFilter=filter;rawCloseModal();openNotificationCenter(el);return;
+        }
+        if(action==='notification-mark-all-read'){
+          markAllNotificationsRead();render();rawCloseModal();openNotificationCenter(el);toast('현재 계정의 알림을 모두 읽음 처리했습니다.');return;
+        }
+        if(action==='notification-toggle-push'){
+          const enabled=!notificationPushEnabled();setNotificationPushEnabled(enabled);appendEvent('기기 푸시 설정 변경',enabled?'현재 계정 푸시 켜짐 · 앱 내 알림은 항상 유지':'현재 계정 푸시 꺼짐 · 앱 내 알림은 항상 유지',{notification:false});render();rawCloseModal();openNotificationCenter(el);toast(enabled?'행동이 필요한 업데이트의 푸시를 켰습니다.':'푸시를 껐습니다. 앱 내 알림은 계속 남습니다.');return;
+        }
+        const ids=String(el.dataset.eventIds||el.dataset.eventId||'').split(',').filter(Boolean),eventId=el.dataset.eventId||ids[0],notificationEvent=(state.events||[]).find(item=>item.id===eventId);
+        markNotificationRead(ids);render();if(notificationEvent)closeNotificationModalAndNavigate(notificationEvent);
+      },true);
 
       function openPublishConfirm() {
         const selected=state.drafts.filter(d=>state.selectedDrafts.includes(d.id));
@@ -3647,8 +3802,8 @@
       }
 
       function renderTopbar() {
-        const alertCount=state.role==='admin'?6:(state.events||[]).filter(event=>event.maidIds?.includes(signedInMaidId())).length;
-        return `<header class="topbar"><div class="topbar-title"><h1>${esc(titleForView())}</h1><p>한국시간 · 마지막 동기화 ${state.selectedDate.replaceAll('-','.')} ${state.network==='online'?state.time:'09:48'} ${state.network==='online'?'':'· 읽기 전용'}</p></div><div class="topbar-actions"><button class="icon-btn" type="button" data-action="alerts" aria-label="알림함 열기 · ${alertCount}건">${icon('bell')}<span class="count-dot">${alertCount}</span></button><button class="btn btn-outline" type="button" data-action="switch-role" aria-label="${state.role==='admin'?'메이드 보기':'관리자 보기'}">${icon('users','icon-sm')}<span>${state.role==='admin'?'메이드 보기':'관리자 보기'}</span></button></div></header>`;
+        const alertCount=notificationUnreadCount(notificationAudienceKey()),countMarkup=alertCount?`<span class="count-dot">${alertCount}</span>`:'';
+        return `<header class="topbar"><div class="topbar-title"><h1>${esc(titleForView())}</h1><p>한국시간 · 마지막 동기화 ${state.selectedDate.replaceAll('-','.')} ${state.network==='online'?state.time:'09:48'} ${state.network==='online'?'':'· 읽기 전용'}</p></div><div class="topbar-actions"><button class="icon-btn" type="button" data-action="alerts" aria-label="알림함 열기 · 안 읽음 ${alertCount}건">${icon('bell')}${countMarkup}</button><button class="btn btn-outline" type="button" data-action="switch-role" aria-label="${state.role==='admin'?'메이드 보기':'관리자 보기'}">${icon('users','icon-sm')}<span>${state.role==='admin'?'메이드 보기':'관리자 보기'}</span></button></div></header>`;
       }
 
       function dateObject(value=state.selectedDate) {
@@ -5583,19 +5738,10 @@
         const upcomingNotice=upcoming.length?`<div class="assignment-notice">${icon('bell')}<div><p><strong>통보된 청소 일정 ${upcoming.length}건</strong><br>오늘·내일 날짜와 관리자가 확정한 순서입니다.</p><ol class="maid-assignment-route">${upcoming.map(({item,assignment})=>`<li><b>${assignment.order}</b><span>${esc(dateLabel(targetEffectiveDate(item)))} · ${item.room}호 · ${esc(item.kind)} · ${esc(assignmentScheduleText(item))}${assignment.activationBlockedBy?' · 관리자 확인 대기':''}</span></li>`).join('')}</ol></div></div>`:'';
         return renderCoach()+renderNetworkNotice()+`<div class="view-stack">${upcomingNotice}<section class="card work-hero"><span>${esc(maidName)} 현재 작업 상태</span><strong>${activeCleaning?`${activeCleaning}호 청소 중`:'청소 중 없음'}</strong><p>관리자에게 배정·통보된 업무만 표시합니다. 동시에 청소 중 한 건만 가능합니다.</p></section><div class="mobile-section-title"><div><h2>내 업무 ${own.length}건</h2><p>담당 확정부터 검수 결과까지 이어집니다.</p></div></div>${renderListState(own.length?`<div class="job-list">${own.map(myJobCard).join('')}</div>`:`<section class="inline-empty"><h3>배정된 업무가 없습니다</h3><p>관리자가 오늘·내일 배정을 통보하면 내 업무와 알림에 표시됩니다.</p>${button('근무 가능일 확인','go-schedule','primary')}</section>`)}</div>`;
       }
-      function renderMaidAlerts() {
-        const maid=signedInMaid(),assigned=notifiedAssignmentEntriesForMaid(maid.id),targetedEvents=(state.events||[]).filter(event=>event.maidIds?.includes(maid.id));
-        const confirmed=maidPayAmount(maid.name);
-        const eventCards=targetedEvents.map(event=>`<article class="card task-row"><div><h3>${esc(event.title)}</h3><p>${esc(event.detail)}</p></div><div class="task-meta"><span>${esc(event.time)}</span><strong>앱 내부 알림</strong></div><div class="task-row-action">${button('내 업무 보기','go-my','outline')}</div></article>`).join('');
-        const assignedCards=assigned.map(({item,assignment})=>{const guestCount=assignmentGuestCount(item);return `<article class="card task-row"><div><h3>${assignment.order}번째 청소 · ${item.room}호 ${esc(item.kind)}</h3><p>${esc(dateLabel(targetEffectiveDate(item)))} · ${item.checkout} 이후 시작${guestCount?` · 숙박 인원 ${esc(guestCountLabel(guestCount))}`:''}${item.carryReason?` · 원 계획 ${esc(dateLabel(targetPlanDate(item)))}`:''}</p></div><div class="task-meta"><span>${state.time}</span><strong>${assignment.activationBlockedBy?'관리자 확인 대기':item.carryReason?'전일 이월 재배정':'현재 통보 일정'}</strong></div><div class="task-row-action">${button('내 업무 보기','go-my','outline')}</div></article>`;}).join('');
-        return renderCoach()+renderNetworkNotice()+`<div class="view-stack"><section><div class="section-head"><div><h2>최근 변경 알림</h2><p class="audit-note">담당·순서 변경과 취소 알림은 업무가 사라진 뒤에도 남습니다.</p></div>${statusBadge(`${targetedEvents.length}건`,'blue')}</div><div class="tab-panel">${eventCards||'<section class="inline-empty"><h3>새 변경 알림이 없습니다</h3><p>관리자가 오늘·내일 배정을 바꾸면 여기에 기록됩니다.</p></section>'}</div></section><section><div class="section-head"><div><h2>현재 통보 일정</h2><p class="audit-note">오늘·내일 배정 중 현재 유효한 본인 일정만 표시합니다.</p></div>${statusBadge(`${assigned.length}건`,'neutral')}</div><div class="tab-panel">${assignedCards||'<section class="inline-empty"><h3>현재 통보된 일정이 없습니다</h3></section>'}</div></section><div class="tab-panel"><article class="card task-row"><div><h3>이번 주 승인 금액 반영</h3><p>해당 객실별 승인 합계 · ${money(confirmed)}</p></div><div class="task-meta"><span>09:55</span><strong>주급</strong></div><div class="task-row-action">${button('내 주급','go-maid-pay','outline')}</div></article><article class="card task-row"><div><h3>컴플레인 판정 확인</h3><p>판정 확인 또는 이의 메모만 가능합니다.</p></div><div class="task-meta"><span>어제</span><strong>응답 필요</strong></div><div class="task-row-action">${button('내용 보기','complaint-detail','outline')}</div></article></div></div>`;
+      function renderMaidAlerts(){
+        const key=notificationAudienceKey('maid',signedInMaidId());ensureNotificationState();return renderCoach()+renderNetworkNotice()+`<div class="view-stack"><section><div class="section-head"><div><h2>알림</h2><p class="audit-note">배정·검수 결과·취소·마감·주급 업데이트를 시간순으로 확인합니다.</p></div>${statusBadge(`안 읽음 ${notificationUnreadCount(key)}건`,notificationUnreadCount(key)?'blue':'neutral')}</div><div class="tab-panel">${renderNotificationListMarkup({key,filter:state.notificationFilter,includeActivity:true})}</div></section></div>`;
       }
-      function renderMaidPayFromLedger() {
-        const currentMaid=signedInMaid(),weeks=adminPayWeeks().map((week,index)=>{const tasks=week.tasksByMaid?.[currentMaid.id]||[],totals=payrollTaskTotals(tasks),payment=paymentStatusMeta(week.start,currentMaid.id,totals.confirmed),record=paymentRecordFor(week.start,currentMaid.id),displayAmount=paymentDisplayAmount(record,totals.confirmed),paymentDrift=displayAmount!==totals.confirmed,paidAt=payment.status==='PAID'?(record.paidAt||`${payrollDateLabel(addIsoDays(week.start,7))} 지급 기록`):['PAYING','CHECK'].includes(record.status)?payment.label:index===0?'다음 월요일 지급 예정':payment.label;return {id:week.start,group:index===0?'current':index===1?'last':'older',label:index===0?'이번 주':index===1?'지난주':'이전 주',period:weekRangeLabel(week.start),confirmed:displayAmount,ledgerConfirmed:totals.confirmed,pending:totals.pending,paymentDrift,status:payment.label,tone:payment.tone,paidAt,tasks};}),current=weeks[0],selectedWeek=state.maidPaySelectedWeek,shown=selectedWeek?weeks.filter(week=>week.id===selectedWeek):weeks;
-        const weekCard=week=>{const open=state.maidPayOpenWeek===week.id;return `<article class="card maid-pay-week"><div class="maid-pay-week-head"><div><span class="maid-pay-week-label">${week.label} · ${week.period}</span><strong>${money(week.confirmed)}</strong><small>${week.paymentDrift?'잠근 지급 기록액':'승인 확정'} · ${esc(currentMaid.name)} 데모 지급 이력</small></div>${statusBadge(week.status,week.tone)}</div>${week.paymentDrift?`<div class="notice notice-danger" style="margin:10px 0 0"><div><strong>현재 원장 ${money(week.ledgerConfirmed)}</strong><br>지급 기록액과의 차이는 관리자 정정·상계 대상으로 분리됩니다.</div></div>`:''}<div class="maid-pay-week-stats"><div><span>현재 원장 예상</span><strong>${money(week.ledgerConfirmed+week.pending)}</strong></div><div><span>검수 대기</span><strong>${money(week.pending)}</strong></div><div><span>지급 기록</span><strong>${week.paidAt}</strong></div></div><button class="maid-pay-disclosure" type="button" data-action="toggle-maid-pay-week" data-id="${week.id}" aria-expanded="${open}" aria-controls="maid-pay-week-${week.id}"><span>작업 상세 ${week.tasks.length}건</span><span>${open?'접기':'자세히 보기'} ${icon('chevronRight','icon-sm')}</span></button><div id="maid-pay-week-${week.id}" class="maid-pay-task-list" ${open?'':'hidden'}>${week.tasks.map(task=>`<div class="maid-pay-task"><div><strong>${esc(task.room)} · ${esc(task.kind)}</strong><span>${esc(task.date)} · ${esc(task.typeName)} · ${esc(task.elevator)}${task.roundLabel?` · 제출/회차 ${esc(task.roundLabel)}`:''}</span><span class="bomb-room-pay-breakdown">${esc(payrollTaskFormula(task))}</span>${task.reportId&&task.photoId?button('폭탄방 증빙 보기','bomb-room-photo','outline',`data-room="${task.roomNo}" data-report="${task.reportId}" data-photo="${task.photoId}"`):''}</div><div><b>${task.stage==='pending'?'승인 시 ':''}${money(task.stage==='excluded'?0:task.amount)}</b>${statusBadge(task.status,task.tone)}</div></div>`).join('')}</div></article>`;};
-        const selectedLabel=selectedWeek?weekRangeLabel(selectedWeek,true):'달력에서 주차 선택',historyBody=shown.length?shown.map(weekCard).join(''):`<section class="inline-empty"><h3>${weekRangeLabel(selectedWeek,true)} 주급 기록이 없습니다</h3><p>해당 월요일–일요일 주차에는 저장된 데모 작업 이력이 없습니다.</p></section>`;
-        return renderCoach()+renderNetworkNotice()+`<div class="view-stack"><section class="card pay-hero"><span>이번 주 · ${weekRangeLabel(current.id)} · 데모 지급 이력</span><strong>${money(current.confirmed)}</strong><div class="pay-hero-grid"><div><span>검수 전 예상 포함</span><b>${money(current.confirmed+current.pending)}</b></div><div><span>검수 대기</span><b>${money(current.pending)}</b></div></div></section><div class="notice notice-warning"><div><strong>앱은 송금하지 않고 지급 여부만 기록합니다.</strong></div></div><div class="pay-week-toolbar"><div><h2>지금까지 주급 내역</h2><p>관리자와 같은 객실별 원장을 월요일–일요일 주차로 표시합니다.</p></div><button class="pay-week-picker" type="button" data-action="open-pay-calendar" data-context="maid-pay" aria-haspopup="dialog">${icon('calendar','icon-sm')}<span>${selectedLabel}</span>${icon('chevronRight','icon-sm')}</button></div><div class="maid-pay-history-head"><div><h2>${selectedWeek?'선택한 주차':'저장된 전체 주차'}</h2><p>${selectedWeek?weekRangeLabel(selectedWeek,true):`데모 ${weeks.length}주 · 최신순`}</p></div>${selectedWeek?button('전체 주차 보기','clear-maid-pay-week','outline'):''}</div><div class="maid-pay-history">${historyBody}</div><p class="maid-pay-footnote">객실 타입·기본 청소요금은 8월 운영 시트 정본이고, 인명·예약·과거 지급 이력은 기능 확인용 데모입니다. 컴플레인·벌점은 주급에서 자동 차감되지 않습니다.</p></div>`;
-      }
+
       function renderMaidPay() {
         return renderMaidPayFromLedger();
         const paid=paymentStatusFor('2026-08-03',signedInMaidId())==='PAID',currentMaid=signedInMaid();
@@ -6143,26 +6289,7 @@
         return item;
       }
 
-      function openActionAlerts(trigger=document.activeElement) {
-        if(state.role==='maid'){
-          const maid=signedInMaid(),ownJobs=Object.entries(state.jobs).filter(([no,status])=>!['approved','public','draft'].includes(status)&&(ROOMS.find(room=>room.no===no)?.assignee===maid.name||currentSubmission(no)?.performerId===maid.id)).length,uploadRooms=Object.entries(state.jobs).filter(([no,status])=>status==='upload'&&ROOMS.find(room=>room.no===no)?.assignee===maid.name).map(([no])=>`${no}호`);
-          const ownComplaints=state.complaints.filter(item=>item.maid===maid.name&&!item.deleted&&['ruled','objected'].includes(item.responseStatus)).length;
-          const items=[['내 업무',`${ownJobs}건 · 내 담당 작업만 표시`],['업로드',uploadRooms.length?`${uploadRooms.join('·')} 미전송 자료 확인`:'대기 자료 없음'],['컴플레인',`${ownComplaints}건 · 본인 기록만 확인`],['주급',`이번 주 승인 확정 ${money(maidPayAmount(maid.name))} · 객실별 합계`],['동기화',state.network==='online'&&state.listMode!=='stale'?'최신 상태':'오래된 데이터 · 상태 변경 잠금']];
-          showModal({title:'내 알림 · 데모',subtitle:'본인 담당·제출·컴플레인·주급 기록만 표시합니다.',large:true,trigger,body:`<div class="rail-list">${items.map(([title,detail])=>`<div class="rail-row">${icon('bell','icon-sm')}<strong>${esc(title)}</strong><span>${esc(detail)}</span></div>`).join('')}</div>`});return;
-        }
-        const pendingInspections=Object.values(state.inspections).filter(status=>status==='pending').length;
-        const requestedCancels=Object.values(state.cancelRequests||{}).filter(request=>request.status==='requested').length+(state.cancelRequest==='requested'&&!Object.keys(state.cancelRequests||{}).length?1:0);
-        const objections=state.complaints.filter(item=>!item.deleted&&item.responseStatus==='objected').length;
-        const paymentText=paymentWeekSummaryFor().label;
-        const items=[
-          ['검수 대기',`${pendingInspections}건 · 전체 제출 단위로 확인`],
-          ['담당 취소 요청',`${requestedCancels}건 · 관리자 결정 전 담당 유지`],
-          ['컴플레인 이의',`${objections}건 · 원 판정과 메모를 함께 보존`],
-          ['주급',paymentText],
-          ['동기화',state.network==='online'&&state.listMode!=='stale'?'최신 상태':'오래된 데이터 · 상태 변경 잠금']
-        ];
-        showModal({title:'알림 현황 · 데모',subtitle:'푸시 수신 여부와 관계없이 해결 전 사건은 앱 안에 남습니다.',large:true,trigger,body:`<div class="rail-list">${items.map(([title,detail])=>`<div class="rail-row">${icon('bell','icon-sm')}<strong>${esc(title)}</strong><span>${esc(detail)}</span></div>`).join('')}</div>`});
-      }
+      function openActionAlerts(trigger=document.activeElement){openNotificationCenter(trigger);}
 
       function adminAuditSummary(detail) {
         if(/실제 서버 작업|브라우저 시뮬레이션/.test(String(detail||'')))return '데모 초기 상태';
@@ -6238,6 +6365,7 @@
       const mutationActionLocks=new Set(),mutationActions=new Set(['complete-checkout-inspection','confirm-checkout-inspection','toggle-room-cleaning','confirm-room-cleaning-on','confirm-room-cleaning-off','save-reservation-v2','submit-cleaning-v2','confirm-approve-v2','confirm-reject-v2','confirm-toggle-payment','mark-payment-check','confirm-payment-open-v2','confirm-finish-payment']);
       const deprecatedStateActions=new Set(['retry-photo','field-complete','submit-cleaning','approve-inspection','reject-inspection','confirm-approve','confirm-reject','recover-candle','confirm-candle','save-reservation','show-pin','hide-pin','resolve-conflict','confirm-conflict','deactivate-maid','confirm-deactivate','start-payment','confirm-payment','finish-payment','payment-check','payment-open','rule-complaint','confirm-ruling','close-complaint','correct-complaint','publish-template','change-availability','confirm-off-active']);
       deprecatedStateActions.forEach(action=>rebuiltActions.add(action));
+      ['notification-filter','notification-mark-all-read','notification-toggle-push','notification-open'].forEach(action=>rebuiltActions.add(action));
 
       document.addEventListener('click', e => {
         const el=e.target.closest('[data-action]');if(!el||!rebuiltActions.has(el.dataset.action))return;
@@ -6361,7 +6489,7 @@
         }
         if(a==='confirm-notification-permission'){
           if(isLocked()){closeModal();render();toast('동기화 상태가 바뀌어 알림 허용 상태를 저장하지 않았습니다.','error');return;}
-          state.notificationsEnabled=true;appendEvent('기기 알림 허용 상태 변경','정적 데모 · 앱 내부 알림은 항상 유지');closeModal();render();toast('알림 허용 상태로 표시했습니다.');return;
+          setNotificationPushEnabled(true);appendEvent('기기 알림 허용 상태 변경','정적 데모 · 앱 내부 알림은 항상 유지',{notification:false});closeModal();render();toast('알림 허용 상태로 표시했습니다.');return;
         }
         if(a==='retry-network'){
           const retryState=state;
@@ -7168,6 +7296,10 @@
         else if(a==='object-complaint')showModal({title:'판정 이의 메모',subtitle:'메이드는 판정·벌점·재청소를 직접 바꿀 수 없습니다.',body:`<div class="field"><label for="objection">이의 메모 · 데모</label><textarea id="objection" class="input-control" rows="4">작업 종료 당시 사진을 다시 확인해 주세요.</textarea></div>`,confirmLabel:'이의 제출',confirmAction:'confirm-objection'});
         else if(a==='confirm-objection'){state.complaint='objected';appendEvent('메이드 이의 제출','관리자 재검토 필요');closeModal();render();toast('관리자 재검토 상태로 전환했습니다.');}
         else if(a==='close-complaint'||a==='correct-complaint'){state.complaint='closed';appendEvent('컴플레인 종결',a==='correct-complaint'?'판정 정정 이벤트 추가':'판정 유지');render();toast('원본을 보존한 채 종결했습니다.');}
+        else if(a==='notification-filter'){const filter=el.dataset.filter;if(!['all','unread','action'].includes(filter))return;state.notificationFilter=filter;openNotificationCenter(el);return;}
+        else if(a==='notification-mark-all-read'){markAllNotificationsRead();render();openNotificationCenter(el);toast('현재 계정의 알림을 모두 읽음 처리했습니다.');return;}
+        else if(a==='notification-toggle-push'){const enabled=!notificationPushEnabled();setNotificationPushEnabled(enabled);appendEvent('기기 푸시 설정 변경',enabled?'현재 계정 푸시 켜짐 · 앱 내 알림은 항상 유지':'현재 계정 푸시 꺼짐 · 앱 내 알림은 항상 유지',{notification:false});render();openNotificationCenter(el);toast(enabled?'행동이 필요한 업데이트의 푸시를 켰습니다.':'푸시를 껐습니다. 앱 내 알림은 계속 남습니다.');return;}
+        else if(a==='notification-open'){const ids=String(el.dataset.eventIds||el.dataset.eventId||'').split(',').filter(Boolean),eventId=el.dataset.eventId||ids[0],event=(state.events||[]).find(item=>item.id===eventId);markNotificationRead(ids);closeModal();render();if(event)requestAnimationFrame(()=>dispatchNotificationTarget(event));return;}
         else if(a==='alert-link'){closeModal();openDetail(el.dataset.type,el.dataset.id,el);}
         else if(a==='date-prev'||a==='date-next'){state.selectedDate=a==='date-prev'?'2026-08-13':'2026-08-15';render();toast(`${state.selectedDate} 객실판을 표시합니다.`);}
         else if(a==='date-today'){state.selectedDate='2026-08-14';render();}

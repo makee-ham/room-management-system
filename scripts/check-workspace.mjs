@@ -1309,14 +1309,14 @@ for (const contract of ['ledger?.closed', 'workDate<state.selectedDate', 'workDa
 }
 
 const maidAlertsStart = html.indexOf('function renderMaidAlerts');
-const maidAlertsSource = html.slice(maidAlertsStart, html.indexOf('function renderMaidPayFromLedger', maidAlertsStart));
+const maidAlertsSource = html.slice(maidAlertsStart, html.indexOf('function renderMaidPay', maidAlertsStart));
 for (const contract of [
-  '(state.events||[]).filter(event=>event.maidIds?.includes(maid.id))',
-  '담당·순서 변경과 취소 알림은 업무가 사라진 뒤에도 남습니다.',
-  '현재 통보 일정',
-  '앱 내부 알림',
+  "notificationAudienceKey('maid',signedInMaidId())",
+  'renderNotificationListMarkup({key',
+  'notificationUnreadCount(key)',
+  '배정·검수 결과·취소·마감·주급 업데이트를 시간순으로 확인합니다.',
 ]) {
-  if (!maidAlertsSource.includes(contract)) throw new Error(`Maid persistent change notification contract missing: ${contract}`);
+  if (!maidAlertsSource.includes(contract)) throw new Error(`Maid event notification contract missing: ${contract}`);
 }
 const directAssignStart = html.indexOf('function openDirectAssign');
 const directAssignSource = html.slice(directAssignStart, html.indexOf('function reservationPreviewMarkup', directAssignStart));
@@ -1777,4 +1777,54 @@ for (const forbidden of [
   if (currentAdminToday.includes(forbidden)) throw new Error(`Removed admin-home item still rendered: ${forbidden}`);
 }
 console.log('Admin-home cleaning-only static contracts: passed');
+
+const notificationContracts = [
+  'const NOTIFICATION_SCHEMA_VERSION=1',
+  'function notificationPolicyForEvent(',
+  'function notificationBundlesForKey(',
+  'function notificationUnreadCount(',
+  'function markNotificationRead(',
+  'function markAllNotificationsRead(',
+  'function renderNotificationListMarkup(',
+  "data-action=\"notification-open\"",
+  "data-action=\"notification-mark-all-read\"",
+  "data-action=\"notification-toggle-push\"",
+  'NOTIFICATION_BUNDLE_WINDOW_MINUTES=10',
+  '서비스 워커',
+  "const alertCount=notificationUnreadCount(notificationAudienceKey())",
+  "if(actorRole==='maid')",
+  "if(/청소 전체 제출|검수 요청|재검수 요청/.test(text))",
+  "appendEvent('기기 푸시 설정 변경'",
+];
+for (const contract of notificationContracts) {
+  if (!html.includes(contract)) throw new Error(`Event notification contract missing: ${contract}`);
+}
+const notificationOpenStart = html.indexOf('function openAlerts()');
+const notificationOpenEnd = html.indexOf('function openPublishConfirm()', notificationOpenStart);
+const notificationOpenSource = html.slice(notificationOpenStart, notificationOpenEnd);
+if (notificationOpenStart < 0 || notificationOpenEnd < 0) throw new Error('Notification center source could not be isolated.');
+for (const forbidden of [
+  "const items=[['350호 입실 미준비'",
+  "title:'알림 현황 · 데모'",
+  "'동기화',state.network",
+  "검수 대기',`${pendingInspections}건",
+]) {
+  if (notificationOpenSource.includes(forbidden)) throw new Error(`Legacy static alert summary remains: ${forbidden}`);
+}
+const actionAlertStart = html.indexOf('function openActionAlerts(');
+const actionAlertEnd = html.indexOf('function adminAuditSummary(', actionAlertStart);
+const actionAlertSource = html.slice(actionAlertStart, actionAlertEnd);
+if (!actionAlertSource.includes('openNotificationCenter(trigger)')) throw new Error('Action alert entry point does not use the unified event center.');
+if (actionAlertSource.includes('최신 상태') || actionAlertSource.includes('0건')) throw new Error('Static zero/sync alert rows remain in action alert entry point.');
+console.log('Event notification center static contracts: passed');
+
+const maidPayLedgerStart = html.indexOf('function renderMaidPayFromLedger()');
+const maidPayRenderStart = html.indexOf('function renderMaidPay()');
+if (maidPayLedgerStart < 0 || maidPayRenderStart < 0 || maidPayLedgerStart > maidPayRenderStart) {
+  throw new Error('Maid pay ledger renderer was removed while replacing the maid notification screen.');
+}
+if (html.includes('__CASTLE_NOTIFICATION_QA__')) {
+  throw new Error('Notification QA mutation bridge must not be present in the shipped wireframe.');
+}
+console.log('Maid pay ledger notification regression contracts: passed');
 
