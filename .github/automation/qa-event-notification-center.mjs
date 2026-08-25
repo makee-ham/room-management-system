@@ -52,9 +52,9 @@ async function verifyDesktop(){
   const dialogText=await dialog.innerText();
   assert.match(dialogText,/앱 내 알림은 항상 보존됩니다/);
   assert.doesNotMatch(dialogText,/동기화\s*최신 상태|담당 취소 요청\s*0건|컴플레인 이의\s*0건|지급 대기 0\/3명/);
-  assert.equal(await dialog.getByRole('button',{name:'전체',exact:true}).count(),1);
-  assert.equal(await dialog.getByRole('button',{name:'안 읽음',exact:true}).count(),1);
-  assert.equal(await dialog.getByRole('button',{name:'처리 필요',exact:true}).count(),1);
+  assert.equal(await dialog.locator('[data-action="notification-filter"][data-filter="all"]').count(),1);
+  assert.equal(await dialog.locator('[data-action="notification-filter"][data-filter="unread"]').count(),1);
+  assert.equal(await dialog.locator('[data-action="notification-filter"][data-filter="action"]').count(),1);
   assert.ok(await dialog.locator('[data-notification-card]').count()>=4,'admin center must retain open and handled events');
 
   await dialog.getByRole('button',{name:/639호 청소 검수 요청/}).click();
