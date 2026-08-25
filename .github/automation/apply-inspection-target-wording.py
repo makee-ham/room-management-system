@@ -115,6 +115,9 @@ checker_path = Path("scripts/check-workspace.mjs")
 checker = checker_path.read_text(encoding="utf-8")
 checker = checker.replace("검수 대기 탭", "검수 대상 목록 탭")
 checker = checker.replace("검수 대기 열기", "검수 대상 목록 열기")
+checker = checker.replace("cleaningTabButton('inspection','검수 대기'", "cleaningTabButton('inspection','검수 대상 목록'")
+checker = checker.replace("inspection:'검수 대기'", "inspection:'검수 요청됨'")
+checker = checker.replace("status==='approved'?'승인 완료':'검수 대기'", "status==='approved'?'승인 완료':'검수 요청됨'")
 checker = checker.rstrip() + r'''
 
 const inspectionWordingContracts = [
