@@ -10,7 +10,7 @@ async function verify(width,screenshotPath){
   page.on('pageerror',error=>errors.push(`${width}px pageerror: ${error.message}`));
   page.on('console',message=>{if(message.type()==='error')errors.push(`${width}px console: ${message.text()}`);});
   await page.goto(base,{waitUntil:'networkidle'});
-  assert.match(await page.title(),/CASTLE THE ART 객실관리/);
+  assert.match(await page.title(),/오늘 할 일 · CASTLE THE ART 데모/);
   const main=page.locator('#main-content');
   await main.waitFor();
   assert.ok((await main.innerText()).trim().length>100,'admin home must not be blank');
