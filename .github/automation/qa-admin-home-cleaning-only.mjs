@@ -40,8 +40,12 @@ async function verify(width,screenshotPath){
   await inspection.click();
   assert.equal(await inspection.getAttribute('aria-expanded'),'true');
   await list.getByRole('button',{name:'검수 대기 열기'}).click();
-  await page.waitForFunction(()=>location.hash.includes('view=inspection'));
-  assert.match(page.url(),/view=inspection/);
+  await page.waitForFunction(()=>location.hash.includes('view=cleaning'));
+  assert.match(page.url(),/view=cleaning/);
+  const inspectionTab=page.getByRole('tab',{name:/검수 대기/});
+  await inspectionTab.waitFor();
+  assert.equal(await inspectionTab.getAttribute('aria-selected'),'true');
+  assert.match(await main.innerText(),/청소 관리/);
   await page.goBack({waitUntil:'networkidle'});
   await page.locator('.accordion-list').waitFor();
 
