@@ -1753,3 +1753,28 @@ if(!html.includes("version:'v6'")||!html.includes("filter(item=>item.id!=='tv-on
 console.log('Fixed type template static contracts: passed');
 
 console.log('Workspace check: passed');
+
+const currentAdminTodayStart = html.lastIndexOf('function renderAdminToday()');
+const currentAdminTodayEnd = html.indexOf('\n      function maidName(', currentAdminTodayStart);
+if (currentAdminTodayStart < 0 || currentAdminTodayEnd < 0) {
+  throw new Error('Current admin-today render block could not be isolated.');
+}
+const currentAdminToday = html.slice(currentAdminTodayStart, currentAdminTodayEnd);
+for (const required of [
+  "renderAccordion('assignment','오늘 청소 배정'",
+  "renderAccordion('inspection','청소 검수'",
+]) {
+  if (!currentAdminToday.includes(required)) throw new Error(`Admin-home core item missing: ${required}`);
+}
+for (const forbidden of [
+  'class="availability-link"',
+  "renderAccordion('schedule','오늘 체크인·체크아웃'",
+  '${cancelAccordion}',
+  "renderAccordion('drafts','배정 준비 청소 작업'",
+  "renderAccordion('inspection','검수 대기'",
+  "renderAccordion('pay','지난주 지급'",
+]) {
+  if (currentAdminToday.includes(forbidden)) throw new Error(`Removed admin-home item still rendered: ${forbidden}`);
+}
+console.log('Admin-home cleaning-only static contracts: passed');
+
