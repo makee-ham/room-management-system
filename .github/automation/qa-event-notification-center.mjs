@@ -71,7 +71,7 @@ async function verifyDesktop(){
   dialog=page.getByRole('dialog');
   await dialog.waitFor();
   assert.equal(await dialog.locator('.notification-card.unread').count(),0,'mark all read must clear unread styling');
-  assert.equal(countFromLabel(await page.getByRole('button',{name:/알림함 열기/}).getAttribute('aria-label')),0,'admin badge must be zero after mark all read');
+  assert.equal(countFromLabel(await page.locator('[data-action="alerts"]').getAttribute('aria-label')),0,'admin badge must be zero after mark all read');
 
   const pushButton=dialog.getByRole('button',{name:/푸시 (꺼짐|켜짐)/});
   const beforePushCards=await dialog.locator('[data-notification-card]').count();
