@@ -1,0 +1,106 @@
+name: Verify and merge KST-today quick reservation fix
+
+on:
+  pull_request:
+    types: [synchronize]
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  verify-and-merge:
+    if: github.head_ref == 'codex/quick-reservation-kst-today-window'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out the working branch
+        uses: actions/checkout@v4
+        with:
+          ref: codex/quick-reservation-kst-today-window
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check the one-time trigger
+        id: gate
+        shell: bash
+        run: |
+          if [[ -f .quick-reservation-kst-today-trigger ]]; then
+            echo 'run=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'run=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Start from current main
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          git fetch origin main codex/quick-reservation-kst-today-window
+          git reset --hard origin/main
+
+      - name: Apply the targeted KST-today window fix
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: python3 .github/automation/apply-quick-reservation-kst-today.py
+
+      - name: Run permanent static workspace checks
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: node scripts/check-workspace.mjs
+
+      - name: Install Chromium test runtime
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          mkdir -p /tmp/castle-playwright
+          cd /tmp/castle-playwright
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+          cd "$GITHUB_WORKSPACE"
+          ln -s /tmp/castle-playwright/node_modules node_modules
+
+      - name: Run rendered date-window interaction QA
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          python3 scripts/serve.py --host 127.0.0.1 --port 4173 >/tmp/castle-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:4173/index.html >/dev/null && break
+            sleep 1
+          done
+          node .github/automation/qa-quick-reservation-kst-today.mjs
+
+      - name: Commit the verified product changes
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          rm -f node_modules
+          rm -f .quick-reservation-kst-today-trigger
+          rm -f .github/workflows/trigger-quick-reservation-kst-today.yml
+          rm -f .github/workflows/verify-and-merge-quick-reservation-kst-today.yml
+          rm -f .github/automation/apply-quick-reservation-kst-today.py
+          rm -f .github/automation/qa-quick-reservation-kst-today.mjs
+          git config user.name "Ham Arin"
+          git config user.email "79068658+makee-ham@users.noreply.github.com"
+          git add -A
+          git commit -m "수정: 간편 예약을 한국 시간 오늘 기준 29일로 계산한다"
+          git push --force-with-lease origin HEAD:codex/quick-reservation-kst-today-window
+
+      - name: Mark the PR ready and squash-merge it
+        if: steps.gate.outputs.run == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        shell: bash
+        run: |
+          gh pr ready "$PR_URL"
+          gh pr merge "$PR_URL" --squash --delete-branch \
+            --subject "수정: 간편 예약을 한국 시간 오늘 기준 29일로 계산한다" \
+            --body "기본 간편 예약 범위를 한국 시간 실제 오늘의 7일 전부터 21일 후까지로 계산한다. 오늘 버튼, KST 날짜 변경, 수동 탐색, 명시적 bookingAnchor 호환을 정적 검사와 Chromium 날짜 고정 QA로 검증했다."
