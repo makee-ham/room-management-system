@@ -65,8 +65,9 @@ async function quickReservationQa(width, height) {
   const label = 'quick reservation';
   await assertHealthy(page, width, label);
 
-  const headers = page.locator('#quick-grid-scroller .quick-grid-header .quick-day-header');
-  await headers.first().waitFor();
+  const headerRoot = width <= 720 ? '#quick-grid-mobile-header' : '#quick-grid-scroller';
+  const headers = page.locator(`${headerRoot} .quick-grid-header .quick-day-header`);
+  await headers.first().waitFor({ state: 'visible' });
   assert.equal(await headers.count(), 29, `${width}px quick reservation must render 29 dates`);
   assert.equal(await headers.first().getAttribute('data-quick-date'), '2026-08-08');
   assert.equal(await headers.last().getAttribute('data-quick-date'), '2026-09-05');
@@ -83,11 +84,17 @@ async function quickReservationQa(width, height) {
   assert.match(normalize(await page.locator('.quick-booking-hero-copy').innerText()), /8월 15일/);
 
   await page.locator('[data-action="quick-month-shift"][data-offset="7"]').click();
-  await page.waitForFunction(() => document.querySelector('#quick-grid-scroller .quick-day-header')?.getAttribute('data-quick-date') === '2026-08-15');
+  await page.waitForFunction(
+    ({ root }) => document.querySelector(`${root} .quick-day-header`)?.getAttribute('data-quick-date') === '2026-08-15',
+    { root: headerRoot },
+  );
   assert.equal(await headers.first().getAttribute('data-quick-date'), '2026-08-15');
 
   await resetButton.click();
-  await page.waitForFunction(() => document.querySelector('#quick-grid-scroller .quick-day-header')?.getAttribute('data-quick-date') === '2026-08-08');
+  await page.waitForFunction(
+    ({ root }) => document.querySelector(`${root} .quick-day-header`)?.getAttribute('data-quick-date') === '2026-08-08',
+    { root: headerRoot },
+  );
   assert.equal(await headers.first().getAttribute('data-quick-date'), '2026-08-08');
   assert.deepEqual(
     await headers.evaluateAll(elements => elements
