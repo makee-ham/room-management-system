@@ -13,45 +13,36 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: codex/issue-112-demo-date-all-maid-availability
-      - name: Print assignment eligibility source
+      - name: Print routing and view selectors
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
           text = Path('WIREFRAME/index.html').read_text(encoding='utf-8')
 
-          def block(marker: str, chars: int = 16000):
-              idx = text.find(marker)
-              print(f'\n===== {marker} at {idx} =====')
-              if idx >= 0:
-                  print(text[idx:idx+chars].replace('\n', '\\n'))
-
           for marker in [
-              'const MAIDS',
-              'function maidStatusFor',
-              'function maidCanReceiveNewAssignment',
-              'function eligibleAssignmentMaids',
-              'function performRandomAssignments',
-              "if(a==='random-assignments')",
-              'function renderRandomAssignmentCard',
-              'function randomAssignmentCandidates',
-              'function assignmentOptions',
+              'function render() {',
+              'function renderAdmin',
+              'function renderQuickReservation',
+              'function renderAdminNav',
+              "params.get('view')",
+              'adminView:',
+              "data-nav=",
+              "quick-month-today",
           ]:
-              block(marker)
+              idx=text.find(marker)
+              print(f'\n===== {marker} at {idx} =====')
+              if idx>=0:
+                  print(text[max(0,idx-1500):min(len(text),idx+14000)].replace('\n','\\n'))
 
-          for term in [
-              'maidStatuses:',
-              'maidAccountStatuses:',
-              'deactivatedMaids:',
-              'activeMaids:',
-              "assignmentDate:'2026-08-17'",
-          ]:
-              print(f'\n===== {term} / {text.count(term)} occurrence(s) =====')
-              start=0
-              for _ in range(8):
-                  idx=text.find(term,start)
-                  if idx<0: break
-                  print(text[max(0,idx-1000):min(len(text),idx+8000)].replace('\n','\\n'))
-                  start=idx+len(term)
+          print('\n===== admin view literal candidates =====')
+          candidates=sorted(set(re.findall(r"adminView(?:===|=|:)['\"]([^'\"]+)['\"]", text)))
+          print(candidates)
+          print('\n===== view query literal contexts =====')
+          for match in re.finditer(r"view", text):
+              context=text[max(0,match.start()-220):min(len(text),match.start()+500)]
+              if any(token in context for token in ['URLSearchParams','adminView','params.get','data-nav']):
+                  print(context.replace('\n','\\n'))
           PY
