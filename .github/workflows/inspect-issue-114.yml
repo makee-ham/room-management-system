@@ -59,7 +59,6 @@ jobs:
               depth = 0
               quote = None
               escape = False
-              template_depth = 0
               i = brace
               while i < len(text):
                   ch = text[i]
@@ -123,7 +122,7 @@ jobs:
           ]:
               context(marker)
 
-          report = Path('docs/issue-114-source-inspection.txt')
+          report = Path('issue-114-source-inspection.txt')
           report.write_text('\n'.join(out), encoding='utf-8')
           print(f'wrote {report} ({report.stat().st_size} bytes)')
           PY
@@ -133,7 +132,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/issue-114-source-inspection.txt
+          git add issue-114-source-inspection.txt
           git diff --cached --quiet && exit 0
           git commit -m "chore: capture issue 114 source inspection"
           git push origin HEAD:codex/issue-114-assignment-week-and-varied-fixtures
