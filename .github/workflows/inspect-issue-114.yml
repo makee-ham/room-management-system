@@ -18,98 +18,47 @@ jobs:
           ref: codex/issue-114-assignment-week-and-varied-fixtures
           fetch-depth: 0
 
-      - name: Build scenario-navigation inspection report
+      - name: Build browser-QA inspection report
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
 
           text = Path('WIREFRAME/index.html').read_text(encoding='utf-8')
-          out = []
-
-          def line_no(offset):
-              return text.count('\n', 0, max(0, offset)) + 1
-
+          out=[]
+          def line_no(offset): return text.count('\n',0,max(0,offset))+1
           def function_body(name):
-              marker = f'function {name}'
-              start = text.find(marker)
-              out.append(f'\n===== FUNCTION {name} · line {line_no(start) if start >= 0 else "missing"} =====')
-              if start < 0:
-                  return
-              brace = text.find('{', start)
-              depth = 0
-              quote = None
-              escape = False
-              for index in range(brace, len(text)):
-                  ch = text[index]
-                  if quote:
-                      if escape:
-                          escape = False
-                      elif ch == '\\':
-                          escape = True
-                      elif ch == quote:
-                          quote = None
-                  elif ch in "'\"`":
-                      quote = ch
-                  elif ch == '{':
-                      depth += 1
-                  elif ch == '}':
-                      depth -= 1
-                      if depth == 0:
-                          out.append(text[start:index+1])
-                          return
-              out.append(text[start:start+18000])
-
-          def contexts(marker, before=1300, after=4500, limit=5):
-              out.append(f'\n===== CONTEXT {marker!r} · count={text.count(marker)} =====')
-              cursor = 0
-              for occurrence in range(limit):
-                  start = text.find(marker, cursor)
-                  if start < 0:
-                      break
-                  out.append(f'--- {occurrence + 1} · line {line_no(start)} ---')
-                  out.append(text[max(0,start-before):min(len(text),start+after)])
-                  cursor = start + len(marker)
-
-          names = sorted(set(re.findall(r'function\s+([A-Za-z0-9_$]+)\s*\(', text)))
-          out.append('SCENARIO-RELATED FUNCTIONS')
-          out.append('\n'.join(name for name in names if re.search(r'(scenario|demo|query|route|history|url|reset)', name, re.I)))
-
-          for name in [
-              'renderDemoStrip',
-              'scenarioOptions',
-              'setScenario',
-              'changeScenario',
-              'resetScenario',
-              'render',
-              'captureRouteState',
-              'restoreRouteState',
-              'readRouteFromLocation',
-              'writeHistoryState',
-          ]:
-              function_body(name)
-
-          for marker in [
-              'URLSearchParams',
-              'location.search',
-              'location.hash',
-              'data-control="scenario',
-              "data-control='scenario",
-              'scenario-select',
-              'demo-scenario',
-              'state = makeScenario',
-              'makeScenario(Number',
-              'makeScenario(',
-              "if(c==='scenario'",
-              "if(control==='scenario'",
-              'data-scenario=',
-          ]:
-              contexts(marker)
-
-          report = Path('issue-114-source-inspection.txt')
-          report.write_text('\n'.join(out), encoding='utf-8')
-          print(f'wrote {report} ({report.stat().st_size} bytes)')
+            marker=f'function {name}'
+            start=text.find(marker)
+            out.append(f'\n===== FUNCTION {name} · line {line_no(start) if start>=0 else "missing"} =====')
+            if start<0:return
+            brace=text.find('{',start);depth=0;quote=None;escape=False
+            for i in range(brace,len(text)):
+              ch=text[i]
+              if quote:
+                if escape:escape=False
+                elif ch=='\\':escape=True
+                elif ch==quote:quote=None
+              elif ch in "'\"`":quote=ch
+              elif ch=='{':depth+=1
+              elif ch=='}':
+                depth-=1
+                if depth==0:
+                  out.append(text[start:i+1]);return
+          def context(marker,before=1200,after=6000,limit=4):
+            out.append(f'\n===== CONTEXT {marker!r} · count={text.count(marker)} =====')
+            pos=0
+            for n in range(limit):
+              idx=text.find(marker,pos)
+              if idx<0:break
+              out.append(f'--- {n+1} · line {line_no(idx)} ---')
+              out.append(text[max(0,idx-before):min(len(text),idx+after)])
+              pos=idx+len(marker)
+          for name in ['applyHashParameters','installCastleTestApi','renderAssignmentDashboard','assignmentRow','assignmentRowMarkup','renderAssignmentRows','renderRandomAssignmentCard','createRandomAssignment','restoreRandomAssignment']:
+            function_body(name)
+          for marker in ['window.', 'Object.defineProperty(window', "data-action=\"random-assignments\"", 'assignment-row', 'assignment-target', '청소대상 객실', '객실별 담당 수정']:
+            context(marker)
+          Path('issue-114-source-inspection.txt').write_text('\n'.join(out),encoding='utf-8')
           PY
 
       - name: Commit inspection report
@@ -119,5 +68,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add issue-114-source-inspection.txt
           git diff --cached --quiet && exit 0
-          git commit -m "chore: inspect issue 114 scenario navigation"
+          git commit -m "chore: inspect issue 114 browser QA hooks"
           git push origin HEAD:codex/issue-114-assignment-week-and-varied-fixtures
