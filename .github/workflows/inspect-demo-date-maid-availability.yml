@@ -1,0 +1,66 @@
+name: Inspect demo date and maid availability
+
+on:
+  push:
+    branches:
+      - codex/issue-112-demo-date-all-maid-availability
+
+jobs:
+  inspect:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/issue-112-demo-date-all-maid-availability
+      - name: Print relevant source contexts
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          text = Path('WIREFRAME/index.html').read_text(encoding='utf-8')
+          terms = [
+              'DEMO_TODAY',
+              'selectedDate:',
+              'quick-booking',
+              'quickBooking',
+              'const MAIDS',
+              'availabilityRecords',
+              'availabilityByMaid',
+              'availabilitySubmission',
+              'availabilitySubmitted',
+              'random-assignments',
+              'randomAssignment',
+              'eligibleMaid',
+              '근무 가능',
+          ]
+          for term in terms:
+              print(f'\n===== {term} / {text.count(term)} occurrence(s) =====')
+              start = 0
+              shown = 0
+              while shown < 10:
+                  idx = text.find(term, start)
+                  if idx < 0:
+                      break
+                  line = text.count('\n', 0, idx) + 1
+                  left = max(0, idx - 1300)
+                  right = min(len(text), idx + 2600)
+                  print(f'\n--- line {line} ---')
+                  print(text[left:right].replace('\n', '\\n'))
+                  start = idx + len(term)
+                  shown += 1
+
+          print('\n===== focused function blocks =====')
+          for marker in [
+              'function renderQuickBooking',
+              'function availabilitySubmissionPhase',
+              'function maidAvailability',
+              'function randomAssignment',
+              "if(a==='random-assignments')",
+          ]:
+              idx = text.find(marker)
+              print(f'\n### {marker} at {idx}')
+              if idx >= 0:
+                  print(text[idx:idx+9000].replace('\n', '\\n'))
+          PY
