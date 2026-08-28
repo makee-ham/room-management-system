@@ -1,0 +1,69 @@
+name: Apply admin-home priority and compact cost link
+
+on:
+  push:
+    branches:
+      - codex/issue-107-home-priority-cost-link
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-verify:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out the feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: codex/issue-107-home-priority-cost-link
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Apply the admin-home priority change
+        shell: bash
+        run: |
+          python3 -m py_compile .github/automation/apply-home-priority-cost-link.py
+          python3 .github/automation/apply-home-priority-cost-link.py
+
+      - name: Run permanent static workspace checks
+        shell: bash
+        run: node scripts/check-workspace.mjs
+
+      - name: Install Chromium test runtime
+        shell: bash
+        run: |
+          mkdir -p /tmp/castle-playwright
+          cd /tmp/castle-playwright
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+          cd "$GITHUB_WORKSPACE"
+          ln -s /tmp/castle-playwright/node_modules node_modules
+
+      - name: Run rendered order, interaction, and responsive QA
+        shell: bash
+        run: |
+          python3 scripts/serve.py --host 127.0.0.1 --port 4173 >/tmp/castle-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:4173/index.html >/dev/null && break
+            sleep 1
+          done
+          node .github/automation/qa-home-priority-cost-link.mjs
+
+      - name: Commit only verified product changes
+        shell: bash
+        run: |
+          rm -f node_modules
+          rm -f .github/automation/apply-home-priority-cost-link.py
+          rm -f .github/automation/qa-home-priority-cost-link.mjs
+          rm -f .github/workflows/apply-home-priority-cost-link.yml
+          git config user.name "Ham Arin"
+          git config user.email "79068658+makee-ham@users.noreply.github.com"
+          git add -A
+          git commit -m "수정: 관리자 홈에서 객실 요약을 우선하고 청소비를 보조 링크로 낮춘다"
+          git push origin HEAD:codex/issue-107-home-priority-cost-link
