@@ -1925,34 +1925,37 @@ if (currentAdminTodayForInspectionWording.includes("button('검수 대기 열기
 }
 console.log('Inspection target-list wording static contracts: passed');
 
-for (const pr94KstDailyContract of [
-  "timeZone:'Asia/Seoul'",
-  'function kstTodayIso(now=new Date())',
-  'quickReservationFollowsToday:true',
+for (const demoQuickWindowContract of [
+  "const DEMO_TODAY='2026-08-15'",
+  "quickReservationAnchorDate:'2026-08-15', quickReservationFollowsToday:true",
   'function refreshQuickReservationActualToday({rerender=false}={})',
-  "window.setInterval(()=>refreshQuickReservationActualToday({rerender:true}),30000)",
-  "state.quickReservationFollowsToday=false;state.quickReservationAnchorDate=shiftIsoDate",
-  "state.quickReservationFollowsToday=true;state.quickReservationAnchorDate=kstTodayIso()",
-  "quickAnchor:state.quickReservationFollowsToday===false?state.quickReservationAnchorDate:null",
+  'const today=DEMO_TODAY;',
+  'else{state.quickReservationAnchorDate=DEMO_TODAY;state.quickReservationFollowsToday=true;}',
+  'state.quickReservationFollowsToday=true;state.quickReservationAnchorDate=DEMO_TODAY;',
+  'data-action="quick-month-today">기준일</button>',
+  '8월 15일 기준 29일',
+  '간편 예약 · 8월 15일 기준',
+  '.quick-booking-page { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; min-width:0; }',
+  '.quick-booking-toolbar { grid-template-columns:minmax(0,1fr); padding:11px; }',
+  '.quick-month-tools { grid-column:auto; min-width:0; width:100%; }',
+  '.quick-grid-shell { overflow-x:clip; overflow-y:visible; }',
+  'box-shadow:inset 0 -1px 0 rgba(20,36,55,.12);',
   "today=iso===actualToday,isPast=iso<actualToday",
-  "isPast=iso<todayIso",
-  '오늘 기준 29일',
-  '이동한 29일',
 ]) {
-  if (!html.includes(pr94KstDailyContract)) throw new Error(`KST daily quick-window contract missing: ${pr94KstDailyContract}`);
+  if (!html.includes(demoQuickWindowContract)) throw new Error(`Demo-date quick-window contract missing: ${demoQuickWindowContract}`);
 }
-for (const pr94LegacyQuickWindowContract of [
-  's.quickReservationAnchorDate=s.selectedDate',
-  'quickWindowFollowedToday=targetState.quickReservationAnchorDate===previousDate',
-  'state.quickReservationAnchorDate=state.selectedDate',
-  'today=iso===state.selectedDate,isPast=iso<state.selectedDate',
+for (const liveDateQuickWindowContract of [
+  'const today=kstTodayIso();',
+  'state.quickReservationAnchorDate=kstTodayIso()',
+  '한국 시간 오늘 기준 29일',
+  '매일 실제 오늘의 7일 전부터 21일 뒤까지',
 ]) {
-  if (html.includes(pr94LegacyQuickWindowContract)) throw new Error(`Legacy operating-date quick-window coupling remains: ${pr94LegacyQuickWindowContract}`);
+  if (html.includes(liveDateQuickWindowContract)) throw new Error(`Live-date quick-window coupling remains in the mock: ${liveDateQuickWindowContract}`);
 }
-if (!wireframeReadme.includes('브라우저 현재 시각을 `Asia/Seoul`로 환산한 실제 오늘')) {
-  throw new Error('KST daily quick-window README policy is missing.');
+if (!wireframeReadme.includes('목업의 고정 기준일 `2026-08-15`')) {
+  throw new Error('Demo-date quick-window README policy is missing.');
 }
-console.log('KST daily quick-window static contracts: passed');
+console.log('Demo-date quick-window static contracts: passed');
 
 for (const contract of [
   'function setMaidStatusFor(maidId,status)',
@@ -2047,4 +2050,55 @@ for (const forbidden of [
 }
 if (!html.includes('/* Admin-home compact cleaning-cost shortcut */')) throw new Error('Compact cleaning-cost shortcut styles are missing.');
 console.log('Admin-home room-summary priority and compact cost-link contracts: passed');
+
+const upcomingAvailabilityMatch = html.match(/weeklyAvailability:\{\n([\s\S]*?)\n\s*\},\n\s*availabilityHistory:/);
+if (!upcomingAvailabilityMatch) throw new Error('Next-week availability fixture could not be isolated.');
+const upcomingAvailabilityRows = [...upcomingAvailabilityMatch[1].matchAll(/(m\d+):\{days:\[([^\]]*)\],status:'submitted'/g)].map(match => ({
+  maidId: match[1],
+  days: match[2].split(',').filter(Boolean).map(Number),
+}));
+if (upcomingAvailabilityRows.length !== 9 || new Set(upcomingAvailabilityRows.map(row => row.maidId)).size !== 9) {
+  throw new Error(`Next-week availability fixture mismatch: ${upcomingAvailabilityRows.length} submitted rows.`);
+}
+const unavailableOnSimulationMonday = upcomingAvailabilityRows.filter(row => !row.days.includes(0)).map(row => row.maidId);
+if (unavailableOnSimulationMonday.length) {
+  throw new Error(`Random-assignment simulation Monday is unavailable for: ${unavailableOnSimulationMonday.join(', ')}`);
+}
+const upcomingHistoryStart = html.indexOf('availabilityHistory:[');
+const upcomingHistoryEnd = html.indexOf("assignmentDate:'2026-08-17'", upcomingHistoryStart);
+const upcomingHistorySource = html.slice(upcomingHistoryStart, upcomingHistoryEnd);
+const upcomingHistoryRows = [...upcomingHistorySource.matchAll(/maidId:'(m\d+)',weekStart:'2026-08-17',days:\[([^\]]*)\]/g)].map(match => ({
+  maidId: match[1],
+  days: match[2].split(',').filter(Boolean).map(Number),
+}));
+if (upcomingHistoryRows.length !== 9 || upcomingHistoryRows.some(row => !row.days.includes(0))) {
+  throw new Error('Next-week availability history must contain nine Monday-available maid records.');
+}
+const workHistoryStart = html.indexOf('const WORK_HISTORY_FIXTURES = [');
+const workHistoryEnd = html.indexOf('const PAYROLL_CLEANING_FIXTURES = {', workHistoryStart);
+const workHistorySource = html.slice(workHistoryStart, workHistoryEnd);
+if (workHistoryStart < 0 || workHistoryEnd < 0) throw new Error('Weekly work-history fixture could not be isolated.');
+for (const maidId of maidIds) {
+  const count = [...workHistorySource.matchAll(new RegExp(`${maidId}:\\{nameSnapshot:`, 'g'))].length;
+  if (count !== 3) throw new Error(`Weekly work-history fixture must contain ${maidId} in all three weeks; found ${count}.`);
+}
+if (html.includes('다음 주 가능일 미제출 2명')) throw new Error('Stale missing-availability notification remains.');
+for (const contract of [
+  "title:'다음 주 가능일 전원 제출 완료'",
+  "detail:'등록된 메이드 9명이 모두 근무 가능일을 제출했습니다.'",
+  'return MAIDS.filter(maid=>maidCanReceiveNewAssignment(maid.id)&&availabilityForWorkDate(maid.id,state.assignmentDate)===\'available\');',
+  '<strong>${eligible.length}명</strong>',
+]) {
+  if (!html.includes(contract)) throw new Error(`All-maid random-assignment contract missing: ${contract}`);
+}
+const workforceMatrixStart = html.indexOf('function renderAvailabilityMatrix()');
+if (workforceMatrixStart < 0) throw new Error('Workforce availability matrix source could not be isolated.');
+const workforceMatrixSource = html.slice(workforceMatrixStart, workforceMatrixStart + 5000);
+if (!workforceMatrixSource.includes("const start='2026-08-17'")) {
+  throw new Error('Workforce matrix must stay on the submitted 2026-08-17 next-week schedule.');
+}
+if (workforceMatrixSource.includes('weekStartIso(state.assignmentDate)')) {
+  throw new Error('Workforce matrix must not drift with the cleaning assignment date.');
+}
+console.log('All-maid availability and work-history fixture contracts: passed');
 
