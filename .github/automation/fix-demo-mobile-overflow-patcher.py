@@ -11,6 +11,11 @@ insert_marker = '''replace_once(
 '''
 insert = '''
 replace_once(
+    ".quick-booking-page { display:grid; gap:14px; min-width:0; }",
+    ".quick-booking-page { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; min-width:0; }",
+    "quick-booking single constrained grid track",
+)
+replace_once(
     ".quick-grid-shell { overflow:visible; }",
     ".quick-grid-shell { overflow-x:clip; overflow-y:visible; }",
     "mobile quick-grid horizontal clipping",
@@ -18,13 +23,14 @@ replace_once(
 '''
 if text.count(insert_marker) != 1:
     raise SystemExit(f'quick-booking insertion marker mismatch: {text.count(insert_marker)}')
-if 'mobile quick-grid horizontal clipping' in text:
-    raise SystemExit('mobile quick-grid overflow patch already inserted unexpectedly')
+if 'quick-booking single constrained grid track' in text:
+    raise SystemExit('quick-booking grid-track patch already inserted unexpectedly')
 text = text.replace(insert_marker, insert_marker + insert, 1)
 
 contract_marker = '''  '간편 예약 · 8월 15일 기준',
 '''
 contract_replacement = '''  '간편 예약 · 8월 15일 기준',
+  '.quick-booking-page { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; min-width:0; }',
   '.quick-grid-shell { overflow-x:clip; overflow-y:visible; }',
 '''
 if text.count(contract_marker) != 1:
