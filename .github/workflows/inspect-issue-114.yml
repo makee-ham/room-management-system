@@ -14,16 +14,15 @@ jobs:
         with:
           ref: codex/issue-114-assignment-week-and-varied-fixtures
 
-      - name: Inspect assignment week and fixture source
+      - name: Inspect target construction and block rules
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
 
           text = Path('WIREFRAME/index.html').read_text(encoding='utf-8')
 
-          def function_block(name: str, max_chars: int = 22000):
+          def function_block(name: str, max_chars: int = 26000):
               marker = f'function {name}'
               start = text.find(marker)
               print(f'\n===== FUNCTION {name} at {start} =====')
@@ -33,63 +32,49 @@ jobs:
               end = min(candidates) if candidates else min(len(text), start + max_chars)
               print(text[start:min(end, start + max_chars)].replace('\n', '\\n'))
 
-          def around(marker: str, before: int = 1200, after: int = 9000, limit: int = 6):
+          for name in [
+              'liveAssignmentTargetsForState',
+              'automaticCheckoutAssignmentTargets',
+              'checkoutAssignmentTarget',
+              'cleaningAssignmentForReservation',
+              'manualAssignmentTargetsForDate',
+              'stayoverAssignmentTargetsForDate',
+              'assignmentFor',
+              'targetPlanDate',
+              'targetEffectiveDate',
+              'cleaningTargetAdjustmentBlock',
+              'roomOperationalBlockReason',
+              'roomPresentation',
+              'reservationTimeStatus',
+              'assignmentContext',
+              'assignmentOptions',
+              'assignmentHasNetChange',
+              'orderedAssignmentsForMaid',
+              'initializeCleaningTargetLedger',
+              'cleaningTargetFromAssignmentSource',
+              'assignmentDateForCleaningTab',
+          ]:
+              function_block(name)
+
+          for marker in [
+              'function liveAssignmentTargetsForState',
+              "source:'manual'",
+              "source:'stayover'",
+              'activationBlockedBy',
+              'roomStopped',
+              'roomStopReasons',
+              'candles[',
+              'roomIssues',
+              'blocksCheckin',
+          ]:
               print(f'\n===== MARKER {marker!r} count={text.count(marker)} =====')
               pos = 0
-              for _ in range(limit):
+              for _ in range(8):
                   idx = text.find(marker, pos)
                   if idx < 0:
                       break
                   line = text.count('\n', 0, idx) + 1
                   print(f'\n--- line {line}, offset {idx} ---')
-                  print(text[max(0, idx-before):min(len(text), idx+after)].replace('\n', '\\n'))
+                  print(text[max(0, idx-1200):min(len(text), idx+7000)].replace('\n', '\\n'))
                   pos = idx + len(marker)
-
-          for name in [
-              'availabilityFor',
-              'availabilityForWorkDate',
-              'availabilityCell',
-              'renderAvailabilityMatrix',
-              'assignmentDayIndex',
-              'assignmentCountsForDate',
-              'eligibleAssignmentMaids',
-              'assignmentTargetsForDate',
-              'assignmentTargets',
-              'renderAssignmentDashboard',
-              'renderRandomAssignmentCard',
-              'createRandomAssignment',
-              'roomIsOnHold',
-              'cleaningTargetCanAdjust',
-              'syncAssignmentDateForCleaningTab',
-              'applyOperationalDate',
-          ]:
-              function_block(name)
-
-          for marker in [
-              'const INITIAL_MANUAL_ASSIGNMENT_TARGETS',
-              'const SCALE_ASSIGNMENT_TARGETS',
-              'const WORK_HISTORY_FIXTURES',
-              'weeklyAvailability:{',
-              'availabilityHistory:[',
-              "case 2:",
-              "assignmentDate:'2026-08-17'",
-              "cleaningTab:'assignment-today'",
-              "const ROOMS",
-              "const INITIAL_RESERVATIONS",
-              "function initialReservationState",
-              "function initialReservationDrafts",
-              "roomStopped:{",
-              "candles:{",
-              "jobs:{",
-              "assignments:{",
-          ]:
-              around(marker)
-
-          print('\n===== STATIC CHECKS NEAR ISSUE-112 CONTRACTS =====')
-          checks = Path('scripts/check-workspace.mjs').read_text(encoding='utf-8')
-          for marker in ['All-maid availability and work-history fixture contracts', 'workforce matrix', '2026-08-17', 'renderAvailabilityMatrix']:
-              idx = checks.find(marker)
-              print(f'\n--- {marker} at {idx} ---')
-              if idx >= 0:
-                  print(checks[max(0, idx-2200):min(len(checks), idx+6000)].replace('\n', '\\n'))
           PY
