@@ -6,7 +6,7 @@ on:
       - codex/issue-114-assignment-week-and-varied-fixtures
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   inspect:
@@ -16,87 +16,124 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: codex/issue-114-assignment-week-and-varied-fixtures
+          fetch-depth: 0
 
-      - name: Inspect assignment week, availability and random distribution
+      - name: Build compact source inspection report
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import re
 
-          text = Path('WIREFRAME/index.html').read_text(encoding='utf-8')
+          source = Path('WIREFRAME/index.html')
+          text = source.read_text(encoding='utf-8')
+          out = []
 
-          def line_no(offset: int) -> int:
-              return text.count('\n', 0, offset) + 1
+          def add(value=''):
+              out.append(str(value))
 
-          def print_context(marker: str, before: int = 1800, after: int = 8500, limit: int = 8):
-              print(f'\n===== MARKER {marker!r} count={text.count(marker)} =====')
-              pos = 0
-              for occurrence in range(limit):
-                  idx = text.find(marker, pos)
-                  if idx < 0:
+          def line_no(offset):
+              return text.count('\n', 0, max(0, offset)) + 1
+
+          def context(marker, before=700, after=1800, limit=4):
+              add(f'\n===== CONTEXT {marker!r} · count={text.count(marker)} =====')
+              cursor = 0
+              for index in range(limit):
+                  pos = text.find(marker, cursor)
+                  if pos < 0:
                       break
-                  print(f'\n--- occurrence {occurrence + 1} · line {line_no(idx)} · offset {idx} ---')
-                  print(text[max(0, idx-before):min(len(text), idx+after)].replace('\n', '\\n'))
-                  pos = idx + len(marker)
+                  add(f'--- occurrence {index + 1} · line {line_no(pos)} ---')
+                  add(text[max(0, pos-before):min(len(text), pos+after)])
+                  cursor = pos + len(marker)
 
-          def function_block(name: str, max_chars: int = 30000):
-              patterns = [f'function {name}', f'const {name} =', f'const {name}=']
-              starts = [text.find(pattern) for pattern in patterns]
-              starts = [start for start in starts if start >= 0]
-              start = min(starts) if starts else -1
-              print(f'\n===== FUNCTION {name} at {start} =====')
+          def function_body(name):
+              marker = f'function {name}'
+              start = text.find(marker)
+              add(f'\n===== FUNCTION {name} · line {line_no(start) if start >= 0 else "missing"} =====')
               if start < 0:
                   return
-              candidates = []
-              for token in ['\n      function ', '\n      const ', '\n      let ']:
-                  pos = text.find(token, start + 1)
-                  if pos >= 0:
-                      candidates.append(pos)
-              end = min(candidates) if candidates else min(len(text), start + max_chars)
-              print(text[start:min(end, start + max_chars)].replace('\n', '\\n'))
+              brace = text.find('{', start)
+              if brace < 0:
+                  add('opening brace missing')
+                  return
+              depth = 0
+              quote = None
+              escape = False
+              template_depth = 0
+              i = brace
+              while i < len(text):
+                  ch = text[i]
+                  if quote:
+                      if escape:
+                          escape = False
+                      elif ch == '\\':
+                          escape = True
+                      elif ch == quote:
+                          quote = None
+                  else:
+                      if ch in "'\"`":
+                          quote = ch
+                      elif ch == '{':
+                          depth += 1
+                      elif ch == '}':
+                          depth -= 1
+                          if depth == 0:
+                              add(text[start:i+1])
+                              return
+                  i += 1
+              add(text[start:start+12000])
+
+          add(f'SOURCE: {source} · chars={len(text)} · lines={text.count(chr(10))+1}')
+          names = sorted(set(re.findall(r'function\s+([A-Za-z0-9_$]+)\s*\(', text)))
+          matched = [name for name in names if re.search(r'(assign|availab|week|random)', name, re.I)]
+          add('\n===== MATCHED FUNCTION NAMES =====')
+          add('\n'.join(matched))
 
           for name in [
-              'baseState',
               'weekStartIso',
-              'availabilityWeekStart',
               'availabilityForWorkDate',
-              'availabilityRecordForWeek',
               'availabilitySubmissionForWeek',
+              'availabilityRecordForWeek',
               'assignmentDateForCleaningTab',
               'syncAssignmentDateForCleaningTab',
+              'assignmentTargetsForDate',
+              'automaticAssignmentTargets',
               'renderCleaningAssignment',
               'renderAssignmentBoard',
               'renderAssignmentAvailability',
               'renderAvailabilityMatrix',
+              'randomAssignmentCandidates',
               'runRandomAssignment',
               'applyRandomAssignment',
-              'randomlyAssignCleaning',
-              'randomAssignmentCandidates',
-              'assignmentTargetsForDate',
-              'automaticAssignmentTargets',
-              'reservationCheckoutTarget',
+              'restoreRandomAssignment',
           ]:
-              function_block(name)
+              function_body(name)
 
           for marker in [
               'weeklyAvailability:',
               'availabilityHistory:',
               'availabilityForWorkDate(',
-              'weekStartIso(state.assignmentDate)',
-              'weekStartIso(assignmentDate)',
-              'state.assignmentDate',
-              '근무표',
-              '랜덤 배정',
+              '메이드 주간 근무표',
+              '근무 가능일 제출',
               'randomAssignmentSnapshot',
               'SCALE_ASSIGNMENT_TARGETS',
               'INITIAL_MANUAL_ASSIGNMENT_TARGETS',
               "case 2:",
               "cleaningTab:'assignment-tomorrow'",
           ]:
-              print_context(marker)
+              context(marker)
 
-          print('\n===== FUNCTION NAMES CONTAINING assignment / availability / random =====')
-          names = sorted(set(re.findall(r'function\s+([A-Za-z0-9_$]*(?:assignment|availability|random)[A-Za-z0-9_$]*)\s*\(', text, flags=re.I)))
-          print('\n'.join(names))
+          report = Path('docs/issue-114-source-inspection.txt')
+          report.write_text('\n'.join(out), encoding='utf-8')
+          print(f'wrote {report} ({report.stat().st_size} bytes)')
           PY
+
+      - name: Commit inspection report
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/issue-114-source-inspection.txt
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: capture issue 114 source inspection"
+          git push origin HEAD:codex/issue-114-assignment-week-and-varied-fixtures
