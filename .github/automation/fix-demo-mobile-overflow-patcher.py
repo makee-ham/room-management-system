@@ -16,6 +16,16 @@ replace_once(
     "quick-booking single constrained grid track",
 )
 replace_once(
+    ".quick-booking-toolbar { grid-template-columns:1fr; padding:11px; }",
+    ".quick-booking-toolbar { grid-template-columns:minmax(0,1fr); padding:11px; }",
+    "mobile quick-booking toolbar constrained track",
+)
+replace_once(
+    ".quick-month-tools { grid-column:auto; }",
+    ".quick-month-tools { grid-column:auto; min-width:0; width:100%; }",
+    "mobile quick-month tools width constraint",
+)
+replace_once(
     ".quick-grid-shell { overflow:visible; }",
     ".quick-grid-shell { overflow-x:clip; overflow-y:visible; }",
     "mobile quick-grid horizontal clipping",
@@ -36,6 +46,8 @@ contract_marker = '''  '간편 예약 · 8월 15일 기준',
 '''
 contract_replacement = '''  '간편 예약 · 8월 15일 기준',
   '.quick-booking-page { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; min-width:0; }',
+  '.quick-booking-toolbar { grid-template-columns:minmax(0,1fr); padding:11px; }',
+  '.quick-month-tools { grid-column:auto; min-width:0; width:100%; }',
   '.quick-grid-shell { overflow-x:clip; overflow-y:visible; }',
   'box-shadow:inset 0 -1px 0 rgba(20,36,55,.12);',
 '''
