@@ -25,8 +25,35 @@ async function assertHealthy(page, width, label) {
   const mainText = normalize(await page.locator('#main-content').innerText());
   assert.ok(mainText.length > 80, `${label}: ${width}px main content must not be blank`);
   assert.doesNotMatch(mainText, /Application error|Internal Server Error|Unhandled Runtime Error|ReferenceError/);
-  const documentOverflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
-  assert.ok(documentOverflow <= 1, `${label}: ${width}px document horizontal overflow: ${documentOverflow}`);
+  const overflowReport = await page.evaluate(() => {
+    const viewportWidth = window.innerWidth;
+    const overflow = document.documentElement.scrollWidth - viewportWidth;
+    const elements = [...document.querySelectorAll('body *')]
+      .map(element => {
+        const rect = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        return {
+          tag: element.tagName.toLowerCase(),
+          id: element.id || '',
+          className: typeof element.className === 'string' ? element.className : '',
+          left: Math.round(rect.left * 10) / 10,
+          right: Math.round(rect.right * 10) / 10,
+          width: Math.round(rect.width * 10) / 10,
+          scrollWidth: element.scrollWidth,
+          clientWidth: element.clientWidth,
+          overflowX: style.overflowX,
+          position: style.position,
+        };
+      })
+      .filter(item => item.right > viewportWidth + 1 || item.left < -1)
+      .sort((left, right) => Math.max(right.right - viewportWidth, -right.left) - Math.max(left.right - viewportWidth, -left.left))
+      .slice(0, 20);
+    return { overflow, viewportWidth, scrollWidth: document.documentElement.scrollWidth, elements };
+  });
+  assert.ok(
+    overflowReport.overflow <= 1,
+    `${label}: ${width}px document horizontal overflow: ${overflowReport.overflow}\n${JSON.stringify(overflowReport, null, 2)}`,
+  );
 }
 
 async function quickReservationQa(width, height) {
@@ -44,8 +71,6 @@ async function quickReservationQa(width, height) {
   assert.equal(await headers.first().getAttribute('data-quick-date'), '2026-08-08');
   assert.equal(await headers.last().getAttribute('data-quick-date'), '2026-09-05');
 
-  const todayHeaders = headers.filter({ has: page.locator(':scope.today') });
-  // Playwright's :scope filtering is browser-dependent; verify the class directly as well.
   const todayDates = await headers.evaluateAll(elements => elements
     .filter(element => element.classList.contains('today'))
     .map(element => element.getAttribute('data-quick-date')));
