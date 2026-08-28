@@ -18,50 +18,31 @@ jobs:
           ref: codex/issue-114-assignment-week-and-varied-fixtures
           fetch-depth: 0
 
-      - name: Build compact source inspection report
+      - name: Build targeted source inspection report
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
 
           source = Path('WIREFRAME/index.html')
           text = source.read_text(encoding='utf-8')
           out = []
 
-          def add(value=''):
-              out.append(str(value))
-
           def line_no(offset):
               return text.count('\n', 0, max(0, offset)) + 1
-
-          def context(marker, before=700, after=1800, limit=4):
-              add(f'\n===== CONTEXT {marker!r} · count={text.count(marker)} =====')
-              cursor = 0
-              for index in range(limit):
-                  pos = text.find(marker, cursor)
-                  if pos < 0:
-                      break
-                  add(f'--- occurrence {index + 1} · line {line_no(pos)} ---')
-                  add(text[max(0, pos-before):min(len(text), pos+after)])
-                  cursor = pos + len(marker)
 
           def function_body(name):
               marker = f'function {name}'
               start = text.find(marker)
-              add(f'\n===== FUNCTION {name} · line {line_no(start) if start >= 0 else "missing"} =====')
+              out.append(f'\n===== FUNCTION {name} · line {line_no(start) if start >= 0 else "missing"} =====')
               if start < 0:
                   return
               brace = text.find('{', start)
-              if brace < 0:
-                  add('opening brace missing')
-                  return
               depth = 0
               quote = None
               escape = False
-              i = brace
-              while i < len(text):
-                  ch = text[i]
+              for index in range(brace, len(text)):
+                  ch = text[index]
                   if quote:
                       if escape:
                           escape = False
@@ -69,56 +50,51 @@ jobs:
                           escape = True
                       elif ch == quote:
                           quote = None
-                  else:
-                      if ch in "'\"`":
-                          quote = ch
-                      elif ch == '{':
-                          depth += 1
-                      elif ch == '}':
-                          depth -= 1
-                          if depth == 0:
-                              add(text[start:i+1])
-                              return
-                  i += 1
-              add(text[start:start+12000])
+                  elif ch in "'\"`":
+                      quote = ch
+                  elif ch == '{':
+                      depth += 1
+                  elif ch == '}':
+                      depth -= 1
+                      if depth == 0:
+                          out.append(text[start:index+1])
+                          return
+              out.append(text[start:start+16000])
 
-          add(f'SOURCE: {source} · chars={len(text)} · lines={text.count(chr(10))+1}')
-          names = sorted(set(re.findall(r'function\s+([A-Za-z0-9_$]+)\s*\(', text)))
-          matched = [name for name in names if re.search(r'(assign|availab|week|random)', name, re.I)]
-          add('\n===== MATCHED FUNCTION NAMES =====')
-          add('\n'.join(matched))
+          def context(marker, before=1400, after=4200):
+              start = text.find(marker)
+              out.append(f'\n===== CONTEXT {marker!r} · line {line_no(start) if start >= 0 else "missing"} =====')
+              if start >= 0:
+                  out.append(text[max(0,start-before):min(len(text),start+after)])
 
+          out.append(f'SOURCE chars={len(text)} lines={text.count(chr(10))+1}')
           for name in [
-              'weekStartIso',
+              'availabilityFor',
               'availabilityForWorkDate',
-              'availabilitySubmissionForWeek',
-              'availabilityRecordForWeek',
-              'assignmentDateForCleaningTab',
-              'syncAssignmentDateForCleaningTab',
-              'assignmentTargetsForDate',
-              'automaticAssignmentTargets',
-              'renderCleaningAssignment',
-              'renderAssignmentBoard',
-              'renderAssignmentAvailability',
+              'availabilityCell',
+              'assignmentDayIndex',
+              'assignmentCountsForDate',
               'renderAvailabilityMatrix',
-              'randomAssignmentCandidates',
-              'runRandomAssignment',
-              'applyRandomAssignment',
-              'restoreRandomAssignment',
+              'eligibleAssignmentMaids',
+              'assignmentRandomGenerator',
+              'randomAssignmentTrial',
+              'createRandomAssignment',
+              'renderRandomAssignmentCard',
+              'filteredAssignmentTargets',
+              'renderAssignmentDashboard',
+              'randomAssignmentContextSignature',
+              'randomAssignmentStateMatches',
+              'cleaningTargetCanAdjust',
           ]:
               function_body(name)
 
           for marker in [
-              'weeklyAvailability:',
-              'availabilityHistory:',
-              'availabilityForWorkDate(',
-              '메이드 주간 근무표',
-              '근무 가능일 제출',
-              'randomAssignmentSnapshot',
-              'SCALE_ASSIGNMENT_TARGETS',
-              'INITIAL_MANUAL_ASSIGNMENT_TARGETS',
+              'const INITIAL_MANUAL_ASSIGNMENT_TARGETS',
+              'const SCALE_ASSIGNMENT_TARGETS',
               "case 2:",
-              "cleaningTab:'assignment-tomorrow'",
+              "selectedDate:'2026-08-15'",
+              'weeklyAvailability:{',
+              'availabilityHistory:[',
           ]:
               context(marker)
 
@@ -134,5 +110,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add issue-114-source-inspection.txt
           git diff --cached --quiet && exit 0
-          git commit -m "chore: capture issue 114 source inspection"
+          git commit -m "chore: refresh issue 114 source inspection"
           git push origin HEAD:codex/issue-114-assignment-week-and-varied-fixtures
