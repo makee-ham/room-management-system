@@ -1507,6 +1507,34 @@ if (auditHash !== expectedAuditHash || indexHash !== expectedIndexHash || checks
   ].join('\n'));
 }
 
+
+const roomCardCopyStart = html.lastIndexOf('      function roomCard(no) {');
+const roomCardCopyEnd = html.indexOf('\n      function cleaningLabel(', roomCardCopyStart);
+if (roomCardCopyStart < 0 || roomCardCopyEnd < 0) {
+  throw new Error('Active roomCard source could not be resolved for copy cleanup checks.');
+}
+const roomCardCopySource = html.slice(roomCardCopyStart, roomCardCopyEnd);
+if (!html.includes('<strong>총 ${ROOMS.length}개 객실</strong>')) {
+  throw new Error('Room catalog total-only heading is missing.');
+}
+if (html.includes('총 ${ROOMS.length}개 객실 · 상태 중복 집계')) {
+  throw new Error('Legacy duplicate-count wording remains in the room catalog heading.');
+}
+for (const forbidden of ['<span>${esc(p.reason)}</span>', '${subBadges}', 'const cleaningSubLabel=']) {
+  if (roomCardCopySource.includes(forbidden)) {
+    throw new Error(`Visible room-card secondary status remains: ${forbidden}`);
+  }
+}
+for (const requiredContract of [
+  '<div class="concept-status-copy"><strong>${esc(p.status)}</strong></div>',
+  '${scheduleBadges}${detailBadges}',
+  'class="badge-row room-schedule-badges"',
+]) {
+  if (!roomCardCopySource.includes(requiredContract)) {
+    throw new Error(`Room-card primary-status or upper-badge contract missing: ${requiredContract}`);
+  }
+}
+
 console.log(`Required files: ${required.length}/${required.length}`);
 console.log(`Inline scripts parsed: ${inlineScripts.length}`);
 console.log(`Large-team assignment fixture: ${maidIds.length} maids`);
