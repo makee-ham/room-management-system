@@ -28,9 +28,11 @@ jobs:
           python3 -m py_compile .github/automation/fix-demo-patcher-runtime.py
           python3 -m py_compile .github/automation/fix-demo-mobile-overflow-patcher.py
           python3 -m py_compile .github/automation/fix-qa-overflow-targets.py
+          python3 -m py_compile .github/automation/fix-workforce-week-patcher.py
           python3 .github/automation/fix-demo-patcher-runtime.py
           python3 .github/automation/fix-demo-mobile-overflow-patcher.py
           python3 .github/automation/fix-qa-overflow-targets.py
+          python3 .github/automation/fix-workforce-week-patcher.py
           python3 -m py_compile .github/automation/apply-demo-date-all-maid-availability.py
           python3 -m py_compile .github/automation/fix-demo-date-doc-contracts.py
           python3 .github/automation/apply-demo-date-all-maid-availability.py
@@ -74,6 +76,7 @@ jobs:
           rm -f .github/automation/fix-demo-patcher-runtime.py
           rm -f .github/automation/fix-demo-mobile-overflow-patcher.py
           rm -f .github/automation/fix-qa-overflow-targets.py
+          rm -f .github/automation/fix-workforce-week-patcher.py
           rm -f .github/automation/fix-demo-date-doc-contracts.py
           rm -f .github/automation/qa-demo-date-all-maid-availability.mjs
           rm -f .github/workflows/apply-demo-date-all-maid-availability.yml
