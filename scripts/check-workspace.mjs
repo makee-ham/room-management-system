@@ -1985,3 +1985,38 @@ if (!html.includes('<span>주급 영향</span><strong>자동 차감 없음</stro
 if (!html.includes('<h3>감사 이력</h3>')) throw new Error('Complaint audit history was removed.');
 console.log('Essential-copy-only static contracts: passed');
 
+const adminHomePriorityStart = html.lastIndexOf('function renderAdminToday()');
+const adminHomePriorityEnd = html.indexOf('\n      function maidName(', adminHomePriorityStart);
+if (adminHomePriorityStart < 0 || adminHomePriorityEnd < 0) throw new Error('Active admin-home source could not be isolated for priority checks.');
+const adminHomePrioritySource = html.slice(adminHomePriorityStart, adminHomePriorityEnd);
+for (const contract of [
+  'data-admin-home-section="room-summary"',
+  'data-admin-home-section="cleaning-actions"',
+  'data-admin-home-section="cleaning-cost"',
+  'data-dashboard-cost-shortcut="today"',
+  'class="card cleaning-cost-shortcut"',
+  '<strong>청소비 예상 지출</strong>',
+  '<small>오늘 ${cleaningCost.count}건 · ${money(cleaningCost.expected)}</small>',
+  '<span class="cleaning-cost-shortcut-cta">주급 정산',
+  'data-action="go-payroll"',
+]) {
+  if (!adminHomePrioritySource.includes(contract)) throw new Error(`Admin-home priority/cost shortcut contract missing: ${contract}`);
+}
+const adminHomeSummaryIndex = adminHomePrioritySource.indexOf('data-admin-home-section="room-summary"');
+const adminHomeActionsIndex = adminHomePrioritySource.indexOf('data-admin-home-section="cleaning-actions"');
+const adminHomeCostIndex = adminHomePrioritySource.indexOf('data-admin-home-section="cleaning-cost"');
+if (!(adminHomeSummaryIndex >= 0 && adminHomeSummaryIndex < adminHomeActionsIndex && adminHomeActionsIndex < adminHomeCostIndex)) {
+  throw new Error('Admin-home sections are not ordered summary → cleaning actions → cleaning cost.');
+}
+for (const forbidden of [
+  'class="cleaning-cost-grid"',
+  'class="cleaning-cost-foot"',
+  '이번 주 예상',
+  '검수 통과 시 예상 지출',
+  '앱은 실제 송금을 실행하지 않습니다.',
+]) {
+  if (adminHomePrioritySource.includes(forbidden)) throw new Error(`Verbose cleaning-cost content remains on admin home: ${forbidden}`);
+}
+if (!html.includes('/* Admin-home compact cleaning-cost shortcut */')) throw new Error('Compact cleaning-cost shortcut styles are missing.');
+console.log('Admin-home room-summary priority and compact cost-link contracts: passed');
+
