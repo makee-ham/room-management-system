@@ -5,6 +5,9 @@ on:
     branches:
       - codex/issue-114-assignment-week-and-varied-fixtures
 
+permissions:
+  contents: read
+
 jobs:
   inspect:
     if: github.actor != 'github-actions[bot]'
@@ -14,67 +17,86 @@ jobs:
         with:
           ref: codex/issue-114-assignment-week-and-varied-fixtures
 
-      - name: Inspect target construction and block rules
+      - name: Inspect assignment week, availability and random distribution
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
           text = Path('WIREFRAME/index.html').read_text(encoding='utf-8')
 
-          def function_block(name: str, max_chars: int = 26000):
-              marker = f'function {name}'
-              start = text.find(marker)
+          def line_no(offset: int) -> int:
+              return text.count('\n', 0, offset) + 1
+
+          def print_context(marker: str, before: int = 1800, after: int = 8500, limit: int = 8):
+              print(f'\n===== MARKER {marker!r} count={text.count(marker)} =====')
+              pos = 0
+              for occurrence in range(limit):
+                  idx = text.find(marker, pos)
+                  if idx < 0:
+                      break
+                  print(f'\n--- occurrence {occurrence + 1} · line {line_no(idx)} · offset {idx} ---')
+                  print(text[max(0, idx-before):min(len(text), idx+after)].replace('\n', '\\n'))
+                  pos = idx + len(marker)
+
+          def function_block(name: str, max_chars: int = 30000):
+              patterns = [f'function {name}', f'const {name} =', f'const {name}=']
+              starts = [text.find(pattern) for pattern in patterns]
+              starts = [start for start in starts if start >= 0]
+              start = min(starts) if starts else -1
               print(f'\n===== FUNCTION {name} at {start} =====')
               if start < 0:
                   return
-              candidates = [p for p in [text.find('\n      function ', start + len(marker)), text.find('\n      const ', start + len(marker))] if p >= 0]
+              candidates = []
+              for token in ['\n      function ', '\n      const ', '\n      let ']:
+                  pos = text.find(token, start + 1)
+                  if pos >= 0:
+                      candidates.append(pos)
               end = min(candidates) if candidates else min(len(text), start + max_chars)
               print(text[start:min(end, start + max_chars)].replace('\n', '\\n'))
 
           for name in [
-              'liveAssignmentTargetsForState',
-              'automaticCheckoutAssignmentTargets',
-              'checkoutAssignmentTarget',
-              'cleaningAssignmentForReservation',
-              'manualAssignmentTargetsForDate',
-              'stayoverAssignmentTargetsForDate',
-              'assignmentFor',
-              'targetPlanDate',
-              'targetEffectiveDate',
-              'cleaningTargetAdjustmentBlock',
-              'roomOperationalBlockReason',
-              'roomPresentation',
-              'reservationTimeStatus',
-              'assignmentContext',
-              'assignmentOptions',
-              'assignmentHasNetChange',
-              'orderedAssignmentsForMaid',
-              'initializeCleaningTargetLedger',
-              'cleaningTargetFromAssignmentSource',
+              'baseState',
+              'weekStartIso',
+              'availabilityWeekStart',
+              'availabilityForWorkDate',
+              'availabilityRecordForWeek',
+              'availabilitySubmissionForWeek',
               'assignmentDateForCleaningTab',
+              'syncAssignmentDateForCleaningTab',
+              'renderCleaningAssignment',
+              'renderAssignmentBoard',
+              'renderAssignmentAvailability',
+              'renderAvailabilityMatrix',
+              'runRandomAssignment',
+              'applyRandomAssignment',
+              'randomlyAssignCleaning',
+              'randomAssignmentCandidates',
+              'assignmentTargetsForDate',
+              'automaticAssignmentTargets',
+              'reservationCheckoutTarget',
           ]:
               function_block(name)
 
           for marker in [
-              'function liveAssignmentTargetsForState',
-              "source:'manual'",
-              "source:'stayover'",
-              'activationBlockedBy',
-              'roomStopped',
-              'roomStopReasons',
-              'candles[',
-              'roomIssues',
-              'blocksCheckin',
+              'weeklyAvailability:',
+              'availabilityHistory:',
+              'availabilityForWorkDate(',
+              'weekStartIso(state.assignmentDate)',
+              'weekStartIso(assignmentDate)',
+              'state.assignmentDate',
+              '근무표',
+              '랜덤 배정',
+              'randomAssignmentSnapshot',
+              'SCALE_ASSIGNMENT_TARGETS',
+              'INITIAL_MANUAL_ASSIGNMENT_TARGETS',
+              "case 2:",
+              "cleaningTab:'assignment-tomorrow'",
           ]:
-              print(f'\n===== MARKER {marker!r} count={text.count(marker)} =====')
-              pos = 0
-              for _ in range(8):
-                  idx = text.find(marker, pos)
-                  if idx < 0:
-                      break
-                  line = text.count('\n', 0, idx) + 1
-                  print(f'\n--- line {line}, offset {idx} ---')
-                  print(text[max(0, idx-1200):min(len(text), idx+7000)].replace('\n', '\\n'))
-                  pos = idx + len(marker)
+              print_context(marker)
+
+          print('\n===== FUNCTION NAMES CONTAINING assignment / availability / random =====')
+          names = sorted(set(re.findall(r'function\s+([A-Za-z0-9_$]*(?:assignment|availability|random)[A-Za-z0-9_$]*)\s*\(', text, flags=re.I)))
+          print('\n'.join(names))
           PY
