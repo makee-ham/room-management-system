@@ -48,6 +48,12 @@ new_room_card_contract = "  \"reservationActionLabel=room.longStay?'장기 투�
 if check.count(old_room_card_contract) != 1:
     raise RuntimeError(f"room-card long-stay validation: expected 1 match, found {check.count(old_room_card_contract)}")
 check = check.replace(old_room_card_contract, new_room_card_contract, 1)
+
+old_checkout_label = "const reservationCheckoutLabel = '<label for=\"res-checkout\">2. 체크아웃 일시</label>';"
+new_checkout_label = "const reservationCheckoutLabel = '<label for=\"res-checkout\" data-res-checkout-label>';"
+if check.count(old_checkout_label) != 1:
+    raise RuntimeError(f"reservation checkout label validation: expected 1 match, found {check.count(old_checkout_label)}")
+check = check.replace(old_checkout_label, new_checkout_label, 1)
 check_path.write_text(check, encoding="utf-8")
 
 sums_path = ROOT / "SHA256SUMS.txt"
