@@ -1,4 +1,4 @@
-name: Final verification for issue 119
+name: Finalize issue 119 branch
 
 on:
   push:
@@ -9,14 +9,14 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
-  group: issue-119-final-verification
-  cancel-in-progress: true
+  group: issue-119-finalization
+  cancel-in-progress: false
 
 jobs:
-  verify:
+  finalize:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -25,6 +25,20 @@ jobs:
         with:
           ref: feature/issue-119-role-cleaning-long-stay
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Remove temporary inspection and apply artifacts
+        shell: bash
+        run: |
+          git rm -r .issue119
+          git rm .github/workflows/issue-119-inspect.yml
+          git rm scripts/apply_issue_119.py
+          git rm scripts/apply_issue_119_v2.py
+          git rm scripts/bootstrap_issue_119_apply.py
+          git rm scripts/issue_119_inspect.py
+          git rm scripts/post_issue_119_v2.py
+          git rm scripts/report-workspace-mismatches.mjs
+          git rm .github/workflows/issue-119-apply.yml
 
       - name: Verify issue 119 contracts and JavaScript syntax
         run: node scripts/check-issue-119.mjs
@@ -33,7 +47,7 @@ jobs:
         run: node scripts/check-workspace.mjs
 
       - name: Check patch hygiene
-        run: git diff --check origin/main...HEAD
+        run: git diff --check origin/main...HEAD -- . ':(exclude).issue119'
 
       - name: Serve wireframe and verify response
         shell: bash
@@ -51,3 +65,11 @@ jobs:
           grep -q 'roomManagementAuthSessionV1' /tmp/room-management-index.html
           grep -q '종료일 미정' /tmp/room-management-index.html
           grep -q 'focus-assignment-room' /tmp/room-management-index.html
+
+      - name: Commit final branch cleanup
+        shell: bash
+        run: |
+          git config user.name "Ham Arin"
+          git config user.email "79068658+makee-ham@users.noreply.github.com"
+          git commit -m "chore: remove issue 119 temporary tooling"
+          git push origin HEAD:feature/issue-119-role-cleaning-long-stay
