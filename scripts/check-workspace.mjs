@@ -568,8 +568,18 @@ if (!/dataIssue:hold\|\|null/.test(html) || !html.includes("'762':'현재 투숙
 if (!/occupancy:occupiedSeed\?'occupied':'vacant'/.test(html) || !/catalogStatus:hold\?'hold':'available'/.test(html)) {
   throw new Error('Room master must separate initial occupancy from customer assignability.');
 }
-if (/LONG_STAY_(?:ROOMS|ENDED_ROOMS)|long-?stay|장기투숙/i.test(html)) {
-  throw new Error('Legacy long-stay UI or state contracts remain in WIREFRAME/index.html.');
+if (/LONG_STAY_(?:ROOMS|ENDED_ROOMS)/.test(html)) {
+  throw new Error('Deprecated fixed long-stay room lists remain in WIREFRAME/index.html.');
+}
+for (const contract of [
+  "const LONG_STAY_OPEN_END_AT='9999-12-31T23:59'",
+  'function reservationIsLongStay(reservation)',
+  'function reservationHasKnownEnd(reservation)',
+  'function reservationLongStayEndLabel(reservation)',
+  'data-control="reservation-long-stay"',
+  '종료일 미정',
+]) {
+  if (!html.includes(contract)) throw new Error(`Long-stay contract missing: ${contract}`);
 }
 for (const contract of [
   "key:'blocked',tone:'red',status:'배정 불가'",
@@ -614,7 +624,7 @@ for (const removed of ['room-work-line', 'concept-cleaning-row', '가장 가까�
 for (const contract of [
   'class="room-quick-actions"',
   'data-action="${closestReservation?\'quick-reservation-edit\':\'reservation-edit\'}"',
-  "reservationActionLabel=weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`",
+  "reservationActionLabel=room.longStay?'장기 투숙 관리':weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`",
   ":pastReservationCount?`예약 기록 ${pastReservationCount}건`:room.occupancy==='occupied'&&!occupiedReservationEnd(room)?'투숙 정보 입력':'예약 등록'",
 ]) {
   if (!roomCardSource.includes(contract)) throw new Error(`Compact room-card reservation action missing: ${contract}`);
@@ -768,7 +778,7 @@ for (const businessWeekContract of [
   if (!html.includes(businessWeekContract)) throw new Error(`Monday-to-Sunday business-week meaning changed: ${businessWeekContract}`);
 }
 const reservationCheckinLabel = '<label for="res-checkin">1. 체크인 일시</label>';
-const reservationCheckoutLabel = '<label for="res-checkout">2. 체크아웃 일시</label>';
+const reservationCheckoutLabel = '<label for="res-checkout" data-res-checkout-label>';
 if (html.indexOf(reservationCheckinLabel) < 0 || html.indexOf(reservationCheckoutLabel) <= html.indexOf(reservationCheckinLabel)) {
   throw new Error('Single-reservation form must render check-in before check-out.');
 }
@@ -794,7 +804,7 @@ for (const contract of [
   'function reservationGuestCount(reservation)',
   "Object.hasOwn(reservation,'guestCount')",
   'guestCount:guestPolicyForRoom(reservation.room).defaultGuestCount',
-  'reservationGuestCount(reservation),reservation.status',
+  "reservationGuestCount(reservation),reservationIsLongStay(reservation)?'long':'dated',reservation.status",
   'Number.isInteger(value)&&value>=1?value:policy.defaultGuestCount',
   "return Number.isInteger(Number(value))&&Number(value)>=1?`${Number(value)}명`:'인원 미기록'",
 ]) {
@@ -821,7 +831,7 @@ for (const contract of [
 for (const contract of [
   "upsertReservationRecord({roomNo,checkInAt:range.checkInAt,checkOutAt:range.checkOutAt,source:'grid'})",
   'reservationGuestCount(result.reservation)}명 예약 접수',
-  "upsertReservationRecord({id:reservationId,roomNo:no,checkInAt:checkinAt,checkOutAt:checkoutAt,guestCount,source:'card',currentStay})",
+  "upsertReservationRecord({id:reservationId,roomNo:no,checkInAt:checkinAt,checkOutAt:isLongStay&&!enteredCheckoutAt?'':checkoutAt,guestCount,source:isLongStay?'long-stay':'card',currentStay,isLongStay})",
   "document.getElementById(result.guestError?'reservation-guest-stepper'",
 ]) {
   if (!html.includes(contract)) throw new Error(`Reservation guest entry contract missing: ${contract}`);
@@ -979,8 +989,8 @@ for (const contract of [
   'guestCountSnapshot:submission.guestCountSnapshot',
   '(attempt.guestCountSnapshot??null)===(submission.guestCountSnapshot??null)',
   'guestCountSnapshot:guestCountForAttempt(attempt)',
-  "guestCountDisplay=guestCount?guestCountLabel(guestCount):'미기록'",
-  '<span>숙박 인원 ${guestCountDisplay}</span>',
+  'const guestCount=assignmentGuestCount(item)',
+  '<span>숙박 인원</span><strong>${esc(guestCountLabel(guestCount))}</strong>',
   "<span>숙박 인원</span><strong>${activeGuestCount?guestCountLabel(activeGuestCount):'미기록'}</strong>",
   'parts.push(`숙박 인원 ${guestCountLabel(assignmentGuestCount(item))}`)',
   'unstartedAttempt.reservationIdSnapshot===activeReservation.id&&!guestCountForAttempt(unstartedAttempt)',
