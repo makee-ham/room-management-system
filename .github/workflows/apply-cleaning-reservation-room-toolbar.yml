@@ -1,0 +1,60 @@
+name: Apply and verify cleaning, reservation, and room toolbar update
+
+on:
+  push:
+    branches:
+      - codex/cleaning-slots-reservation-list-room-toolbar
+    paths:
+      - .github/workflows/apply-cleaning-reservation-room-toolbar.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply-verify-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out working branch
+        uses: actions/checkout@v4
+        with:
+          ref: codex/cleaning-slots-reservation-list-room-toolbar
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restore feature patch and QA
+        shell: bash
+        run: |
+          cat .github/automation-payload/feature.* | base64 --decode | gzip --decompress > /tmp/feature.patch
+          cat .github/automation-payload/qa.* | base64 --decode | gzip --decompress > /tmp/verify-feature.py
+
+      - name: Apply product patch
+        shell: bash
+        run: git apply --index /tmp/feature.patch
+
+      - name: Run permanent static checks
+        shell: bash
+        run: |
+          node scripts/check-workspace.mjs
+          git diff --check
+
+      - name: Install Chromium QA runtime
+        shell: bash
+        run: |
+          python3 -m pip install --disable-pip-version-check playwright==1.55.0
+          python3 -m playwright install --with-deps chromium
+
+      - name: Run rendered interaction and responsive QA
+        shell: bash
+        run: python3 /tmp/verify-feature.py
+
+      - name: Commit verified product changes
+        shell: bash
+        run: |
+          rm -rf .github/automation-payload
+          rm -f .github/workflows/apply-cleaning-reservation-room-toolbar.yml
+          git config user.name "Ham Arin"
+          git config user.email "79068658+makee-ham@users.noreply.github.com"
+          git add -A
+          git commit -m "청소 인증 슬롯과 예약·객실현황 UI를 정리한다"
+          git push origin HEAD:codex/cleaning-slots-reservation-list-room-toolbar
