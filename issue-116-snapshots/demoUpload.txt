@@ -1,0 +1,9 @@
+function demoUploadImageFixture(key) {
+        return ({
+          bed:{fixture:'bed',src:'reference/redesign-concepts/admin-inspection.png',view:'62 505 354 210',uploadedAt:'2026.08.15 10:42',version:'v2'},
+          bath:{fixture:'bath',src:'reference/redesign-concepts/admin-inspection.png',view:'435 505 354 210',uploadedAt:'2026.08.15 10:43',version:'v2'},
+          floor:{fixture:'floor',src:'reference/redesign-concepts/admin-inspection.png',view:'62 845 354 210',uploadedAt:'2026.08.15 10:44',version:'v2'},
+          supply:{fixture:'supply',src:'reference/redesign-concepts/admin-inspection.png',view:'435 845 354 210',uploadedAt:'2026.08.15 10:45',version:'v2'},
+          tv:{fixture:'tv',src:'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22852%22 height=%221850%22 viewBox=%220 0 852 1850%22%3E%3Crect width=%22852%22 height=%221850%22 fill=%22%23e8edf3%22/%3E%3Crect x=%2276%22 y=%22510%22 width=%22700%22 height=%22520%22 rx=%2228%22 fill=%22%23142130%22/%3E%3Crect x=%22104%22 y=%22538%22 width=%22644%22 height=%22444%22 rx=%2216%22 fill=%22%232b6f9f%22/%3E%3Cpath d=%22M104 780h644v202H104z%22 fill=%22%231f587f%22/%3E%3Ctext x=%22148%22 y=%22680%22 font-family=%22system-ui,sans-serif%22 font-size=%2254%22 font-weight=%22700%22 fill=%22white%22%3EINPUT 1%3C/text%3E%3Ctext x=%22148%22 y=%22755%22 font-family=%22system-ui,sans-serif%22 font-size=%2238%22 fill=%22%23d8efff%22%3ENO SIGNAL%3C/text%3E%3Ccircle cx=%22726%22 cy=%221010%22 r=%228%22 fill=%22%234ade80%22/%3E%3Crect x=%22346%22 y=%221030%22 width=%22160%22 height=%2220%22 rx=%2210%22 fill=%22%23333%22/%3E%3C/svg%3E',view:'0 0 852 1850',uploadedAt:'2026.08.18 12:00',version:'v7'}
+        })[key]||{fixture:'bed',src:'reference/redesign-concepts/admin-inspection.png',view:'62 505 354 210',uploadedAt:'2026.08.15 10:42',version:'v2'};
+      }

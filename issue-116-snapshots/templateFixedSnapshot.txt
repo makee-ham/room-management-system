@@ -1,0 +1,4 @@
+function templateFixedSnapshot(template) {
+        const roomNo=templateRepresentativeRoom(template);
+        return template&&roomNo?templateSnapshotFor(roomNo,template.name):null;
+      }

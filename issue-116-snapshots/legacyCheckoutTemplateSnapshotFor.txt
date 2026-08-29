@@ -1,0 +1,5 @@
+function legacyCheckoutTemplateSnapshotFor(roomNo) {
+        const current=templateSnapshotFor(roomNo,'퇴실 청소');
+        if(!current)return null;
+        return Object.freeze({...current,version:'v6',photos:Object.freeze(current.photos.filter(item=>item.id!=='tv-on').map(item=>Object.freeze({...item})))});
+      }

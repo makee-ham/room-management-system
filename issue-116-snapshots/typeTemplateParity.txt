@@ -1,0 +1,4 @@
+function typeTemplateParity(typeId,kind='퇴실 청소') {
+        const rooms=ROOMS.filter(room=>room.type===String(typeId)),contracts=rooms.map(room=>({room:room.no,contract:photoSlotContract(templateSnapshotFor(room.no,kind)?.photos||[])})),signatures=[...new Set(contracts.map(item=>JSON.stringify(item.contract)))],profile=TYPE_LAYOUT_PROFILES[typeId]||null;
+        return {typeId:String(typeId),kind,roomCount:rooms.length,composition:profile?.composition||'',slotCount:contracts[0]?.contract.length||0,signatures,allSame:signatures.length===1,rooms:contracts.map(item=>item.room)};
+      }

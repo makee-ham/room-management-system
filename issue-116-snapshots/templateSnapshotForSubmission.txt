@@ -1,0 +1,12 @@
+function templateSnapshotForSubmission(roomNo,submission,attempt=null) {
+        if(submission?.templateSnapshot)return submission.templateSnapshot;
+        if(submission?.templateId&&attempt?.templateSnapshot?.id===submission.templateId)return attempt.templateSnapshot;
+        if(submission){
+          const submittedTypeId=submission.roomMetaSnapshot?.typeId||attempt?.roomMetaSnapshot?.typeId||ROOMS.find(item=>item.no===roomNo)?.type||'standard',snapshotRoom=ROOMS.find(item=>item.type===submittedTypeId)?.no||roomNo;
+          const snapshot=submission.kind==='퇴실 청소'?legacyCheckoutTemplateSnapshotFor(snapshotRoom):templateSnapshotFor(snapshotRoom,submission.kind||'퇴실 청소');
+          if(!snapshot)return null;
+          const submittedVersion=submission.templateVersion||snapshot.version;
+          return submittedVersion===snapshot.version?snapshot:Object.freeze({...snapshot,version:submittedVersion});
+        }
+        return attempt?.templateSnapshot||templateSnapshotFor(roomNo,attempt?.kind||'퇴실 청소');
+      }

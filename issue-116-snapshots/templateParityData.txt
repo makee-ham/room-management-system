@@ -1,0 +1,5 @@
+function templateParityData(templateId,roomNo=null) {
+        const template=templateById(String(templateId));if(!template)return null;
+        const rooms=templateRooms(template),requested=roomNo==null?null:String(roomNo),selected=requested&&rooms.some(room=>room.no===requested)?requested:templateRepresentativeRoom(template),snapshot=selected?templateSnapshotFor(selected,template.name):templateFixedSnapshot(template),contract=photoSlotContract(snapshot?.photos||[]),profile=TYPE_LAYOUT_PROFILES[template.typeId]||TYPE_LAYOUT_PROFILES.standard;
+        return {templateId:template.id,typeId:template.typeId,kindId:template.kindId,version:template.version,room:selected,roomCount:rooms.length,fixedByType:true,composition:profile.composition,baseRuleCount:template.photos.length,actualSlotCount:contract.length,requiredSlotCount:contract.filter(item=>item.required).length,optionalSlotCount:contract.filter(item=>!item.required).length,layoutProfile:{...profile},contract,signature:JSON.stringify(contract),stats:templateSlotStats(template)};
+      }
