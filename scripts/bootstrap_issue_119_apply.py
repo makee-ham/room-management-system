@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Adjust the one-shot issue #119 generator to the current single-file wireframe."""
+import re
 from pathlib import Path
 
 path = Path(__file__).with_name("apply_issue_119.py")
@@ -17,6 +18,14 @@ replacements = {
 for old, new in replacements.items():
     if old in text:
         text = text.replace(old, new, 1)
+
+text, _ = re.subn(
+    r'html = replace_once\(\n    html,\n    "      const maidNav.*?    "remove maid alert navigation tab",\n\)\n',
+    "html = replace_once(html, \"{id:'alerts',label:'알림',icon:'bell'}, \" , \"\", \"remove maid alert navigation tab\")\n",
+    text,
+    count=1,
+    flags=re.S,
+)
 
 path.write_text(text, encoding="utf-8")
 print("Normalized issue #119 apply script for the current wireframe.")
