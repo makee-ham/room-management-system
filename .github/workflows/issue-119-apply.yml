@@ -8,6 +8,7 @@ on:
       - .github/workflows/issue-119-apply.yml
       - scripts/apply_issue_119_v2.py
       - scripts/post_issue_119_v2.py
+      - scripts/report-workspace-mismatches.mjs
   workflow_dispatch:
 
 permissions:
@@ -33,6 +34,9 @@ jobs:
         run: |
           python3 scripts/apply_issue_119_v2.py
           python3 scripts/post_issue_119_v2.py
+
+      - name: Report all workspace mismatches
+        run: node scripts/report-workspace-mismatches.mjs
 
       - name: Verify issue 119 contracts
         run: node scripts/check-issue-119.mjs
