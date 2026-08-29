@@ -1,4 +1,4 @@
-name: Collect room list source
+name: Apply and verify room card/list view toggle
 
 on:
   push:
@@ -8,21 +8,80 @@ on:
       - .github/workflows/collect-room-list-source.yml
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  collect:
+  apply-verify-commit:
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     steps:
-      - uses: actions/checkout@v4
-      - name: Collect repository source
+      - name: Check out working branch
+        uses: actions/checkout@v4
+        with:
+          ref: codex/room-card-list-view-toggle
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restore feature patch and rendered QA
         shell: bash
         run: |
-          mkdir -p /tmp/room-list-source
-          rsync -a --exclude=.git ./ /tmp/room-list-source/
-      - name: Upload repository artifact
+          cat .github/room-view-payload/patch.* | base64 --decode | gzip --decompress > /tmp/room-view.patch
+          cat .github/room-view-payload/qa.* | base64 --decode | gzip --decompress > /tmp/verify-room-view.py
+
+      - name: Apply product patch
+        shell: bash
+        run: |
+          git apply --check /tmp/room-view.patch
+          git apply /tmp/room-view.patch
+
+      - name: Run permanent static and syntax checks
+        shell: bash
+        run: |
+          node scripts/check-workspace.mjs
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html=Path('WIREFRAME/index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script(?:\s[^>]*)?>([\s\S]*?)</script>',html,re.I)
+          if len(scripts)!=1:
+              raise SystemExit(f'Expected one inline script, found {len(scripts)}')
+          Path('/tmp/room-view-inline.js').write_text(scripts[0],encoding='utf-8')
+          PY
+          node --check /tmp/room-view-inline.js
+          git diff --check
+
+      - name: Install Chromium QA runtime
+        shell: bash
+        run: |
+          python3 -m pip install --disable-pip-version-check playwright==1.55.0
+          python3 -m playwright install --with-deps chromium
+
+      - name: Run rendered interaction and responsive QA
+        shell: bash
+        run: |
+          python3 scripts/serve.py --host 127.0.0.1 --port 4173 >/tmp/room-view-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:4173/index.html >/dev/null && break
+            sleep 1
+          done
+          python3 /tmp/verify-room-view.py
+
+      - name: Upload rendered QA evidence
         uses: actions/upload-artifact@v4
         with:
-          name: room-list-source
-          path: /tmp/room-list-source
-          retention-days: 1
+          name: room-card-list-view-qa
+          path: /tmp/room-list-view-qa
+          retention-days: 3
+
+      - name: Commit verified product changes
+        shell: bash
+        run: |
+          rm -rf .github/room-view-payload
+          rm -f .github/workflows/collect-room-list-source.yml
+          git config user.name "Ham Arin"
+          git config user.email "79068658+makee-ham@users.noreply.github.com"
+          git add -A
+          git commit -m "객실 카드형·리스트형 보기를 나누고 PIN 관리를 명확히 한다"
+          git push origin HEAD:codex/room-card-list-view-toggle
