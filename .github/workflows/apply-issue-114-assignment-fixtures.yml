@@ -44,10 +44,11 @@ jobs:
             'select[data-target="${variedTargets.notified}"]':'select[data-location="table"][data-target="${variedTargets.notified}"]',
             'select[data-target="${variedTargets.started}"]':'select[data-location="table"][data-target="${variedTargets.started}"]',
             'select[data-target="${targetId}"]':'select[data-location="table"][data-target="${targetId}"]',
+            "/이미 시작한 청소/":"/사전 청소 시작|통보 완료/",
           }
           for old,new in replacements.items():
             if text.count(old)!=1:
-              raise SystemExit(f'QA table-selector replacement mismatch: {old} / {text.count(old)}')
+              raise SystemExit(f'QA replacement mismatch: {old} / {text.count(old)}')
             text=text.replace(old,new,1)
           path.write_text(text,encoding='utf-8')
           PY
