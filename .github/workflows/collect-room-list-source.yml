@@ -1,0 +1,28 @@
+name: Collect room list source
+
+on:
+  push:
+    branches:
+      - codex/room-card-list-view-toggle
+    paths:
+      - .github/workflows/collect-room-list-source.yml
+
+permissions:
+  contents: read
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Collect repository source
+        shell: bash
+        run: |
+          mkdir -p /tmp/room-list-source
+          rsync -a --exclude=.git ./ /tmp/room-list-source/
+      - name: Upload repository artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: room-list-source
+          path: /tmp/room-list-source
+          retention-days: 1
