@@ -27,6 +27,20 @@ jobs:
         run: |
           python3 -m py_compile .github/automation/apply-issue-114-assignment-fixtures.py
           python3 .github/automation/apply-issue-114-assignment-fixtures.py
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path('.github/automation/qa-issue-114-assignment-fixtures.mjs')
+          text=path.read_text(encoding='utf-8')
+          obsolete=[
+            "  assert.match(normalize(await page.locator('.assignment-panel').first().innerText()),/8월 10일.*8월 16일/);\n",
+            "  assert.match(normalize(await nextWeek.page.locator('.assignment-panel').first().innerText()),/8월 17일.*8월 23일/);\n",
+          ]
+          for line in obsolete:
+            if text.count(line)!=1:
+              raise SystemExit(f'QA week-copy assertion mismatch: {line.strip()} / {text.count(line)}')
+            text=text.replace(line,'',1)
+          path.write_text(text,encoding='utf-8')
+          PY
           git diff --check
 
       - name: Run permanent static workspace checks
