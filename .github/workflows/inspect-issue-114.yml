@@ -18,7 +18,7 @@ jobs:
           ref: codex/issue-114-assignment-week-and-varied-fixtures
           fetch-depth: 0
 
-      - name: Build targeted assignment-fixture inspection report
+      - name: Extract exact source units
         shell: bash
         run: |
           python3 - <<'PY'
@@ -26,17 +26,14 @@ jobs:
           import re
 
           text = Path('WIREFRAME/index.html').read_text(encoding='utf-8')
-          out=[]
-          def line_no(offset): return text.count('\n',0,max(0,offset))+1
-          def function_body(name):
-            markers=[f'function {name}',f'const {name}=',f'let {name}=']
-            start=min([idx for idx in (text.find(marker) for marker in markers) if idx>=0],default=-1)
-            out.append(f'\n===== FUNCTION {name} · line {line_no(start) if start>=0 else "missing"} =====')
-            if start<0:return
-            brace=text.find('{',start)
-            if brace<0:
-              out.append(text[start:start+5000]);return
-            depth=0;quote=None;escape=False
+          target_dir=Path('issue-114-inspection')
+          target_dir.mkdir(exist_ok=True)
+
+          def extract_function(name):
+            marker=f'function {name}'
+            start=text.find(marker)
+            if start<0:return f'===== {name}: missing =====\n'
+            brace=text.find('{',start);depth=0;quote=None;escape=False
             for i in range(brace,len(text)):
               ch=text[i]
               if quote:
@@ -47,64 +44,72 @@ jobs:
               elif ch=='{':depth+=1
               elif ch=='}':
                 depth-=1
-                if depth==0:
-                  # Include a trailing semicolon for function expressions where present.
-                  end=i+1
-                  while end<len(text) and text[end] in '; \t': end+=1
-                  out.append(text[start:end]);return
-            out.append(text[start:start+16000])
-          def context(marker,before=1400,after=7000,limit=6):
-            out.append(f'\n===== CONTEXT {marker!r} · count={text.count(marker)} =====')
-            pos=0
-            for n in range(limit):
-              idx=text.find(marker,pos)
-              if idx<0:break
-              out.append(f'--- {n+1} · line {line_no(idx)} ---')
-              out.append(text[max(0,idx-before):min(len(text),idx+after)])
-              pos=idx+len(marker)
+                if depth==0:return text[start:i+1]+'\n'
+            return text[start:start+24000]+'\n'
 
-          keyword_names=[]
-          for match in re.finditer(r'\bfunction\s+([A-Za-z0-9_$]+)\s*\(',text):
-            name=match.group(1)
-            lowered=name.lower()
-            if any(term in lowered for term in ['assign','availab','cleaningtarget','checkout','stayover','manualcleaning','roomisonhold']):
-              keyword_names.append(name)
-          out.append('\n===== FUNCTION CATALOG =====\n'+'\n'.join(dict.fromkeys(keyword_names)))
+          groups={
+            'availability.txt':[
+              'availabilityFor','availabilityForWorkDate','assignmentDayIndex','availabilityCell',
+              'assignmentDateForCleaningTab','syncAssignmentDateForCleaningTab','renderAvailabilityMatrix',
+              'assignmentCountsForDate','eligibleAssignmentMaids','assignmentOptions'
+            ],
+            'targets.txt':[
+              'automaticAssignmentTargets','liveAssignmentTargetsForState','liveAssignmentTargets',
+              'assignmentTargetsForDate','assignmentTargets','initializeCleaningTargetLedger',
+              'cleaningTargetCanAdjust','cleaningTargetAdjustmentBlock','roomIsOnHold'
+            ],
+            'random.txt':[
+              'renderRandomAssignmentCard','randomAssignmentContextSignature','assignmentRandomGenerator',
+              'randomAssignmentTrial','createRandomAssignment','randomAssignmentStateMatches',
+              'restoreRandomAssignment','discardStaleRandomAssignment','assignmentCanSave'
+            ],
+            'render.txt':[
+              'renderAssignmentDashboard','assignmentScheduleMarkup','assignmentSourceMarkup',
+              'assignmentAdjustmentMarkup','renderMaidOrderBoardContent','renderCleaningHub','renderWorkforce'
+            ],
+            'scenario.txt':['baseState','makeScenario']
+          }
+          for filename,names in groups.items():
+            body=[]
+            for name in names:
+              body.append(f'\n===== {name} =====\n')
+              body.append(extract_function(name))
+            target_dir.joinpath(filename).write_text(''.join(body),encoding='utf-8')
 
-          for name in [
-            'makeScenario','baseState','weekStartIso','assignmentDateForCleaningTab','syncAssignmentDateForCleaningTab',
-            'availabilityForWorkDate','availabilityRecordForWorkDate','availabilityCell','assignmentDayIndex',
-            'renderAvailabilityMatrix','assignmentMaidIdsForDate','assignmentMaidIds','assignmentMaidOptions',
-            'assignmentCountsForDate','assignmentCounts','assignmentTargetsForDate','assignmentTargets',
-            'liveAssignmentTargetsForState','automaticCleaningTargetsForDate','manualCleaningTargetsForDate',
-            'tomorrowBaselineCleaningTargets','baselineCleaningTargetsForDate','assignmentTargetCleaningDate',
-            'cleaningAssignmentEligibility','cleaningAssignmentEligibilityReason','cleaningTypeForDate',
-            'renderAssignmentDashboard','renderRandomAssignmentCard','randomAssignments','restoreRandomAssignments',
-            'assignmentOptions','assignmentScheduleMarkup','assignmentSourceMarkup','assignmentAdjustmentMarkup',
-            'renderMaidOrderBoardContent','assignmentTargetRate','eligibleAssignmentMaids','cleaningTargetCanAdjust',
-            'roomIsOnHold','assignmentTargetForRoom','initializeCleaningTargetLedger'
-          ]:
-            function_body(name)
+          def contexts(markers,filename,before=2200,after=12000):
+            chunks=[]
+            for marker in markers:
+              chunks.append(f'\n===== {marker!r} / {text.count(marker)} =====\n')
+              pos=0
+              for index in range(min(text.count(marker),10)):
+                hit=text.find(marker,pos)
+                if hit<0:break
+                chunks.append(text[max(0,hit-before):min(len(text),hit+after)]+'\n')
+                pos=hit+len(marker)
+            target_dir.joinpath(filename).write_text(''.join(chunks),encoding='utf-8')
 
-          for marker in [
+          contexts([
             'SCALE_ASSIGNMENT_TARGETS','weeklyAvailability:','availabilityHistory:',
-            'manualAssignmentTargets:','manualCleaningNeeded:','manualCleaningRequests:',
-            'assignmentNoticesByDate:','assignmentDrafts:','assignmentSchedulesByDate:','cleaningTargets:',
-            "jobs:{", "roomStopped:", "candles:", "occupancyOverride", "plannedCheckoutAt",
-            "function renderWorkforce", "function renderCleaningHub", "if(a==='random-assignments')",
-            "if(a==='undo-random-assignment')", "data-control=\"assignment-maid\""
-          ]:
-            context(marker)
-
-          Path('issue-114-source-inspection.txt').write_text('\n'.join(out),encoding='utf-8')
+            'manualAssignmentTargets:','cleaningTargets:','assignmentNoticesByDate:',
+            'assignmentDrafts:','assignmentSchedulesByDate:'
+          ],'fixtures.txt')
+          contexts([
+            "jobs:{",'roomStopped:','candles:','occupancyOverride','plannedCheckoutAt',
+            'earlyCheckin','lateCheckout','special','remark'
+          ],'room-state.txt',before=1000,after=5000)
+          contexts([
+            "if(a==='random-assignments')","if(a==='undo-random-assignment')",
+            "if(c==='assignment-maid')",'data-action="random-assignments"',
+            'data-action="undo-random-assignment"'
+          ],'actions.txt',before=1600,after=9000)
           PY
 
-      - name: Commit inspection report
+      - name: Commit inspection units
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add issue-114-source-inspection.txt
+          git add issue-114-inspection
           git diff --cached --quiet && exit 0
-          git commit -m "chore: inspect issue 114 availability and targets"
+          git commit -m "chore: extract issue 114 source units"
           git push origin HEAD:codex/issue-114-assignment-week-and-varied-fixtures
