@@ -18,7 +18,7 @@ jobs:
           ref: codex/issue-114-assignment-week-and-varied-fixtures
           fetch-depth: 0
 
-      - name: Build browser-QA inspection report
+      - name: Build targeted assignment-fixture inspection report
         shell: bash
         run: |
           python3 - <<'PY'
@@ -28,11 +28,15 @@ jobs:
           out=[]
           def line_no(offset): return text.count('\n',0,max(0,offset))+1
           def function_body(name):
-            marker=f'function {name}'
-            start=text.find(marker)
+            markers=[f'function {name}',f'const {name}=',f'let {name}=']
+            start=min([idx for idx in (text.find(marker) for marker in markers) if idx>=0],default=-1)
             out.append(f'\n===== FUNCTION {name} · line {line_no(start) if start>=0 else "missing"} =====')
             if start<0:return
-            brace=text.find('{',start);depth=0;quote=None;escape=False
+            # For function declarations / function expressions, balance braces.
+            brace=text.find('{',start)
+            if brace<0:
+              out.append(text[start:start+5000]);return
+            depth=0;quote=None;escape=False
             for i in range(brace,len(text)):
               ch=text[i]
               if quote:
@@ -45,7 +49,8 @@ jobs:
                 depth-=1
                 if depth==0:
                   out.append(text[start:i+1]);return
-          def context(marker,before=1200,after=6000,limit=4):
+            out.append(text[start:start+12000])
+          def context(marker,before=1800,after=8500,limit=8):
             out.append(f'\n===== CONTEXT {marker!r} · count={text.count(marker)} =====')
             pos=0
             for n in range(limit):
@@ -54,10 +59,28 @@ jobs:
               out.append(f'--- {n+1} · line {line_no(idx)} ---')
               out.append(text[max(0,idx-before):min(len(text),idx+after)])
               pos=idx+len(marker)
-          for name in ['applyHashParameters','installCastleTestApi','renderAssignmentDashboard','assignmentRow','assignmentRowMarkup','renderAssignmentRows','renderRandomAssignmentCard','createRandomAssignment','restoreRandomAssignment']:
+
+          for name in [
+            'makeState','makeScenario','weekStartIso','assignmentDateForTab','syncAssignmentDateForCleaningTab',
+            'renderAvailabilityMatrix','assignmentMaidIds','assignmentMaidOptions','assignmentCounts',
+            'assignmentTargets','tomorrowBaselineCleaningTargets','assignmentTargetCleaningDate',
+            'cleaningAssignmentEligibility','cleaningAssignmentEligibilityReason','cleaningTypeForDate',
+            'renderAssignmentDashboard','renderRandomAssignmentCard','randomAssignments','restoreRandomAssignments',
+            'assignmentOptions','assignmentScheduleMarkup','assignmentSourceMarkup','assignmentAdjustmentMarkup',
+            'renderMaidOrderBoardContent','assignmentTargetRate','eligibleAssignmentMaids'
+          ]:
             function_body(name)
-          for marker in ['window.', 'Object.defineProperty(window', "data-action=\"random-assignments\"", 'assignment-row', 'assignment-target', '청소대상 객실', '객실별 담당 수정']:
+
+          for marker in [
+            'INITIAL_TOMORROW','DEMO_ASSIGNMENT_TARGETS','weeklyAvailability:','historicalAvailability:',
+            'manualCleaningNeeded:','manualCleaningRequests:','assignmentNoticesByDate:',
+            'assignmentDrafts:','assignmentSchedulesByDate:','cleaningTargets:',
+            "jobs:{", "roomStopped:", "candle", "early", "late", "plannedCheckoutAt",
+            "function renderWorkforce", "function renderCleaningHub", "if(a==='random-assignments')",
+            "if(a==='undo-random-assignment')", "data-control=\"assignment-maid\""
+          ]:
             context(marker)
+
           Path('issue-114-source-inspection.txt').write_text('\n'.join(out),encoding='utf-8')
           PY
 
@@ -68,5 +91,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add issue-114-source-inspection.txt
           git diff --cached --quiet && exit 0
-          git commit -m "chore: inspect issue 114 browser QA hooks"
+          git commit -m "chore: inspect issue 114 assignment fixtures"
           git push origin HEAD:codex/issue-114-assignment-week-and-varied-fixtures
