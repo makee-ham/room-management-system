@@ -1,0 +1,133 @@
+name: Inspect issue 116 photo slots and quick-date layout
+
+on:
+  push:
+    branches:
+      - codex/issue-116-other-photos-mobile-quick-date
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/issue-116-other-photos-mobile-quick-date
+          fetch-depth: 0
+
+      - name: Extract focused source units
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          text=Path('WIREFRAME/index.html').read_text(encoding='utf-8')
+          out_dir=Path('issue-116-inspection')
+          out_dir.mkdir(exist_ok=True)
+
+          def line_no(offset):
+            return text.count('\n',0,max(0,offset))+1
+
+          def extract_function(name):
+            markers=[f'function {name}',f'const {name}=',f'let {name}=']
+            starts=[text.find(marker) for marker in markers]
+            start=min([value for value in starts if value>=0],default=-1)
+            if start<0:
+              return f'===== {name}: missing =====\n'
+            brace=text.find('{',start)
+            if brace<0:
+              return text[start:start+6000]+'\n'
+            depth=0;quote=None;escape=False
+            for index in range(brace,len(text)):
+              char=text[index]
+              if quote:
+                if escape: escape=False
+                elif char=='\\': escape=True
+                elif char==quote: quote=None
+              elif char in "'\"`": quote=char
+              elif char=='{': depth+=1
+              elif char=='}':
+                depth-=1
+                if depth==0:
+                  return text[start:index+1]+'\n'
+            return text[start:start+24000]+'\n'
+
+          names=[]
+          for match in re.finditer(r'\bfunction\s+([A-Za-z0-9_$]+)\s*\(',text):
+            name=match.group(1)
+            lowered=name.lower()
+            if any(term in lowered for term in ['photo','upload','template','submission','inspection','task','quick','booking','reservation','date','viewer']):
+              names.append(name)
+          names=list(dict.fromkeys(names))
+          out_dir.joinpath('function-catalog.txt').write_text('\n'.join(names),encoding='utf-8')
+
+          preferred=[
+            'photoSlotContract','templateSnapshotFor','templateSnapshotForSubmission','templateParityData',
+            'taskState','taskRequirements','taskUploads','renderTask','renderCleaningTask','renderUploadItem',
+            'inspectionTemplateUploadItems','renderInspection','renderInspectionPanel','photoViewerConfig',
+            'validatedSubmission','createCleaningSubmissionRecord','currentSubmission','currentSubmissionRecord',
+            'demoUpload','demoUploadImageFixture','renderQuickReservation','renderQuickBooking','quickReservationHeader',
+            'renderRoomBoard','renderRooms','renderRoomDateNavigator','renderDateNavigator','applyHashParameters'
+          ]
+          functions=[]
+          for name in preferred:
+            body=extract_function(name)
+            if 'missing' not in body:
+              functions.append(f'\n===== {name} =====\n{body}')
+          out_dir.joinpath('preferred-functions.txt').write_text(''.join(functions),encoding='utf-8')
+
+          # Extract every relevant function in manageable grouped files.
+          groups={'photo':[],'quick':[],'other':[]}
+          for name in names:
+            lowered=name.lower()
+            if any(term in lowered for term in ['photo','upload','template','submission','inspection','task','viewer']): key='photo'
+            elif any(term in lowered for term in ['quick','booking','reservation','date']): key='quick'
+            else: key='other'
+            groups[key].append(f'\n===== {name} · line {line_no(text.find("function "+name))} =====\n{extract_function(name)}')
+          for key,chunks in groups.items():
+            out_dir.joinpath(f'{key}-functions.txt').write_text(''.join(chunks),encoding='utf-8')
+
+          def contexts(markers,filename,before=2600,after=10000,limit=20):
+            chunks=[]
+            for marker in markers:
+              chunks.append(f'\n===== {marker!r} / {text.count(marker)} =====\n')
+              pos=0
+              for occurrence in range(min(text.count(marker),limit)):
+                hit=text.find(marker,pos)
+                if hit<0: break
+                chunks.append(f'--- occurrence {occurrence+1} · line {line_no(hit)} ---\n')
+                chunks.append(text[max(0,hit-before):min(len(text),hit+after)]+'\n')
+                pos=hit+len(marker)
+            out_dir.joinpath(filename).write_text(''.join(chunks),encoding='utf-8')
+
+          contexts([
+            '선택 증빙','기타','maxPhotos','multiple','uploads:',"status:'empty'",'required:false',
+            'data-action="upload-photo"','data-action="remove-photo"','data-photo-id',
+            'inspectionTemplateUploadItems','photoSlotContract','templateSnapshot'
+          ],'photo-contexts.txt',before=2200,after=12000)
+
+          contexts([
+            '기준일','오늘','quick-reservation','quick-booking','quick-grid','quick-date','quickReservation',
+            'data-action="quick','data-action="today','date-navigation','date-nav','room-date',
+            '@media (max-width: 360px)','@media (max-width: 390px)','@media (max-width: 420px)',
+            '@media (max-width: 480px)','@media (max-width: 540px)'
+          ],'quick-contexts.txt',before=3000,after=14000)
+
+          Path('issue-116-source-inspection.txt').write_text(
+            f'index lines: {text.count(chr(10))+1}\nfunctions: {len(names)}\n',encoding='utf-8'
+          )
+          PY
+
+      - name: Commit inspection output
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add issue-116-inspection issue-116-source-inspection.txt
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: inspect issue 116 photo and quick-date sources"
+          git push origin HEAD:codex/issue-116-other-photos-mobile-quick-date
