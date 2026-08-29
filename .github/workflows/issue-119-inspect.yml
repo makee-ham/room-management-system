@@ -1,0 +1,40 @@
+name: Issue 119 temporary code map
+
+on:
+  push:
+    branches:
+      - feature/issue-119-role-cleaning-long-stay
+    paths:
+      - .github/workflows/issue-119-inspect.yml
+      - scripts/issue_119_inspect.py
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out issue branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/issue-119-role-cleaning-long-stay
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate compact source code map
+        run: python3 scripts/issue_119_inspect.py
+
+      - name: Commit code map
+        shell: bash
+        run: |
+          git config user.name "Ham Arin"
+          git config user.email "79068658+makee-ham@users.noreply.github.com"
+          git add .issue119/CODEMAP.md
+          if git diff --cached --quiet; then
+            echo "No code map changes"
+            exit 0
+          fi
+          git commit -m "chore: generate issue 119 code map"
+          git push origin HEAD:feature/issue-119-role-cleaning-long-stay
