@@ -7,6 +7,7 @@ on:
     paths:
       - .github/workflows/issue-119-apply.yml
       - scripts/apply_issue_119_v2.py
+      - scripts/post_issue_119_v2.py
   workflow_dispatch:
 
 permissions:
@@ -29,7 +30,9 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Apply issue 119 changes
-        run: python3 scripts/apply_issue_119_v2.py
+        run: |
+          python3 scripts/apply_issue_119_v2.py
+          python3 scripts/post_issue_119_v2.py
 
       - name: Verify issue 119 contracts
         run: node scripts/check-issue-119.mjs
