@@ -54,6 +54,12 @@ new_checkout_label = "const reservationCheckoutLabel = '<label for=\"res-checkou
 if check.count(old_checkout_label) != 1:
     raise RuntimeError(f"reservation checkout label validation: expected 1 match, found {check.count(old_checkout_label)}")
 check = check.replace(old_checkout_label, new_checkout_label, 1)
+
+old_guest_fingerprint = "  'reservationGuestCount(reservation),reservation.status',"
+new_guest_fingerprint = "  \"reservationGuestCount(reservation),reservationIsLongStay(reservation)?'long':'dated',reservation.status\","
+if check.count(old_guest_fingerprint) != 1:
+    raise RuntimeError(f"reservation fingerprint validation: expected 1 match, found {check.count(old_guest_fingerprint)}")
+check = check.replace(old_guest_fingerprint, new_guest_fingerprint, 1)
 check_path.write_text(check, encoding="utf-8")
 
 sums_path = ROOT / "SHA256SUMS.txt"
