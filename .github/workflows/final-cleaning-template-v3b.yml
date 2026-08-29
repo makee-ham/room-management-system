@@ -1,0 +1,111 @@
+name: Hardened final cleaning template verification
+
+on:
+  push:
+    branches:
+      - codex/cleaning-template-final-v3
+    paths:
+      - .github/workflows/final-cleaning-template-v3b.yml
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  apply-verify-merge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Check out finalizer branch
+        uses: actions/checkout@v4
+        with:
+          ref: codex/cleaning-template-final-v3
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Preserve migration scripts and start from latest main
+        shell: bash
+        run: |
+          cp .github/automation/final-cleaning-template.py /tmp/final-cleaning-template.py
+          cp .github/automation/final-cleaning-template-qa-v2.py /tmp/final-cleaning-template-qa.py
+          git fetch origin main
+          git reset --hard origin/main
+
+      - name: Apply current cleaning-photo contract
+        run: python3 /tmp/final-cleaning-template.py
+
+      - name: Check source syntax and patch cleanliness
+        run: |
+          node --check scripts/check-workspace.mjs
+          git diff --check
+
+      - name: Install Chromium test runtime
+        run: |
+          python3 -m pip install --disable-pip-version-check playwright==1.55.0
+          python3 -m playwright install --with-deps chromium
+
+      - name: Run role rerender and responsive QA
+        shell: bash
+        run: |
+          python3 scripts/serve.py --host 127.0.0.1 --port 4173 >/tmp/castle-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:4173/index.html >/dev/null && break
+            sleep 1
+          done
+          python3 /tmp/final-cleaning-template-qa.py
+
+      - name: Run permanent repository contracts
+        run: |
+          node scripts/check-workspace.mjs
+          git diff --check
+
+      - name: Upload short-lived QA evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-cleaning-template-v3b-qa
+          path: /tmp/final-cleaning-template-qa
+          retention-days: 1
+
+      - name: Commit clean product diff
+        id: product
+        shell: bash
+        run: |
+          git config user.name "Ham Arin"
+          git config user.email "79068658+makee-ham@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "청소 인증 사진 항목과 화면 표시를 단순화한다"
+            git push --force-with-lease origin HEAD:codex/cleaning-template-final-v3
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create or reuse pull request and squash merge
+        if: steps.product.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          PR_NUMBER="$(gh pr list --head codex/cleaning-template-final-v3 --base main --state open --json number --jq '.[0].number // empty')"
+          if [[ -z "$PR_NUMBER" ]]; then
+            PR_URL="$(gh pr create \
+              --base main \
+              --head codex/cleaning-template-final-v3 \
+              --title '청소 인증 사진 항목과 화면 표시를 단순화한다' \
+              --body $'## 변경 사항\n- 청소 업무 정보에 객실 호수가 이미 표시되므로 `객실번호·현관` 촬영 슬롯을 제거했습니다.\n- `기타`를 제외한 모든 청소 인증 사진 슬롯을 최소 1장 필수로 통일했습니다.\n- `기타`는 선택 항목이며 기존 최대 10장 구조를 유지했습니다.\n- 메이드 업로드와 관리자 검수 화면에서 회색 설명 문장 및 `필수`·`선택` 표기를 제거했습니다.\n- 새 퇴실 청소 템플릿을 v8로 구분하고 기존 제출 스냅샷은 보존합니다.\n\n## 검증\n- 메이드·관리자 역할 전환과 동적 재렌더 후 표시 정책\n- 가능한 데모 경로의 실제 사진 화면 탐색\n- 320/360/390/420/421/768/1440px 반응형 및 가로 넘침\n- 프레임워크 오버레이·콘솔·런타임 오류\n- 기타 외 필수, 기타 선택·최대 10장, 제출 스냅샷 정합성\n- 저장소 영구 정적 계약·해시·매니페스트')"
+            PR_NUMBER="${PR_URL##*/}"
+          fi
+          gh pr merge "$PR_NUMBER" --squash --delete-branch \
+            --subject '청소 인증 사진 항목과 화면 표시를 단순화한다' \
+            --body '객실번호·현관 촬영을 제거하고 기타 외 모든 사진 슬롯을 필수화했습니다. 관리자와 메이드 화면의 설명 및 필수·선택 표기를 제거하고 역할 재렌더·반응형·정적 계약 검사를 통과했습니다.'
+
+      - name: Remove no-op finalizer branch
+        if: steps.product.outputs.changed == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: git push origin --delete codex/cleaning-template-final-v3 || true
