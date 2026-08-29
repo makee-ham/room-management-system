@@ -56,7 +56,8 @@ jobs:
             'targets.txt':[
               'automaticAssignmentTargets','liveAssignmentTargetsForState','liveAssignmentTargets',
               'assignmentTargetsForDate','assignmentTargets','initializeCleaningTargetLedger',
-              'cleaningTargetCanAdjust','cleaningTargetAdjustmentBlock','roomIsOnHold'
+              'cleaningTargetCanAdjust','cleaningTargetAdjustmentBlock','roomIsOnHold','roomDataIssue',
+              'assignmentContext','assignmentPricingSnapshot','assignmentTargetElevator'
             ],
             'random.txt':[
               'renderRandomAssignmentCard','randomAssignmentContextSignature','assignmentRandomGenerator',
@@ -67,7 +68,7 @@ jobs:
               'renderAssignmentDashboard','assignmentScheduleMarkup','assignmentSourceMarkup',
               'assignmentAdjustmentMarkup','renderMaidOrderBoardContent','renderCleaningHub','renderWorkforce'
             ],
-            'scenario.txt':['baseState','makeScenario']
+            'scenario.txt':['baseState','makeScenario','resetRoomCatalogState']
           }
           for filename,names in groups.items():
             body=[]
@@ -81,7 +82,7 @@ jobs:
             for marker in markers:
               chunks.append(f'\n===== {marker!r} / {text.count(marker)} =====\n')
               pos=0
-              for index in range(min(text.count(marker),10)):
+              for index in range(min(text.count(marker),12)):
                 hit=text.find(marker,pos)
                 if hit<0:break
                 chunks.append(text[max(0,hit-before):min(len(text),hit+after)]+'\n')
@@ -94,9 +95,10 @@ jobs:
             'assignmentDrafts:','assignmentSchedulesByDate:'
           ],'fixtures.txt')
           contexts([
+            'const ROOM','ROOM_TYPE','ROOM_NUM','roomDataIssue','dataIssue:',
             "jobs:{",'roomStopped:','candles:','occupancyOverride','plannedCheckoutAt',
             'earlyCheckin','lateCheckout','special','remark'
-          ],'room-state.txt',before=1000,after=5000)
+          ],'room-state.txt',before=1800,after=10000)
           contexts([
             "if(a==='random-assignments')","if(a==='undo-random-assignment')",
             "if(c==='assignment-maid')",'data-action="random-assignments"',
@@ -111,5 +113,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add issue-114-inspection
           git diff --cached --quiet && exit 0
-          git commit -m "chore: extract issue 114 source units"
+          git commit -m "chore: inspect issue 114 room catalog"
           git push origin HEAD:codex/issue-114-assignment-week-and-varied-fixtures
