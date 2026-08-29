@@ -27,7 +27,7 @@ jobs:
         shell: bash
         run: |
           cat .github/room-view-payload/patch.* | base64 --decode | gzip --decompress > /tmp/room-view.patch
-          cat .github/room-view-payload/qa.* | base64 --decode | gzip --decompress > /tmp/verify-room-view.py
+          cp .github/room-view-payload/verify-room-list-view.py /tmp/verify-room-view.py
 
       - name: Apply product patch
         shell: bash
