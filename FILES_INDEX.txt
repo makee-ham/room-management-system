@@ -126,6 +126,9 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 - TOOLS/README.md
 - WIREFRAME/index.html
 - WIREFRAME/QA.md
+- WIREFRAME/QA/screenshots/admin-inspection-other-up-to-10-390.png
+- WIREFRAME/QA/screenshots/maid-other-up-to-10-320.png
+- WIREFRAME/QA/screenshots/quick-reservation-today-row-320.png
 - WIREFRAME/QA/screenshots/admin-mobile-calendar.png
 - WIREFRAME/QA/screenshots/admin-mobile-inspection-gallery.png
 - WIREFRAME/QA/screenshots/admin-mobile-inspection-photo.png
