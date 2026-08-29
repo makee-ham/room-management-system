@@ -94,6 +94,9 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-cleaning-day-tabs-1440.png',
   'WIREFRAME/QA/screenshots/admin-same-day-adjustment-390.png',
   'WIREFRAME/QA/screenshots/maid-same-day-change-notice-390.png',
+  'WIREFRAME/QA/screenshots/maid-other-up-to-10-320.png',
+  'WIREFRAME/QA/screenshots/admin-inspection-other-up-to-10-390.png',
+  'WIREFRAME/QA/screenshots/quick-reservation-today-row-320.png',
   'WIREFRAME/reference/redesign-concepts/admin-inspection.png',
   'WIREFRAME/reference/redesign-concepts/admin-next-day-assignment.png',
   'WIREFRAME/reference/redesign-concepts/maid-weekly-availability.png',
@@ -116,6 +119,9 @@ const requiredPngEvidence = [
   'WIREFRAME/QA/screenshots/admin-cleaning-day-tabs-1440.png',
   'WIREFRAME/QA/screenshots/admin-same-day-adjustment-390.png',
   'WIREFRAME/QA/screenshots/maid-same-day-change-notice-390.png',
+  'WIREFRAME/QA/screenshots/maid-other-up-to-10-320.png',
+  'WIREFRAME/QA/screenshots/admin-inspection-other-up-to-10-390.png',
+  'WIREFRAME/QA/screenshots/quick-reservation-today-row-320.png',
 ];
 const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 const invalidPngEvidence = requiredPngEvidence.filter((file) => {
@@ -258,9 +264,11 @@ for (const contract of [
   'task-photo-file',
   'accept="image/*" capture="environment"',
   'URL.createObjectURL(file)',
-  'releaseRoomIssuePhoto(upload.image)',
-  'task.uploads?.forEach(upload=>collect(upload.image))',
-  'submission.uploads?.forEach(upload=>collect(upload.image))',
+  'remove-task-photo-item',
+  'uploadPhotoEntries(upload).forEach(item=>releaseRoomIssuePhoto(item.image))',
+  'task.uploads?.forEach(upload=>uploadPhotoEntries(upload).forEach(item=>collect(item.image)))',
+  'submission.uploads?.forEach(upload=>uploadPhotoEntries(upload).forEach(item=>collect(item.image)))',
+  'multiple data-control="task-photo-file" data-source="gallery"',
   'urls.forEach(url=>URL.revokeObjectURL(url))',
 ]) {
   if (!html.includes(contract)) throw new Error(`Maid photo-only workflow contract missing: ${contract}`);
@@ -1799,7 +1807,8 @@ for (const contract of [
   '메이드 제출 기준 ${expectedItems.length}개 슬롯 · 관리자 검수 ${items.length}개 슬롯',
   'data-template-contract-match="${structureMatches?\'true\':\'false\'}"',
   "snapshot?.photos?.some(item=>item.id==='tv-on'||String(item.id).startsWith('tv-on-'))",
-  '한 슬롯에는 현재 사진 1장만 유지됩니다.',
+  '일반 슬롯은 1장, 기타 슬롯은 최대 10장을 유지합니다.',
+  'data-template-max-photos="${photoUploadLimit(item)}"',
   'typeTemplateParity:(typeId,kind=\'퇴실 청소\')=>',
   'templateVersionAudit:roomNo=>',
 ]) {
@@ -1815,6 +1824,17 @@ const inspectionReviewStart=html.indexOf('function renderInspectionTemplateRevie
 const inspectionReviewEnd=html.indexOf('function openInspectionPhoto',inspectionReviewStart);
 const inspectionReviewSource=html.slice(inspectionReviewStart,inspectionReviewEnd);
 if(!inspectionReviewSource.includes('photoSlotContractSignature(expectedItems)===photoSlotContractSignature(items)'))throw new Error('Admin inspection does not verify the submitted slot contract.');
+if((html.match(/required:false,fixture:'supply',multiple:true,maxPhotos:10/g)||[]).length!==6)throw new Error('All six optional evidence slots must use maxPhotos 10.');
+if((html.match(/zone:'기타'/g)||[]).length<6||html.includes("zone:'선택 증빙'"))throw new Error('Optional evidence zone must be named 기타 everywhere.');
+for(const contract of [
+  'function photoUploadLimit(upload)',
+  'function uploadPhotoCollection(upload)',
+  'function cloneUploadEvidence(upload)',
+  'data-max-photos="${limit}"',
+  'data-template-max-photos="${photoUploadLimit(upload)}"',
+  'otherPhotoCount:other?uploadPhotoCount(other):0',
+  'otherMaxPhotos:other?photoUploadLimit(other):0',
+]) if(!html.includes(contract))throw new Error(`Other-photo collection contract missing: ${contract}`);
 for(const removed of ['ROOM_LAYOUT_PROFILES','DEFAULT_LAYOUT_PROFILES','template-preview-room','templateSlotRange','레이아웃 확인 보류','최소 공통 슬롯','필수 촬영 구역 ${requiredUploads.length}개','여러 장 허용',"snapshot?.version==='v7'"]){
   if(html.includes(removed))throw new Error(`Obsolete or contradictory template contract remains: ${removed}`);
 }
@@ -1932,7 +1952,8 @@ for (const demoQuickWindowContract of [
   'const today=DEMO_TODAY;',
   'else{state.quickReservationAnchorDate=DEMO_TODAY;state.quickReservationFollowsToday=true;}',
   'state.quickReservationFollowsToday=true;state.quickReservationAnchorDate=DEMO_TODAY;',
-  'data-action="quick-month-today">기준일</button>',
+  'data-action="quick-month-today">오늘</button>',
+  '.quick-month-tools > [data-action="quick-month-today"] { grid-column:1/-1; width:100%; min-height:44px; }',
   '8월 15일 기준 29일',
   '간편 예약 · 8월 15일 기준',
   '.quick-booking-page { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; min-width:0; }',
@@ -1954,6 +1975,9 @@ for (const liveDateQuickWindowContract of [
 }
 if (!wireframeReadme.includes('목업의 고정 기준일 `2026-08-15`')) {
   throw new Error('Demo-date quick-window README policy is missing.');
+}
+for(const contract of ['`오늘` 버튼을 누르면', '420px 이하에서는 이전·기간·다음 조작 아래의 독립 행']) {
+  if(!wireframeReadme.includes(contract))throw new Error(`Mobile today-button README contract missing: ${contract}`);
 }
 console.log('Demo-date quick-window static contracts: passed');
 
