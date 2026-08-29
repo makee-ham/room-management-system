@@ -1,4 +1,4 @@
-name: Apply and verify issue 119
+name: Final verification for issue 119
 
 on:
   push:
@@ -6,56 +6,48 @@ on:
       - feature/issue-119-role-cleaning-long-stay
     paths:
       - .github/workflows/issue-119-apply.yml
-      - scripts/apply_issue_119_v2.py
-      - scripts/post_issue_119_v2.py
-      - scripts/report-workspace-mismatches.mjs
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: issue-119-apply-v2
-  cancel-in-progress: false
+  group: issue-119-final-verification
+  cancel-in-progress: true
 
 jobs:
-  apply-and-verify:
+  verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - name: Check out issue branch
         uses: actions/checkout@v4
         with:
           ref: feature/issue-119-role-cleaning-long-stay
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Apply issue 119 changes
-        run: |
-          python3 scripts/apply_issue_119_v2.py
-          python3 scripts/post_issue_119_v2.py
-
-      - name: Report all workspace mismatches
-        run: node scripts/report-workspace-mismatches.mjs
-
-      - name: Verify issue 119 contracts
+      - name: Verify issue 119 contracts and JavaScript syntax
         run: node scripts/check-issue-119.mjs
 
       - name: Verify repository workspace
         run: node scripts/check-workspace.mjs
 
       - name: Check patch hygiene
-        run: git diff --check
+        run: git diff --check origin/main...HEAD
 
-      - name: Commit verified implementation
+      - name: Serve wireframe and verify response
         shell: bash
         run: |
-          git config user.name "Ham Arin"
-          git config user.email "79068658+makee-ham@users.noreply.github.com"
-          git add WIREFRAME/index.html WIREFRAME/README.md WIREFRAME/QA.md DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md SHA256SUMS.txt manifest.json scripts/check-issue-119.mjs scripts/check-workspace.mjs
-          if git diff --cached --quiet; then
-            echo "No implementation changes"
-            exit 0
-          fi
-          git commit -m "feat: add role login, assignment UX, and optional long stays"
-          git push origin HEAD:feature/issue-119-role-cleaning-long-stay
+          python3 scripts/serve.py >/tmp/room-management-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid 2>/dev/null || true' EXIT
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:4173/index.html >/tmp/room-management-index.html; then
+              break
+            fi
+            sleep 0.25
+          done
+          test -s /tmp/room-management-index.html
+          grep -q 'roomManagementAuthSessionV1' /tmp/room-management-index.html
+          grep -q '종료일 미정' /tmp/room-management-index.html
+          grep -q 'focus-assignment-room' /tmp/room-management-index.html
