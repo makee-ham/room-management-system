@@ -149,3 +149,6 @@ function makeScenario(id) {
         if(Number(id)===14)rolloverUnresolvedTargets(s,'2026-08-17');
         return s;
       }
+
+===== resetRoomCatalogState =====
+function resetRoomCatalogState(){ROOMS.splice(0,ROOMS.length,...ROOM_BASELINE.map(cloneRoomRecord));}

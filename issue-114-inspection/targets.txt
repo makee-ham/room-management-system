@@ -79,3 +79,23 @@ function cleaningTargetAdjustmentBlock(target) {
 
 ===== roomIsOnHold =====
 function roomIsOnHold(no){return !!roomDataIssue(no);}
+
+===== roomDataIssue =====
+function roomDataIssue(no){return ROOMS.find(room=>room.no===String(no))?.dataIssue||'';}
+
+===== assignmentContext =====
+function assignmentContext(item) {
+        const liveRoom=ROOMS.find(entry=>entry.no===item.room),snapshot=assignmentPricingSnapshot(item),room=liveRoom?{...liveRoom,elevator:snapshot.elevator}:liveRoom,type={...(ROOM_TYPES[snapshot.typeId]||ROOM_TYPES.standard),rate:snapshot.rate,minutes:snapshot.minutes};
+        const roomStatus=roomReservationStatus(room),status=item.source==='stayover'?reservationTimeStatus(null,null):reservationTimeStatus(item.checkin||roomStatus.checkin,item.checkout||roomStatus.checkout);
+        return {room,type,...status};
+      }
+
+===== assignmentPricingSnapshot =====
+function assignmentPricingSnapshot(item) {
+        const room=ROOMS.find(entry=>entry.no===item.room),committed=state.assignments?.[item.id]?.committedTarget||null,source=committed||item,typeId=source.type||item.type||room?.type||'standard',type=ROOM_TYPES[typeId]||ROOM_TYPES.standard;
+        const elevator=Object.prototype.hasOwnProperty.call(source,'elevatorSnapshot')?source.elevatorSnapshot:room?.elevator||null;
+        return {typeId,rate:Number(source.rateSnapshot)||Number(source.baseRateSnapshot)||Number(source.templateSnapshot?.rate)||Number(type.rate)||0,minutes:Number(source.minutesSnapshot)||Number(source.templateSnapshot?.minutes)||Number(type.minutes)||0,elevator};
+      }
+
+===== assignmentTargetElevator =====
+function assignmentTargetElevator(item) { return assignmentPricingSnapshot(item).elevator; }
