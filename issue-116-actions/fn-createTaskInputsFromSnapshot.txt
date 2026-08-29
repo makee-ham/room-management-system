@@ -1,0 +1,8 @@
+function createTaskInputsFromSnapshot(snapshot,prior={}) {
+        const priorUploads=prior.uploads||[],priorFor=rule=>{
+          const exact=priorUploads.find(upload=>upload.id===rule.id);
+          if(exact)return {status:exact.status||'empty',upload:exact};
+          return {status:'empty',upload:null};
+        };
+        return {attemptId:prior.attemptId||null,templateId:snapshot?.id||null,templateVersion:snapshot?.version||null,templateSnapshot:snapshot||null,checklist:{},uploads:(snapshot?.photos||[]).map(rule=>{const resolved=priorFor(rule);return uploadFromPhotoRule(rule,resolved.status,resolved.upload);}),note:prior.note||'',candle:prior.candle||0,issueDraft:prior.issueDraft||{type:'',note:'',photos:[]},bombRoomDraft:prior.bombRoomDraft||{note:'',photos:[]}};
+      }

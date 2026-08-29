@@ -1,0 +1,1 @@
+function photoSlotContractSignature(items=[]) { return JSON.stringify(photoSlotContract(items)); }

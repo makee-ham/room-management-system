@@ -1,0 +1,87 @@
+const TYPE_PHOTO_GROUPS={
+        standard:[
+          {id:'entry-number',zone:'현관',label:'객실번호·현관',description:'호수와 현관 상태가 함께 보이게 촬영합니다. 안내문 연락처는 화면에서 제외합니다.',required:true,fixture:'supply'},
+          {id:'entry-storage',zone:'현관',label:'신발장·현관 수납',description:'문과 서랍을 열어 내부와 바닥을 한 번에 확인합니다.',required:true,fixture:'supply'},
+          {id:'studio-wide',zone:'메인 공간',label:'침대·식탁·TV·바닥 와이드',description:'스튜디오형 메인 공간 전체가 한 화면에 들어오게 촬영합니다.',required:true,fixture:'bed'},
+          {id:'tv-on',zone:'TV',label:'TV 켜짐·화면 출력 확인',description:'TV 전체와 켜진 화면이 보이게 촬영하세요. 계정·QR·알림이 보이면 입력 화면으로 바꿔 주세요.',required:true,fixture:'tv'},
+          {id:'kitchen-wide',zone:'주방',label:'주방 전체·상하부장',description:'싱크와 상판, 열린 상하부장 상태를 함께 확인합니다.',required:true,fixture:'supply'},
+          {id:'appliances',zone:'주방',label:'냉장고·세탁기·조리 가전',description:'설비 내부와 문·드럼 상태가 보이도록 여러 장을 올릴 수 있습니다.',required:true,fixture:'supply',multiple:true},
+          {id:'wardrobe',zone:'수납',label:'드레스룸·옷장·서랍',description:'존재하는 모든 수납을 열고 내부와 바닥을 촬영합니다.',required:true,fixture:'floor',multiple:true},
+          {id:'bath-wide',zone:'욕실',label:'욕실 전체',description:'세면대·변기·샤워 구역이 한 화면에 보이게 촬영합니다.',required:true,fixture:'bath'},
+          {id:'bath-drains',zone:'욕실',label:'모든 배수구 근접',description:'욕실에 있는 배수구를 각각 가까이 촬영합니다.',required:true,fixture:'floor',multiple:true,repeatable:true,repeatBy:'drains'},
+          {id:'extra-proof',zone:'선택 증빙',label:'설비·비품·특이사항 추가',description:'파손·수량·하자 등 추가 확인이 필요할 때만 올립니다.',required:false,fixture:'supply',multiple:true}
+        ],
+        premium:[
+          {id:'entry-number',zone:'현관',label:'객실번호·현관',description:'호수와 현관 상태가 함께 보이게 촬영합니다. 안내문 연락처는 화면에서 제외합니다.',required:true,fixture:'supply'},
+          {id:'entry-storage',zone:'현관',label:'신발장·현관 수납',description:'문과 서랍을 열어 내부와 바닥을 확인합니다.',required:true,fixture:'supply'},
+          {id:'bedrooms',zone:'침실',label:'침실 침대·바닥 와이드',description:'존재하는 모든 침실을 각각 촬영합니다.',required:true,fixture:'bed',multiple:true,repeatable:true,repeatBy:'bedrooms'},
+          {id:'living-tv',zone:'거실',label:'거실·TV벽·창가 와이드',description:'거실 바닥과 가구 배치가 한 화면에 들어오게 촬영합니다.',required:true,fixture:'bed'},
+          {id:'tv-on',zone:'TV',label:'TV 켜짐·화면 출력 확인',description:'TV 전체와 켜진 화면이 보이게 촬영하세요. 계정·QR·알림이 보이면 입력 화면으로 바꿔 주세요.',required:true,fixture:'tv'},
+          {id:'wardrobes',zone:'수납',label:'침실 옷장·드레스룸',description:'각 침실의 수납을 열어 내부를 촬영합니다.',required:true,fixture:'floor',multiple:true,repeatable:true,repeatBy:'bedrooms'},
+          {id:'kitchen-wide',zone:'주방',label:'싱크·상판·상하부장',description:'싱크와 열린 수납장, 상판 마감 상태를 함께 확인합니다.',required:true,fixture:'supply'},
+          {id:'appliances',zone:'주방',label:'냉장고·세탁기·조리 가전',description:'객실에 있는 설비 내부를 각각 촬영합니다.',required:true,fixture:'supply',multiple:true},
+          {id:'bathrooms',zone:'욕실',label:'욕실 전체 와이드',description:'존재하는 모든 욕실을 각각 촬영합니다. 거울에 사람이 비치지 않게 합니다.',required:true,fixture:'bath',multiple:true,repeatable:true,repeatBy:'bathrooms'},
+          {id:'bath-drains',zone:'욕실',label:'욕실 배수구 근접',description:'각 배수구를 가까이 촬영합니다.',required:true,fixture:'floor',multiple:true,repeatable:true,repeatBy:'drains'},
+          {id:'extra-proof',zone:'선택 증빙',label:'추가 수납·설비·특이사항',description:'객실별 추가 공간이나 하자 증빙이 필요할 때 올립니다.',required:false,fixture:'supply',multiple:true}
+        ],
+        oceanPremium:[
+          {id:'entry-number',zone:'현관',label:'객실번호·현관',description:'호수와 현관 상태가 함께 보이게 촬영합니다. 안내문 연락처는 화면에서 제외합니다.',required:true,fixture:'supply'},
+          {id:'entry-storage',zone:'현관',label:'신발장·현관 수납',description:'문과 서랍을 열어 내부와 바닥을 확인합니다.',required:true,fixture:'supply'},
+          {id:'bedrooms',zone:'침실',label:'침실 침대·바닥 와이드',description:'존재하는 모든 침실을 각각 촬영합니다.',required:true,fixture:'bed',multiple:true,repeatable:true,repeatBy:'bedrooms'},
+          {id:'ocean-living',zone:'거실',label:'높은 창·거실·식당 와이드',description:'창가와 거실·식당 바닥이 한 화면에 들어오게 촬영합니다.',required:true,fixture:'bed'},
+          {id:'tv-on',zone:'TV',label:'TV 켜짐·화면 출력 확인',description:'TV 전체와 켜진 화면이 보이게 촬영하세요. 계정·QR·알림이 보이면 입력 화면으로 바꿔 주세요.',required:true,fixture:'tv'},
+          {id:'stairs',zone:'복층',label:'계단·난간·계단 하부 수납',description:'계단 전체와 열린 하부 수납을 각각 확인합니다.',required:true,fixture:'floor',multiple:true},
+          {id:'pantry',zone:'수납',label:'팬트리·추가 수납',description:'실제 팬트리가 있는 객실만 수납장을 열어 내부를 촬영합니다.',required:true,fixture:'supply',multiple:true,conditionalBy:'pantry'},
+          {id:'kitchen-wide',zone:'주방',label:'싱크·상판·상하부장',description:'싱크와 열린 수납장, 상판 마감 상태를 함께 확인합니다.',required:true,fixture:'supply'},
+          {id:'appliances',zone:'주방',label:'냉장고·세탁기·조리 가전',description:'객실에 있는 설비 내부를 각각 촬영합니다.',required:true,fixture:'supply',multiple:true},
+          {id:'wardrobes',zone:'수납',label:'침실 옷장·드레스룸',description:'각 침실의 수납을 열어 내부를 촬영합니다.',required:true,fixture:'floor',multiple:true,repeatable:true,repeatBy:'bedrooms'},
+          {id:'bathrooms',zone:'욕실',label:'욕실 전체 와이드',description:'존재하는 모든 욕실을 각각 촬영합니다. 거울에 사람이 비치지 않게 합니다.',required:true,fixture:'bath',multiple:true,repeatable:true,repeatBy:'bathrooms'},
+          {id:'bath-drains',zone:'욕실',label:'욕실 배수구 근접',description:'각 배수구를 가까이 촬영합니다.',required:true,fixture:'floor',multiple:true,repeatable:true,repeatBy:'drains'},
+          {id:'extra-proof',zone:'선택 증빙',label:'전망·설비·특이사항 추가',description:'전망·창·설비나 하자 증빙이 필요할 때만 올립니다.',required:false,fixture:'supply',multiple:true}
+        ],
+        oceanFamily:[
+          {id:'entry-number',zone:'현관',label:'객실번호·현관',description:'호수와 현관 상태가 함께 보이게 촬영합니다. 안내문 연락처는 화면에서 제외합니다.',required:true,fixture:'supply'},
+          {id:'entry-storage',zone:'현관',label:'신발장·현관 수납',description:'문과 서랍을 열어 내부와 바닥을 확인합니다.',required:true,fixture:'supply'},
+          {id:'bedrooms',zone:'침실',label:'침실 침대·바닥 와이드',description:'객실 레이아웃에 있는 모든 침실을 각각 촬영합니다.',required:true,fixture:'bed',multiple:true,repeatable:true,repeatBy:'bedrooms'},
+          {id:'living-dining',zone:'거실',label:'거실·식당·TV벽 와이드',description:'공용 공간의 바닥과 가구가 한 화면에 들어오게 촬영합니다.',required:true,fixture:'bed'},
+          {id:'tv-on',zone:'TV',label:'TV 켜짐·화면 출력 확인',description:'TV 전체와 켜진 화면이 보이게 촬영하세요. 계정·QR·알림이 보이면 입력 화면으로 바꿔 주세요.',required:true,fixture:'tv'},
+          {id:'wardrobes',zone:'수납',label:'침실 옷장·드레스룸',description:'각 침실의 옷장과 추가 수납을 열어 내부를 촬영합니다.',required:true,fixture:'floor',multiple:true,repeatable:true,repeatBy:'bedrooms'},
+          {id:'kitchen-wide',zone:'주방',label:'싱크·상판·상하부장',description:'싱크와 열린 수납장, 상판 마감 상태를 함께 확인합니다.',required:true,fixture:'supply'},
+          {id:'appliances',zone:'주방',label:'냉장고·세탁기·조리 가전',description:'객실에 있는 설비 내부를 각각 촬영합니다.',required:true,fixture:'supply',multiple:true},
+          {id:'bathrooms',zone:'욕실',label:'욕실 전체 와이드',description:'객실 레이아웃에 있는 모든 욕실을 각각 촬영합니다. 거울에 사람이 비치지 않게 합니다.',required:true,fixture:'bath',multiple:true,repeatable:true,repeatBy:'bathrooms'},
+          {id:'bath-drains',zone:'욕실',label:'욕실 배수구 근접',description:'각 욕실의 배수구를 가까이 촬영합니다.',required:true,fixture:'floor',multiple:true,repeatable:true,repeatBy:'drains'},
+          {id:'extra-proof',zone:'선택 증빙',label:'추가 방·수납·특이사항',description:'객실별 추가 공간이나 하자 증빙이 필요할 때 올립니다.',required:false,fixture:'supply',multiple:true}
+        ]
+      };
+      const TEMPLATE_KIND_DEMO={
+        checkout:{name:'퇴실 청소',version:'v7',requirementsMode:'photo-only-v1',photos:[]},
+        stayover:{name:'연박 청소',version:'v4',requirementsMode:'photo-only-v1',photos:[
+          {id:'stayover-wide',zone:'정돈',label:'정돈 완료 전체',description:'투숙객 물품과 개인정보가 보이지 않게 전체 정돈 상태만 촬영합니다.',required:true,fixture:'bed'},
+          {id:'stayover-bath',zone:'욕실',label:'욕실·수건',description:'욕실 정비와 수건 보충 상태를 촬영합니다.',required:true,fixture:'bath'},
+          {id:'stayover-supply',zone:'선택 증빙',label:'추가 요청 사항',description:'투숙객이 요청한 범위의 추가 작업만 기록합니다.',required:false,fixture:'supply',multiple:true}
+        ]},
+        reclean:{name:'재청소',version:'v4',requirementsMode:'photo-only-v1',photos:[
+          {id:'reclean-reason',zone:'반려 지점',label:'반려 지점 작업 후',description:'관리자가 남긴 반려 지점을 같은 각도로 다시 촬영합니다.',required:true,fixture:'bath',multiple:true},
+          {id:'reclean-wide',zone:'전체 마감',label:'객실 전체 마감',description:'재청소 뒤 객실 전체 상태를 촬영합니다.',required:true,fixture:'bed'},
+          {id:'reclean-extra',zone:'선택 증빙',label:'추가 확인 자료',description:'반려 지점 주변의 추가 증빙이 필요할 때 올립니다.',required:false,fixture:'supply',multiple:true}
+        ]}
+      };
+      const LEGACY_TEMPLATE_CHECKLISTS=Object.freeze({
+        checkout:Object.freeze([
+          Object.freeze({id:'bed',label:'침대·침구',description:'구김·오염·머리카락 확인',required:true}),
+          Object.freeze({id:'bath',label:'욕실',description:'배수구·수전·거울 확인',required:true}),
+          Object.freeze({id:'floor',label:'바닥·먼지',description:'모서리와 가구 아래 확인',required:true}),
+          Object.freeze({id:'lock',label:'문 잠금',description:'퇴실 전 도어락 확인',required:true})
+        ]),
+        stayover:Object.freeze([]),
+        reclean:Object.freeze([])
+      });
+      const TEMPLATE_TIME_DEMO={
+        standard:{checkout:55,stayover:40,reclean:30},
+        premium:{checkout:65,stayover:45,reclean:35},
+        oceanPremium:{checkout:70,stayover:50,reclean:40},
+        oceanFamily:{checkout:80,stayover:60,reclean:45}
+      };
+      let pendingTemplateChange=null;
+
+      

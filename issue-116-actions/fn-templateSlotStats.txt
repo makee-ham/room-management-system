@@ -1,0 +1,4 @@
+function templateSlotStats(template) {
+        const snapshot=templateFixedSnapshot(template),photos=snapshot?.photos||template?.photos||[],required=photos.filter(item=>item.required).length,baseRequired=template?.photos?.filter(item=>item.required).length||0,baseTotal=template?.photos?.length||0;
+        return {baseTotal,baseRequired,total:photos.length,required,optional:photos.length-required,roomCount:templateRooms(template).length};
+      }

@@ -1,0 +1,354 @@
+
+===== task-photo-file · line 6178 =====
+
+        const task=state.taskInputs?.[no];
+        if(!attemptId||task?.attemptId!==attemptId)return null;
+        const upload=task.uploads?.find(item=>item.id===photoId);
+        return upload?{task,upload}:null;
+      }
+      function taskUploadForMutation(no,photoId,attemptId,allowedJobs=['cleaning']) {
+        if(!maidCanEditCleaning(no,allowedJobs))return null;
+        const resolved=taskUploadByIdentity(no,photoId,attemptId),currentId=currentAttemptId(no);
+        return resolved&&currentId===attemptId?resolved:null;
+      }
+      function taskPhotoInputId(no,photoId,source) { return `task-photo-${source}-${no}-${photoId}`.replace(/[^a-zA-Z0-9_-]/g,'-'); }
+      function taskZoneGroups(task) {
+        const groups=[],byZone=new Map();
+        task.uploads.forEach(upload=>{
+          const zone=upload.zone||'사진';
+          if(!byZone.has(zone)){const group={zone,uploads:[]};byZone.set(zone,group);groups.push(group);}
+          byZone.get(zone).uploads.push(upload);
+        });
+        return groups;
+      }
+      function taskUploadStatusText(upload) {
+        if(upload.status==='uploading')return '사진 확인 중';
+        if(upload.status==='failed')return '전송 실패 · 다시 촬영';
+        if(upload.status==='done')return upload.image?.objectUrl?'현장 촬영 완료':'사진 완료';
+        return upload.required?'필수 사진 없음':'선택 사진 없음';
+      }
+      function taskPhotoVisual(upload) {
+        if(upload.image?.objectUrl)return `<img src="${esc(upload.image.src)}" alt="${esc(upload.label)} 현장 촬영 미리보기">`;
+        if(['done','failed'].includes(upload.status)&&upload.image)return inspectionPhotoSvg(upload,upload.label);
+        return icon(upload.status==='uploading'?'clock':'camera');
+      }
+      function taskZoneCardMarkup(no,group,task,editable) {
+        const attemptId=task.attemptId||'',requiredUploads=group.uploads.filter(item=>item.required),photosDone=requiredUploads.every(upload=>upload.status==='done'),failed=group.uploads.some(upload=>upload.status==='failed'||upload.status==='uploading'),hasRequired=requiredUploads.length>0,complete=hasRequired&&photosDone&&!failed;
+        const photos=`<div class="task-zone-photos">${group.uploads.map(upload=>{
+          const cameraId=taskPhotoInputId(no,upload.id,'camera'),galleryId=taskPhotoInputId(no,upload.id,'gallery'),busy=upload.status==='uploading',captured=upload.status==='done'||upload.status==='failed'||!!upload.image?.objectUrl;
+          return `<article class="task-zone-photo ${upload.status}" data-photo-slot="${esc(upload.id)}"><div class="task-zone-photo-main"><span class="task-zone-photo-visual">${taskPhotoVisual(upload)}</span><div class="task-zone-photo-copy"><strong>${esc(upload.label)} · ${upload.required?'필수':'선택'}</strong><span>${esc(upload.description||'청소 완료 상태를 촬영합니다.')}</span><span class="photo-state" aria-live="polite">${esc(taskUploadStatusText(upload))}${upload.instanceCount>1?` · ${upload.instance}/${upload.instanceCount}`:''}</span></div></div>${editable?`<div class="task-zone-photo-actions"><button class="btn btn-primary" type="button" data-action="capture-task-photo" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}" aria-label="${no}호 ${esc(group.zone)} ${esc(upload.label)} ${captured?'다시 촬영':'바로 촬영'}" ${busy?'disabled':''}>${icon('camera','icon-sm')}${captured?'다시 촬영':'바로 촬영'}</button><button class="btn btn-outline" type="button" data-action="choose-task-photo" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}" aria-label="${no}호 ${esc(group.zone)} ${esc(upload.label)} 갤러리에서 선택" ${busy?'disabled':''}>갤러리</button>${captured?`<button class="btn btn-outline icon-only" type="button" data-action="remove-task-photo" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}" aria-label="${no}호 ${esc(group.zone)} ${esc(upload.label)} 사진 삭제" ${busy?'disabled':''}>${icon('x','icon-sm')}</button>`:'<span aria-hidden="true"></span>'}</div><input id="${cameraId}" hidden type="file" accept="image/*" capture="environment" data-control="task-photo-file" data-source="camera" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}"><input id="${galleryId}" hidden type="file" accept="image/*" data-control="task-photo-file" data-source="gallery" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}">`:''}</article>`;
+        }).join('')}</div>`;
+        return `<section class="task-zone-card ${complete?'complete':''} ${failed?'failed':''}" aria-labelledby="task-zone-${no}-${groupsafe(group.zone)}"><div class="task-zone-head"><div><h4 id="task-zone-${no}-${groupsafe(group.zone)}">${esc(group.zone)}</h4><p>필수 ${requiredUploads.length}장 · 선택 ${group.uploads.length-requiredUploads.length}장</p></div>${statusBadge(complete?'구역 완료':failed?'사진 확인 필요':hasRequired?'촬영 필요':'선택',complete?'green':failed?'red':hasRequired?'amber':'neutral')}</div>${photos}</section>`;
+      }
+      function groupsafe(value) { return String(value||'zone').replace(/[^a-zA-Z0-9가-힣_-]/g,'-'); }
+      function renderRoomIssueInput(no,editable) {
+        const draft=roomIssueDraft(no),records=visibleRoomIssueRecords(no),hasDraft=!!draft.note.trim()||draft.photos.length>0;
+        const types=['냄새','청소 미흡','시설 고장','비품 부족·파손','분실물','기타'];
+        const editor=editable?`<div class="room-issue-form"><div class="notice notice-warning" style="margin:0"><div><strong>개인정보 입력 금지</strong><br>고객 이름·휴대폰 번호·이메일은 메모와 사진 파일명에 남기지 않습니다.</div></div><div class="room-issue-form-grid"><div class="field"><label for="room-issue-type-${no}">특이사항 유형 · 선택</label><select id="room-issue-type-${no}" class="select-control" data-control="room-issue-type" data-room="${no}"><option value="">유형 선택 안 함</option>${types.map(type=>`<option value="${type}" ${draft.type===type?'selected':''}>${type}</option>`).join('')}</select></div><div class="field"><label for="room-issue-note-${no}">업무 메모 · 선택</label><textarea id="room-issue-note-${no}" class="input-control task-note" rows="3" data-control="room-issue-note" data-room="${no}" placeholder="개인정보를 제외한 객실 상태를 적어 주세요.">${esc(draft.note)}</textarea></div></div><div class="room-issue-picker"><div class="room-issue-picker-copy"><strong>이미지 여러 장</strong><span>한 번에 여러 이미지를 선택하고 등록 전 개별 제거할 수 있습니다.</span></div><input id="room-issue-files-${no}" class="sr-only" type="file" accept="image/*" multiple tabindex="-1" data-control="room-issue-files" data-room="${no}"><button class="btn btn-outline" type="button" data-action="choose-room-issue-files" data-room="${no}">${icon('camera','icon-sm')}이미지 선택</button></div>${renderRoomIssueDraftPhotos(no)}<button class="btn btn-primary btn-block" type="button" data-action="save-room-issue" data-room="${no}" ${hasDraft?'':'disabled'}>특이사항 등록 · 선택 ${draft.photos.length}장</button><p class="audit-note" style="margin:0">현재 탭 메모리에서만 미리보기를 유지하는 데모이며 실제 서버 업로드·영속 저장이 아닙니다.</p></div>`:'<p class="audit-note" style="margin:12px 0 0">메이드는 청소 중에만 특이사항을 등록할 수 있습니다. 저장된 기록은 관리자에게 그대로 공유됩니다.</p>';
+        return `${editor}${records.length?renderRoomIssueRecords(no):editable?'':'<div class="inline-empty"><h3>등록된 특이사항이 없습니다</h3><p>메이드가 저장한 특이사항과 사진이 여기에 표시됩니다.</p></div>'}`;
+      }
+      function renderCleaningInputSection(no,key,title,meta,body) {
+        const titleId=`cleaning-section-${groupsafe(no)}-${groupsafe(key)}`;
+        return `<section class="cleaning-section" data-cleaning-section="${esc(key)}" aria-labelledby="${titleId}"><div class="cleaning-section-head"><h3 id="${titleId}">${esc(title)}</h3><span data-cleaning-section-meta>${esc(meta)}</span></div><div class="cleaning-section-body">${body}</div></section>`;
+      }
+      function renderTaskInputSections(no,job) {
+        const {task,snapshot,requiredUploads}=taskRequirements(no), occupied=ROOMS.find(r=>r.no===no)?.occupancy==='occupied';
+        const editable=maidCanEditRoomIssue(no,job),bomb=bombRoomReport(no),bombMeta=bombRoomStatusMeta(bomb),groups=taskZoneGroups(task);
+        const doneUploads=task.uploads.filter(upload=>upload.status==='done').length,type=ROOM_TYPES[snapshot?.typeId||ROOMS.find(room=>room.no===no)?.type||'standard'];
+        const requiredGroups=groups.filter(group=>group.uploads.some(item=>item.required)),completedGroups=requiredGroups.filter(group=>group.uploads.filter(item=>item.required).every(item=>item.status==='done')).length;
+        const tvSafety=snapshot?.photos?.some(item=>item.id==='tv-on'||String(item.id).startsWith('tv-on-'))?' TV는 켜고 계정·QR·알림 없는 기본 화면으로 촬영하세요.':'';
+        const photoBody=`<div class="photo-template-banner"><div><strong>${esc(type.name)} · ${esc(snapshot?.name||'퇴실 청소')}</strong><span>필수 사진 ${requiredUploads.length}장 · 구역 버튼을 눌러 바로 촬영하세요.</span></div><div class="badge-row">${statusBadge(`${completedGroups}/${requiredGroups.length} 구역 완료`,completedGroups===requiredGroups.length?'green':'amber')}</div></div><div class="task-zone-progress"><div><span>완료 구역</span><strong>${completedGroups}/${requiredGroups.length}</strong></div><div><span>사진 촬영</span><strong>${doneUploads}/${task.uploads.length}</strong></div></div><div class="task-zone-safety">${icon('shield','icon-sm')}<span><strong>촬영 전 개인정보를 확인하세요.</strong><br>연락처·얼굴·고객 물품·거울 속 사람은 제외하세요.${tvSafety}</span></div><div class="task-zone-grid">${groups.map(group=>taskZoneCardMarkup(no,group,task,editable)).join('')}</div>`;
+        const candleBody=`<p class="audit-note" style="margin:12px 0 0">청소 결과를 입력하는 동안만 객실의 최종 촛불 수량을 조정할 수 있습니다.</p><div class="candle-stepper" role="group" aria-label="${no}호 청소 결과 촛불 수량"><button class="btn btn-outline" type="button" data-action="task-candle-change" data-room="${no}" data-delta="-1" aria-label="촛불 1개 줄이기" ${!editable||task.candle<1?'disabled':''}>−</button><div class="candle-stepper-value" aria-live="polite"><strong>${task.candle||0}개</strong><span>청소 완료 후 객실 수량</span></div><button class="btn btn-outline" type="button" data-action="task-candle-change" data-room="${no}" data-delta="1" aria-label="촛불 1개 늘리기" ${!editable||task.candle>=9?'disabled':''}>+</button></div>`;
+        return `<div class="cleaning-sections">${renderCleaningInputSection(no,'photos','구역별 사진 촬영',`${completedGroups}/${requiredGroups.length} 구역`,photoBody)}${renderCleaningInputSection(no,'bomb-room','폭탄방 신고',bombMeta.label,renderBombRoomPanel(no,job))}${renderCleaningInputSection(no,'room-issues','객실 특이사항',`${visibleRoomIssueRecords(no).length}건 · 선택 ${task.issueDraft.photos.length}장`,renderRoomIssueInput(no,editable))}${occupied?'':renderCleaningInputSection(no,'candles','촛불',`${task.candle||0}개`,candleBody)}</div>`;
+      }
+      function cleaningPrimary(no,job) {
+        const req=taskRequirements(no),access=attemptAccessStatus(no);
+        if(['scheduled','claimed','reclean'].includes(job)) return {label:access.allowed?(job==='reclean'?'재청소 시작':'일 시작'):access.reason,action:'start-cleaning',disabled:!access.allowed||isLocked()};
+        if(job==='cleaning') { const photosLeft=req.requiredUploads.filter(item=>item.status!=='done').length;return {label:photosLeft?`남은 필수 사진 ${photosLeft}장`:'현장 완료',action:'field-complete-v2',disabled:!!photosLeft||req.failed||isLocked()}; }
+        if(job==='upload'&&req.failed) return {label:'미전송 재시도',action:'retry-all-task-photos',disabled:isLocked()};
+        if(job==='upload') return {label:'청소 전체 제출',action:'submit-cleaning-v2',disabled:!req.requiredDone||isLocked()};
+        if(job==='inspection'||job==='approved') return {label:'제출 결과 보기',action:'demo-info',disabled:false};
+        return {label:'상세 확인',action:'demo-info',disabled:false};
+      }
+      function maidCanStart(no) {
+        const room=ROOMS.find(r=>r.no===no),job=state.jobs[no],task=taskState(no),attemptId=currentAttemptId(no),attempt=state.cleaningAttempts?.[attemptId];
+        return state.role==='maid'&&!isLocked()&&(signedInMaidIsActive()||maidCanCompleteRequiredReclean(no))&&room?.assignee===signedInMaidName()&&task.attemptId===attemptId&&attempt?.performerId===signedInMaidId()&&['active','reclean'].includes(attempt.status)&&['scheduled','claimed','reclean'].includes(job)&&attemptAccessStatus(no,attempt).allowed;
+      }
+      function maidCanEditCleaning(no,allowedJobs=['cleaning']) {
+        const room=ROOMS.find(item=>item.no===no),task=taskState(no),attempt=state.cleaningAttempts?.[task.attemptId];
+        return state.role==='maid'&&!isLocked()&&(signedInMaidIsActive()||maidCanContinueDeactivation(no)||maidCanCompleteRequiredReclean(no))&&room?.assignee===signedInMaidName()&&task.attemptId===currentAttemptId(no)&&attempt?.performerId===signedInMaidId()&&allowedJobs.includes(state.jobs[no]);
+      }
+      function renderCleaningDetailActiveCore(no) {
+        const baseRoom=ROOMS.find(r=>r.no===no)||ROOMS[0],currentAttempt=state.cleaningAttempts?.[currentAttemptId(no)]||null,currentRecord=currentSubmission(no);
+        if(!state.jobs[no]&&!currentAttempt&&!currentRecord)return state.role==='admin'?renderRoomDetail(no):renderCoach()+detailHeader('청소 작업이 없습니다','관리자에게 통보받은 본인 업무만 확인할 수 있습니다.')+'<section class="card card-pad"><div class="notice notice-info"><div><strong>생성된 청소 작업이 없습니다.</strong><br>객실 기본정보를 청소 배정으로 간주하지 않습니다.</div></div></section>';
+        const room=no==='332'&&state.conflict==='resolved'?{...baseRoom,checkout:state.conflictRecord.afterCheckout}:baseRoom,job=state.jobs[no];
+        const activeAttempt=state.cleaningAttempts?.[currentAttemptId(no)],activeGuestCount=guestCountForAttempt(activeAttempt),activeCheckout=activeAttempt?.checkoutSnapshot||room.checkout,activeCheckin=activeAttempt?.checkinSnapshot||room.checkin,activeRoomMeta=activeAttempt?.roomMetaSnapshot||roomMetadataSnapshot(no),activeType=ROOM_TYPES[activeRoomMeta?.typeId]||ROOM_TYPES[room.type],activeTypeName=activeRoomMeta?.typeName||activeType.name,activeTemplate=snapshotForAttempt(no,activeAttempt),activeRate=activeAttempt?.baseRateSnapshot??activeType.rate,activeKind=activeAttempt?.kind||(job==='reclean'?'재청소':'퇴실 청소'),activeMinutes=activeTemplate?.minutes??activeType.minutes,activeStageLabel=activeKind==='재청소'?(job==='reclean'?'재청소 · 시작 예정':`재청소 · ${statusLabel(job)}`):cleaningLabel(job);
+
+===== task-photo-file · line 6178 =====
+
+      function taskUploadForMutation(no,photoId,attemptId,allowedJobs=['cleaning']) {
+        if(!maidCanEditCleaning(no,allowedJobs))return null;
+        const resolved=taskUploadByIdentity(no,photoId,attemptId),currentId=currentAttemptId(no);
+        return resolved&&currentId===attemptId?resolved:null;
+      }
+      function taskPhotoInputId(no,photoId,source) { return `task-photo-${source}-${no}-${photoId}`.replace(/[^a-zA-Z0-9_-]/g,'-'); }
+      function taskZoneGroups(task) {
+        const groups=[],byZone=new Map();
+        task.uploads.forEach(upload=>{
+          const zone=upload.zone||'사진';
+          if(!byZone.has(zone)){const group={zone,uploads:[]};byZone.set(zone,group);groups.push(group);}
+          byZone.get(zone).uploads.push(upload);
+        });
+        return groups;
+      }
+      function taskUploadStatusText(upload) {
+        if(upload.status==='uploading')return '사진 확인 중';
+        if(upload.status==='failed')return '전송 실패 · 다시 촬영';
+        if(upload.status==='done')return upload.image?.objectUrl?'현장 촬영 완료':'사진 완료';
+        return upload.required?'필수 사진 없음':'선택 사진 없음';
+      }
+      function taskPhotoVisual(upload) {
+        if(upload.image?.objectUrl)return `<img src="${esc(upload.image.src)}" alt="${esc(upload.label)} 현장 촬영 미리보기">`;
+        if(['done','failed'].includes(upload.status)&&upload.image)return inspectionPhotoSvg(upload,upload.label);
+        return icon(upload.status==='uploading'?'clock':'camera');
+      }
+      function taskZoneCardMarkup(no,group,task,editable) {
+        const attemptId=task.attemptId||'',requiredUploads=group.uploads.filter(item=>item.required),photosDone=requiredUploads.every(upload=>upload.status==='done'),failed=group.uploads.some(upload=>upload.status==='failed'||upload.status==='uploading'),hasRequired=requiredUploads.length>0,complete=hasRequired&&photosDone&&!failed;
+        const photos=`<div class="task-zone-photos">${group.uploads.map(upload=>{
+          const cameraId=taskPhotoInputId(no,upload.id,'camera'),galleryId=taskPhotoInputId(no,upload.id,'gallery'),busy=upload.status==='uploading',captured=upload.status==='done'||upload.status==='failed'||!!upload.image?.objectUrl;
+          return `<article class="task-zone-photo ${upload.status}" data-photo-slot="${esc(upload.id)}"><div class="task-zone-photo-main"><span class="task-zone-photo-visual">${taskPhotoVisual(upload)}</span><div class="task-zone-photo-copy"><strong>${esc(upload.label)} · ${upload.required?'필수':'선택'}</strong><span>${esc(upload.description||'청소 완료 상태를 촬영합니다.')}</span><span class="photo-state" aria-live="polite">${esc(taskUploadStatusText(upload))}${upload.instanceCount>1?` · ${upload.instance}/${upload.instanceCount}`:''}</span></div></div>${editable?`<div class="task-zone-photo-actions"><button class="btn btn-primary" type="button" data-action="capture-task-photo" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}" aria-label="${no}호 ${esc(group.zone)} ${esc(upload.label)} ${captured?'다시 촬영':'바로 촬영'}" ${busy?'disabled':''}>${icon('camera','icon-sm')}${captured?'다시 촬영':'바로 촬영'}</button><button class="btn btn-outline" type="button" data-action="choose-task-photo" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}" aria-label="${no}호 ${esc(group.zone)} ${esc(upload.label)} 갤러리에서 선택" ${busy?'disabled':''}>갤러리</button>${captured?`<button class="btn btn-outline icon-only" type="button" data-action="remove-task-photo" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}" aria-label="${no}호 ${esc(group.zone)} ${esc(upload.label)} 사진 삭제" ${busy?'disabled':''}>${icon('x','icon-sm')}</button>`:'<span aria-hidden="true"></span>'}</div><input id="${cameraId}" hidden type="file" accept="image/*" capture="environment" data-control="task-photo-file" data-source="camera" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}"><input id="${galleryId}" hidden type="file" accept="image/*" data-control="task-photo-file" data-source="gallery" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}">`:''}</article>`;
+        }).join('')}</div>`;
+        return `<section class="task-zone-card ${complete?'complete':''} ${failed?'failed':''}" aria-labelledby="task-zone-${no}-${groupsafe(group.zone)}"><div class="task-zone-head"><div><h4 id="task-zone-${no}-${groupsafe(group.zone)}">${esc(group.zone)}</h4><p>필수 ${requiredUploads.length}장 · 선택 ${group.uploads.length-requiredUploads.length}장</p></div>${statusBadge(complete?'구역 완료':failed?'사진 확인 필요':hasRequired?'촬영 필요':'선택',complete?'green':failed?'red':hasRequired?'amber':'neutral')}</div>${photos}</section>`;
+      }
+      function groupsafe(value) { return String(value||'zone').replace(/[^a-zA-Z0-9가-힣_-]/g,'-'); }
+      function renderRoomIssueInput(no,editable) {
+        const draft=roomIssueDraft(no),records=visibleRoomIssueRecords(no),hasDraft=!!draft.note.trim()||draft.photos.length>0;
+        const types=['냄새','청소 미흡','시설 고장','비품 부족·파손','분실물','기타'];
+        const editor=editable?`<div class="room-issue-form"><div class="notice notice-warning" style="margin:0"><div><strong>개인정보 입력 금지</strong><br>고객 이름·휴대폰 번호·이메일은 메모와 사진 파일명에 남기지 않습니다.</div></div><div class="room-issue-form-grid"><div class="field"><label for="room-issue-type-${no}">특이사항 유형 · 선택</label><select id="room-issue-type-${no}" class="select-control" data-control="room-issue-type" data-room="${no}"><option value="">유형 선택 안 함</option>${types.map(type=>`<option value="${type}" ${draft.type===type?'selected':''}>${type}</option>`).join('')}</select></div><div class="field"><label for="room-issue-note-${no}">업무 메모 · 선택</label><textarea id="room-issue-note-${no}" class="input-control task-note" rows="3" data-control="room-issue-note" data-room="${no}" placeholder="개인정보를 제외한 객실 상태를 적어 주세요.">${esc(draft.note)}</textarea></div></div><div class="room-issue-picker"><div class="room-issue-picker-copy"><strong>이미지 여러 장</strong><span>한 번에 여러 이미지를 선택하고 등록 전 개별 제거할 수 있습니다.</span></div><input id="room-issue-files-${no}" class="sr-only" type="file" accept="image/*" multiple tabindex="-1" data-control="room-issue-files" data-room="${no}"><button class="btn btn-outline" type="button" data-action="choose-room-issue-files" data-room="${no}">${icon('camera','icon-sm')}이미지 선택</button></div>${renderRoomIssueDraftPhotos(no)}<button class="btn btn-primary btn-block" type="button" data-action="save-room-issue" data-room="${no}" ${hasDraft?'':'disabled'}>특이사항 등록 · 선택 ${draft.photos.length}장</button><p class="audit-note" style="margin:0">현재 탭 메모리에서만 미리보기를 유지하는 데모이며 실제 서버 업로드·영속 저장이 아닙니다.</p></div>`:'<p class="audit-note" style="margin:12px 0 0">메이드는 청소 중에만 특이사항을 등록할 수 있습니다. 저장된 기록은 관리자에게 그대로 공유됩니다.</p>';
+        return `${editor}${records.length?renderRoomIssueRecords(no):editable?'':'<div class="inline-empty"><h3>등록된 특이사항이 없습니다</h3><p>메이드가 저장한 특이사항과 사진이 여기에 표시됩니다.</p></div>'}`;
+      }
+      function renderCleaningInputSection(no,key,title,meta,body) {
+        const titleId=`cleaning-section-${groupsafe(no)}-${groupsafe(key)}`;
+        return `<section class="cleaning-section" data-cleaning-section="${esc(key)}" aria-labelledby="${titleId}"><div class="cleaning-section-head"><h3 id="${titleId}">${esc(title)}</h3><span data-cleaning-section-meta>${esc(meta)}</span></div><div class="cleaning-section-body">${body}</div></section>`;
+      }
+      function renderTaskInputSections(no,job) {
+        const {task,snapshot,requiredUploads}=taskRequirements(no), occupied=ROOMS.find(r=>r.no===no)?.occupancy==='occupied';
+        const editable=maidCanEditRoomIssue(no,job),bomb=bombRoomReport(no),bombMeta=bombRoomStatusMeta(bomb),groups=taskZoneGroups(task);
+        const doneUploads=task.uploads.filter(upload=>upload.status==='done').length,type=ROOM_TYPES[snapshot?.typeId||ROOMS.find(room=>room.no===no)?.type||'standard'];
+        const requiredGroups=groups.filter(group=>group.uploads.some(item=>item.required)),completedGroups=requiredGroups.filter(group=>group.uploads.filter(item=>item.required).every(item=>item.status==='done')).length;
+        const tvSafety=snapshot?.photos?.some(item=>item.id==='tv-on'||String(item.id).startsWith('tv-on-'))?' TV는 켜고 계정·QR·알림 없는 기본 화면으로 촬영하세요.':'';
+        const photoBody=`<div class="photo-template-banner"><div><strong>${esc(type.name)} · ${esc(snapshot?.name||'퇴실 청소')}</strong><span>필수 사진 ${requiredUploads.length}장 · 구역 버튼을 눌러 바로 촬영하세요.</span></div><div class="badge-row">${statusBadge(`${completedGroups}/${requiredGroups.length} 구역 완료`,completedGroups===requiredGroups.length?'green':'amber')}</div></div><div class="task-zone-progress"><div><span>완료 구역</span><strong>${completedGroups}/${requiredGroups.length}</strong></div><div><span>사진 촬영</span><strong>${doneUploads}/${task.uploads.length}</strong></div></div><div class="task-zone-safety">${icon('shield','icon-sm')}<span><strong>촬영 전 개인정보를 확인하세요.</strong><br>연락처·얼굴·고객 물품·거울 속 사람은 제외하세요.${tvSafety}</span></div><div class="task-zone-grid">${groups.map(group=>taskZoneCardMarkup(no,group,task,editable)).join('')}</div>`;
+        const candleBody=`<p class="audit-note" style="margin:12px 0 0">청소 결과를 입력하는 동안만 객실의 최종 촛불 수량을 조정할 수 있습니다.</p><div class="candle-stepper" role="group" aria-label="${no}호 청소 결과 촛불 수량"><button class="btn btn-outline" type="button" data-action="task-candle-change" data-room="${no}" data-delta="-1" aria-label="촛불 1개 줄이기" ${!editable||task.candle<1?'disabled':''}>−</button><div class="candle-stepper-value" aria-live="polite"><strong>${task.candle||0}개</strong><span>청소 완료 후 객실 수량</span></div><button class="btn btn-outline" type="button" data-action="task-candle-change" data-room="${no}" data-delta="1" aria-label="촛불 1개 늘리기" ${!editable||task.candle>=9?'disabled':''}>+</button></div>`;
+        return `<div class="cleaning-sections">${renderCleaningInputSection(no,'photos','구역별 사진 촬영',`${completedGroups}/${requiredGroups.length} 구역`,photoBody)}${renderCleaningInputSection(no,'bomb-room','폭탄방 신고',bombMeta.label,renderBombRoomPanel(no,job))}${renderCleaningInputSection(no,'room-issues','객실 특이사항',`${visibleRoomIssueRecords(no).length}건 · 선택 ${task.issueDraft.photos.length}장`,renderRoomIssueInput(no,editable))}${occupied?'':renderCleaningInputSection(no,'candles','촛불',`${task.candle||0}개`,candleBody)}</div>`;
+      }
+      function cleaningPrimary(no,job) {
+        const req=taskRequirements(no),access=attemptAccessStatus(no);
+        if(['scheduled','claimed','reclean'].includes(job)) return {label:access.allowed?(job==='reclean'?'재청소 시작':'일 시작'):access.reason,action:'start-cleaning',disabled:!access.allowed||isLocked()};
+        if(job==='cleaning') { const photosLeft=req.requiredUploads.filter(item=>item.status!=='done').length;return {label:photosLeft?`남은 필수 사진 ${photosLeft}장`:'현장 완료',action:'field-complete-v2',disabled:!!photosLeft||req.failed||isLocked()}; }
+        if(job==='upload'&&req.failed) return {label:'미전송 재시도',action:'retry-all-task-photos',disabled:isLocked()};
+        if(job==='upload') return {label:'청소 전체 제출',action:'submit-cleaning-v2',disabled:!req.requiredDone||isLocked()};
+        if(job==='inspection'||job==='approved') return {label:'제출 결과 보기',action:'demo-info',disabled:false};
+        return {label:'상세 확인',action:'demo-info',disabled:false};
+      }
+      function maidCanStart(no) {
+        const room=ROOMS.find(r=>r.no===no),job=state.jobs[no],task=taskState(no),attemptId=currentAttemptId(no),attempt=state.cleaningAttempts?.[attemptId];
+        return state.role==='maid'&&!isLocked()&&(signedInMaidIsActive()||maidCanCompleteRequiredReclean(no))&&room?.assignee===signedInMaidName()&&task.attemptId===attemptId&&attempt?.performerId===signedInMaidId()&&['active','reclean'].includes(attempt.status)&&['scheduled','claimed','reclean'].includes(job)&&attemptAccessStatus(no,attempt).allowed;
+      }
+      function maidCanEditCleaning(no,allowedJobs=['cleaning']) {
+        const room=ROOMS.find(item=>item.no===no),task=taskState(no),attempt=state.cleaningAttempts?.[task.attemptId];
+        return state.role==='maid'&&!isLocked()&&(signedInMaidIsActive()||maidCanContinueDeactivation(no)||maidCanCompleteRequiredReclean(no))&&room?.assignee===signedInMaidName()&&task.attemptId===currentAttemptId(no)&&attempt?.performerId===signedInMaidId()&&allowedJobs.includes(state.jobs[no]);
+      }
+      function renderCleaningDetailActiveCore(no) {
+        const baseRoom=ROOMS.find(r=>r.no===no)||ROOMS[0],currentAttempt=state.cleaningAttempts?.[currentAttemptId(no)]||null,currentRecord=currentSubmission(no);
+        if(!state.jobs[no]&&!currentAttempt&&!currentRecord)return state.role==='admin'?renderRoomDetail(no):renderCoach()+detailHeader('청소 작업이 없습니다','관리자에게 통보받은 본인 업무만 확인할 수 있습니다.')+'<section class="card card-pad"><div class="notice notice-info"><div><strong>생성된 청소 작업이 없습니다.</strong><br>객실 기본정보를 청소 배정으로 간주하지 않습니다.</div></div></section>';
+        const room=no==='332'&&state.conflict==='resolved'?{...baseRoom,checkout:state.conflictRecord.afterCheckout}:baseRoom,job=state.jobs[no];
+        const activeAttempt=state.cleaningAttempts?.[currentAttemptId(no)],activeGuestCount=guestCountForAttempt(activeAttempt),activeCheckout=activeAttempt?.checkoutSnapshot||room.checkout,activeCheckin=activeAttempt?.checkinSnapshot||room.checkin,activeRoomMeta=activeAttempt?.roomMetaSnapshot||roomMetadataSnapshot(no),activeType=ROOM_TYPES[activeRoomMeta?.typeId]||ROOM_TYPES[room.type],activeTypeName=activeRoomMeta?.typeName||activeType.name,activeTemplate=snapshotForAttempt(no,activeAttempt),activeRate=activeAttempt?.baseRateSnapshot??activeType.rate,activeKind=activeAttempt?.kind||(job==='reclean'?'재청소':'퇴실 청소'),activeMinutes=activeTemplate?.minutes??activeType.minutes,activeStageLabel=activeKind==='재청소'?(job==='reclean'?'재청소 · 시작 예정':`재청소 · ${statusLabel(job)}`):cleaningLabel(job);
+        const maidOwnsSubmission=['inspection','approved'].includes(job)&&currentSubmission(no)?.performerId===signedInMaidId();
+        if(state.role==='maid'&&room.assignee!==signedInMaidName()&&!maidOwnsSubmission)return renderCoach()+detailHeader('접근할 수 없는 업무','본인에게 배정되었거나 본인이 제출한 객실만 확인할 수 있습니다.')+'<section class="card card-pad"><div class="notice notice-danger"><div><strong>업무 접근이 차단됐습니다.</strong><br>목록으로 돌아가 관리자에게 배정받은 업무를 확인해 주세요.</div></div></section>';
+
+===== task-photo-file · line 7381 =====
+
+          if(state.role!=='admin'||state.adminView!=='maids'||state.adminMaidTab!=='pay'||isLocked()||!context||state.adminPayWeek!==context.cfg.start||!['PAYING','CHECK'].includes(context.meta.status)||el.dataset.expected!==context.meta.status||!currentRecord||el.dataset.record!==paymentRecordFingerprint(currentRecord)){closeModal();render();toast('권한·선택 주차·메이드·잠근 지급 기록이 바뀌어 대기로 복귀하지 않았습니다.','error');return;}
+          if(!reason){toast('송금하지 않았음을 확인한 사유를 입력하세요.','error');document.getElementById('payment-resolution-reason')?.focus();return;}
+          const resolution=reopenPaymentFor(context,reason);
+          appendEvent(`${context.maid.name} ${weekRangeLabel(context.cfg.start)} 지급 대기 복귀`,`${resolution.id} · ${money(resolution.amountSnapshot||0)} · 잠근 수익 ID ${resolution.taskIds.join(', ')||'없음'} · fingerprint ${resolution.taskFingerprint||'없음'} · 담당 ${paymentManagerLabel(resolution)} · 시작 ${resolution.startedAt||'미기록'} · 송금하지 않음 확인 · 사유: ${reason}`,{maidIds:[context.maid.id]});
+          closeModal();render();focusAfterRender(paymentToggleSelector(context.cfg.start,context.maid.id));toast(`${context.maid.name} 지급을 사유와 함께 대기로 돌렸습니다.`);return;
+        }
+        if(a==='confirm-finish-payment'){
+          const context=paymentContextFor(el.dataset.week,el.dataset.maid),currentRecord=context?.record;
+          if(state.role!=='admin'||state.adminView!=='maids'||state.adminMaidTab!=='pay'||isLocked()||!context||state.adminPayWeek!==context.cfg.start||!['PAYING','CHECK'].includes(context.meta.status)||el.dataset.expected!==context.meta.status||!currentRecord||el.dataset.record!==paymentRecordFingerprint(currentRecord)){closeModal();render();toast('권한·선택 주차·메이드·잠근 금액·수익 구성 또는 지급 상태가 바뀌어 완료하지 않았습니다.','error');return;}
+          setPaymentStatusFor(context,'PAID');
+          appendEvent(`${context.maid.name} ${weekRangeLabel(context.cfg.start)} 지급 완료 기록`,`${money(currentRecord.amountSnapshot||0)} · 잠근 수익 ${currentRecord.taskIds.length}건 · 다른 메이드 상태 불변 · 앱 밖 전액 송금 완료만 기록`,{maidIds:[context.maid.id],dedupeKey:`payment:${paymentRecordKey(context.cfg.start,context.maid.id)}:PAID:${currentRecord.taskFingerprint}`});
+          historyReturnFocus={action:'admin-pay-detail',id:adminPayDetailId(context.cfg.start,context.maid.id)};closeModal();render();toast(`${context.maid.name} 외부 송금 완료를 기록했습니다.`);return;
+        }
+        if(a==='delete-complaint'){if(state.role!=='admin'){toast('컴플레인·벌점 삭제는 관리자만 할 수 있습니다.','error');return;}if(isLocked()){toast('최신 상태를 확인하기 전에는 컴플레인·벌점을 삭제할 수 없습니다.','error');return;}const item=state.complaints.find(c=>c.id===id);if(item){item.deleted=true;appendEvent(`${item.maid} ${item.type} 삭제`,'활성 목록에서 숨김 · 원본 감사 이력 보존',{maidIds:[MAIDS.find(maid=>maid.name===item.maid)?.id]});render();toastUndo('활성 목록에서 삭제했습니다.','undo-complaint',id);focusAfterRender(`[data-action="undo-complaint"][data-id="${id}"]`);}return;}
+        if(a==='undo-complaint'){if(state.role!=='admin'){toast('컴플레인·벌점 복구는 관리자만 할 수 있습니다.','error');return;}if(isLocked()){toast('최신 상태를 확인하기 전에는 삭제를 되돌릴 수 없습니다.','error');return;}const item=state.complaints.find(c=>c.id===id);if(item){item.deleted=false;appendEvent(`${item.maid} ${item.type} 삭제 실행 취소`,'활성 목록 복원',{maidIds:[MAIDS.find(maid=>maid.name===item.maid)?.id]});render();focusAfterRender(`[data-action="delete-complaint"][data-id="${id}"]`);toast('기록을 활성 목록에 복원했습니다.');}return;}
+      });
+
+      document.addEventListener('input',e=>{
+        if(['res-checkin','res-checkout'].includes(e.target.id)){updateReservationTimePreview();return;}
+        if(e.target.id!=='pin-edit-input') return;
+        e.target.value=e.target.value.replace(/\D/g,'').slice(0,4);
+        const review=document.querySelector('[data-action="pin-review"]');
+        if(review) review.disabled=!/^\d{4}$/.test(e.target.value);
+      });
+
+      document.addEventListener('change',e=>{
+        const c=e.target.dataset.control;if(!c||!['role','maid-account','scenario','room-filter','room-type-filter','quick-reservation-type','reservation-room','maid-pay-filter','work-history-maid','task-photo-file','task-candle','room-issue-type','room-issue-files','bomb-room-files','complaint-type','conflict-step-v2','maid-deactivation-gate','assignment-maid','reservation-cancel-reason'].includes(c))return;
+        e.stopImmediatePropagation();
+        if(c==='reservation-cancel-reason'){
+          const confirm=document.querySelector('[data-action="confirm-reservation-cancel"]');
+          if(confirm)confirm.disabled=!!reservationCancelReasonError(e.target.value);
+          return;
+        }
+        if(c==='reservation-room'){updateReservationGuestControls(true);return;}
+        if(c==='role'){maskPin();closeModal();state.role=e.target.value;state.detail=null;render();requestAnimationFrame(()=>document.querySelector('[data-control="role"]')?.focus());return;}
+        if(c==='maid-account'){if(state.role!=='maid')return;maskPin();closeModal();state.currentMaidId=MAIDS.some(maid=>maid.id===e.target.value)?e.target.value:'m1';syncSignedInMaidAvailability();state.detail=null;render();requestAnimationFrame(()=>document.querySelector('[data-control="maid-account"]')?.focus());toast(`${signedInMaidName()} 계정으로 전환했습니다.`);return;}
+        if(c==='scenario'){maskPin();releaseRoomIssuePhotoUrls();protectedPinOverrides.clear();closeModal();state=makeScenario(Number(e.target.value));hydrateTemplateSnapshotsForState();render();requestAnimationFrame(()=>document.querySelector('[data-control="scenario"]')?.focus());toast(`${state.scenario}번 시나리오를 불러왔습니다.`);return;}
+        if(c==='room-filter'){state.roomFilter=e.target.value;render();requestAnimationFrame(()=>document.querySelector('[data-control="room-filter"]')?.focus());return;}
+        if(c==='room-type-filter'){state.roomTypeFilter=e.target.value;render();requestAnimationFrame(()=>document.querySelector('[data-control="room-type-filter"]')?.focus());return;}
+        if(c==='quick-reservation-type'){rememberQuickGridViewport();state.quickReservationType=e.target.value;state.quickGridScrollTop=0;render();restoreQuickGridViewport('[data-control="quick-reservation-type"]');return;}
+        if(c==='maid-pay-filter'){state.maidPayFilter=e.target.value;state.maidPaySelectedWeek=null;const visibleIds={all:['2026-08-10','2026-08-03','2026-07-27','2026-07-20','2026-07-13','2026-07-06'],current:['2026-08-10'],last:['2026-08-03'],older:['2026-07-27','2026-07-20','2026-07-13','2026-07-06']}[state.maidPayFilter]||[];if(!visibleIds.includes(state.maidPayOpenWeek))state.maidPayOpenWeek=visibleIds[0]||null;render();requestAnimationFrame(()=>document.querySelector('[data-control="maid-pay-filter"]')?.focus());return;}
+        if(c==='work-history-maid'){state.workHistoryMaid=e.target.value;render();requestAnimationFrame(()=>document.querySelector('[data-control="work-history-maid"]')?.focus());return;}
+        if(c==='task-photo-file'){
+          const input=e.target,no=input.dataset.room,photoId=input.dataset.photo,attemptId=input.dataset.attempt,source=input.dataset.source,file=input.files?.[0]||null;input.value='';
+          if(!file)return;
+          const resolved=taskUploadForMutation(no,photoId,attemptId);
+          if(!resolved){toast('촬영 중 담당·수행 회차가 바뀌어 사진을 반영하지 않았습니다.','error');return;}
+          if(!file.type?.startsWith('image/')){toast('이미지 파일만 사진 슬롯에 넣을 수 있습니다.','error');return;}
+          if(file.size>20*1024*1024){toast('이미지는 한 장당 20MB 이하만 선택할 수 있습니다.','error');return;}
+          const previousImage=resolved.upload.image,previousStatus=resolved.upload.status,fixture=previousImage?.fixture||'supply',src=URL.createObjectURL(file);
+          resolved.upload.status='uploading';resolved.upload.image={src,objectUrl:true,type:file.type,size:file.size,uploadedAt:`${state.selectedDate} ${state.time}`,version:`현장 촬영 · ${source==='camera'?'카메라':'갤러리'}`,fixture};render();focusAfterRender(`[data-action="capture-task-photo"][data-room="${no}"][data-photo="${photoId}"]`);
+          setTimeout(()=>{
+            const identified=taskUploadByIdentity(no,photoId,attemptId),same=identified?.upload?.image?.objectUrl&&identified.upload.image.src===src;
+            if(!same){URL.revokeObjectURL(src);if(previousImage?.objectUrl)releaseRoomIssuePhoto(previousImage);return;}
+            const latest=taskUploadForMutation(no,photoId,attemptId);
+            if(!latest){identified.upload.status=previousStatus;identified.upload.image=previousImage;URL.revokeObjectURL(src);render();return;}
+            latest.upload.status='done';if(previousImage?.objectUrl&&previousImage.src!==src)releaseRoomIssuePhoto(previousImage);render();focusAfterRender(`[data-action="capture-task-photo"][data-room="${no}"][data-photo="${photoId}"]`);toast(`${source==='camera'?'카메라 촬영':'갤러리 이미지'}을 ${latest.upload.label} 사진 슬롯에 반영했습니다.`);
+          },320);return;
+        }
+        if(c==='task-candle'){const no=e.target.dataset.room;if(!maidCanEditCleaning(no)){render();toast('본인 담당 청소 중 작업의 촛불 결과만 변경할 수 있습니다.','error');return;}taskState(no).candle=Number(e.target.value);render();requestAnimationFrame(()=>document.querySelector(`[data-control="task-candle"][data-room="${no}"]`)?.focus());return;}
+        if(c==='room-issue-type'){const no=e.target.dataset.room;if(!maidCanEditRoomIssue(no)){render();return;}roomIssueDraft(no).type=e.target.value;return;}
+        if(c==='room-issue-files'){
+          const no=e.target.dataset.room,draft=roomIssueDraft(no),files=[...(e.target.files||[])],images=files.filter(file=>file.type.startsWith('image/'));
+          if(!maidCanEditRoomIssue(no)){e.target.value='';toast('본인 담당 객실을 청소 중일 때만 이미지를 선택할 수 있습니다.','error');return;}
+          if(!images.length){e.target.value='';toast('이미지 파일을 한 장 이상 선택하세요.','error');return;}
+          const stamp=Date.now();images.forEach((file,index)=>draft.photos.push({id:`rip-${stamp}-${index}-${draft.photos.length}`,label:`선택한 사진 ${draft.photos.length+1}`,src:URL.createObjectURL(file),objectUrl:true,size:file.size,type:file.type}));
+          const skipped=files.length-images.length;e.target.value='';render();focusAfterRender(`[data-action="choose-room-issue-files"][data-room="${no}"]`);toast(`${images.length}장의 이미지를 선택했습니다.${skipped?` 이미지가 아닌 파일 ${skipped}개는 제외했습니다.`:''}`);return;
+        }
+        if(c==='bomb-room-files'){
+          const no=e.target.dataset.room,draft=bombRoomDraft(no),files=[...(e.target.files||[])],images=files.filter(file=>file.type.startsWith('image/'));
+          if(!maidCanCreateBombRoomReport(no)){e.target.value='';toast('본인 담당 객실의 전체 제출 전 단계에서만 폭탄방 이미지를 선택할 수 있습니다.','error');return;}
+          if(!images.length){e.target.value='';toast('폭탄방 증빙 이미지를 한 장 이상 선택하세요.','error');return;}
+          const stamp=Date.now();images.forEach((file,index)=>draft.photos.push({id:`bombp-${stamp}-${index}-${draft.photos.length}`,label:`선택한 증빙 ${draft.photos.length+1}`,src:URL.createObjectURL(file),objectUrl:true,size:file.size,type:file.type}));
+          const skipped=files.length-images.length;e.target.value='';render();focusAfterRender(`[data-action="save-bomb-room-report"][data-room="${no}"]`);toast(`${images.length}장의 폭탄방 증빙을 선택했습니다.${skipped?` 이미지가 아닌 파일 ${skipped}개는 제외했습니다.`:''}`);return;
+        }
+        if(c==='complaint-type'){state.complaintType=e.target.value;render();requestAnimationFrame(()=>document.querySelector('[data-control="complaint-type"]')?.focus());return;}
+        if(c==='conflict-step-v2'){state.conflictSteps[e.target.value]=e.target.checked;const confirm=document.querySelector('[data-action="confirm-conflict-v2"]');if(confirm)confirm.disabled=isLocked()||!Object.values(state.conflictSteps).every(Boolean);return;}
+        if(c==='maid-deactivation-gate'){const maidId=e.target.dataset.maidId,flow=ensureMaidDeactivationFor(maidId);flow.gates[e.target.value]=e.target.checked;setMaidDeactivationFor(maidId,flow);const blockers=maidDeactivationBlockers(maidId),allDone=Object.values(flow.gates).every(Boolean),action=document.querySelector(`[data-action="complete-deactivation-v2"][data-id="${maidId}"]`);if(action)action.disabled=isLocked()||!allDone||blockers.messages.length>0;return;}
+        if(c==='assignment-maid'){
+          if(state.role!=='admin'||isLocked()){toast('관리자 최신 상태에서만 담당 메이드를 변경할 수 있습니다.','error');render();return;}
+          const targetId=e.target.dataset.target,location=e.target.dataset.location||'table',focusSelector=`[data-control="assignment-maid"][data-location="${location}"][data-target="${targetId}"]`,item=assignmentTargets().find(target=>target.id===targetId),assignment=item?assignmentFor(item):null;if(!assignment||!item)return;
+          if(!cleaningTargetCanAdjust(item)){toast(cleaningTargetAdjustmentBlock(item),'error');render();requestAnimationFrame(()=>document.querySelector(focusSelector)?.focus());return;}
+          if(roomIsOnHold(item.room)){toast(`${item.room}호는 운영 상태 확인 보류 객실이라 담당을 선택할 수 없습니다.`,'error');render();requestAnimationFrame(()=>document.querySelector(focusSelector)?.focus());return;}
+          if(e.target.value&&(!maidCanReceiveNewAssignment(e.target.value)||availabilityForWorkDate(e.target.value,targetEffectiveDate(item))!=='available')){toast(!maidCanReceiveNewAssignment(e.target.value)?'비활성 처리 중이거나 비활성인 메이드는 새 담당 후보에 포함되지 않습니다.':'해당 날짜를 근무 가능으로 제출한 메이드만 배정할 수 있습니다.','error');render();requestAnimationFrame(()=>document.querySelector(focusSelector)?.focus());return;}
+          const previousMaidId=assignment.maidId,nextMaidId=e.target.value;
+          if(previousMaidId===nextMaidId)return;
+          if(!nextMaidId&&assignment.previousMaidId){toast('이미 통보된 담당은 공란으로 해제할 수 없습니다. 새 담당 메이드를 선택해 변경 통보하세요.','error');render();requestAnimationFrame(()=>document.querySelector(focusSelector)?.focus());return;}
+          if(state.randomAssignmentSnapshot){state.randomAssignmentSnapshot=null;state.randomAssignments={};state.randomAssignmentSummary=null;}else if(state.randomAssignments)delete state.randomAssignments[targetId];
+          assignment.maidId=nextMaidId;assignment.order=null;assignment.status=nextMaidId?'draft':'unassigned';
+          normalizeAssignmentOrderFor(previousMaidId);normalizeAssignmentOrderFor(nextMaidId);
+
+===== task-photo-file · line 7397 =====
+
+        if(a==='delete-complaint'){if(state.role!=='admin'){toast('컴플레인·벌점 삭제는 관리자만 할 수 있습니다.','error');return;}if(isLocked()){toast('최신 상태를 확인하기 전에는 컴플레인·벌점을 삭제할 수 없습니다.','error');return;}const item=state.complaints.find(c=>c.id===id);if(item){item.deleted=true;appendEvent(`${item.maid} ${item.type} 삭제`,'활성 목록에서 숨김 · 원본 감사 이력 보존',{maidIds:[MAIDS.find(maid=>maid.name===item.maid)?.id]});render();toastUndo('활성 목록에서 삭제했습니다.','undo-complaint',id);focusAfterRender(`[data-action="undo-complaint"][data-id="${id}"]`);}return;}
+        if(a==='undo-complaint'){if(state.role!=='admin'){toast('컴플레인·벌점 복구는 관리자만 할 수 있습니다.','error');return;}if(isLocked()){toast('최신 상태를 확인하기 전에는 삭제를 되돌릴 수 없습니다.','error');return;}const item=state.complaints.find(c=>c.id===id);if(item){item.deleted=false;appendEvent(`${item.maid} ${item.type} 삭제 실행 취소`,'활성 목록 복원',{maidIds:[MAIDS.find(maid=>maid.name===item.maid)?.id]});render();focusAfterRender(`[data-action="delete-complaint"][data-id="${id}"]`);toast('기록을 활성 목록에 복원했습니다.');}return;}
+      });
+
+      document.addEventListener('input',e=>{
+        if(['res-checkin','res-checkout'].includes(e.target.id)){updateReservationTimePreview();return;}
+        if(e.target.id!=='pin-edit-input') return;
+        e.target.value=e.target.value.replace(/\D/g,'').slice(0,4);
+        const review=document.querySelector('[data-action="pin-review"]');
+        if(review) review.disabled=!/^\d{4}$/.test(e.target.value);
+      });
+
+      document.addEventListener('change',e=>{
+        const c=e.target.dataset.control;if(!c||!['role','maid-account','scenario','room-filter','room-type-filter','quick-reservation-type','reservation-room','maid-pay-filter','work-history-maid','task-photo-file','task-candle','room-issue-type','room-issue-files','bomb-room-files','complaint-type','conflict-step-v2','maid-deactivation-gate','assignment-maid','reservation-cancel-reason'].includes(c))return;
+        e.stopImmediatePropagation();
+        if(c==='reservation-cancel-reason'){
+          const confirm=document.querySelector('[data-action="confirm-reservation-cancel"]');
+          if(confirm)confirm.disabled=!!reservationCancelReasonError(e.target.value);
+          return;
+        }
+        if(c==='reservation-room'){updateReservationGuestControls(true);return;}
+        if(c==='role'){maskPin();closeModal();state.role=e.target.value;state.detail=null;render();requestAnimationFrame(()=>document.querySelector('[data-control="role"]')?.focus());return;}
+        if(c==='maid-account'){if(state.role!=='maid')return;maskPin();closeModal();state.currentMaidId=MAIDS.some(maid=>maid.id===e.target.value)?e.target.value:'m1';syncSignedInMaidAvailability();state.detail=null;render();requestAnimationFrame(()=>document.querySelector('[data-control="maid-account"]')?.focus());toast(`${signedInMaidName()} 계정으로 전환했습니다.`);return;}
+        if(c==='scenario'){maskPin();releaseRoomIssuePhotoUrls();protectedPinOverrides.clear();closeModal();state=makeScenario(Number(e.target.value));hydrateTemplateSnapshotsForState();render();requestAnimationFrame(()=>document.querySelector('[data-control="scenario"]')?.focus());toast(`${state.scenario}번 시나리오를 불러왔습니다.`);return;}
+        if(c==='room-filter'){state.roomFilter=e.target.value;render();requestAnimationFrame(()=>document.querySelector('[data-control="room-filter"]')?.focus());return;}
+        if(c==='room-type-filter'){state.roomTypeFilter=e.target.value;render();requestAnimationFrame(()=>document.querySelector('[data-control="room-type-filter"]')?.focus());return;}
+        if(c==='quick-reservation-type'){rememberQuickGridViewport();state.quickReservationType=e.target.value;state.quickGridScrollTop=0;render();restoreQuickGridViewport('[data-control="quick-reservation-type"]');return;}
+        if(c==='maid-pay-filter'){state.maidPayFilter=e.target.value;state.maidPaySelectedWeek=null;const visibleIds={all:['2026-08-10','2026-08-03','2026-07-27','2026-07-20','2026-07-13','2026-07-06'],current:['2026-08-10'],last:['2026-08-03'],older:['2026-07-27','2026-07-20','2026-07-13','2026-07-06']}[state.maidPayFilter]||[];if(!visibleIds.includes(state.maidPayOpenWeek))state.maidPayOpenWeek=visibleIds[0]||null;render();requestAnimationFrame(()=>document.querySelector('[data-control="maid-pay-filter"]')?.focus());return;}
+        if(c==='work-history-maid'){state.workHistoryMaid=e.target.value;render();requestAnimationFrame(()=>document.querySelector('[data-control="work-history-maid"]')?.focus());return;}
+        if(c==='task-photo-file'){
+          const input=e.target,no=input.dataset.room,photoId=input.dataset.photo,attemptId=input.dataset.attempt,source=input.dataset.source,file=input.files?.[0]||null;input.value='';
+          if(!file)return;
+          const resolved=taskUploadForMutation(no,photoId,attemptId);
+          if(!resolved){toast('촬영 중 담당·수행 회차가 바뀌어 사진을 반영하지 않았습니다.','error');return;}
+          if(!file.type?.startsWith('image/')){toast('이미지 파일만 사진 슬롯에 넣을 수 있습니다.','error');return;}
+          if(file.size>20*1024*1024){toast('이미지는 한 장당 20MB 이하만 선택할 수 있습니다.','error');return;}
+          const previousImage=resolved.upload.image,previousStatus=resolved.upload.status,fixture=previousImage?.fixture||'supply',src=URL.createObjectURL(file);
+          resolved.upload.status='uploading';resolved.upload.image={src,objectUrl:true,type:file.type,size:file.size,uploadedAt:`${state.selectedDate} ${state.time}`,version:`현장 촬영 · ${source==='camera'?'카메라':'갤러리'}`,fixture};render();focusAfterRender(`[data-action="capture-task-photo"][data-room="${no}"][data-photo="${photoId}"]`);
+          setTimeout(()=>{
+            const identified=taskUploadByIdentity(no,photoId,attemptId),same=identified?.upload?.image?.objectUrl&&identified.upload.image.src===src;
+            if(!same){URL.revokeObjectURL(src);if(previousImage?.objectUrl)releaseRoomIssuePhoto(previousImage);return;}
+            const latest=taskUploadForMutation(no,photoId,attemptId);
+            if(!latest){identified.upload.status=previousStatus;identified.upload.image=previousImage;URL.revokeObjectURL(src);render();return;}
+            latest.upload.status='done';if(previousImage?.objectUrl&&previousImage.src!==src)releaseRoomIssuePhoto(previousImage);render();focusAfterRender(`[data-action="capture-task-photo"][data-room="${no}"][data-photo="${photoId}"]`);toast(`${source==='camera'?'카메라 촬영':'갤러리 이미지'}을 ${latest.upload.label} 사진 슬롯에 반영했습니다.`);
+          },320);return;
+        }
+        if(c==='task-candle'){const no=e.target.dataset.room;if(!maidCanEditCleaning(no)){render();toast('본인 담당 청소 중 작업의 촛불 결과만 변경할 수 있습니다.','error');return;}taskState(no).candle=Number(e.target.value);render();requestAnimationFrame(()=>document.querySelector(`[data-control="task-candle"][data-room="${no}"]`)?.focus());return;}
+        if(c==='room-issue-type'){const no=e.target.dataset.room;if(!maidCanEditRoomIssue(no)){render();return;}roomIssueDraft(no).type=e.target.value;return;}
+        if(c==='room-issue-files'){
+          const no=e.target.dataset.room,draft=roomIssueDraft(no),files=[...(e.target.files||[])],images=files.filter(file=>file.type.startsWith('image/'));
+          if(!maidCanEditRoomIssue(no)){e.target.value='';toast('본인 담당 객실을 청소 중일 때만 이미지를 선택할 수 있습니다.','error');return;}
+          if(!images.length){e.target.value='';toast('이미지 파일을 한 장 이상 선택하세요.','error');return;}
+          const stamp=Date.now();images.forEach((file,index)=>draft.photos.push({id:`rip-${stamp}-${index}-${draft.photos.length}`,label:`선택한 사진 ${draft.photos.length+1}`,src:URL.createObjectURL(file),objectUrl:true,size:file.size,type:file.type}));
+          const skipped=files.length-images.length;e.target.value='';render();focusAfterRender(`[data-action="choose-room-issue-files"][data-room="${no}"]`);toast(`${images.length}장의 이미지를 선택했습니다.${skipped?` 이미지가 아닌 파일 ${skipped}개는 제외했습니다.`:''}`);return;
+        }
+        if(c==='bomb-room-files'){
+          const no=e.target.dataset.room,draft=bombRoomDraft(no),files=[...(e.target.files||[])],images=files.filter(file=>file.type.startsWith('image/'));
+          if(!maidCanCreateBombRoomReport(no)){e.target.value='';toast('본인 담당 객실의 전체 제출 전 단계에서만 폭탄방 이미지를 선택할 수 있습니다.','error');return;}
+          if(!images.length){e.target.value='';toast('폭탄방 증빙 이미지를 한 장 이상 선택하세요.','error');return;}
+          const stamp=Date.now();images.forEach((file,index)=>draft.photos.push({id:`bombp-${stamp}-${index}-${draft.photos.length}`,label:`선택한 증빙 ${draft.photos.length+1}`,src:URL.createObjectURL(file),objectUrl:true,size:file.size,type:file.type}));
+          const skipped=files.length-images.length;e.target.value='';render();focusAfterRender(`[data-action="save-bomb-room-report"][data-room="${no}"]`);toast(`${images.length}장의 폭탄방 증빙을 선택했습니다.${skipped?` 이미지가 아닌 파일 ${skipped}개는 제외했습니다.`:''}`);return;
+        }
+        if(c==='complaint-type'){state.complaintType=e.target.value;render();requestAnimationFrame(()=>document.querySelector('[data-control="complaint-type"]')?.focus());return;}
+        if(c==='conflict-step-v2'){state.conflictSteps[e.target.value]=e.target.checked;const confirm=document.querySelector('[data-action="confirm-conflict-v2"]');if(confirm)confirm.disabled=isLocked()||!Object.values(state.conflictSteps).every(Boolean);return;}
+        if(c==='maid-deactivation-gate'){const maidId=e.target.dataset.maidId,flow=ensureMaidDeactivationFor(maidId);flow.gates[e.target.value]=e.target.checked;setMaidDeactivationFor(maidId,flow);const blockers=maidDeactivationBlockers(maidId),allDone=Object.values(flow.gates).every(Boolean),action=document.querySelector(`[data-action="complete-deactivation-v2"][data-id="${maidId}"]`);if(action)action.disabled=isLocked()||!allDone||blockers.messages.length>0;return;}
+        if(c==='assignment-maid'){
+          if(state.role!=='admin'||isLocked()){toast('관리자 최신 상태에서만 담당 메이드를 변경할 수 있습니다.','error');render();return;}
+          const targetId=e.target.dataset.target,location=e.target.dataset.location||'table',focusSelector=`[data-control="assignment-maid"][data-location="${location}"][data-target="${targetId}"]`,item=assignmentTargets().find(target=>target.id===targetId),assignment=item?assignmentFor(item):null;if(!assignment||!item)return;
+          if(!cleaningTargetCanAdjust(item)){toast(cleaningTargetAdjustmentBlock(item),'error');render();requestAnimationFrame(()=>document.querySelector(focusSelector)?.focus());return;}
+          if(roomIsOnHold(item.room)){toast(`${item.room}호는 운영 상태 확인 보류 객실이라 담당을 선택할 수 없습니다.`,'error');render();requestAnimationFrame(()=>document.querySelector(focusSelector)?.focus());return;}
+          if(e.target.value&&(!maidCanReceiveNewAssignment(e.target.value)||availabilityForWorkDate(e.target.value,targetEffectiveDate(item))!=='available')){toast(!maidCanReceiveNewAssignment(e.target.value)?'비활성 처리 중이거나 비활성인 메이드는 새 담당 후보에 포함되지 않습니다.':'해당 날짜를 근무 가능으로 제출한 메이드만 배정할 수 있습니다.','error');render();requestAnimationFrame(()=>document.querySelector(focusSelector)?.focus());return;}
+          const previousMaidId=assignment.maidId,nextMaidId=e.target.value;
+          if(previousMaidId===nextMaidId)return;
+          if(!nextMaidId&&assignment.previousMaidId){toast('이미 통보된 담당은 공란으로 해제할 수 없습니다. 새 담당 메이드를 선택해 변경 통보하세요.','error');render();requestAnimationFrame(()=>document.querySelector(focusSelector)?.focus());return;}
+          if(state.randomAssignmentSnapshot){state.randomAssignmentSnapshot=null;state.randomAssignments={};state.randomAssignmentSummary=null;}else if(state.randomAssignments)delete state.randomAssignments[targetId];
+          assignment.maidId=nextMaidId;assignment.order=null;assignment.status=nextMaidId?'draft':'unassigned';
+          normalizeAssignmentOrderFor(previousMaidId);normalizeAssignmentOrderFor(nextMaidId);
+          const nextFocusSelector=nextMaidId?focusSelector:`[data-control="assignment-maid"][data-location="table"][data-target="${targetId}"]`;
+          render();requestAnimationFrame(()=>{const target=document.querySelector(nextFocusSelector)||document.querySelector('[data-action="random-assignments"]');target?.focus();});return;
+        }
+      });
+
+      document.addEventListener('input',e=>{
+        const c=e.target.dataset.control;if(c==='room-search'){state.roomSearch=e.target.value;const pos=e.target.selectionStart;render();requestAnimationFrame(()=>{const input=document.getElementById('room-search');if(input){input.focus();input.setSelectionRange(pos,pos);}});}else if(c==='quick-reservation-search'){const value=e.target.value.replace(/\D/g,'').slice(0,6),pos=Math.min(value.length,e.target.selectionStart||value.length);if(e.target.value!==value)e.target.value=value;clearTimeout(quickSearchTimer);quickSearchTimer=setTimeout(()=>{rememberQuickGridViewport();state.quickReservationSearch=value;state.quickGridScrollTop=0;render();restoreQuickGridViewport('[data-control="quick-reservation-search"]');requestAnimationFrame(()=>{const input=document.querySelector('[data-control="quick-reservation-search"]');input?.setSelectionRange?.(pos,pos);});},140);}else if(c==='task-note'){const no=e.target.dataset.room;if(maidCanEditCleaning(no))taskState(no).note=e.target.value;}else if(c==='room-issue-note'){const no=e.target.dataset.room;if(!maidCanEditRoomIssue(no))return;const draft=roomIssueDraft(no);draft.note=e.target.value;const action=document.querySelector(`[data-action="save-room-issue"][data-room="${no}"]`);if(action)action.disabled=!draft.note.trim()&&!draft.photos.length;}else if(c==='bomb-room-note'){const no=e.target.dataset.room;if(maidCanCreateBombRoomReport(no))bombRoomDraft(no).note=e.target.value;}else if(c==='assignment-exception'){if(state.role!=='admin'||isLocked())return;const room=e.target.dataset.room;state.assignmentExceptions[room]=e.target.value;const action=document.querySelector('[data-action="save-assignments"]');if(action)action.disabled=!assignmentCanSave();}
+      });
+
+      document.addEventListener('submit',e=>{
+        if(e.target.id!=='complaint-form')return;e.preventDefault();e.stopImmediatePropagation();
+        if(state.role!=='admin'||isLocked()){toast('관리자 최신 상태에서만 컴플레인·벌점을 기록할 수 있습니다.','error');return;}
+        const maid=document.getElementById('complaint-maid')?.value||'',kind=document.getElementById('complaint-kind')?.value||'complaint',reason=document.getElementById('complaint-reason')?.value.trim()||'',points=Number(document.getElementById('complaint-points')?.value||0);
+        if(!maid||!reason||(kind==='penalty'&&points<1)){toast('메이드·기록 종류·사유와 필요한 벌점을 입력하세요.','error');return;}
