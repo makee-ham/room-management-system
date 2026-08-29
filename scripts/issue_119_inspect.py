@@ -13,38 +13,41 @@ CHUNK_LINES = 800
 CONTEXT_BEFORE = 16
 CONTEXT_AFTER = 34
 TERMS: tuple[tuple[str, str, int], ...] = (
-    ("state declaration", "const state =", 4),
-    ("default state", "function createDefaultState", 4),
+    ("state declaration", "let state =", 4),
+    ("base state", "function baseState", 4),
     ("state normalization", "function normalize", 8),
-    ("main render", "function render()", 4),
-    ("shell render", "function renderShell", 4),
-    ("admin navigation", "ADMIN_NAV", 4),
-    ("maid navigation", "MAID_NAV", 4),
-    ("maid route", "function renderMaid", 12),
-    ("maid schedule", "function renderMaidSchedule", 4),
-    ("maid availability", "근무 가능일", 10),
-    ("maid alert route", "maidAlerts", 8),
-    ("maid session", "roomManagementMaidSession", 8),
-    ("logout action", "logout", 12),
-    ("room presentation", "function roomPresentation", 4),
-    ("room card", "function roomCard", 6),
-    ("room table", "function renderRoomTable", 4),
-    ("room detail", "function openRoom", 6),
-    ("room detail action", "room-detail", 12),
-    ("reservation modal", "function openReservation", 8),
-    ("reservation form", "reservation-form", 8),
-    ("reservation save", "save-reservation", 12),
-    ("reservation overlap", "reservationOverlaps", 8),
-    ("reservation availability", "availableRooms", 8),
-    ("assignment targets", "function assignmentTargets", 6),
-    ("live assignment targets", "liveAssignmentTargetsForState", 8),
-    ("filtered assignment targets", "filteredAssignmentTargets", 8),
-    ("cleaning target rows", "객실별 담당 수정", 4),
-    ("unassigned room cards", "아직 순서가 없는 객실", 4),
-    ("click delegate", "document.addEventListener('click'", 12),
-    ("data issue", "dataIssue", 12),
-    ("initial occupied", "INITIAL_OCCUPIED_ROOMS", 8),
-    ("long stay", "장기", 12),
+    ("main render", "function render()", 8),
+    ("main route", "function renderMain", 8),
+    ("login", "function renderLogin", 8),
+    ("topbar", "function renderTopbar", 8),
+    ("admin navigation", "const adminNav", 4),
+    ("maid navigation", "const maidNav", 4),
+    ("maid route", "function renderMaid", 30),
+    ("maid schedule", "function renderMaidSchedule", 8),
+    ("maid availability", "근무 가능일", 20),
+    ("maid alert route", "alerts", 30),
+    ("logged in", "loggedIn", 30),
+    ("logout action", "logout", 30),
+    ("room presentation", "function roomPresentation", 8),
+    ("room card", "function roomCard", 12),
+    ("room table", "function renderRoomTable", 8),
+    ("room detail", "function openRoom", 12),
+    ("room detail action", "room-detail", 30),
+    ("reservation modal", "function openReservation", 12),
+    ("reservation config", "function reservationModalConfig", 12),
+    ("reservation form", "reservation-form", 20),
+    ("reservation save", "save-reservation", 20),
+    ("reservation overlap", "reservationOverlaps", 20),
+    ("reservation availability", "availableRooms", 20),
+    ("assignment targets", "function assignmentTargets", 12),
+    ("live assignment targets", "liveAssignmentTargetsForState", 20),
+    ("filtered assignment targets", "filteredAssignmentTargets", 20),
+    ("cleaning target rows", "객실별 담당 수정", 8),
+    ("unassigned room cards", "아직 순서가 없는 객실", 8),
+    ("click delegate", "document.addEventListener('click'", 30),
+    ("data issue", "dataIssue", 30),
+    ("initial occupied", "INITIAL_OCCUPIED_ROOMS", 16),
+    ("long stay", "장기", 30),
 )
 
 
@@ -81,8 +84,10 @@ def main() -> None:
         "Generated only for implementation review; remove before the final PR commit.",
         "",
     ]
+    occurrence_lines = ["# Issue #119 occurrence index", ""]
     for label, term, limit in TERMS:
         matches = [index for index, line in enumerate(lines) if term in line]
+        occurrence_lines.append(f"- **{label}** `{term}`: {', '.join(str(index + 1) for index in matches) or 'none'}")
         grep_lines.extend((f"## {label}: `{term}`", "", f"matches: {len(matches)}", ""))
         for occurrence, index in enumerate(matches[:limit], start=1):
             start = max(0, index - CONTEXT_BEFORE)
@@ -93,7 +98,8 @@ def main() -> None:
 
     (ROOT / "INDEX.md").write_text("\n".join(index_lines) + "\n", encoding="utf-8")
     (ROOT / "GREP.md").write_text("\n".join(grep_lines) + "\n", encoding="utf-8")
-    print(f"wrote {len(list(CHUNKS.glob('*.txt')))} chunks and {ROOT / 'GREP.md'}")
+    (ROOT / "OCCURRENCES.md").write_text("\n".join(occurrence_lines) + "\n", encoding="utf-8")
+    print(f"wrote {len(list(CHUNKS.glob('*.txt')))} chunks and review indexes")
 
 
 if __name__ == "__main__":
