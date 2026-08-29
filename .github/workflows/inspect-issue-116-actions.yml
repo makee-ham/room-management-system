@@ -1,0 +1,123 @@
+name: Inspect issue 116 actions and responsive CSS
+
+on:
+  push:
+    branches:
+      - codex/issue-116-other-photos-mobile-quick-date
+
+permissions:
+  contents: write
+
+jobs:
+  inspect-actions:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/issue-116-other-photos-mobile-quick-date
+          fetch-depth: 0
+
+      - name: Extract action handlers and CSS slices
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          text=Path('WIREFRAME/index.html').read_text(encoding='utf-8')
+          out=Path('issue-116-actions')
+          out.mkdir(exist_ok=True)
+
+          def function_body(name):
+            start=text.find(f'function {name}')
+            if start<0:return f'{name}: missing\n'
+            # Locate body brace after the closing parameter parenthesis.
+            paren=text.find('(',start);depth=0;quote=None;escape=False;close=-1
+            for i in range(paren,len(text)):
+              ch=text[i]
+              if quote:
+                if escape:escape=False
+                elif ch=='\\':escape=True
+                elif ch==quote:quote=None
+              elif ch in "'\"`":quote=ch
+              elif ch=='(':depth+=1
+              elif ch==')':
+                depth-=1
+                if depth==0:close=i;break
+            brace=text.find('{',close)
+            depth=0;quote=None;escape=False
+            for i in range(brace,len(text)):
+              ch=text[i]
+              if quote:
+                if escape:escape=False
+                elif ch=='\\':escape=True
+                elif ch==quote:quote=None
+              elif ch in "'\"`":quote=ch
+              elif ch=='{':depth+=1
+              elif ch=='}':
+                depth-=1
+                if depth==0:return text[start:i+1]+'\n'
+            return text[start:start+30000]+'\n'
+
+          for name in ['createTaskInputsFromSnapshot','demoUpload','renderQuickReservation','renderDateTools','templateCatalog','templateSlotStats','photoSlotContractSignature']:
+            out.joinpath(f'fn-{name}.txt').write_text(function_body(name),encoding='utf-8')
+
+          # Full template rule object.
+          start=text.find('const TYPE_PHOTO_GROUPS=')
+          end=text.find('const TEMPLATE_KIND_GROUPS',start)
+          if end<0:end=text.find('function templateCatalog',start)
+          out.joinpath('type-photo-groups.txt').write_text(text[start:end],encoding='utf-8')
+
+          def contexts_for(marker):
+            chunks=[];pos=0
+            while True:
+              hit=text.find(marker,pos)
+              if hit<0:break
+              line=text.count('\n',0,hit)+1
+              # Capture a narrow source unit around each occurrence.
+              start=max(0,text.rfind('\n',0,max(0,hit-4000)))
+              end=min(len(text),text.find('\n',min(len(text),hit+10000)))
+              if end<0:end=min(len(text),hit+10000)
+              chunks.append(f'\n===== {marker} · line {line} =====\n{text[start:end]}')
+              pos=hit+len(marker)
+            return '\n'.join(chunks)
+
+          for marker,filename in [
+            ('capture-task-photo','capture-task-photo.txt'),
+            ('choose-task-photo','choose-task-photo.txt'),
+            ('remove-task-photo','remove-task-photo.txt'),
+            ('task-photo-file','task-photo-file.txt'),
+            ('quick-month-today','quick-month-today.txt')
+          ]:
+            out.joinpath(filename).write_text(contexts_for(marker),encoding='utf-8')
+
+          # Event listener region only.
+          event_start=text.find("root.addEventListener('click'")
+          if event_start<0:event_start=text.find('addEventListener(\'click\'')
+          event_end=text.find('installCastleTestApi',event_start)
+          out.joinpath('event-region.txt').write_text(text[event_start:event_end],encoding='utf-8')
+
+          # Extract CSS contexts around quick toolbar and narrow breakpoints.
+          style=re.search(r'<style>([\s\S]*?)</style>',text)
+          css=style.group(1) if style else ''
+          css_chunks=[]
+          for marker in ['.quick-booking-toolbar','.quick-month-tools','.quick-month-label','.date-tools','@media (max-width: 720px)','@media (max-width: 560px)','@media (max-width: 480px)','@media (max-width: 390px)','@media (max-width: 360px)']:
+            pos=0
+            while True:
+              hit=css.find(marker,pos)
+              if hit<0:break
+              css_chunks.append(f'\n===== {marker} =====\n'+css[max(0,hit-1800):min(len(css),hit+8000)])
+              pos=hit+len(marker)
+          out.joinpath('quick-css-context.txt').write_text('\n'.join(css_chunks),encoding='utf-8')
+          PY
+
+      - name: Commit inspection output
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add issue-116-actions
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: inspect issue 116 actions and responsive css"
+          git push origin HEAD:codex/issue-116-other-photos-mobile-quick-date
