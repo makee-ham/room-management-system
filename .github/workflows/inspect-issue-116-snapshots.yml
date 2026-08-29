@@ -1,0 +1,75 @@
+name: Inspect issue 116 snapshots and exact toolbar CSS
+
+on:
+  push:
+    branches:
+      - codex/issue-116-other-photos-mobile-quick-date
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/issue-116-other-photos-mobile-quick-date
+          fetch-depth: 0
+      - name: Extract exact units
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          text=Path('WIREFRAME/index.html').read_text(encoding='utf-8')
+          out=Path('issue-116-snapshots');out.mkdir(exist_ok=True)
+          def fn(name):
+            start=text.find(f'function {name}')
+            if start<0:return f'{name}: missing\n'
+            paren=text.find('(',start);depth=0;quote=None;escape=False;close=-1
+            for i in range(paren,len(text)):
+              ch=text[i]
+              if quote:
+                if escape:escape=False
+                elif ch=='\\':escape=True
+                elif ch==quote:quote=None
+              elif ch in "'\"`":quote=ch
+              elif ch=='(':depth+=1
+              elif ch==')':
+                depth-=1
+                if depth==0:close=i;break
+            brace=text.find('{',close);depth=0;quote=None;escape=False
+            for i in range(brace,len(text)):
+              ch=text[i]
+              if quote:
+                if escape:escape=False
+                elif ch=='\\':escape=True
+                elif ch==quote:quote=None
+              elif ch in "'\"`":quote=ch
+              elif ch=='{':depth+=1
+              elif ch=='}':
+                depth-=1
+                if depth==0:return text[start:i+1]+'\n'
+            return text[start:start+30000]
+          for name in ['templateFixedSnapshot','templateSnapshotFor','legacyCheckoutTemplateSnapshotFor','templateSnapshotForSubmission','hydrateTemplateSnapshotsForState','demoUpload','taskRequirements','renderQuickReservation','inspectionTemplatePhotoState','templateParityData','typeTemplateParity']:
+            out.joinpath(f'{name}.txt').write_text(fn(name),encoding='utf-8')
+          style=re.search(r'<style>([\s\S]*?)</style>',text).group(1)
+          markers=['.quick-booking-page','@media (max-width:980px)','@media (max-width:720px)','@media (max-width:560px)','@media (max-width:480px)','@media (max-width:420px)','@media (max-width:390px)','@media (max-width:360px)']
+          pieces=[]
+          for marker in markers:
+            start=style.find(marker)
+            pieces.append(f'\n===== {marker} @ {start} =====\n')
+            if start>=0:pieces.append(style[start:min(len(style),start+12000)])
+          out.joinpath('toolbar-css-exact.txt').write_text(''.join(pieces),encoding='utf-8')
+          PY
+      - name: Commit output
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add issue-116-snapshots
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: inspect issue 116 snapshots and toolbar css"
+          git push origin HEAD:codex/issue-116-other-photos-mobile-quick-date
