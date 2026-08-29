@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Post-process legacy duplicate markup after the issue #119 v2 transform."""
+"""Post-process duplicate legacy markup and update issue #119 validation policy."""
 from __future__ import annotations
 
 import hashlib
@@ -17,6 +17,33 @@ if count != 1:
 html = html.replace(old, new, 1)
 html_path.write_text(html, encoding="utf-8")
 
+# Issue #119 intentionally replaces the old implicit occupancy-only model with an
+# explicit long-stay reservation type. Keep rejecting deprecated fixed room lists,
+# but require the new optional-end-date model instead of rejecting every mention of
+# long stay.
+check_path = ROOT / "scripts/check-workspace.mjs"
+check = check_path.read_text(encoding="utf-8")
+old_check = """if (/LONG_STAY_(?:ROOMS|ENDED_ROOMS)|long-?stay|장기투숙/i.test(html)) {
+  throw new Error('Legacy long-stay UI or state contracts remain in WIREFRAME/index.html.');
+}"""
+new_check = """if (/LONG_STAY_(?:ROOMS|ENDED_ROOMS)/.test(html)) {
+  throw new Error('Deprecated fixed long-stay room lists remain in WIREFRAME/index.html.');
+}
+for (const contract of [
+  \"const LONG_STAY_OPEN_END_AT='9999-12-31T23:59'\",
+  'function reservationIsLongStay(reservation)',
+  'function reservationHasKnownEnd(reservation)',
+  'function reservationLongStayEndLabel(reservation)',
+  'data-control=\"reservation-long-stay\"',
+  '종료일 미정',
+]) {
+  if (!html.includes(contract)) throw new Error(`Long-stay contract missing: ${contract}`);
+}"""
+if check.count(old_check) != 1:
+    raise RuntimeError(f"workspace long-stay policy: expected 1 match, found {check.count(old_check)}")
+check = check.replace(old_check, new_check, 1)
+check_path.write_text(check, encoding="utf-8")
+
 sums_path = ROOT / "SHA256SUMS.txt"
 refreshed = []
 for raw in sums_path.read_text(encoding="utf-8").splitlines():
@@ -29,4 +56,4 @@ for raw in sums_path.read_text(encoding="utf-8").splitlines():
     refreshed.append(f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {rel}")
 sums_path.write_text("\n".join(refreshed) + "\n", encoding="utf-8")
 
-print("Removed the stale legacy role switch markup.")
+print("Removed stale role-switch markup and updated long-stay workspace validation.")
