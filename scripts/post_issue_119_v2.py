@@ -64,6 +64,16 @@ replacements = [
         "  \"upsertReservationRecord({id:reservationId,roomNo:no,checkInAt:checkinAt,checkOutAt:isLongStay&&!enteredCheckoutAt?'':checkoutAt,guestCount,source:isLongStay?'long-stay':'card',currentStay,isLongStay})\",",
         "long-stay reservation entry validation",
     ),
+    (
+        "  \"guestCountDisplay=guestCount?guestCountLabel(guestCount):'미기록'\",",
+        "  'const guestCount=assignmentGuestCount(item)',",
+        "maid assignment guest variable validation",
+    ),
+    (
+        "  '<span>숙박 인원 ${guestCountDisplay}</span>',",
+        "  '<span>숙박 인원</span><strong>${esc(guestCountLabel(guestCount))}</strong>',",
+        "maid assignment guest copy validation",
+    ),
 ]
 for old_contract, new_contract, label in replacements:
     if check.count(old_contract) != 1:
