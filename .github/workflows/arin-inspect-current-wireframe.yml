@@ -15,38 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Collect source and focused snippets
+      - name: Collect repository source
         shell: bash
         run: |
-          mkdir -p /tmp/arin-inspect
-          cp WIREFRAME/index.html /tmp/arin-inspect/index.html
-          cp scripts/check-workspace.mjs /tmp/arin-inspect/check-workspace.mjs
-          python3 - <<'PY'
-          from pathlib import Path
-          text = Path('WIREFRAME/index.html').read_text(encoding='utf-8')
-          terms = [
-              '선택 증빙', 'quick-month-today', 'quick-month-tools',
-              'multiple:true', 'input.files', 'Array.from(event.target.files)',
-              'photoUploads', 'templateSnapshot', 'renderInspection',
-              'renderMaid', 'photo-slot', '사진 추가', '재촬영'
-          ]
-          out=[]
-          for term in terms:
-              out.append(f'\n===== {term} =====\n')
-              start=0
-              seen=0
-              while True:
-                  idx=text.find(term,start)
-                  if idx<0 or seen>=12: break
-                  lo=max(0,idx-1800); hi=min(len(text),idx+2600)
-                  out.append(text[lo:hi])
-                  out.append('\n-----\n')
-                  start=idx+len(term); seen+=1
-          Path('/tmp/arin-inspect/snippets.txt').write_text(''.join(out),encoding='utf-8')
-          PY
-      - name: Upload inspection artifact
+          mkdir -p /tmp/arin-repo
+          rsync -a --exclude=.git ./ /tmp/arin-repo/
+      - name: Upload repository artifact
         uses: actions/upload-artifact@v4
         with:
-          name: arin-wireframe-source
-          path: /tmp/arin-inspect
+          name: arin-repository-source
+          path: /tmp/arin-repo
           retention-days: 1
