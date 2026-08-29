@@ -172,7 +172,7 @@ for (const contract of [
   "if(state.role==='maid'){applyMaidCopyPolicy(root);return;}",
   "'maid-schedule','근무 가능일'",
   "'maid-pay','주급 내역'",
-  "'촬영 방법','구역별 필수 사진을 촬영하세요.",
+  "'촬영 방법','구역별 인증 사진을 촬영하세요.",
   '.help-title { display:flex; align-items:center; gap:7px;',
   '.info-tip-trigger { display:grid; place-items:center; width:44px; height:44px',
   '.info-tip-mark { display:grid; place-items:center; width:22px; height:22px; border:0; font-size:19px;',
@@ -255,8 +255,8 @@ for (const removed of ['메이드별 작업량·동선 비교', 'renderAssignmen
 for (const contract of [
   "requirementsMode:'photo-only-v1'",
   '구역별 사진 촬영',
-  '필수 사진 ${requiredUploads.length}장 · 구역 버튼을 눌러 바로 촬영하세요.',
-  '남은 필수 사진 ${photosLeft}장',
+  '인증 사진 ${requiredUploads.length}장 · 각 항목에 사진을 한 장 이상 등록하세요.',
+  '남은 인증 사진 ${photosLeft}장',
   'taskZoneGroups',
   'capture-task-photo',
   'choose-task-photo',
@@ -348,19 +348,29 @@ if ([typePhotoGroupsStart, typePhotoGroupsEnd, typePhotoObjectStart, typePhotoOb
 }
 const typePhotoGroups = Function(`"use strict";return (${typePhotoGroupsSource.slice(typePhotoObjectStart, typePhotoObjectEnd + 1)});`)();
 const expectedCheckoutPhotoCounts = {
-  standard:{total:10,required:9},
-  premium:{total:11,required:10},
-  oceanPremium:{total:13,required:12},
-  oceanFamily:{total:11,required:10},
+  standard:{total:9,required:8},
+  premium:{total:10,required:9},
+  oceanPremium:{total:12,required:11},
+  oceanFamily:{total:10,required:9},
 };
 for (const [typeId, expected] of Object.entries(expectedCheckoutPhotoCounts)) {
   const rules = typePhotoGroups[typeId] || [];
   const tvRules = rules.filter(rule => rule.id === 'tv-on');
   if (rules.length !== expected.total || rules.filter(rule => rule.required).length !== expected.required) {
-    throw new Error(`${typeId} checkout photo counts do not include the required TV-on evidence slot.`);
+    throw new Error(`${typeId} checkout photo counts do not match the simplified entrance-free template.`);
   }
   if (tvRules.length !== 1 || tvRules[0].zone !== 'TV' || tvRules[0].label !== 'TV 켜짐·화면 출력 확인' || tvRules[0].required !== true || tvRules[0].fixture !== 'tv') {
     throw new Error(`${typeId} must have exactly one distinct required TV-on photo rule.`);
+  }
+
+  if (rules.some(rule => rule.id === 'entry-number' || rule.label === '객실번호·현관')) {
+    throw new Error(`${typeId} still contains the redundant room-number entrance slot.`);
+  }
+  if (rules.some(rule => rule.zone !== '기타' && rule.required !== true)) {
+    throw new Error(`${typeId} has a non-기타 slot that is not required.`);
+  }
+  if (rules.some(rule => rule.zone === '기타' && (rule.required !== false || rule.maxPhotos !== 10))) {
+    throw new Error(`${typeId} 기타 slot must be optional with maxPhotos 10.`);
   }
 }
 for (const contract of [
@@ -873,7 +883,7 @@ for (const contract of [
   'function suggestedReservationStartDate(roomNo)',
   "requestedCurrent=reservationId==='__current__'",
   "needsCurrentStayDetails=!existing&&room.occupancy==='occupied'&&!occupiedReservationEnd(room)",
-  'data-action="reservation-add"',
+  "auxiliaryAction:nextRegistration.canAdd?'reservation-add':''",
   '현재 예약 수정 가능 · 예약 취소 불가',
   'registeringCurrentStay',
   'linkedCurrentStay',
@@ -1643,7 +1653,7 @@ for (const contract of [
   'data-template-status=',
   '메이드 청소 템플릿 기준 검수',
   '제출 당시 구역·항목·순서 그대로 확인',
-  '필수 사진 누락',
+  '사진 누락',
   'TV 항목은 켜짐·화면 출력 요구사항까지 확인하세요.',
   '${renderInspectionTemplateReview(no,submissionTemplate,submission,attempt)}',
 ]) {
@@ -1655,7 +1665,7 @@ const activeInspectionSource=html.slice(activeInspectionStart,activeInspectionEn
 if(activeInspectionStart<0||activeInspectionEnd<=activeInspectionStart||activeInspectionSource.includes('renderInspectionGallery(no)')||activeInspectionSource.includes('submittedUploads.length')){
   throw new Error('Active admin inspection still uses the legacy flat photo gallery.');
 }
-for (const contract of ['관리자 검수·메이드 청소 템플릿 통일','templateSnapshot','필수 사진 누락','TV 켜짐·화면 출력 항목']) {
+for (const contract of ['관리자 검수·메이드 청소 템플릿 통일','templateSnapshot','사진 누락','TV 켜짐·화면 출력 항목']) {
   if (!wireframeReadme.includes(contract)) throw new Error(`Inspection-template parity README contract missing: ${contract}`);
 }
 for (const contract of ['관리자 검수·메이드 청소 템플릿 통일','필수 완료/전체 필수','전송 실패·필수 누락','data-template-version']) {
@@ -1808,6 +1818,7 @@ for (const contract of [
   'data-template-contract-match="${structureMatches?\'true\':\'false\'}"',
   "snapshot?.photos?.some(item=>item.id==='tv-on'||String(item.id).startsWith('tv-on-'))",
   '일반 슬롯은 1장, 기타 슬롯은 최대 10장을 유지합니다.',
+  'function enforceCleaningPhotoRequirementRules(items=[])',
   'data-template-max-photos="${photoUploadLimit(item)}"',
   'typeTemplateParity:(typeId,kind=\'퇴실 청소\')=>',
   'templateVersionAudit:roomNo=>',
@@ -1824,6 +1835,16 @@ const inspectionReviewStart=html.indexOf('function renderInspectionTemplateRevie
 const inspectionReviewEnd=html.indexOf('function openInspectionPhoto',inspectionReviewStart);
 const inspectionReviewSource=html.slice(inspectionReviewStart,inspectionReviewEnd);
 if(!inspectionReviewSource.includes('photoSlotContractSignature(expectedItems)===photoSlotContractSignature(items)'))throw new Error('Admin inspection does not verify the submitted slot contract.');
+for(const stale of ["${esc(upload.label)} · ${upload.required?'필수':'선택'}", "${esc(upload.description||'청소 완료 상태를 촬영합니다.')}"]){
+  if(inspectionReviewSource.includes(stale))throw new Error(`Admin inspection still renders redundant slot copy: ${stale}`);
+}
+const taskZoneCardStart=html.indexOf('function taskPhotoCollectionMarkup');
+const taskZoneCardEnd=html.indexOf('function groupsafe',taskZoneCardStart);
+const taskZoneCardSource=html.slice(taskZoneCardStart,taskZoneCardEnd);
+for(const stale of ["${esc(upload.label)} · ${upload.required?'필수':'선택'}", "${esc(upload.description||'청소 완료 상태를 촬영합니다.')}"]){
+  if(taskZoneCardSource.includes(stale))throw new Error(`Maid photo card still renders redundant slot copy: ${stale}`);
+}
+if(html.includes("{id:'entry-number',zone:'현관',label:'객실번호·현관'"))throw new Error('Current templates still contain the redundant room-number entrance slot.');
 if((html.match(/required:false,fixture:'supply',multiple:true,maxPhotos:10/g)||[]).length!==6)throw new Error('All six optional evidence slots must use maxPhotos 10.');
 if((html.match(/zone:'기타'/g)||[]).length<6||html.includes("zone:'선택 증빙'"))throw new Error('Optional evidence zone must be named 기타 everywhere.');
 for(const contract of [
@@ -2164,3 +2185,22 @@ for (let maidIndex=1;maidIndex<=9;maidIndex+=1) {
 }
 console.log('Issue #114 assignment-week and varied-fixture static contracts: passed');
 
+const reservationListSource=html.slice(html.indexOf('function reservationNextRegistrationState'),html.indexOf('function reservationModalConfig'));
+for(const expected of ['reservation-list-head','예약 일정','숙박 · 인원','청소 상태']){
+  if(!reservationListSource.includes(expected))throw new Error(`Reservation list view is missing ${expected}.`);
+}
+if(reservationListSource.includes('reservation-schedule-add'))throw new Error('Next reservation action is still rendered inside the schedule body.');
+const standardModalSource=html.slice(html.indexOf('function standardModalMarkup'),html.indexOf('function showModal'));
+for(const expected of ['modal-leading-actions','auxiliaryAction','modal-auxiliary']){
+  if(!standardModalSource.includes(expected))throw new Error(`Modal footer auxiliary action contract is missing ${expected}.`);
+}
+const reservationConfigSource=html.slice(html.indexOf("function reservationModalConfig"),html.indexOf("function openReservation(roomNo='211'"));
+if(!reservationConfigSource.includes("auxiliaryLabel:nextRegistration.canAdd?'다음 예약 등록':''"))throw new Error('Next reservation action is not configured in the modal footer.');
+const roomConceptStart=html.indexOf('const catalogSummary=');
+const roomConceptSource=html.slice(roomConceptStart,html.indexOf('function renderRoomDetail',roomConceptStart));
+if(roomConceptSource.includes('data-control="room-type-filter"'))throw new Error('Room type select still duplicates the catalog tabs.');
+for(const expected of ['concept-filter-search','data-control="room-search"','optgroup label="상태 조건"']){
+  if(!roomConceptSource.includes(expected))throw new Error(`Room status toolbar is missing ${expected}.`);
+}
+if(roomConceptSource.includes('상태 조건 · 중복 가능'))throw new Error('Room status group still contains the redundant 중복 가능 copy.');
+console.log('Reservation list and room-toolbar simplification static contracts: passed');
