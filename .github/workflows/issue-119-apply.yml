@@ -1,55 +1,54 @@
-name: Apply issue 119 implementation
+name: Apply and verify issue 119
 
 on:
   push:
     branches:
       - feature/issue-119-role-cleaning-long-stay
     paths:
-      - scripts/bootstrap_issue_119_apply.py
-      - scripts/apply_issue_119.py
-      - scripts/patch_issue_119_long_stay_end.py
       - .github/workflows/issue-119-apply.yml
+      - scripts/apply_issue_119_v2.py
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: issue-119-apply
+  group: issue-119-apply-v2
   cancel-in-progress: false
 
 jobs:
-  apply:
+  apply-and-verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Check out issue branch
         uses: actions/checkout@v4
         with:
           ref: feature/issue-119-role-cleaning-long-stay
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Apply issue 119 changes
-        run: |
-          python3 scripts/bootstrap_issue_119_apply.py
-          python3 scripts/apply_issue_119.py
-          if [ -f scripts/patch_issue_119_long_stay_end.py ]; then
-            python3 scripts/patch_issue_119_long_stay_end.py
-          fi
+        run: python3 scripts/apply_issue_119_v2.py
 
-      - name: Verify source and workspace
-        run: |
-          node scripts/check-issue-119.mjs
-          node scripts/check-workspace.mjs
-          git diff --check
+      - name: Verify issue 119 contracts
+        run: node scripts/check-issue-119.mjs
 
-      - name: Commit implementation
+      - name: Verify repository workspace
+        run: node scripts/check-workspace.mjs
+
+      - name: Check patch hygiene
+        run: git diff --check
+
+      - name: Commit verified implementation
+        shell: bash
         run: |
-          if git diff --quiet; then
-            echo "No generated changes to commit."
+          git config user.name "Ham Arin"
+          git config user.email "79068658+makee-ham@users.noreply.github.com"
+          git add WIREFRAME/index.html WIREFRAME/README.md WIREFRAME/QA.md DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md SHA256SUMS.txt scripts/check-issue-119.mjs
+          if git diff --cached --quiet; then
+            echo "No implementation changes"
             exit 0
           fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add WIREFRAME/index.html WIREFRAME/README.md WIREFRAME/QA.md DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md SHA256SUMS.txt scripts/check-issue-119.mjs
-          git commit -m "feat: implement issue 119 role cleaning and long stay flows"
+          git commit -m "feat: add role login, assignment UX, and optional long stays"
           git push origin HEAD:feature/issue-119-role-cleaning-long-stay
