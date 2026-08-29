@@ -27,5 +27,13 @@ text, _ = re.subn(
     flags=re.S,
 )
 
+text, _ = re.subn(
+    r'html = replace_once\(\n    html,\n    ("<button class=.*?"),\n    ("<button class=.*?"),\n    "topbar logout",\n\)\n',
+    r'html = html.replace(\n    \1,\n    \2,\n)\n',
+    text,
+    count=1,
+    flags=re.S,
+)
+
 path.write_text(text, encoding="utf-8")
 print("Normalized issue #119 apply script for the current wireframe.")
