@@ -1,5 +1,6 @@
 name: Apply and verify room card/list view toggle
 
+# Rendered QA explicitly opens the 객실 screen before assertions.
 on:
   push:
     branches:
