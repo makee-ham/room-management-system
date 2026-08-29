@@ -1,0 +1,37 @@
+# Issue #119 occurrence index
+
+- **state declaration** `let state =`: 2463
+- **base state** `function baseState`: 2313
+- **state normalization** `function normalize`: 2650, 4088, 4095, 5133, 5479
+- **main render** `function render()`: 2783
+- **main route** `function renderMain`: 3235, 4031
+- **login** `function renderLogin`: 3643
+- **topbar** `function renderTopbar`: 3221, 4049
+- **admin navigation** `const adminNav`: 2508
+- **maid navigation** `const maidNav`: 2511
+- **maid route** `function renderMaid`: 3355, 3386, 3391, 3411, 3417, 3423, 3427, 3601, 3607, 3612, 5205, 5450, 6061, 6081, 6092, 6098, 6102, 6172
+- **maid schedule** `function renderMaidSchedule`: 6061
+- **maid availability** `근무 가능일`: 2297, 2604, 2611, 3129, 3174, 4027, 5361, 5452, 6075, 6096, 7251, 7314
+- **maid alert route** `alerts`: 2512, 2625, 3225, 3331, 3719, 4027, 4044, 4051, 6750, 6876, 7658
+- **logged in** `loggedIn`: 2317, 2791, 2805, 2816, 2950, 3236, 4032, 4102, 6704, 6868, 6872, 7725, 7749
+- **logout action** `logout`: 1720, 3076, 3367, 5625, 6173, 6750, 6879, 7725
+- **room presentation** `function roomPresentation`: 4284
+- **room card** `function roomCard`: 4303
+- **room table** `function renderRoomTable`: 3301
+- **room detail** `function openRoom`: 6047, 6444, 6520
+- **room detail action** `room-detail`: 843, 2625, 3273, 3274, 3276, 3278, 3280, 3282, 3283, 3296, 3319, 3326, 4309, 4311, 4316, 4736, 6178, 6750, 6822, 7054, 7661
+- **reservation modal** `function openReservation`: 3703, 6575, 6589
+- **reservation config** `function reservationModalConfig`: 6564
+- **reservation form** `reservation-form`: 3704, 6573
+- **reservation save** `save-reservation`: 3704, 6573, 6750, 6754, 6755, 7090, 7667
+- **reservation overlap** `reservationOverlaps`: 1934, 4416, 4453, 4663, 4723, 7791
+- **reservation availability** `availableRooms`: none
+- **assignment targets** `function assignmentTargets`: 5050, 5056
+- **live assignment targets** `liveAssignmentTargetsForState`: 4958, 5044, 5049, 5052
+- **filtered assignment targets** `filteredAssignmentTargets`: 5183, 5356
+- **cleaning target rows** `객실별 담당 수정`: 5361
+- **unassigned room cards** `아직 순서가 없는 객실`: 5210
+- **click delegate** `document.addEventListener('click'`: 3739, 4826, 6746, 6759, 7637, 7651
+- **data issue** `dataIssue`: 1831, 2016, 2018, 4161, 7022
+- **initial occupied** `INITIAL_OCCUPIED_ROOMS`: 1804, 1828
+- **long stay** `장기`: none
