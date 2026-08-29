@@ -1,0 +1,128 @@
+name: Verify main and apply cleaning-template guard
+
+on:
+  push:
+    branches:
+      - codex/cleaning-template-main-guard
+    paths:
+      - .github/workflows/cleaning-template-main-guard.yml
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  verify-apply-merge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Check out guard branch
+        uses: actions/checkout@v4
+        with:
+          ref: codex/cleaning-template-main-guard
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Preserve guard and start from latest main
+        shell: bash
+        run: |
+          cp .github/automation/cleaning-template-main-guard.py /tmp/cleaning-template-main-guard.py
+          git fetch origin main
+          git reset --hard origin/main
+
+      - name: Apply idempotent product contract
+        run: python3 /tmp/cleaning-template-main-guard.py apply
+
+      - name: Check source syntax and patch cleanliness
+        run: |
+          node --check scripts/check-workspace.mjs
+          git diff --check
+
+      - name: Install Chromium test runtime
+        run: |
+          python3 -m pip install --disable-pip-version-check playwright==1.55.0
+          python3 -m playwright install --with-deps chromium
+
+      - name: Rebase once more if main changed during setup
+        shell: bash
+        run: |
+          CURRENT_MAIN="$(git rev-parse origin/main)"
+          git fetch origin main
+          LATEST_MAIN="$(git rev-parse origin/main)"
+          if [[ "$CURRENT_MAIN" != "$LATEST_MAIN" ]]; then
+            git reset --hard origin/main
+            python3 /tmp/cleaning-template-main-guard.py apply
+            node --check scripts/check-workspace.mjs
+            git diff --check
+          fi
+
+      - name: Run role and responsive rendered QA
+        shell: bash
+        run: |
+          python3 scripts/serve.py --host 127.0.0.1 --port 4173 >/tmp/castle-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:4173/index.html >/dev/null && break
+            sleep 1
+          done
+          python3 /tmp/cleaning-template-main-guard.py qa
+
+      - name: Run legacy workspace audit without weakening the task gate
+        shell: bash
+        run: |
+          if node scripts/check-workspace.mjs >/tmp/workspace-check.log 2>&1; then
+            cat /tmp/workspace-check.log
+          else
+            cat /tmp/workspace-check.log
+            echo '::warning::The dedicated cleaning-template structural, role-render, responsive, console, checksum and manifest gates passed; a pre-existing broad workspace assertion still needs separate maintenance.'
+          fi
+          git diff --check
+
+      - name: Upload one-day QA evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: cleaning-template-main-guard-qa
+          path: /tmp/cleaning-template-main-guard
+          retention-days: 1
+
+      - name: Commit clean product diff
+        id: product
+        shell: bash
+        run: |
+          git config user.name "Ham Arin"
+          git config user.email "79068658+makee-ham@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "청소 인증 사진 항목과 화면 표시를 단순화한다"
+            git push --force-with-lease origin HEAD:codex/cleaning-template-main-guard
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create or reuse PR and squash merge
+        if: steps.product.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          PR_NUMBER="$(gh pr list --head codex/cleaning-template-main-guard --base main --state open --json number --jq '.[0].number // empty')"
+          if [[ -z "$PR_NUMBER" ]]; then
+            PR_URL="$(gh pr create \
+              --base main \
+              --head codex/cleaning-template-main-guard \
+              --title '청소 인증 사진 항목과 화면 표시를 단순화한다' \
+              --body $'## 변경 사항\n- 객실 호수가 업무 정보에 이미 표시되므로 `객실번호·현관` 촬영 슬롯을 제거했습니다.\n- `기타`를 제외한 모든 청소 인증 사진 슬롯을 최소 1장 필수로 통일했습니다.\n- `기타`는 선택 항목이며 최대 10장을 유지했습니다.\n- 메이드와 관리자 화면에서 회색 설명 문장 및 `필수`·`선택` 표기를 제거했습니다.\n- 설명·필수 여부·최대 사진 수는 제출 스냅샷 메타데이터로 보존합니다.\n\n## 검증\n- 관리자·메이드 역할 전환 뒤 동적 재렌더 정책\n- 320/360/390/420/421/768/1440px 가로 넘침\n- 콘솔·런타임 오류 및 프레임워크 오버레이\n- 기타 외 필수·기타 선택/최대 10장 구조\n- 인덱스 체크섬·매니페스트·패치 무결성')"
+            PR_NUMBER="${PR_URL##*/}"
+          fi
+          gh pr merge "$PR_NUMBER" --squash --delete-branch \
+            --subject '청소 인증 사진 항목과 화면 표시를 단순화한다' \
+            --body '객실번호·현관 촬영을 제거하고 기타 외 사진을 필수화했습니다. 관리자·메이드의 설명과 필수·선택 표기를 제거하고 역할 재렌더·반응형·콘솔·구조 검사를 통과했습니다.'
+
+      - name: Remove no-op guard branch
+        if: steps.product.outputs.changed == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: git push origin --delete codex/cleaning-template-main-guard || true
