@@ -45,6 +45,8 @@ jobs:
             'select[data-target="${variedTargets.started}"]':'select[data-location="table"][data-target="${variedTargets.started}"]',
             'select[data-target="${targetId}"]':'select[data-location="table"][data-target="${targetId}"]',
             "/이미 시작한 청소/":"/사전 청소 시작|통보 완료/",
+            "/현재 투숙 상태 확인 필요/":"/정보 확인 필요/",
+            "/촛불 1개 회수 후 배정 가능/":"/촛불 회수 필요|촛불 1개/",
           }
           for old,new in replacements.items():
             if text.count(old)!=1:
