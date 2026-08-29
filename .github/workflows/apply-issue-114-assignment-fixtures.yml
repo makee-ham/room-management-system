@@ -1,0 +1,75 @@
+name: Apply assignment-week and varied fixtures
+
+on:
+  push:
+    branches:
+      - codex/issue-114-assignment-week-and-varied-fixtures
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-verify:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+
+    steps:
+      - name: Check out the feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: codex/issue-114-assignment-week-and-varied-fixtures
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Apply assignment-week and simulation fixtures
+        shell: bash
+        run: |
+          python3 -m py_compile .github/automation/apply-issue-114-assignment-fixtures.py
+          python3 .github/automation/apply-issue-114-assignment-fixtures.py
+          git diff --check
+
+      - name: Run permanent static workspace checks
+        shell: bash
+        run: node scripts/check-workspace.mjs
+
+      - name: Install Chromium test runtime
+        shell: bash
+        run: |
+          mkdir -p /tmp/castle-playwright
+          cd /tmp/castle-playwright
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+          cd "$GITHUB_WORKSPACE"
+          ln -s /tmp/castle-playwright/node_modules node_modules
+
+      - name: Run rendered assignment-week and random-draft QA
+        shell: bash
+        run: |
+          python3 scripts/serve.py --host 127.0.0.1 --port 4173 >/tmp/castle-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:4173/index.html >/dev/null && break
+            sleep 1
+          done
+          node .github/automation/qa-issue-114-assignment-fixtures.mjs
+
+      - name: Commit only verified product changes
+        shell: bash
+        run: |
+          rm -f node_modules
+          rm -rf .github/automation/__pycache__
+          rm -f .github/automation/apply-issue-114-assignment-fixtures.py
+          rm -f .github/automation/qa-issue-114-assignment-fixtures.mjs
+          rm -f .github/workflows/apply-issue-114-assignment-fixtures.yml
+          rm -f .github/workflows/inspect-issue-114.yml
+          rm -f issue-114-source-inspection.txt
+          rm -rf issue-114-inspection
+          git config user.name "Ham Arin"
+          git config user.email "79068658+makee-ham@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "수정: 배정 주차와 랜덤 배정용 객실 fixture를 맞춘다"
+          git push origin HEAD:codex/issue-114-assignment-week-and-varied-fixtures
