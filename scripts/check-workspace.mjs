@@ -620,6 +620,30 @@ for (const contract of [
   if (!roomCardSource.includes(contract)) throw new Error(`Compact room-card reservation action missing: ${contract}`);
 }
 
+const roomListRowStart = html.indexOf('function roomListRow(no)');
+const roomListRowEnd = html.indexOf('function cleaningLabel', roomListRowStart);
+if (roomListRowStart < 0 || roomListRowEnd <= roomListRowStart) throw new Error('Room list row source block not found.');
+const roomListRowSource = html.slice(roomListRowStart, roomListRowEnd);
+for (const contract of [
+  "roomViewMode:'list'",
+  'function renderRoomListPinManager(no)',
+  'class="room-list-item',
+  'class="room-list-actions"',
+  'data-action="set-room-view"',
+  'data-view="card"',
+  'data-view="list"',
+  '<span>PIN 관리</span>',
+  '.room-list-actions { display:grid; grid-template-columns:repeat(4,minmax(0,1fr));',
+  '.room-list-actions { grid-template-columns:repeat(2,minmax(0,1fr));',
+]) {
+  if (!html.includes(contract)) throw new Error(`Room card/list view contract missing: ${contract}`);
+}
+if (roomListRowSource.includes('<span>관리</span>')) throw new Error('Ambiguous room-list 관리 header returned; use PIN 관리.');
+for (const action of ['quick-reservation-edit','reservation-edit','operation-status','room-detail']) {
+  if (!roomListRowSource.includes(action)) throw new Error(`Room list action contract missing: ${action}`);
+}
+console.log('Room card/list view toggle and equal-action contracts: passed');
+
 for (const contract of [
   "if(a==='edit-room-info')",
   "if(a==='save-room-info')",
@@ -1380,6 +1404,12 @@ if (!directAssignSource.includes('if(roomTarget){pushPageTransition') || !direct
 const qa = readFileSync(resolve(root, 'WIREFRAME/QA.md'), 'utf8');
 const wireframeReadme = readFileSync(resolve(root, 'WIREFRAME/README.md'), 'utf8');
 const taskPrompt = readFileSync(resolve(root, 'DOCS/WIREFRAME_TASK_PROMPT.md'), 'utf8');
+if (!wireframeReadme.includes('기본은 여러 객실을 빠르게 비교하는 `리스트 보기`')) {
+  throw new Error('Room card/list view README policy is missing.');
+}
+for (const qaContract of ['객실 카드형·리스트형 전환','PIN 관리','계산 너비 차이가 1px 이하']) {
+  if (!qa.includes(qaContract)) throw new Error(`Room card/list view QA record missing: ${qaContract}`);
+}
 for (const contract of [
   '추가 검증 · 오늘·내일 배정과 당일 추가·취소·변경 알림',
   '숫자는 미배정 수가 아니라 날짜별 전체 청소대상 수',

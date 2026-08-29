@@ -1,7 +1,7 @@
 {
   "package": "CASTLE THE ART room management wireframe",
-  "version": "2026-08-30-maid-other-10-mobile-today-cleaning-slot-simplify-reservation-list-room-toolbar",
-  "generated_at_kst": "2026-08-30T00:05:00+09:00",
+  "version": "2026-08-30-room-card-list-view-toggle-pin-management",
+  "generated_at_kst": "2026-08-30T01:55:00+09:00",
   "repository": "https://github.com/makee-ham/room-management-system",
   "entrypoint": "WIREFRAME/index.html",
   "policy_source": "DOCS/FINAL_UX_AUDIT.md",
@@ -12,7 +12,7 @@
   "qa_record": "WIREFRAME/QA.md",
   "sha256": {
     "DOCS/FINAL_UX_AUDIT.md": "e479e468c32c27ef606a311fd090ed7a4a8718590d363c9634da014960956c78",
-    "WIREFRAME/index.html": "10325ae68e8b7b5c2e3b633c74e93fd5b2c63dc4a451cdc5dc899b28a4bffbdf"
+    "WIREFRAME/index.html": "7dbb62d22a53dc902f3705f6df00807676d78233f1532c2352c201666001a2bf"
   },
   "runtime": {
     "build_required": false,
