@@ -5,6 +5,7 @@ on:
     branches:
       - feature/issue-119-role-cleaning-long-stay
     paths:
+      - scripts/bootstrap_issue_119_apply.py
       - scripts/apply_issue_119.py
       - scripts/patch_issue_119_long_stay_end.py
       - .github/workflows/issue-119-apply.yml
@@ -29,6 +30,7 @@ jobs:
 
       - name: Apply issue 119 changes
         run: |
+          python3 scripts/bootstrap_issue_119_apply.py
           python3 scripts/apply_issue_119.py
           if [ -f scripts/patch_issue_119_long_stay_end.py ]; then
             python3 scripts/patch_issue_119_long_stay_end.py
