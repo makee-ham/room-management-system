@@ -43,23 +43,32 @@ if check.count(old_check) != 1:
     raise RuntimeError(f"workspace long-stay policy: expected 1 match, found {check.count(old_check)}")
 check = check.replace(old_check, new_check, 1)
 
-old_room_card_contract = "  \"reservationActionLabel=weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`\","
-new_room_card_contract = "  \"reservationActionLabel=room.longStay?'장기 투숙 관리':weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`\","
-if check.count(old_room_card_contract) != 1:
-    raise RuntimeError(f"room-card long-stay validation: expected 1 match, found {check.count(old_room_card_contract)}")
-check = check.replace(old_room_card_contract, new_room_card_contract, 1)
-
-old_checkout_label = "const reservationCheckoutLabel = '<label for=\"res-checkout\">2. 체크아웃 일시</label>';"
-new_checkout_label = "const reservationCheckoutLabel = '<label for=\"res-checkout\" data-res-checkout-label>';"
-if check.count(old_checkout_label) != 1:
-    raise RuntimeError(f"reservation checkout label validation: expected 1 match, found {check.count(old_checkout_label)}")
-check = check.replace(old_checkout_label, new_checkout_label, 1)
-
-old_guest_fingerprint = "  'reservationGuestCount(reservation),reservation.status',"
-new_guest_fingerprint = "  \"reservationGuestCount(reservation),reservationIsLongStay(reservation)?'long':'dated',reservation.status\","
-if check.count(old_guest_fingerprint) != 1:
-    raise RuntimeError(f"reservation fingerprint validation: expected 1 match, found {check.count(old_guest_fingerprint)}")
-check = check.replace(old_guest_fingerprint, new_guest_fingerprint, 1)
+replacements = [
+    (
+        "  \"reservationActionLabel=weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`\",",
+        "  \"reservationActionLabel=room.longStay?'장기 투숙 관리':weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`\",",
+        "room-card long-stay validation",
+    ),
+    (
+        "const reservationCheckoutLabel = '<label for=\"res-checkout\">2. 체크아웃 일시</label>';",
+        "const reservationCheckoutLabel = '<label for=\"res-checkout\" data-res-checkout-label>';",
+        "reservation checkout label validation",
+    ),
+    (
+        "  'reservationGuestCount(reservation),reservation.status',",
+        "  \"reservationGuestCount(reservation),reservationIsLongStay(reservation)?'long':'dated',reservation.status\",",
+        "reservation fingerprint validation",
+    ),
+    (
+        "  \"upsertReservationRecord({id:reservationId,roomNo:no,checkInAt:checkinAt,checkOutAt:checkoutAt,guestCount,source:'card',currentStay})\",",
+        "  \"upsertReservationRecord({id:reservationId,roomNo:no,checkInAt:checkinAt,checkOutAt:isLongStay&&!enteredCheckoutAt?'':checkoutAt,guestCount,source:isLongStay?'long-stay':'card',currentStay,isLongStay})\",",
+        "long-stay reservation entry validation",
+    ),
+]
+for old_contract, new_contract, label in replacements:
+    if check.count(old_contract) != 1:
+        raise RuntimeError(f"{label}: expected 1 match, found {check.count(old_contract)}")
+    check = check.replace(old_contract, new_contract, 1)
 check_path.write_text(check, encoding="utf-8")
 
 sums_path = ROOT / "SHA256SUMS.txt"
