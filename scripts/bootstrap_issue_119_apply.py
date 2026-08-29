@@ -10,6 +10,8 @@ replacements = {
         'html = replace_once(html, "\\n  </style>", css + "\\n  </style>", "insert issue 119 CSS")',
     'html = replace_once(html, "      function baseState(id=0) {", auth_helpers + "      function baseState(id=0) {", "insert authentication helpers")':
         'html = replace_once(html, "      function baseState(scenario = 0) {", auth_helpers + "      function baseState(scenario = 0) {", "insert authentication helpers")',
+    'pattern = rf"      function {re.escape(start_name)}\\([^\\n]*?\\) \\{{.*?\\n      \\}}\\n(?=\\n      function {re.escape(next_name)}\\()"':
+        'pattern = rf"      function {re.escape(start_name)}\\([^\\n]*?\\) \\{{.*?\\n      \\}}\\n(?=\\s*      function {re.escape(next_name)}\\()"',
 }
 
 for old, new in replacements.items():
