@@ -19,6 +19,12 @@ for old, new in replacements.items():
     if old in text:
         text = text.replace(old, new, 1)
 
+# The live wireframe keeps the reservation list optional and names the date argument `date`.
+text = text.replace(
+    "      function reservationCheckoutTarget(reservation,assignmentDate=reservation?.checkOutAt?.slice(0,10),targetState=state) {",
+    "      function reservationCheckoutTarget(reservation,date=reservation?.checkOutAt?.slice(0,10)||'',targetState=state,reservations=null) {",
+)
+
 text, _ = re.subn(
     r'html = replace_once\(\n    html,\n    "      const maidNav.*?    "remove maid alert navigation tab",\n\)\n',
     "html = replace_once(html, \"{id:'alerts',label:'알림',icon:'bell'}, \" , \"\", \"remove maid alert navigation tab\")\n",
