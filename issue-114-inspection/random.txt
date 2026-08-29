@@ -1,0 +1,83 @@
+
+===== renderRandomAssignmentCard =====
+function renderRandomAssignmentCard() {
+        const eligible=eligibleAssignmentMaids(),unassigned=assignmentTargets().filter(item=>!assignmentFor(item).maidId&&!roomIsOnHold(item.room)&&cleaningTargetCanAdjust(item)),summary=state.randomAssignmentSummary||{assigned:0,skipped:0},active=!!state.randomAssignmentSnapshot,disabled=state.role!=='admin'||isLocked()||!eligible.length||(!active&&!unassigned.length);
+        const actions=active?`${button('다시 동선 고려 랜덤 배정','random-assignments','outline',disabled?'disabled':'')}${button('랜덤 배정 전으로 되돌리기','undo-random-assignment','outline',disabled?'disabled':'')}`:button(`미배정 ${unassigned.length}건 동선 고려 랜덤 배정`,'random-assignments','primary',disabled?'disabled':'');
+        return `<section class="card assignment-random" aria-labelledby="assignment-random-title"><div class="assignment-random-copy"><span class="random-kicker">2단계 · 저장 전 랜덤 초안</span><div class="assignment-random-title-row"><h3 id="assignment-random-title">동선 고려 랜덤 배정</h3><div class="assignment-rule-help"><button class="assignment-rule-help-button" type="button" aria-label="랜덤 배정 기준 설명" aria-describedby="assignment-random-tooltip">${icon('info','icon-sm')}</button><div class="assignment-rule-tooltip" id="assignment-random-tooltip" role="tooltip"><strong>랜덤 배정 기준</strong><span>근무 가능·마감을 먼저 확인합니다.</span><span>총 청소요금 균형을 우선합니다.</span><span>같은 점수에서는 같은 엘리베이터·가까운 호수를 봅니다.</span><span>관리자가 담당과 순서를 최종 수정합니다.</span><span>실제 이동시간을 계산하는 경로 최적화는 아닙니다.</span></div></div></div><p>미배정 객실만 저장 전 초안으로 배정합니다.</p></div><div class="assignment-random-stats"><div><span>근무 가능</span><strong>${eligible.length}명</strong></div><div><span>초안 배정</span><strong>${active?`${summary.assigned}객실`:'실행 전'}</strong></div><div><span>남은 미배정</span><strong>${active?`${summary.skipped}객실`:`${unassigned.length}객실`}</strong></div></div><div class="assignment-random-actions"><div class="random-live" aria-live="polite">${active?`${summary.assigned}건을 랜덤 배정했습니다. 아래에서 담당과 순서를 바꾼 뒤 저장·통보하세요.`:'기존 통보와 관리자가 정한 담당은 유지하고 미배정 객실만 채웁니다.'}</div>${actions}</div></section>`;
+      }
+
+===== randomAssignmentContextSignature =====
+function randomAssignmentContextSignature() {
+        const targets=assignmentTargets().map(item=>[item.id,item.room,item.kind,targetPlanDate(item),targetEffectiveDate(item),item.carryReason||'',item.rolloverCount||0,item.reservationId||'',item.guestCount??'',item.checkout||'',item.checkin||'',item.deadline||'',item.accessStart||'',item.requestDue||'',item.accessEnd||'',assignmentTargetElevator(item)||'',assignmentTargetRate(item),assignmentTargetMinutes(item)].join(':')).sort().join('|'),availability=eligibleAssignmentMaids().map(maid=>maid.id).sort().join('|');
+        return `${state.assignmentDate}::${targets}::${availability}`;
+      }
+
+===== assignmentRandomGenerator =====
+function assignmentRandomGenerator() {
+        let seed=(Date.now()^Math.floor(Math.random()*4294967296))>>>0;
+        if(globalThis.crypto?.getRandomValues){const value=new Uint32Array(1);globalThis.crypto.getRandomValues(value);seed=value[0]||seed;}
+        if(!seed)seed=0x9e3779b9;
+        return ()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return (seed>>>0)/4294967296;};
+      }
+
+===== randomAssignmentTrial =====
+function randomAssignmentTrial(eligible,targets,random) {
+        const loads=new Map(eligible.map(maid=>{const items=orderedAssignmentsForMaid(maid.id);return [maid.id,{maid,total:items.reduce((sum,item)=>sum+assignmentTargetRate(item),0),items:[...items],finish:assignmentRouteFinish(items),newTargetIds:[]}];}));
+        const ordered=targets.map(item=>({item,key:random()})).sort((left,right)=>assignmentTargetDueMinutes(left.item)-assignmentTargetDueMinutes(right.item)||assignmentTargetRate(right.item)-assignmentTargetRate(left.item)||left.key-right.key).map(entry=>entry.item);
+        const plan={},notes={};let assigned=0,skipped=0,zoneRankTotal=0,roomDistanceTotal=0;
+        ordered.forEach(item=>{
+          const rate=assignmentTargetRate(item),minutes=assignmentTargetMinutes(item),release=assignmentTargetReleaseMinutes(item),due=assignmentTargetDueMinutes(item),zone=assignmentTargetElevator(item),deadline=item.requestDue||item.deadline||item.accessEnd||'마감 미입력';
+          const candidates=eligible.map(maid=>{const load=loads.get(maid.id),start=Math.max(load.finish,release),finish=start+minutes;if(finish>due)return null;const totals=eligible.map(entry=>loads.get(entry.id).total+(entry.id===maid.id?rate:0)),pay=assignmentPayStats(totals),proximity=assignmentProximity(item,load.items);return {maid,load,start,finish,payGap:pay.gap,payDeviation:pay.deviation,...proximity,hadItems:load.items.length>0,tie:random()};}).filter(Boolean).sort((left,right)=>left.payGap-right.payGap||left.payDeviation-right.payDeviation||left.zoneRank-right.zoneRank||left.roomDistance-right.roomDistance||left.tie-right.tie);
+          const choice=candidates[0];
+          if(!choice){notes[item.id]={maidId:null,reason:`배정 보류 · ${deadline}까지 완료 가능한 근무자 없음`};skipped+=1;return;}
+          plan[item.id]=choice.maid.id;choice.load.total+=rate;choice.load.finish=choice.finish;choice.load.items.push(item);choice.load.newTargetIds.push(item.id);assigned+=1;zoneRankTotal+=choice.zoneRank;roomDistanceTotal+=choice.roomDistance;
+          const location=!zone?'엘리베이터 미기재':!choice.hadItems?`${zone} 엘리베이터 동선 시작`:choice.zoneRank===0?`${zone} 엘리베이터 · 가까운 호수`:`${zone} 엘리베이터 기준 배치`;
+          notes[item.id]={maidId:choice.maid.id,reason:`총 청소요금 균형 우선 · ${location}`};
+        });
+        const totals=eligible.map(maid=>loads.get(maid.id).total),pay=assignmentPayStats(totals),routes=Object.fromEntries(eligible.map(maid=>[maid.id,loads.get(maid.id).newTargetIds]));
+        return {plan,notes,routes,assigned,skipped,payGap:pay.gap,payDeviation:pay.deviation,zoneRankTotal,roomDistanceTotal,tie:random()};
+      }
+
+===== createRandomAssignment =====
+function createRandomAssignment() {
+        const eligible=eligibleAssignmentMaids(),targets=assignmentTargets().filter(item=>!assignmentFor(item).maidId&&!roomIsOnHold(item.room)&&item.kind!=='재청소'&&cleaningTargetCanAdjust(item));
+        if(!eligible.length||!targets.length)return {assigned:0,skipped:0,eligible:eligible.length};
+        state.randomAssignmentSnapshot={beforeAssignments:Object.fromEntries(targets.map(item=>[item.id,JSON.parse(JSON.stringify(state.assignments[item.id]||null))])),createdAt:state.time,contextSignature:randomAssignmentContextSignature()};
+        const trials=targets.length<=24?96:targets.length<=60?48:24,random=assignmentRandomGenerator(),results=Array.from({length:trials},()=>randomAssignmentTrial(eligible,targets,random)),maxAssigned=Math.max(...results.map(result=>result.assigned));
+        const maximumCoverageResults=results.filter(result=>result.assigned===maxAssigned).sort((left,right)=>left.payGap-right.payGap||left.payDeviation-right.payDeviation||left.zoneRankTotal-right.zoneRankTotal||left.roomDistanceTotal-right.roomDistanceTotal||left.tie-right.tie);
+        const best=maximumCoverageResults[0],targetById=new Map(targets.map(item=>[item.id,item]));
+        eligible.forEach(maid=>{const baseCount=orderedAssignmentsForMaid(maid.id).length;(best.routes[maid.id]||[]).forEach((targetId,index)=>{const item=targetById.get(targetId),assignment=item?assignmentFor(item):null;if(!assignment)return;assignment.maidId=maid.id;assignment.order=baseCount+index+1;assignment.status='draft';});});
+        state.randomAssignmentSnapshot.afterAssignments=Object.fromEntries(targets.map(item=>[item.id,JSON.parse(JSON.stringify(state.assignments[item.id]||null))]));
+        state.randomAssignments=best.notes;state.randomAssignmentSummary={assigned:best.assigned,skipped:best.skipped};return {assigned:best.assigned,skipped:best.skipped,eligible:eligible.length};
+      }
+
+===== randomAssignmentStateMatches =====
+function randomAssignmentStateMatches(snapshot=state.randomAssignmentSnapshot) {
+        return !!snapshot&&Object.entries(snapshot.afterAssignments||{}).every(([targetId,record])=>JSON.stringify(state.assignments[targetId]||null)===JSON.stringify(record));
+      }
+
+===== restoreRandomAssignment =====
+function restoreRandomAssignment() {
+        const snapshot=state.randomAssignmentSnapshot;if(!snapshot)return false;
+        if(snapshot.contextSignature!==randomAssignmentContextSignature()||!randomAssignmentStateMatches(snapshot))return false;
+        Object.entries(snapshot.beforeAssignments||{}).forEach(([targetId,record])=>{if(record)state.assignments[targetId]=JSON.parse(JSON.stringify(record));else delete state.assignments[targetId];});
+        state.randomAssignments={};state.randomAssignmentSnapshot=null;state.randomAssignmentSummary=null;return true;
+      }
+
+===== discardStaleRandomAssignment =====
+function discardStaleRandomAssignment() {
+        const snapshot=state.randomAssignmentSnapshot;if(!snapshot)return false;
+        Object.entries(snapshot.afterAssignments||{}).forEach(([targetId,after])=>{if(JSON.stringify(state.assignments[targetId]||null)!==JSON.stringify(after))return;const before=snapshot.beforeAssignments?.[targetId];if(before)state.assignments[targetId]=JSON.parse(JSON.stringify(before));else delete state.assignments[targetId];});
+        MAIDS.forEach(maid=>normalizeAssignmentOrderFor(maid.id));state.randomAssignments={};state.randomAssignmentSnapshot=null;state.randomAssignmentSummary=null;return true;
+      }
+
+===== assignmentCanSave =====
+function assignmentCanSave() {
+        const targets=assignmentTargets(),changedTargets=targets.filter(item=>assignmentHasNetChange(item)&&!!assignmentFor(item).maidId),affectedMaidIds=[...new Set(changedTargets.flatMap(item=>[assignmentFor(item).maidId,assignmentFor(item).previousMaidId]).filter(Boolean))],allAssignedToAvailable=changedTargets.every(item=>availabilityForWorkDate(assignmentFor(item).maidId,targetEffectiveDate(item))==='available');
+        const continuousOrders=affectedMaidIds.every(maidId=>orderedAssignmentsForMaid(maidId).every((item,index)=>assignmentFor(item).order===index+1));
+        const allAssignedToActiveMaids=changedTargets.every(item=>maidCanReceiveNewAssignment(assignmentFor(item).maidId));
+        const noHeldRoomChanges=changedTargets.every(item=>!roomIsOnHold(item.room)&&item.carryReason!=='access-review');
+        const noStartedRoomChanges=changedTargets.every(cleaningTargetCanAdjust);
+        const randomFresh=!state.randomAssignmentSnapshot||(state.randomAssignmentSnapshot.contextSignature===randomAssignmentContextSignature()&&randomAssignmentStateMatches());
+        return changedTargets.length>0&&noHeldRoomChanges&&noStartedRoomChanges&&allAssignedToAvailable&&allAssignedToActiveMaids&&continuousOrders&&randomFresh&&!isLocked();
+      }
