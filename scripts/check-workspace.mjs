@@ -2094,11 +2094,49 @@ for (const contract of [
 const workforceMatrixStart = html.indexOf('function renderAvailabilityMatrix()');
 if (workforceMatrixStart < 0) throw new Error('Workforce availability matrix source could not be isolated.');
 const workforceMatrixSource = html.slice(workforceMatrixStart, workforceMatrixStart + 5000);
-if (!workforceMatrixSource.includes("const start='2026-08-17'")) {
-  throw new Error('Workforce matrix must stay on the submitted 2026-08-17 next-week schedule.');
+if (!workforceMatrixSource.includes('const start=weekStartIso(state.assignmentDate)')) {
+  throw new Error('Workforce matrix must use the assignment date week.');
 }
-if (workforceMatrixSource.includes('weekStartIso(state.assignmentDate)')) {
-  throw new Error('Workforce matrix must not drift with the cleaning assignment date.');
+if (workforceMatrixSource.includes("const start='2026-08-17'")) {
+  throw new Error('Legacy fixed 2026-08-17 workforce week remains.');
 }
 console.log('All-maid availability and work-history fixture contracts: passed');
+
+const issue114SimulationContracts = [
+  'const CURRENT_WEEK_ASSIGNMENT_AVAILABILITY = Object.freeze({',
+  "const TOMORROW_ASSIGNMENT_SIMULATION_DATE='2026-08-16'",
+  'const TOMORROW_ASSIGNMENT_SIMULATION_TARGETS = Object.freeze([',
+  'function applyTomorrowAssignmentSimulation(targetState)',
+  "if(Number(id)===0)applyTomorrowAssignmentSimulation(s)",
+  "targetState.roomStopped['608']=true",
+  "targetState.candles['211']=Math.max(1",
+  "targetState.assignments[notified623.id]",
+  "workTargetId:startedTarget.id",
+  'function assignmentRoomHoldReason(no,targetState=state)',
+  "return `촛불 ${candleCount}개 회수 후 배정 가능`",
+  "const start=weekStartIso(state.assignmentDate)",
+];
+for (const contract of issue114SimulationContracts) {
+  if (!html.includes(contract)) throw new Error(`Issue #114 assignment fixture contract missing: ${contract}`);
+}
+const issue114TargetSourceStart = html.indexOf('const TOMORROW_ASSIGNMENT_SIMULATION_TARGETS');
+const issue114TargetSourceEnd = html.indexOf('function applyTomorrowAssignmentSimulation', issue114TargetSourceStart);
+const issue114TargetSource = html.slice(issue114TargetSourceStart, issue114TargetSourceEnd);
+const issue114TargetRooms = [...issue114TargetSource.matchAll(/room:'(\d+)'/g)].map(match=>match[1]);
+if (issue114TargetRooms.length !== 35 || new Set(issue114TargetRooms).size !== 35) {
+  throw new Error(`Tomorrow simulation target fixture mismatch: ${issue114TargetRooms.length} rows / ${new Set(issue114TargetRooms).size} unique rooms.`);
+}
+for (const roomNo of ['516','556','541','455','540','762','608','211']) {
+  if (!issue114TargetRooms.includes(roomNo)) throw new Error(`Required varied-state fixture missing: ${roomNo}`);
+}
+const issue114AvailabilityStart = html.indexOf('const CURRENT_WEEK_ASSIGNMENT_AVAILABILITY');
+const issue114AvailabilityEnd = html.indexOf('const TOMORROW_ASSIGNMENT_SIMULATION_DATE', issue114AvailabilityStart);
+const issue114AvailabilitySource = html.slice(issue114AvailabilityStart, issue114AvailabilityEnd);
+for (let maidIndex=1;maidIndex<=9;maidIndex+=1) {
+  const match=issue114AvailabilitySource.match(new RegExp(`m${maidIndex}:Object\\.freeze\\(\\[([^\\]]+)\\]\\)`));
+  if (!match || !match[1].split(',').map(value=>Number(value.trim())).includes(6)) {
+    throw new Error(`Maid m${maidIndex} must be available on simulation Sunday.`);
+  }
+}
+console.log('Issue #114 assignment-week and varied-fixture static contracts: passed');
 

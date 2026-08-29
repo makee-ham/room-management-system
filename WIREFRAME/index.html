@@ -1978,7 +1978,13 @@
         });
       }
       function roomDataIssue(no){return ROOMS.find(room=>room.no===String(no))?.dataIssue||'';}
-      function roomIsOnHold(no){return !!roomDataIssue(no);}
+      function assignmentRoomHoldReason(no,targetState=state){
+        const roomNo=String(no),dataIssue=roomDataIssue(roomNo);if(dataIssue)return dataIssue;
+        if(targetState?.roomStopped?.[roomNo])return targetState.roomStopReasons?.[roomNo]||'운영 중지 · 청소 배정 제외';
+        const candleCount=Number(targetState?.candles?.[roomNo]||0);if(candleCount>0)return `촛불 ${candleCount}개 회수 후 배정 가능`;
+        return '';
+      }
+      function roomIsOnHold(no){return !!assignmentRoomHoldReason(no);}
       const MAIDS = [
         { id:'m1', name:'김민지1', phone:'•••• 4821', assigned:2, active:'332호 청소 중' },
         { id:'m2', name:'김민지2', phone:'•••• 1174', assigned:1, active:'업무 대기' },
@@ -2001,6 +2007,91 @@
         {id:'manual-645-checkout-2026-08-17',room:'645',type:'oceanFamily',kind:'퇴실 청소',date:'2026-08-17',checkout:'10:30',deadline:'15:30',source:'manual',sourceLabel:'직접 등록 · 현장 요청'},
         {id:'manual-651-checkout-2026-08-17',room:'651',type:'premium',kind:'퇴실 청소',date:'2026-08-17',checkout:'11:00',deadline:'15:30',source:'manual',sourceLabel:'직접 등록 · 현장 요청'}
       ];
+
+      const CURRENT_WEEK_ASSIGNMENT_AVAILABILITY = Object.freeze({
+        m1:Object.freeze([0,1,3,4,5,6]),
+        m2:Object.freeze([1,2,4,5,6]),
+        m3:Object.freeze([0,2,3,4,5,6]),
+        m4:Object.freeze([0,1,2,3,4,5,6]),
+        m5:Object.freeze([0,2,3,5,6]),
+        m6:Object.freeze([0,1,4,5,6]),
+        m7:Object.freeze([1,2,4,5,6]),
+        m8:Object.freeze([0,1,2,3,4,5,6]),
+        m9:Object.freeze([0,3,4,5,6])
+      });
+      const TOMORROW_ASSIGNMENT_SIMULATION_DATE='2026-08-16';
+      const TOMORROW_ASSIGNMENT_SIMULATION_TARGETS = Object.freeze([
+        {room:'621',code:'checkout',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+        {room:'352',code:'checkout',kind:'퇴실 청소',checkout:'10:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+        {room:'516',code:'early',kind:'퇴실 청소',checkout:'11:00',checkin:'14:00',deadline:'13:30',source:'checkout',sourceLabel:'예약 체크아웃 · 얼리 체크인',guestCount:2},
+        {room:'552',code:'checkout',kind:'퇴실 청소',checkout:'11:00',checkin:'15:00',deadline:'14:30',source:'checkout',sourceLabel:'예약 체크아웃 · 조기 입실',guestCount:2},
+        {room:'556',code:'late',kind:'퇴실 청소',checkout:'13:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 레이트 체크아웃',guestCount:2},
+        {room:'652',code:'checkout',kind:'퇴실 청소',checkout:'10:30',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+        {room:'657',code:'checkout',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+        {room:'660',code:'checkout',kind:'퇴실 청소',checkout:'10:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+        {room:'662',code:'checkout',kind:'퇴실 청소',checkout:'12:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+        {room:'720',code:'checkout',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+        {room:'723',code:'checkout',kind:'퇴실 청소',checkout:'10:30',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+        {room:'726',code:'checkout',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+        {room:'729',code:'checkout',kind:'퇴실 청소',checkout:'12:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+        {room:'750',code:'manual',kind:'퇴실 청소',checkout:'10:30',checkin:'16:00',deadline:'15:30',source:'manual',sourceLabel:'직접 등록 · 현장 요청',guestCount:2},
+        {room:'752',code:'checkout',kind:'퇴실 청소',checkout:'10:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+        {room:'753',code:'checkout',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+        {room:'756',code:'checkout',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+        {room:'760',code:'checkout',kind:'퇴실 청소',checkout:'12:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+        {room:'762',code:'hold',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 정보 확인 필요',guestCount:2},
+        {room:'135',code:'checkout',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:3},
+        {room:'136',code:'checkout',kind:'퇴실 청소',checkout:'10:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+        {room:'240',code:'checkout',kind:'퇴실 청소',checkout:'12:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:3},
+        {room:'454',code:'checkout',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+        {room:'455',code:'manual',kind:'퇴실 청소',checkout:'10:30',checkin:'16:00',deadline:'15:30',source:'manual',sourceLabel:'직접 등록 · 현장 추가 요청',guestCount:2},
+        {room:'459',code:'checkout',kind:'퇴실 청소',checkout:'10:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:3},
+        {room:'527',code:'checkout',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+        {room:'531',code:'checkout',kind:'퇴실 청소',checkout:'12:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:3},
+        {room:'534',code:'checkout',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+        {room:'540',code:'started',kind:'퇴실 청소',checkout:'10:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 사전 청소 시작',guestCount:2},
+        {room:'541',code:'stayover',kind:'연박 청소',accessStart:'12:30',requestDue:'14:00',accessEnd:'15:00',deadline:'14:00',source:'stayover',sourceLabel:'연박 청소 신청',guestCount:2},
+        {room:'549',code:'stayover',kind:'연박 청소',accessStart:'13:00',requestDue:'14:30',accessEnd:'15:30',deadline:'14:30',source:'stayover',sourceLabel:'연박 청소 신청',guestCount:3},
+        {room:'554',code:'manual',kind:'퇴실 청소',checkout:'11:30',checkin:'16:00',deadline:'15:30',source:'manual',sourceLabel:'직접 등록 · 추가 청소 요청',guestCount:2},
+        {room:'640',code:'stayover',kind:'연박 청소',accessStart:'12:00',requestDue:'14:00',accessEnd:'15:00',deadline:'14:00',source:'stayover',sourceLabel:'연박 청소 신청',guestCount:4},
+        {room:'608',code:'stopped',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 운영 중지',guestCount:4},
+        {room:'211',code:'candle',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 촛불 회수 필요',guestCount:4}
+      ].map(item=>{
+        const catalog=ROOM_CATALOG.find(([roomNo])=>roomNo===item.room),type=catalog?.[1]||'standard';
+        return Object.freeze({id:`sim-${item.room}-${item.code}-${TOMORROW_ASSIGNMENT_SIMULATION_DATE}`,date:TOMORROW_ASSIGNMENT_SIMULATION_DATE,planDate:TOMORROW_ASSIGNMENT_SIMULATION_DATE,effectiveDate:TOMORROW_ASSIGNMENT_SIMULATION_DATE,type,...item});
+      }));
+      function applyTomorrowAssignmentSimulation(targetState) {
+        const currentIds=new Set((targetState.manualAssignmentTargets||[]).map(item=>item.id));
+        targetState.manualAssignmentTargets=targetState.manualAssignmentTargets||[];
+        TOMORROW_ASSIGNMENT_SIMULATION_TARGETS.forEach(item=>{if(!currentIds.has(item.id))targetState.manualAssignmentTargets.push({...item});});
+        targetState.availabilityHistory=targetState.availabilityHistory||[];
+        Object.entries(CURRENT_WEEK_ASSIGNMENT_AVAILABILITY).forEach(([maidId,days],index)=>{
+          const id=`availability-${maidId}-2026-08-10-v2`;
+          targetState.availabilityHistory=targetState.availabilityHistory.filter(item=>item.id!==id);
+          targetState.availabilityHistory.push({id,maidId,weekStart:'2026-08-10',days:[...days],submittedAt:`8/9 ${String(21-Math.floor(index/3)).padStart(2,'0')}:${String(12+index*4).padStart(2,'0')}`,version:2});
+        });
+        targetState.roomStopped=targetState.roomStopped||{};targetState.roomStopReasons=targetState.roomStopReasons||{};
+        targetState.roomStopped['608']=true;targetState.roomStopReasons['608']='608호 운영 중지 · 청소 배정 제외';
+        targetState.candles=targetState.candles||{};targetState.candles['211']=Math.max(1,Number(targetState.candles['211']||0));
+        targetState.assignments=targetState.assignments||{};
+        const notified623={id:'checkout-623-2026-08-16',room:'623',type:'standard',kind:'퇴실 청소',date:'2026-08-16',planDate:'2026-08-16',effectiveDate:'2026-08-16',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃',reservationId:'reservation-demo-623',guestCount:2,rateSnapshot:16000,minutesSnapshot:55,elevatorSnapshot:'A'};
+        targetState.assignments[notified623.id]={maidId:'m2',order:1,status:'notified',previousMaidId:'m2',previousOrder:1,notifiedAt:'8월 15일 (토) 18:00',notificationRevision:1,committedTarget:{...notified623}};
+        const startedTarget=TOMORROW_ASSIGNMENT_SIMULATION_TARGETS.find(item=>item.room==='540'),attemptId='attempt-540-simulation-20260816';
+        targetState.assignments[startedTarget.id]={maidId:'m4',order:1,status:'notified',previousMaidId:'m4',previousOrder:1,notifiedAt:'8월 15일 (토) 09:35',notificationRevision:1,committedTarget:{...startedTarget,rateSnapshot:20000,minutesSnapshot:65,elevatorSnapshot:'C'}};
+        targetState.jobs=targetState.jobs||{};targetState.jobs['540']='cleaning';
+        targetState.currentAttemptByRoom=targetState.currentAttemptByRoom||{};targetState.currentAttemptByRoom['540']=attemptId;
+        targetState.cleaningAttempts=targetState.cleaningAttempts||{};
+        targetState.cleaningAttempts[attemptId]={id:attemptId,room:'540',performerId:'m4',performerName:'박소영',status:'cleaning',startedAt:'2026.08.15 09:40',createdAt:'2026.08.15 09:35',workDate:'2026-08-16',effectiveDate:'2026-08-16',workTargetId:startedTarget.id,kind:'퇴실 청소',baseRateSnapshot:20000,checkoutSnapshot:startedTarget.checkout,checkinSnapshot:startedTarget.checkin,deadlineSnapshot:startedTarget.deadline,guestCountSnapshot:startedTarget.guestCount};
+        targetState.activeCleaningByMaid=targetState.activeCleaningByMaid||{};targetState.activeCleaningByMaid.m4='540';
+        if(targetState.taskInputs?.['332']){
+          const task=JSON.parse(JSON.stringify(targetState.taskInputs['332']));task.attemptId=attemptId;task.uploads=(task.uploads||[]).map((upload,index)=>({...upload,status:index===0?'done':'empty'}));targetState.taskInputs['540']=task;
+        }
+        const room540=ROOMS.find(room=>room.no==='540'),room623=ROOMS.find(room=>room.no==='623');
+        if(room540){room540.assignee='박소영';room540.cleaning='cleaning';}
+        if(room623)room623.assignee='김민지2';
+        return targetState;
+      }
+
       const WORK_HISTORY_FIXTURES = [
         {
           start:'2026-08-10',status:'마감 기록',
@@ -2286,6 +2377,7 @@
       function makeScenario(id) {
         resetRoomCatalogState();
         const s = baseState(id);
+        if(Number(id)===0)applyTomorrowAssignmentSimulation(s);
         switch (Number(id)) {
           case 1: s.time='21:10'; s.selectedDate='2026-08-16'; s.availabilitySubmitted=false; s.weeklyAvailability.m1.status='unsubmitted'; s.availabilityHistory=s.availabilityHistory.filter(item=>item.maidId!=='m1'); break;
           case 2: s.time='21:55'; s.selectedDate='2026-08-16'; s.cleaningTab='assignment-tomorrow'; s.manualAssignmentTargets.push(...SCALE_ASSIGNMENT_TARGETS.map(item=>({...item}))); break;
@@ -4802,10 +4894,12 @@
         return Object.values(attempts).reverse().find(matches)||null;
       }
       function cleaningTargetAdjustmentBlock(target) {
-        if(target?.kind==='재청소')return '재청소는 기존 수행자가 완료해야 합니다.';
-        if(target?.carryReason==='access-review')return 'PIN·출입 영향 확인이 끝난 뒤 조정할 수 있습니다.';
-        const attempt=target?attemptForCleaningTarget(target):null;
-        const roomAttempt=target&&targetEffectiveDate(target)===state.selectedDate?activeUnfinishedAttempt(target.room):null;
+        if(!target)return '';
+        const holdReason=assignmentRoomHoldReason(target.room);if(holdReason)return holdReason;
+        if(target.kind==='재청소')return '재청소는 기존 수행자가 완료해야 합니다.';
+        if(target.carryReason==='access-review')return 'PIN·출입 영향 확인이 끝난 뒤 조정할 수 있습니다.';
+        const attempt=attemptForCleaningTarget(target);
+        const roomAttempt=targetEffectiveDate(target)===state.selectedDate?activeUnfinishedAttempt(target.room):null;
         if(roomAttempt&&roomAttempt.workTargetId!==target.id)return roomAttempt.status==='submitted'?'이 객실의 이전 청소 검수가 남아 검수 대기에서 먼저 종결해야 합니다.':'이 객실의 다른 청소가 진행 중이라 청소 상세에서 조정해야 합니다.';
         if(!attempt)return '';
         if(attempt.startedAt||attempt.completedAt||!['active','scheduled'].includes(attempt.status))return '이미 시작한 청소는 진행 중에서 조정합니다.';
@@ -5053,7 +5147,7 @@
         return changedTargets.length>0&&noHeldRoomChanges&&noStartedRoomChanges&&allAssignedToAvailable&&allAssignedToActiveMaids&&continuousOrders&&randomFresh&&!isLocked();
       }
       function renderAvailabilityMatrix() {
-        const start='2026-08-17',days=['월','화','수','목','금','토','일'].map((name,index)=>{const iso=addIsoDays(start,index);return {name,iso,day:Number(iso.slice(8))};});
+        const start=weekStartIso(state.assignmentDate),days=['월','화','수','목','금','토','일'].map((name,index)=>{const iso=addIsoDays(start,index);return {name,iso,day:Number(iso.slice(8))};});
         return `<div class="availability-matrix-wrap"><table class="availability-matrix"><thead><tr><th scope="col">메이드</th>${days.map(day=>`<th scope="col">${day.name} ${day.day}</th>`).join('')}</tr></thead><tbody>${MAIDS.map(maid=>`<tr><th scope="row">${esc(maid.name)}</th>${days.map((day,index)=>`<td>${availabilityCell(maid.id,index,day.iso)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><div class="assignment-foot"><p>✓ 가능 · × 불가 · — 미제출. ${days[assignmentDayIndex()].name}요일 배정 후보는 해당 날짜 가능 제출자만 표시합니다.</p></div>`;
       }
       function assignmentOptions(item) {
