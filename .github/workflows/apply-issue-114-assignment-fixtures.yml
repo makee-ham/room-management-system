@@ -39,6 +39,16 @@ jobs:
             if text.count(line)!=1:
               raise SystemExit(f'QA week-copy assertion mismatch: {line.strip()} / {text.count(line)}')
             text=text.replace(line,'',1)
+          replacements={
+            'select[data-control="assignment-maid"][data-target="${targetId}"]':'select[data-control="assignment-maid"][data-location="table"][data-target="${targetId}"]',
+            'select[data-target="${variedTargets.notified}"]':'select[data-location="table"][data-target="${variedTargets.notified}"]',
+            'select[data-target="${variedTargets.started}"]':'select[data-location="table"][data-target="${variedTargets.started}"]',
+            'select[data-target="${targetId}"]':'select[data-location="table"][data-target="${targetId}"]',
+          }
+          for old,new in replacements.items():
+            if text.count(old)!=1:
+              raise SystemExit(f'QA table-selector replacement mismatch: {old} / {text.count(old)}')
+            text=text.replace(old,new,1)
           path.write_text(text,encoding='utf-8')
           PY
           git diff --check
