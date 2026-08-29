@@ -1,0 +1,139 @@
+name: Inspect issue 116 targeted implementation units
+
+on:
+  push:
+    branches:
+      - codex/issue-116-other-photos-mobile-quick-date
+
+permissions:
+  contents: write
+
+jobs:
+  inspect-targeted:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/issue-116-other-photos-mobile-quick-date
+          fetch-depth: 0
+
+      - name: Extract exact functions and CSS
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          text=Path('WIREFRAME/index.html').read_text(encoding='utf-8')
+          out=Path('issue-116-targeted')
+          out.mkdir(exist_ok=True)
+
+          def extract_function(name):
+            marker=f'function {name}'
+            start=text.find(marker)
+            if start<0:
+              return f'function {name}: missing\n'
+            brace=text.find('{',start)
+            depth=0;quote=None;escape=False
+            for i in range(brace,len(text)):
+              ch=text[i]
+              if quote:
+                if escape: escape=False
+                elif ch=='\\': escape=True
+                elif ch==quote: quote=None
+              elif ch in "'\"`": quote=ch
+              elif ch=='{': depth+=1
+              elif ch=='}':
+                depth-=1
+                if depth==0:
+                  return text[start:i+1]+'\n'
+            return text[start:start+30000]+'\n'
+
+          names=[
+            'templateCatalog','expandPhotoRules','photoSlotContract','templateSlotStats','templateSnapshotFor',
+            'uploadFromPhotoRule','createTaskInputsFromSnapshot','taskState','taskRequirements','taskUploadByIdentity',
+            'taskUploadForMutation','taskPhotoInputId','taskZoneGroups','taskUploadStatusText','taskPhotoVisual',
+            'taskZoneCardMarkup','renderTaskInputSections','evidencePhotoSnapshot','evidencePhotoSignature',
+            'bindSubmissionEvidenceSnapshots','createCleaningSubmissionRecord','validatedSubmission','inspectionTemplateUploadItems',
+            'inspectionTemplateGroups','inspectionTemplatePhotoState','renderInspectionTemplatePhoto','renderInspectionTemplateGroup',
+            'renderInspectionTemplateReview','photoViewerConfig','renderQuickReservation','renderDateTools','applyHashParameters'
+          ]
+          for name in names:
+            out.joinpath(f'fn-{name}.txt').write_text(extract_function(name),encoding='utf-8')
+
+          def context(marker,before=5000,after=16000,limit=20):
+            chunks=[];pos=0
+            for n in range(limit):
+              hit=text.find(marker,pos)
+              if hit<0: break
+              line=text.count('\n',0,hit)+1
+              chunks.append(f'\n===== {marker!r} occurrence {n+1} line {line} =====\n')
+              chunks.append(text[max(0,hit-before):min(len(text),hit+after)])
+              pos=hit+len(marker)
+            return '\n'.join(chunks) or f'{marker}: missing\n'
+
+          markers={
+            'template-selection-evidence':'선택 증빙',
+            'template-other':'기타',
+            'task-photo-action':'task-photo',
+            'task-photo-input':'task-photo-input',
+            'photo-input-change':'type="file"',
+            'quick-baseline':'기준일',
+            'quick-today':'quick-today',
+            'quick-window':'quick-window',
+            'quick-toolbar':'quick-toolbar',
+            'room-date-tools':'renderDateTools'
+          }
+          for filename,marker in markers.items():
+            out.joinpath(f'ctx-{filename}.txt').write_text(context(marker),encoding='utf-8')
+
+          # Extract all CSS blocks that mention the relevant selectors or breakpoints.
+          style_match=re.search(r'<style>([\s\S]*?)</style>',text)
+          css=style_match.group(1) if style_match else ''
+          selectors=['quick-','date-tools','date-nav','room-date','@media (max-width: 360px)','@media (max-width: 390px)','@media (max-width: 420px)','@media (max-width: 480px)','@media (max-width: 540px)']
+          css_chunks=[]
+          for selector in selectors:
+            pos=0
+            while True:
+              hit=css.find(selector,pos)
+              if hit<0: break
+              start=max(0,css.rfind('}',0,hit)+1)
+              brace=css.find('{',hit)
+              if brace<0: break
+              depth=0
+              end=None
+              for i in range(brace,len(css)):
+                if css[i]=='{': depth+=1
+                elif css[i]=='}':
+                  depth-=1
+                  if depth==0:
+                    end=i+1;break
+              if end is None: end=min(len(css),hit+12000)
+              css_chunks.append(f'\n/* marker {selector} */\n'+css[start:end])
+              pos=max(end,hit+len(selector))
+          out.joinpath('relevant-css.txt').write_text('\n'.join(css_chunks),encoding='utf-8')
+
+          # Extract checks and docs contracts touching these two areas.
+          checks=Path('scripts/check-workspace.mjs').read_text(encoding='utf-8')
+          docs='\n\n===== README =====\n'+Path('WIREFRAME/README.md').read_text(encoding='utf-8')+'\n\n===== QA =====\n'+Path('WIREFRAME/QA.md').read_text(encoding='utf-8')
+          for marker,filename in [('선택 증빙','checks-selection-evidence.txt'),('quick','checks-quick.txt'),('template parity','checks-template-parity.txt')]:
+            chunks=[];pos=0
+            for n in range(20):
+              hit=checks.lower().find(marker.lower(),pos)
+              if hit<0: break
+              chunks.append(checks[max(0,hit-2500):min(len(checks),hit+6500)])
+              pos=hit+len(marker)
+            out.joinpath(filename).write_text('\n\n'.join(chunks),encoding='utf-8')
+          out.joinpath('docs-context.txt').write_text(docs,encoding='utf-8')
+          PY
+
+      - name: Commit targeted inspection output
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add issue-116-targeted
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: inspect issue 116 targeted implementation units"
+          git push origin HEAD:codex/issue-116-other-photos-mobile-quick-date
