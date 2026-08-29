@@ -23,18 +23,18 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Generate compact source code map
+      - name: Generate temporary source chunks
         run: python3 scripts/issue_119_inspect.py
 
-      - name: Commit code map
+      - name: Commit source chunks
         shell: bash
         run: |
           git config user.name "Ham Arin"
           git config user.email "79068658+makee-ham@users.noreply.github.com"
-          git add .issue119/CODEMAP.md
+          git add -A .issue119
           if git diff --cached --quiet; then
-            echo "No code map changes"
+            echo "No source chunk changes"
             exit 0
           fi
-          git commit -m "chore: generate issue 119 code map"
+          git commit -m "chore: generate issue 119 source chunks"
           git push origin HEAD:feature/issue-119-role-cleaning-long-stay
