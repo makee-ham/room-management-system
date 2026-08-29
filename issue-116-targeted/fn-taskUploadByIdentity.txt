@@ -1,0 +1,6 @@
+function taskUploadByIdentity(no,photoId,attemptId) {
+        const task=state.taskInputs?.[no];
+        if(!attemptId||task?.attemptId!==attemptId)return null;
+        const upload=task.uploads?.find(item=>item.id===photoId);
+        return upload?{task,upload}:null;
+      }

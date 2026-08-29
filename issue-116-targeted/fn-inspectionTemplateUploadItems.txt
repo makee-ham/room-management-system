@@ -1,0 +1,9 @@
+function inspectionTemplateUploadItems(no,template,submission=currentSubmission(no),attempt=null) {
+        const rules=(template?.photos||[]).map(rule=>({...rule})),actualUploads=submission?.uploads||attempt?.uploads||inspectionUploads(no),actualById=new Map(actualUploads.map(upload=>[String(upload.id),upload])),seen=new Set(),items=[];
+        rules.forEach(rule=>{
+          const actual=actualById.get(String(rule.id))||null;seen.add(String(rule.id));
+          items.push({...rule,...(actual||{}),id:String(rule.id),zone:rule.zone||actual?.zone||'사진',label:rule.label||actual?.label||String(rule.id),description:rule.description||actual?.description||'청소 완료 상태를 촬영합니다.',required:rule.required!==false,status:actual?.status||'missing',image:actual?.image||null,templateOrder:items.length});
+        });
+        actualUploads.forEach(upload=>{if(seen.has(String(upload.id)))return;items.push({...upload,id:String(upload.id),zone:upload.zone||'이전 제출 사진',description:upload.description||'이전 제출에만 남아 있는 사진입니다.',required:!!upload.required,templateOrder:items.length});});
+        return items;
+      }

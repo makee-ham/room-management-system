@@ -1,0 +1,9 @@
+function renderDateTools() {
+        return `<div class="date-tools">
+          <button class="icon-btn" type="button" data-action="date-prev" aria-label="이전 날짜">${icon('chevronLeft')}</button>
+          <div class="date-current">${icon('calendar','icon-sm')}<span>${state.selectedDate==='2026-08-14'?'2026.08.14 · 오늘':state.selectedDate.replaceAll('-','.')} </span></div>
+          <button class="icon-btn" type="button" data-action="date-next" aria-label="다음 날짜">${icon('chevronRight')}</button>
+          ${button('오늘','date-today','outline')}
+          <div class="filter-wrap"><label for="room-filter">필터</label><select id="room-filter" class="select-control" data-control="room-filter"><option value="all" ${state.roomFilter==='all'?'selected':''}>전체 객실</option><option value="blocked" ${state.roomFilter==='blocked'?'selected':''}>입실 차단·충돌</option><option value="inspection" ${state.roomFilter==='inspection'?'selected':''}>검수·업로드</option></select></div>
+        </div>`;
+      }

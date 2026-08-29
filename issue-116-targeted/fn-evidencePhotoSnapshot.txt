@@ -1,0 +1,3 @@
+function evidencePhotoSnapshot(photo) {
+        return {...photo,...(photo.image?{image:{...photo.image}}:{})};
+      }

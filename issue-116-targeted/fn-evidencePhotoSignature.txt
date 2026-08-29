@@ -1,0 +1,4 @@
+function evidencePhotoSignature(photo) {
+        const image=photo?.image;
+        return JSON.stringify([String(photo?.id||''),String(photo?.label||''),String(photo?.src||''),!!photo?.objectUrl,Number(photo?.size)||0,String(photo?.type||''),String(image?.src||''),String(image?.fixture||''),String(image?.uploadedAt||''),String(image?.version||''),String(image?.view||''),!!image?.objectUrl]);
+      }

@@ -1,0 +1,495 @@
+
+===== '기타' occurrence 1 line 4415 =====
+
+lice(0,10))} ${knownOccupancyEnd.slice(11,16)} 체크아웃 전`,date:checkInAt.slice(0,10)};
+        while(cursor<=end){const iso=dateIso(cursor),occupiedReason=editingProjectedStay||registeringCurrentStay?'':quickOccupiedDateBlockReason(room,iso),existing=reservationForNight(roomNo,iso);if(occupiedReason)return {reason:occupiedReason,date:iso};if(existing&&existing.id!==ignoreId)return {reason:`기존 예약 · ${quickRangeLabel(existing)}`,date:iso,reservation:existing};cursor.setDate(cursor.getDate()+1);}
+        const overlap=reservationOverlaps(roomNo,checkInAt,checkOutAt,ignoreId);if(overlap)return {reason:`기존 예약 · ${quickRangeLabel(overlap)}`,date:overlap.checkInAt.slice(0,10),reservation:overlap};
+        return null;
+      }
+      function reservationCheckoutTarget(reservation,date=reservation?.checkOutAt?.slice(0,10)||'',targetState=state,reservations=null) {
+        if(!reservation||!date)return null;
+        const room=ROOMS.find(item=>item.no===reservation.room);if(!room)return null;
+        const schedule=reservationTurnoverSchedule(reservation,reservations||activeReservationsFor(targetState,reservation.room));
+        return {id:`checkout-${room.no}-${date}`,room:room.no,type:room.type,kind:'퇴실 청소',date,checkout:reservation.checkOutAt.slice(11,16),checkin:schedule.checkin,deadline:schedule.deadline,source:'checkout',sourceLabel:'예약 체크아웃',reservationId:reservation.id,guestCount:reservationGuestCount(reservation),nextReservationId:schedule.nextReservationId};
+      }
+      function reservationAssignmentEntryForDate(reservation,date,{reopenSameReservation=false}={}) {
+        const freshTarget=reservationCheckoutTarget(reservation,date),expectedId=freshTarget?.id||`checkout-${reservation.room}-${date}`,matchesTarget=target=>target?.room===reservation.room&&target.kind==='퇴실 청소'&&((target.reservationId===reservation.id&&(!target.date||target.date===date))||(!target.reservationId&&target.date===date)||target.id===expectedId);
+        const freshRecord=(id,record)=>record?.status==='cancelled'&&freshTarget?reopenCancelledAssignmentForNewReservation(state,{...freshTarget,id},{allowSameReservation:reopenSameReservation}):record;
+        const liveTarget=liveAssignmentTargets().find(matchesTarget),liveRecord=liveTarget?freshRecord(liveTarget.id,state.assignments?.[liveTarget.id]):null;
+        if(liveRecord)return {id:liveTarget.id,record:liveRecord,item:{...freshTarget,id:liveTarget.id}};
+        const entries=Object.entries(state.assignments||{}),committedEntry=entries.find(([,record])=>record?.committedTarget?.reservationId===reservation.id&&matchesTarget(record.committedTarget))||entries.find(([id,record])=>id===expectedId&&(!record?.committedTarget?.reservationId||record.committedTarget.reservationId===reservation.id))||entries.find(([,record])=>matchesTarget(record?.committedTarget));
+        const id=committedEntry?.[0]||liveTarget?.id||expectedId,record=freshRecord(id,committedEntry?.[1]||null);
+        return {id,record,item:freshTarget?{...freshTarget,id}:null};
+      }
+      function notifiedMaidForAssignment(record) {
+        return record?.previousMaidId||(record?.status==='notified'?record.maidId:null)||null;
+      }
+      function syncAssignmentScheduleFromItem(record,item) {
+        if(!record||!item)return {record,item,changed:false,maidId:null};
+        if(record.status==='cancelled')return {record,item,changed:false,scheduleChanged:false,guestCountChanged:false,reservationChanged:false,maidId:null};
+        const committed=record.committedTarget,scheduleChanged=!committed||['checkout','checkin','deadline','nextReservationId'].some(key=>(item[key]||'')!==(committed[key]||'')),guestCountChanged=!committed||(item.guestCount??null)!==(committed.guestCount??null),reservationChanged=!committed||(item.reservationId||'')!==(committed.reservationId||''),changed=scheduleChanged||guestCountChanged||reservationChanged,maidId=notifiedMaidForAssignment(record);
+        record.scheduleChanged=scheduleChanged;
+        record.guestCountChanged=guestCountChanged;
+        record.reservationChanged=reservationChanged;
+        record.targetChanged=changed;
+        record.status=!record.maidId?'unassigned':record.maidId!==record.previousMaidId||record.order!==record.previousOrder||changed?'draft':'notified';
+        return {record,item,changed,scheduleChanged,guestCountChanged,reservationChanged,maidId};
+      }
+      function syncReservationAssignmentScheduleState(reservation,date,options={}) {
+        const {record,item}=reservationAssignmentEntryForDate(reservation,date,options);
+        return syncAssignmentScheduleFromItem(record,item);
+      }
+      function underlyingManualCheckoutTarget(roomNo,date) {
+        return (state.manualAssignmentTargets||[]).find(item=>!item.cancelled&&item.room===roomNo&&item.kind==='퇴실 청소'&&(!item.date||item.date===date))||null;
+      }
+      const RESERVATION_CANCEL_REASONS=Object.freeze({mistake:'잘못 입력',external:'외부 예약 취소 확인',duplicate:'중복 입력 정리',roomChange:'객실 변경으로 기존 예약 정리',other:'기타 운영 사유'});
+      function reservationCancelReasonLabel(code){return Object.hasOwn(RESERVATION_CANCEL_REASONS,code)?RESERVATION_CANCEL_REASONS[code]:'';}
+      function reservationCancelReasonError(code){return reservationCancelReasonLabel(code)?'':'예약 취소 사유를 선택해 주세요.';}
+      const CLEANING_CANCEL_REASONS=Object.freeze({schedule:'운영 일정 변경',notNeeded:'현장 확인 후 청소 불필요',duplicate:'중복 청소 대상 정리',reservation:'예약·투숙 일정 변경',facility:'안전·시설 점검 우선'});
+      function cleaningCancelReasonLabel(code){return Object.hasOwn(CLEANING_CANCEL_REASONS,code)?CLEANING_CANCEL_REASONS[code]:'';}
+      function cleaningCancelReasonError(code){return cleaningCancelReasonLabel(code)?'':'청소 취소 사유를 선택해 주세요.';}
+      function reservationCancellationAdjacentChanges(reservation) {
+        const beforeReservations=activeReservationsFor(state,reservation.room),afterReservations=beforeReservations.filter(item=>item.id!==reservation.id);
+        return beforeReservations.filter(item=>item.id!==reservation.id).map(item=>({reservation:item,before:reservationTurnoverSchedule(item,beforeReservations),after:reservationTurnoverSchedule(item,afterReservations)})).filter(entry=>['nextReservationId','checkin','deadline'].some(key=>(entry.before[key]||'')!==(entry.after[key]||'')));
+      }
+      function reservationAutomaticCleaningAttempt(reservation,attempt=activeUnfinishedAttempt(reservation?.room)) {
+        if(!reservation||!attempt||attempt.kind!=='퇴실 청소')return null;
+        const date=reservation.checkOutAt.slice(0,10),manualTarget=underlyingManualCheckoutTarget(reservation.room,date),entry=reservationAssignmentEntryForDate(reservation,date),targetIds=new Set([`checkout-${reservation.room}-${date}`,entry.id].filter(Boolean)),retainedManualAttempt=!!manualTarget&&attempt.workTargetId===manualTarget.id;
+        const committedReservationId=state.assignments?.[attempt.workTargetId]?.committedTarget?.reservationId||null,attemptReservationId=attempt.reservationIdSnapshot||committedReservationId,reservationMatches=attemptReservationId===reservation.id;
+        return reservationMatches&&!retainedManualAttempt&&attemptWorkDate(attempt,state.selectedDate)===date&&targetIds.has(attempt.workTargetId)?attempt:null;
+      }
+      function applyReservationCleaningTargetToAttempt(attempt,target) {
+        if(!attempt||!target)return false;
+        const previousTargetId=attempt.workTargetId||'';
+        Object.assign(attempt,{workDate:targetPlanDate(target,target.date),effectiveDate:targetEffectiveDate(target,target.date),workTargetId:target.id,accessStart:target.accessStart||target.checkout||null,reservationIdSnapshot:target.reservationId||null,guestCountSnapshot:assignmentGuestCount(target),checkoutSnapshot:target.checkout||'',checkinSnapshot:target.checkin||'',deadlineSnapshot:target.deadline||'',nextReservationIdSnapshot:target.nextReservationId||null});
+        if(state.cleaningTargets){
+          if(previousTargetId&&previousTargetId!==target.id&&state.cleaningTargets[previousTargetId]?.currentAttemptId===attempt.id)delete state.cleaningTargets[previousTargetId];
+          state.cleaningTargets[target.id]={...cleaningTargetSnapshot(target,target.date),currentAttemptId:attempt.id};
+        }
+        return true;
+      }
+      function syncCommittedTargetToUnstartedAttempt(item) {
+        const attempt=activeUnfinishedAttempt(item?.room);if(!attempt||!item||attempt.startedAt||roomPinWasViewed(item.room,attempt.id)||attempt.accessReviewRequired||!['scheduled','claimed','unassigned'].includes(state.jobs[item.room]))return false;
+        const sameReservation=!!item.reservationId&&attempt.reservationIdSnapshot===item.reservationId,sameTarget=attempt.workTargetId===item.id;
+        if(!sameReservation&&!sameTarget)return false;
+        return applyReservationCleaningTargetToAttempt(attempt,item);
+      }
+      function committedAttemptSyncConflict(item) {
+        const record=state.assignments?.[item?.id],committed=record?.committedTarget,attempt=activeUnfinishedAttempt(item?.room);if(!record?.targetChanged||!committed||!attempt)return null;
+        const linked=attempt.workTargetId===committed.id||!!committed.reservationId&&attempt.reservationIdSnapshot===committed.reservationId;if(!linked)return null;
+        return attempt.startedAt||roomPinWasViewed(item.room,attempt.id)||attempt.accessReviewRequired||!['scheduled','claimed','unassigned'].includes(state.jobs[item.room])?attempt:null;
+      }
+      function syncUnstartedReservationCleaningAttempt(reservation,linkedAttempt=null) {
+        const attempt=linkedAttempt||reservationAutomaticCleaningAttempt(reservation),target=reservationCheckoutTarget(reservation);
+        if(!attempt||!target||attempt.startedAt||roomPinWasViewed(reservation.room,attempt.id)||attempt.accessReviewRequired||!['scheduled','claimed','unassigned'].includes(state.jobs[reservation.room]))return false;
+        const previousWorkDate=attemptWorkDate(attempt,state.selectedDate),previousTargetId=attempt.workTargetId||'',before=[attempt.reservationIdSnapshot||'',attempt.guestCountSnapshot??'',attempt.checkoutSnapshot||'',attempt.checkinSnapshot||'',attempt.deadlineSnapshot||'',attempt.nextReservationIdSnapshot||'',previousWorkDate,previousTargetId,attempt.accessStart||''].join('|'),after=[reservation.id,reservationGuestCount(reservation),target.checkout||'',target.checkin||'',target.deadline||'',target.nextReservationId||'',target.date,target.id,target.checkout||''].join('|');
+        if(before===after)return false;
+        const record=state.assignments?.[attempt.workTargetId]||null,notifiedMaidId=notifiedMaidForAssignment(record),sameDay=attemptOperationalDate(attempt,state.selectedDate)<=state.selectedDate;
+        if(notifiedMaidId&&!sameDay)return false;
+        applyReservationCleaningTargetToAttempt(attempt,target);
+        if(record&&notifiedMaidId){
+          const snapshot=record.committedTarget||{};record.committedTarget={...snapshot,...target,type:target.type||snapshot.type,rateSnapshot:snapshot.rateSnapshot,minutesSnapshot:snapshot.minutesSnapshot,elevatorSnapshot:snapshot.elevatorSnapshot};record.status='notified';record.scheduleChanged=false;record.guestCountChanged=false;record.reservationChanged=false;record.targetChanged=false;
+        }
+        if(attempt.performerId)appendEvent('내 청소 예약정보 변경',`${reservation.room}호 · ${quickDateLabel(target.date)} ${target.checkout}부터 · 숙박 ${reservationGuestCount(reservation)}명 · 준비 마감 ${target.deadline}${previousWorkDate!==target.date?` · 업무일 ${quickDateLabel(previousWorkDate)}에서 변경`:''}`,{maidIds:[attempt.performerId],roomId:reservation.room,attemptId:attempt.id});
+        return true;
+      }
+      function reservationCancellationImpact(reservation) {
+        if(!reservation)return null;
+        const room=ROOMS.find(item=>item.no===reservation.room),checkoutDate=reservation.checkOutAt.slice(0,10),expectedTargetId=`checkout-${reservation.room}-${checkoutDate}`,manualTarget=underlyingManualCheckoutTarget(reservation.room,checkoutDate),assignmentEntry=reservationAssignmentEntryForDate(reservation,checkoutDate),assignmentRecord=manualTarget&&state.assignments?.[manualTarget.id]?state.assignments[manualTarget.id]:assignmentEntry.record,assignmentItem=manualTarget||assignmentEntry.item,notifiedMaidId=notifiedMaidForAssignment(assignmentRecord),selectedMaidId=assignmentRecord?.maidId||assignmentRecord?.previousMaidId||null,drafts=(state.drafts||[]).filter(draft=>draft.reservationId===reservation.id),draftIsPublished=draft=>{const publication=state.publications?.[draft.id];return draft.visibility==='public'||!!publication&&(typeof publication!=='object'||publication.status!=='cancelled');},publishedDrafts=drafts.filter(draftIsPublished),privateDrafts=drafts.filter(draft=>!draftIsPublished(draft)),beforeReservations=activeReservationsFor(state,reservation.room),afterReservations=beforeReservations.filter(item=>item.id!==reservation.id),cleaningChanges=reservationCleaningChanges(beforeReservations,afterReservations),removalCleaningChanged=cleaningChanges.length>0,publicCleaningLinked=!!publishedDrafts.length||reservationCleaningChangeTouchesPublic(cleaningChanges,reservation.room),randomAssignmentActive=reservationCleaningChangeTouchesRandom(cleaningChanges),actualStayStarted=room?.occupancy==='occupied'&&currentOccupiedReservation(room)?.id===reservation.id,stayStarted=actualStayStarted,roomAttempt=activeUnfinishedAttempt(reservation.room),connectedAttempt=reservationAutomaticCleaningAttempt(reservation,roomAttempt),pinViewed=!!connectedAttempt&&roomPinWasViewed(reservation.room,connectedAttempt.id),roomAttemptLocked=!!roomAttempt&&(!!roomAttempt.startedAt||roomPinWasViewed(reservation.room,roomAttempt.id)||roomAttempt.accessReviewRequired||!['scheduled','claimed','unassigned'].includes(state.jobs[reservation.room])),roomAttemptWorkDate=roomAttempt?attemptWorkDate(roomAttempt,state.selectedDate):'',adjacentAttemptTimingChanged=!!roomAttempt&&roomAttempt!==connectedAttempt&&reservationWorkTimingFingerprint(beforeReservations,roomAttemptWorkDate)!==reservationWorkTimingFingerprint(afterReservations,roomAttemptWorkDate),adjacentChanges=reservationCancellationAdjacentChanges(reservation);
+        let blockedReason='';
+        if(!adminCanMutate())blockedReason='관리자 최신 온라인 상태에서만 예약을 취소할 수 있습니다.';
+        else if(reservationRecordIsPast(reservation))blockedReason='지난 예약 기록은 조회만 가능하며 수정하거나 취소할 수 없습니다.';
+        else if(stayStarted)blockedReason='체크인이 시작된 예약은 취소하지 않고 예약 관리에서 실제 체크아웃 시각을 수정해야 합니다.';
+        else if(connectedAttempt)blockedReason=pinViewed?'연결된 청소 수행 회차에서 PIN을 이미 조회해 현장 영향 확인이 필요합니다.':'연결된 청소 수행 회차가 이미 만들어져 먼저 청소 담당·회차를 조율해야 합니다.';
+        else if(roomAttemptLocked&&adjacentAttemptTimingChanged)blockedReason='이 예약을 취소하면 이미 시작했거나 PIN을 조회한 직전 퇴실 청소의 다음 입실 시각·준비 마감이 바뀝니다. 청소 충돌을 먼저 조율해 주세요.';
+        else if(publicCleaningLinked)blockedReason='연결된 청소 작업이 이미 공개되어 예약을 바로 취소할 수 없습니다. 청소 화면에서 공개를 중단하거나 담당 영향을 먼저 조율해 주세요.';
+        else if(randomAssignmentActive)blockedReason='랜덤 배정 초안이 적용된 동안에는 예약을 취소할 수 없습니다. 해당 청소 배정에서 랜덤 초안을 되돌린 뒤 다시 확인해 주세요.';
+        return {reservation,room,checkoutDate,expectedTargetId,manualTarget,assignmentEntry,assignmentRecord,assignmentItem,notifiedMaidId,selectedMaidId,drafts,privateDrafts,publishedDrafts,beforeReservations,afterReservations,cleaningChanges,removalCleaningChanged,publicCleaningLinked,randomAssignmentActive,actualStayStarted,stayStarted,roomAttempt,connectedAttempt,pinViewed,roomAttemptLocked,roomAttemptWorkDate,adjacentAttemptTimingChanged,adjacentChanges,blockedReason};
+      }
+      function reservationCancellationImpactFingerprint(reservation,impact=reservationCancellationImpact(reservation)) {
+        if(!reservation||!impact)return '';
+        const record=impact.assignmentRecord,attempt=impact.roomAttempt,recordSnapshot=record?JSON.stringify({maidId:record.maidId||'',order:record.order??null,status:record.status||'',previousMaidId:record.previousMaidId||'',previousOrder:record.previousOrder??null,scheduleChanged:!!record.scheduleChanged,guestCountChanged:!!record.guestCountChanged,reservationChanged:!!record.reservationChanged,targetChanged:!!record.targetChanged,committedTarget:record.committedTarget||null}):'',item=impact.assignmentItem,itemSnapshot=item?JSON.stringify({id:item.id||'',date:item.date||'',checkout:item.checkout||'',checkin:item.checkin||'',deadline:item.deadline||'',kind:item.kind||'',reservationId:item.reservationId||'',guestCount:item.guestCount??null}):'',draftSnapshot=impact.drafts.map(draft=>{const publication=state.publications?.[draft.id];return [draft.id,draft.visibility||'',publication?(typeof publication==='object'?publication.status||'published':'published'):''].join('~');}).sort().join(','),roomSnapshot=JSON.stringify({occupancy:impact.room?.occupancy||'',actualCheckinAt:impact.room?.actualCheckinAt||'',reservationProjectionId:impact.room?.reservationProjectionId||'',job:state.jobs[reservation.room]||''}),adjacentSnapshot=impact.adjacentChanges.map(entry=>{const date=entry.reservation.checkOutAt.slice(0,10),assignment=reservationAssignmentEntryForDate(entry.reservation,date),adjacentRecord=assignment.record;return [entry.reservation.id,entry.before.nextReservationId||'',entry.after.nextReservationId||'',entry.before.deadline,entry.after.deadline,assignment.id,adjacentRecord?.maidId||'',adjacentRecord?.previousMaidId||'',adjacentRecord?.status||'',adjacentRecord?.targetChanged?'changed':''].join('~');}).join(',');
+        const randomSnapshot=state.randomAssignmentSnapshot?JSON.stringify({createdAt:state.randomAssignmentSnapshot.createdAt||'',contextSignature:state.randomAssignmentSnapshot.contextSignature||'',afterAssignments:state.randomAssignmentSnapshot.afterAssignments||{}}):'';
+        return [reservationFingerprint(reservation),state.role,state.network,state.selectedDate,state.time,roomSnapshot,draftSnapshot,impact.manualTarget?.id||'',impact.assignmentEntry?.id||'',itemSnapshot,recordSnapshot,attempt?[attempt.id,attempt.status,attempt.startedAt||'',attempt.workTargetId||'',attemptWorkDate(attempt,state.selectedDate),roomPinWasViewed(reservation.room,attempt.id)?'pin':'',attempt.accessReviewRequired?'access-review':'',impact.roomAttemptLocked?'locked':'',impact.adjacentAttemptTimingChanged?'timing-changed':''].join('~'):'',adjacentSnapshot,randomSnapshot].join('||');
+      }
+      function cancelReservationAssignmentRecord(record,{targetId,room,date,reservationId,reason,target=null,eventTitle=''}) {
+        if(!record)return {cancelledMaidId:null,notifiedMaidId:null};
+        if(record.status==='cancelled')return {cancelledMaidId:null,notifiedMaidId:null,alreadyCancelled:true};
+        const selectedMaidId=record.maidId||record.previousMaidId||null,notifiedMaidId=notifiedMaidForAssignment(record),selectedOrder=record.order??record.previousOrder??null,notifiedOrder=record.previousOrder??record.order??null,targetSnapshot=record.committedTarget?{...record.committedTarget}:target?{...target}:null,previousStatus=record.status||'unassigned',beforeMaidId=selectedMaidId||notifiedMaidId,beforeOrder=selectedOrder??notifiedOrder,cancelledAt=`${state.selectedDate}T${state.time}`;
+        const releaseLabel=reason.includes('체크아웃 날짜 변경')?'예약 일정 변경으로 기존 담당 해제':'예약 취소로 담당 해제';
+        if(beforeMaidId)state.assignmentHistory.unshift({time:`${dateLabel(state.selectedDate)} ${state.time}`,targetId,assignmentDate:date,room,reservationId,beforeMaidId,beforeNotifiedMaidId:notifiedMaidId,beforeOrder,beforeStatus:previousStatus,targetSnapshot:targetSnapshot?{...targetSnapshot}:null,afterMaidId:null,before:`${maidName(beforeMaidId)}${beforeOrder?` · ${beforeOrder}번째`:''}`,after:releaseLabel,reason:`${reason} · 기존 통보 내용 보존`});
+        Object.assign(record,{maidId:'',order:null,status:'cancelled',previousMaidId:null,previousOrder:null,committedTarget:null,scheduleChanged:false,guestCountChanged:false,reservationChanged:false,targetChanged:false,cancelledMaidId:selectedMaidId,cancelledNotifiedMaidId:notifiedMaidId,cancelledOrder:selectedOrder,cancelledPreviousOrder:notifiedOrder,cancelledStatus:previousStatus,cancelledTarget:targetSnapshot?{...targetSnapshot}:null,cancelledAt,cancelledBy:'관리자 · 데모',cancelledReason:reason,cancelledReservationId:reservationId});
+        const existingTarget=state.cleaningTargets?.[targetId]||null,ledgerBase=existingTarget||targetSnapshot||target;if(ledgerBase){if(!state.cleaningTargets)state.cleaningTargets={};state.cleaningTargets[targetId]={...cleaningTargetSnapshot(ledgerBase,date),...(existingTarget||{}),closed:true,closedAt:cancelledAt,closedBy:'관리자 · 데모',closeReasonCode:'reservation',closeReason:reason,closeStatus:'cancelled'};}
+        [...new Set([selectedMaidId,notifiedMaidId].filter(Boolean))].forEach(normalizeAssignmentOrderFor);
+        if(notifiedMaidId)appendEvent(eventTitle||`${room}호 청소 담당 취소 통보`,`${quickDateLabel(date)} 퇴실 청소 · ${releaseLabel} · 당시 담당 순서와 일정 보존`,{maidIds:[notifiedMaidId],roomId:room});
+        return {cancelledMaidId:selectedMaidId,notifiedMaidId,alr
+
+===== '기타' occurrence 2 line 5883 =====
+
+</label><textarea id="bomb-room-note-${no}" class="input-control" rows="3" data-control="bomb-room-note" data-room="${no}" placeholder="개인정보를 제외하고 오염 상태를 적어 주세요.">${esc(draft.note)}</textarea></div><input id="bomb-room-files-${no}" type="file" accept="image/*" multiple tabindex="-1" data-control="bomb-room-files" data-room="${no}"><div class="bomb-room-editor-actions"><button class="btn btn-outline" type="button" data-action="choose-bomb-room-files" data-room="${no}">${icon('camera','icon-sm')}이미지 선택</button></div>${renderBombRoomDraftPhotos(no)}<button class="btn btn-primary btn-block" type="button" data-action="save-bomb-room-report" data-room="${no}" ${draft.photos.length?'':'disabled'}>폭탄방 신고 · 이미지 ${draft.photos.length}장</button></div>`:'';
+        const decision=state.role==='admin'&&job==='inspection'&&report?.status==='pending'?`<div class="notice notice-warning" style="margin:0"><div><strong>전체 검수 결정 전에 폭탄방 여부를 먼저 결정해 주세요.</strong><br>인정하면 기본 요금과 같은 금액이 한 번만 추가됩니다.</div></div><div class="bomb-room-decision-actions"><button class="btn btn-outline" type="button" data-action="reject-bomb-room" data-id="${no}">폭탄방 미인정</button><button class="btn btn-success" type="button" data-action="approve-bomb-room" data-id="${no}">폭탄방 인정 · 2배</button></div>`:'';
+        const reportSettled=!!earningRecordForReport(report);
+        const result=wholeRejected?`<div class="notice notice-danger" style="margin:0"><div><strong>청소 전체 반려 · 적립 없음</strong><br>폭탄방 ${report?.status==='approved'?'인정':'미인정'} 결정과 증빙은 제출 이력에 보존하지만 이 제출의 주급은 0원입니다.</div></div>`:report?.status==='approved'?`<div class="notice notice-success" style="margin:0"><div><strong>관리자 폭탄방 인정</strong><br>${esc(report.decidedAt||'결정 기록')} · ${reportSettled?'전체 청소 승인으로 해당 객실의 같은 금액 추가요금이 확정됐습니다.':'전체 청소 승인 시 해당 객실의 같은 금액 추가요금이 확정됩니다.'}</div></div>`:report?.status==='rejected'?`<div class="notice notice-info" style="margin:0"><div><strong>관리자 폭탄방 미인정</strong><br>${esc(report.decisionReason||'일반 청소요금만 적용')} · ${reportSettled?'전체 청소 승인으로 기본 요금만 확정됐습니다.':'전체 청소 승인 시 기본 요금만 확정됩니다.'}</div></div>`:report?'<div class="notice notice-warning" style="margin:0"><div><strong>관리자 검수 대기</strong><br>증빙은 제출 내역에 보존되며 승인 전에는 추가 요금이 확정되지 않습니다.</div></div>':'';
+        const unpaidNotice=unpaidReclean?'<div class="notice notice-info" style="margin:0"><div><strong>재청소는 무급 0원입니다.</strong><br>처음 청소한 본인이 완료하며 폭탄방 신고와 추가 청소비는 없습니다.</div></div>':'';
+        return `<div class="bomb-room-panel${panelClass}"><div class="bomb-room-head"><div><h4>${panelTitle}</h4>${reportCopy}</div>${statusBadge(wholeRejected?'청소 전체 반려 · 적립 없음':unpaidReclean?'재청소 · 무급':meta.label,wholeRejected?'red':unpaidReclean?'neutral':meta.tone)}</div>${bombRoomFeeMarkup(no,report,{wholeRejected})}${unpaidNotice}${report?.note?`<p class="bomb-room-note">${esc(report.note)}</p>`:''}${bombRoomPhotoGallery(no,report)}${result}${editor}${decision}</div>`;
+      }
+      function roomIssueRecords(no) {
+        return state.roomIssues?.[no]||[];
+      }
+      function ensureRoomIssueRecords(no) {
+        if(!state.roomIssues)state.roomIssues={};
+        if(!state.roomIssues[no])state.roomIssues[no]=[];
+        return state.roomIssues[no];
+      }
+      function visibleRoomIssueRecords(no) {
+        const records=roomIssueRecords(no);return state.role==='admin'?records:records.filter(record=>record.createdById===signedInMaidId());
+      }
+      function roomIssueDraft(no) {
+        return taskState(no).issueDraft;
+      }
+      function roomIssuePhotoVisual(photo,label='') {
+        if(photo.src)return `<img src="${esc(photo.src)}" alt="${esc(label||photo.label||'객실 특이사항 이미지')}">`;
+        if(photo.image)return inspectionPhotoSvg({image:photo.image},label||photo.label||'객실 특이사항 이미지');
+        return `<span class="room-issue-photo-visual" aria-label="이미지 미리보기 없음">${icon('camera')}</span>`;
+      }
+      function roomIssuePhotoGallery(no,record) {
+        if(!record.photos?.length)return '';
+        return `<div class="room-issue-gallery">${record.photos.map((photo,index)=>`<button class="room-issue-photo" type="button" data-action="room-issue-photo" data-room="${no}" data-issue="${record.id}" data-photo="${photo.id}" aria-label="${no}호 ${esc(record.type)} 특이사항 사진 ${index+1} 크게 보기"><span class="room-issue-photo-visual">${roomIssuePhotoVisual(photo,`${no}호 특이사항 사진 ${index+1}`)}</span><span class="room-issue-photo-copy"><strong>특이사항 사진 ${index+1}</strong>${icon('chevronRight','icon-sm')}</span></button>`).join('')}</div>`;
+      }
+      function renderRoomIssueRecords(no,recordsOverride=undefined) {
+        const records=Array.isArray(recordsOverride)?recordsOverride:visibleRoomIssueRecords(no);
+        if(!records.length)return '<div class="inline-empty"><h3>등록된 특이사항이 없습니다</h3><p>메이드가 현장에서 등록한 메모와 사진이 여기에 표시됩니다.</p></div>';
+        return `<div class="room-issue-record-list">${records.map(record=>`<article class="room-issue-record" data-room-issue="${record.id}"><div class="room-issue-record-head"><div><strong>${esc(record.type||'기타')}</strong><span>${esc(record.createdBy)} · ${esc(record.createdAt)} · 사진 ${record.photos?.length||0}장</span></div>${statusBadge(record.status==='resolved'?'해결':record.blocksCheckin?'입실 차단':'관리자 확인 대기',record.status==='resolved'?'green':record.blocksCheckin?'red':'amber')}</div>${record.note?`<p class="room-issue-record-note">${esc(record.note)}</p>`:'<p class="audit-note" style="margin:10px 0 0">사진으로만 등록된 특이사항입니다.</p>'}${roomIssuePhotoGallery(no,record)}</article>`).join('')}</div>`;
+      }
+      function renderRoomIssuesSection(no,recordsOverride=undefined) {
+        const records=Array.isArray(recordsOverride)?recordsOverride:visibleRoomIssueRecords(no);
+        return `<section class="card card-pad" aria-labelledby="room-issues-${no}"><div class="section-head"><div><h3 id="room-issues-${no}">객실 특이사항</h3><span class="meta">메이드 등록 · 관리자 조회</span></div>${statusBadge(`${records.length}건`,records.length?'amber':'neutral')}</div>${renderRoomIssueRecords(no,records)}${state.role==='admin'&&records.length?'<p class="audit-note" style="margin:10px 0 0">관리자는 이 제출에 묶인 원 등록 기록과 사진을 조회하며, 해결 처리는 별도 관리자 이력으로 남깁니다.</p>':''}</section>`;
+      }
+      function renderRoomIssueDraftPhotos(no) {
+        const draft=roomIssueDraft(no);
+        if(!draft.photos.length)return '<p class="audit-note" style="margin:0">선택한 이미지가 없습니다. 메모 없이 사진만 등록할 수도 있습니다.</p>';
+        return `<div class="room-issue-gallery" aria-live="polite">${draft.photos.map((photo,index)=>`<div class="room-issue-photo"><span class="room-issue-photo-visual">${roomIssuePhotoVisual(photo,`${no}호 선택한 특이사항 사진 ${index+1}`)}</span><span class="room-issue-photo-copy"><strong>선택한 사진 ${index+1}</strong><span>${Math.max(1,Math.round((photo.size||0)/1024))}KB</span></span><button class="room-issue-remove" type="button" data-action="remove-room-issue-photo" data-room="${no}" data-photo="${photo.id}" aria-label="선택한 특이사항 사진 ${index+1} 제거">${icon('close','icon-sm')}</button></div>`).join('')}</div>`;
+      }
+      function containsRoomIssuePersonalData(value) {
+        return /[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}|(?:01[016789])[- .]?\d{3,4}[- .]?\d{4}/.test(value||'');
+      }
+      function maidCanEditRoomIssue(no,job=state.jobs[no]) {
+        return job==='cleaning'&&maidCanEditCleaning(no,['cleaning']);
+      }
+      function releaseRoomIssuePhoto(photo) {
+        if(photo?.objectUrl&&photo.src)URL.revokeObjectURL(photo.src);
+      }
+      function releaseRoomIssuePhotoUrls(snapshot=state) {
+        const urls=new Set(),collect=photo=>{if(photo?.objectUrl&&photo.src)urls.add(photo.src);};
+        Object.values(snapshot?.taskInputs||{}).forEach(task=>{
+          task.issueDraft?.photos?.forEach(collect);
+          task.bombRoomDraft?.photos?.forEach(collect);
+          task.uploads?.forEach(upload=>collect(upload.image));
+        });
+        Object.values(snapshot?.cleaningSubmissions||{}).forEach(submission=>submission.uploads?.forEach(upload=>collect(upload.image)));
+        Object.values(snapshot?.roomIssues||{}).flat().forEach(record=>record.photos?.forEach(collect));
+        Object.values(snapshot?.bombRoomReports||{}).forEach(report=>report.photos?.forEach(collect));
+        urls.forEach(url=>URL.revokeObjectURL(url));
+      }
+      function photoViewerConfig(payload) {
+        const no=String(payload?.room||''),room=ROOMS.find(item=>item.no===no);
+        if(!room)return null;
+        if(payload?.source==='inspection'){
+          const rawSubmission=state.cleaningSubmissions?.[payload?.recordId]||null,submission=validatedSubmission(rawSubmission)||rawSubmission,upload=submission?.uploads?.find(item=>item.id===payload.photoId);
+          if(!rawSubmission||state.cleaningSubmissions?.[rawSubmission.id]!==rawSubmission||submission.room!==no||!upload||state.role!=='admin'&&submission.performerId!==signedInMaidId())return null;
+          const captured=!!upload.image?.objectUrl;
+          return {title:`${no}호 · ${upload.label}`,subtitle:captured?'메이드가 전체 제출에 포함한 현장 촬영 이미지':'메이드가 전체 제출에 포함한 데모 이미지',large:true,body:`<div class="photo-viewer-visual">${inspectionPhotoSvg(upload,`${no}호 ${upload.label}`)}</div><div class="photo-meta"><div class="info-item"><span>구분</span><strong>${upload.required?'필수 사진':'선택 사진'}</strong></div><div class="info-item"><span>촬영</span><strong>${esc(upload.image?.uploadedAt||'시각 없음')}</strong></div><div class="info-item"><span>제출 버전</span><strong>${esc(upload.image?.version||'현장 촬영')} · ${upload.status==='failed'?'검증 실패':'검증 완료'}</strong></div></div><p class="audit-note" style="margin:12px 0 0">확대 보기는 검수 참고용이며 사진별 승인·반려는 제공하지 않습니다. 사진 원문과 파일명은 URL·브라우저 이력에 저장하지 않습니다.</p>`};
+        }
+        if(payload?.source==='bomb-room'){
+          const linkedSubmission=Object.values(state.cleaningSubmissions||{}).find(item=>item.room===no&&item.reportId===payload?.recordId)||null,report=linkedSubmission?rawBombRoomReportForSubmission(linkedSubmission):state.bombRoomReports?.[payload?.recordId]||bombRoomReport(no),photo=report?.photos?.find(item=>item.id===payload.photoId),meta=bombRoomStatusMeta(report),submission=linkedSubmission||(report?.submissionId?state.cleaningSubmissions?.[report.submissionId]||null:null);
+          if(!report||report.room!==no||!photo||state.role!=='admin'&&report.reportedById!==signedInMaidId()&&submission?.performerId!==signedInMaidId())return null;
+          const decision=report.attemptStatus==='superseded'?`회차 종료 · ${esc(report.supersededAt||'시각 없음')} · ${esc(report.supersededReason||'담당 변경')}`:report.status==='pending'?'관리자 결정 대기':`${esc(report.decidedAt||'결정 시각 없음')} · ${esc(report.decisionReason|| (report.status==='approved'?'폭탄방 인정':'일반 청소 범위'))}`;
+          return {title:`${no}호 · 폭탄방 증빙`,subtitle:`${report.reportedBy} 신고 · ${meta.label} · 데모 메모리 이미지`,large:true,body:`<div class="photo-viewer-visual">${roomIssuePhotoVisual(photo,`${no}호 폭탄방 증빙 이미지`)}</div><div class="photo-meta"><div class="info-item"><span>신고자</span><strong>${esc(report.reportedBy)}</strong></div><div class="info-item"><span>신고 시각</span><strong>${esc(report.reportedAt)}</strong></div><div class="info-item"><span>검수 상태</span><strong>${esc(meta.label)}</strong></div><div class="info-item"><span>관리자 결정·회차</span><strong>${decision}</strong></div></div>${report.note?`<div class="notice notice-info" style="margin-top:12px"><div><strong>신고 메모</strong><br>${esc(report.note)}</div></div>`:''}<p class="audit-note" style="margin:12px 0 0">사진 파일명과 원본은 URL·알림·감사 이력·브라우저 영속 저장소에 남기지 않습니다.</p>`};
+        }
+        const linkedSubmission=Object.values(state.cleaningSubmissions||{}).find(item=>item.room===no&&item.roomIssuesSnapshot?.some(record=>record.id===payload?.recordId))||null,snapshotRecord=linkedSubmission?.roomIssuesSnapshot?.find(item=>item.id===payload?.recordId)||null,record=snapshotRecord||roomIssueRecords(no).find(item=>item.id===payload?.recordId),photo=record?.photos?.find(item=>item.id===payload?.photoId);
+        if(!record||!photo||state.role!=='admin'&&record.createdById!==signedInMaidId()&&linkedSubmission?.performerId!==signedInMaidId())return null;
+        return {title:`${no}호 · ${record.type||'객실 특이사항'}`,subtitle:`${record.createdBy} 등록 · 관리자 조회 가능 · 데모 메모리 이미지`,large:true,body:`<div class="photo-viewer-visual">${roomIssuePhotoVisual(photo,`${no}호 ${record.type} 특이사항 이미지`)}</div><div class="photo-meta"><div class="info-item"><span>등록자</span><strong>${esc(record.createdBy)}</strong></div><div class="info-item"><span>등록 시각</span><strong>${esc(record.createdAt)}</strong></div><div class="info-item"><span>보존 상태</span><strong>현재 탭 메모리 · 데모</strong></div></div><p class="audit-note" style="margin:12px 0 0">사진 파일명과 원본은 URL·알림·감사 이력·브라우저 영속 저장소에 남기지 않습니다.</p>`};
+      }
+      function photoViewerModalMarkup(payload) {
+        const config=photoViewerConfig(payload);
+        return config?standardModalMarkup(config):'';
+      }
+      function openRoomIssuePhoto(no,issueId,photoId,trigger=document.activeElement) {
+        const payload={source:'room-issue',room:no,recordId:issueId,photoId},config=photoViewerConfig(payload);
+        if(!config){toast('이 사진을 볼 권한이 없거나 기록을 찾을 수 없습니다.','error');return;}
+        showModal({...config,trigger,historyKind:'photo-viewer',historyPayload:payload});
+      }
+      function openBombRoomPhoto(no,reportId,photoId,trigger=document.activeElement) {
+        const payload={source:'bomb-room',room:no,recordId:reportId,photoId},config=photoViewerConfig(payload);
+        if(!config){toast('이 폭탄방 증빙을 볼 권한이 없거나 기록을 찾을 수 없습니다.','error');return;}
+        showModal({...config,trigger,historyKind:'photo-viewer',historyPayload:payload});
+      }
+      function renderAvailabilityCard() {
+        const saved=state.weeklyAvailability?.[signedInMaidId()]?.days||[],hasCommitted=state.availabilitySubmitted||state.availabilityChangeRequested,selected=hasCommitted?saved:state.availabilityDraft||[],statusLabel=state.availabilityChangeRequested?'다음 주 변경 요청':state.availabilitySubmitted?'다음 주 제출 완료':'다음 주 미제출';
+        return `<section class="card availability-card"><div class="availability-result">${statusBadge(statusLabel,state.availabilitySubmitted?'green':'amber')}<div><strong>8월 17일–23일 · 가능 ${selected.length}일</strong><span>${availabilitySubmissionWindowLabel()} 제출 · 객실 담당은 관리자만 배정</span></div>${button('근무 일정 열기','go-schedule','outline')}</div></section>`;
+      }
+      function renderMaidSchedule() {
+        const maidId=signedInMaidId(),accountActive=signedInMaidIsActive(),dayNames=[['월','17'],['화','18'],['수','19'],['목','20'],['금','21'],['토','22'],['일','23']],phase=availabilitySubmissionPhase(),submitted=state.availabilitySubmitted,editing=!!state.availabilityEditing&&phase==='open',savedSelected=state.weeklyAvailability?.[maidId]?.days||[],selected=editing||!submitted?state.availabilityDraft||[]:savedSelected,availableCount=selected.length;
+        const assigned=notifiedAssignmentEntriesForMaid(maidId);
+        const assignedCards=assigned.length?assigned.map(({item})=>{const guestCount=assignmentGuestCount(item);return `<div class="assigned-preview-grid"><div><span>근무일</span><strong>${esc(dateLabel(targetEffectiveDate(item)))}</strong></div><div><span>객실</span><strong>${item.room}호</strong></div><div><span>업무</span><strong>${esc(item.kind)}</strong></div>${guestCount?`<div><span>숙박 인원</span><strong>${esc(guestCountLabel(guestCount))}</strong></div>`:`<div><span>예약 연결</span><strong>없음</strong></div>`}<div><span>시작 가능</span><strong>${item.checkout} 이후</strong></div>${item.carryReason?`<div><span>이월</span><strong>원 계획 ${esc(dateLabel(targetPlanDate(item)))}</strong></div>`:''}</div>`;}).join(''):`<div class="inline-empty"><h3>배정된 업무가 없습니다</h3><p>관리자가 근무일 전날 밤 객실 담당을 확정하면 여기에 표시됩니다.</p></div>`;
+        const submissionWindow=availabilitySubmissionWindowLabel(),phaseText=!accountActive?'비활성 계정 · 과거 제출 읽기 전용':phase==='before'?`${submissionWindow} 제출 가능`:phase==='open'?`${submissionWindow} · 지금 제출 가능`:`${submissionWindow} 마감 · 변경은 관리자 확인 필요`;
+        const editorLocked=!accountActive||submitted&&!editing||state.availabilityChangeRequested||phase!=='open'||isLocked();
+        let actionMarkup='';
+        if(!accountActive)actionMarkup='<div class="notice notice-warning" style="margin:0"><div><strong>가능일 수정 잠금</strong><br>비활성 처리 중이거나 비활성인 계정은 과거 제출만 조회할 수 있습니다.</div></div>';
+        else if(state.availabilityChangeRequested)actionMarkup='<div class="notice notice-warning" style="margin:0"><div><strong>관리자 확인 요청됨</strong><br>기존 제출은 유지되고 변경 요청이 관리자 알림에 남았습니다.</div></div>';
+        else if(editing)actionMarkup=button('수정 내용 다시 제출','submit-week-availability','primary',isLocked()?'disabled':'');
+        else if(submitted&&phase==='open')actionMarkup=button('제출 내용 수정','edit-week-availability','primary',isLocked()?'disabled':'');
+        else if(submitted&&phase==='closed')actionMarkup=button('가능일 변경 요청','request-availability-change','outline',isLocked()?'disabled':'');
+        else if(submitted)actionMarkup=button('제출 기간 아님','edit-week-availability','outline','disabled');
+        else actionMarkup=button(phase==='open'?'다음 주 가능일 제출':phase==='before'?`${submissionWindow} 제출`:'제출 마감','submit-week-availability','primary',phase==='open'&&!isLocked()?'':'disabled');
+        return renderCoach()+renderNetworkNotice()+`<div class="weekly-availability"><section class="card week-card"><div class="week-card-head"><div><h2>8월 17일 (월)–8월 23일 (일)</h2><p>다음 주에 근무 가능한 요일을 모두 선택해 주세요.</p></div>${statusBadge(state.availabilityChangeRequested?'변경 요청':editing?'수정 중':submitted?'제출 완료':'미제출',state.availabilityChangeRequested||editing?'amber':submitted?'green':'amber')}</div><div class="deadline-bar">${icon('clock','icon-sm')}<span>${phaseText}</span></div><div class="week-days" aria-label="다음 주 근무 가능일">${dayNames.map((day,index)=>{const active=selected.includes(index);return `<button class="week-day" type="button" data-action="toggle-week-day" data-day="${index}" aria-pressed="${active}" ${editorLocked?'disabled':''}><strong>${day[0]} ${day[1]}</strong><span>${active?'근무 가능':'근무 불가'}</span><i class="week-toggle" aria-hidden="true"></i></button>`;}).join('')}</div><div class="week-total">${icon('calendar','icon-sm')}가능 ${availableCount}일 · 불가 ${7-availableCount}일</div><div class="week-submit-actions">${actionMarkup}</div><div class="assignment-notice">${icon('user')}<p>관리자가 각 근무일 전날 밤 객실을 직접 배정합니다. 메이드는 객실을 선택하거나 다른 메이드에게 배정할 수 없습니다.</p></div></section><section class="card assigned-preview"><div class="section-head"><div><h2>배정된 내 업무</h2><span class="meta">관리자 통보 완료 건만 표시</span></div>${statusBadge(`${assigned.length}건`,'blue')}</div>${assignedCards}<p class="audit-note" style="margin:10px 0 0">배정이 바뀌면 기존 담당 구간은 이력으로 남고 알림에서 변경 내용을 확인할 수 있습니다.</p></section></div>`;
+      }
+      function publicJobCard(no) {
+        const room=ROOMS.find(r=>r.no===no), type=ROOM_TYPES[room?.type||'standard'];
+        return `<article class="card job-card"><div class="job-card-top"><div class="job-title"><h3>${no}호 · ${esc(cleaningLabel(state.jobs[no]))}</h3><p>${esc(type.name)}</p></div>${statusBadge('관리자 배정','green')}</div><div class="schedule-line">${icon('clock','icon-sm')}<span>시작 가능 ${startTimeFor(no)} · 담당 ${esc(room?.assignee||'미정')}</span></div><div class="notice notice-info" style="margin:0">메이드는 관리자에게 통보받은 업무만 확인하고 수행할 수 있습니다.</div></article>`;
+      }
+      function renderMaidOpen() {
+        return renderMaidSchedule();
+      }
+      function myJobCard(no) {
+        const job=state.jobs[no], room=ROOMS.find(r=>r.no===no),attempt=state.cleaningAttempts?.[currentAttemptId(no)],access=attemptAccessStatus(no,attempt),start=access.start,reached=access.allowed,rollover=rolloverMetaForRoom(no);
+        const guestCount=guestCountForAttempt(attempt),guestCountDisplay=guestCount?guestCountLabel(guestCount):'미기록',reclean=attempt?.kind==='재청소'?{reason:attempt.reason||'전체 반려 뒤 본인 재청소',previousMaid:currentSubmission(no)?.performerName||room?.assignee||'기존 메이드',originalKind:currentSubmission(no)?.kind||'퇴실 청소'}:null;
+        const labels={scheduled:reached?'일 시작':'시작 시각 대기',claimed:reached?'일 시작':'시작 시각 대기',cleaning:'계속 청소',upload:taskState(no).uploads.some(u=>u.status==='failed')?'미전송 재시도':'청소 전체 제출',inspection:'제출 결과 보기',approved:'완료 결과 보기',reclean:reached?'재청소 시작':'시작 시각 대기'};
+        const action='cleaning-detail';
+        const bomb=bombRoomReport(no),bombMeta=bombRoomStatusMeta(bomb),tone=job==='approved'?'green':job==='cleaning'||job==='upload'?'amber':job==='inspection'?'blue':'neutral';
+        return `<article class="card job-card"><div class="job-card-top"><div class="job-title"><h3>${no}호 · ${reclean?'재청소':cleaningLabel(job)}</h3><p>${esc(ROOM_TYPES[room?.type||'standard'].name)}</p></div><div class="badge-row">${statusBadge(statusLabel(job),tone)}${bomb?statusBadge(bombMeta.label,bombMeta.tone):''}</div></div>${rolloverBadgeMarkup(rollover,{compact:true})}<div class="schedule-line">${icon('clock','icon-sm')}<span>${job==='upload'?'현장 완료 · 사진 전송·전체 제출 필요':job==='cleaning'&&rollover?'계속 청소 가능':`시작 가능 ${start} · ${reached?'지금 시작 가능':esc(access.reason)}`}</span></div>
+
+===== '기타' occurrence 3 line 6185 =====
+
+,photoId,attemptId,allowedJobs=['cleaning']) {
+        if(!maidCanEditCleaning(no,allowedJobs))return null;
+        const resolved=taskUploadByIdentity(no,photoId,attemptId),currentId=currentAttemptId(no);
+        return resolved&&currentId===attemptId?resolved:null;
+      }
+      function taskPhotoInputId(no,photoId,source) { return `task-photo-${source}-${no}-${photoId}`.replace(/[^a-zA-Z0-9_-]/g,'-'); }
+      function taskZoneGroups(task) {
+        const groups=[],byZone=new Map();
+        task.uploads.forEach(upload=>{
+          const zone=upload.zone||'사진';
+          if(!byZone.has(zone)){const group={zone,uploads:[]};byZone.set(zone,group);groups.push(group);}
+          byZone.get(zone).uploads.push(upload);
+        });
+        return groups;
+      }
+      function taskUploadStatusText(upload) {
+        if(upload.status==='uploading')return '사진 확인 중';
+        if(upload.status==='failed')return '전송 실패 · 다시 촬영';
+        if(upload.status==='done')return upload.image?.objectUrl?'현장 촬영 완료':'사진 완료';
+        return upload.required?'필수 사진 없음':'선택 사진 없음';
+      }
+      function taskPhotoVisual(upload) {
+        if(upload.image?.objectUrl)return `<img src="${esc(upload.image.src)}" alt="${esc(upload.label)} 현장 촬영 미리보기">`;
+        if(['done','failed'].includes(upload.status)&&upload.image)return inspectionPhotoSvg(upload,upload.label);
+        return icon(upload.status==='uploading'?'clock':'camera');
+      }
+      function taskZoneCardMarkup(no,group,task,editable) {
+        const attemptId=task.attemptId||'',requiredUploads=group.uploads.filter(item=>item.required),photosDone=requiredUploads.every(upload=>upload.status==='done'),failed=group.uploads.some(upload=>upload.status==='failed'||upload.status==='uploading'),hasRequired=requiredUploads.length>0,complete=hasRequired&&photosDone&&!failed;
+        const photos=`<div class="task-zone-photos">${group.uploads.map(upload=>{
+          const cameraId=taskPhotoInputId(no,upload.id,'camera'),galleryId=taskPhotoInputId(no,upload.id,'gallery'),busy=upload.status==='uploading',captured=upload.status==='done'||upload.status==='failed'||!!upload.image?.objectUrl;
+          return `<article class="task-zone-photo ${upload.status}" data-photo-slot="${esc(upload.id)}"><div class="task-zone-photo-main"><span class="task-zone-photo-visual">${taskPhotoVisual(upload)}</span><div class="task-zone-photo-copy"><strong>${esc(upload.label)} · ${upload.required?'필수':'선택'}</strong><span>${esc(upload.description||'청소 완료 상태를 촬영합니다.')}</span><span class="photo-state" aria-live="polite">${esc(taskUploadStatusText(upload))}${upload.instanceCount>1?` · ${upload.instance}/${upload.instanceCount}`:''}</span></div></div>${editable?`<div class="task-zone-photo-actions"><button class="btn btn-primary" type="button" data-action="capture-task-photo" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}" aria-label="${no}호 ${esc(group.zone)} ${esc(upload.label)} ${captured?'다시 촬영':'바로 촬영'}" ${busy?'disabled':''}>${icon('camera','icon-sm')}${captured?'다시 촬영':'바로 촬영'}</button><button class="btn btn-outline" type="button" data-action="choose-task-photo" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}" aria-label="${no}호 ${esc(group.zone)} ${esc(upload.label)} 갤러리에서 선택" ${busy?'disabled':''}>갤러리</button>${captured?`<button class="btn btn-outline icon-only" type="button" data-action="remove-task-photo" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}" aria-label="${no}호 ${esc(group.zone)} ${esc(upload.label)} 사진 삭제" ${busy?'disabled':''}>${icon('x','icon-sm')}</button>`:'<span aria-hidden="true"></span>'}</div><input id="${cameraId}" hidden type="file" accept="image/*" capture="environment" data-control="task-photo-file" data-source="camera" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}"><input id="${galleryId}" hidden type="file" accept="image/*" data-control="task-photo-file" data-source="gallery" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}">`:''}</article>`;
+        }).join('')}</div>`;
+        return `<section class="task-zone-card ${complete?'complete':''} ${failed?'failed':''}" aria-labelledby="task-zone-${no}-${groupsafe(group.zone)}"><div class="task-zone-head"><div><h4 id="task-zone-${no}-${groupsafe(group.zone)}">${esc(group.zone)}</h4><p>필수 ${requiredUploads.length}장 · 선택 ${group.uploads.length-requiredUploads.length}장</p></div>${statusBadge(complete?'구역 완료':failed?'사진 확인 필요':hasRequired?'촬영 필요':'선택',complete?'green':failed?'red':hasRequired?'amber':'neutral')}</div>${photos}</section>`;
+      }
+      function groupsafe(value) { return String(value||'zone').replace(/[^a-zA-Z0-9가-힣_-]/g,'-'); }
+      function renderRoomIssueInput(no,editable) {
+        const draft=roomIssueDraft(no),records=visibleRoomIssueRecords(no),hasDraft=!!draft.note.trim()||draft.photos.length>0;
+        const types=['냄새','청소 미흡','시설 고장','비품 부족·파손','분실물','기타'];
+        const editor=editable?`<div class="room-issue-form"><div class="notice notice-warning" style="margin:0"><div><strong>개인정보 입력 금지</strong><br>고객 이름·휴대폰 번호·이메일은 메모와 사진 파일명에 남기지 않습니다.</div></div><div class="room-issue-form-grid"><div class="field"><label for="room-issue-type-${no}">특이사항 유형 · 선택</label><select id="room-issue-type-${no}" class="select-control" data-control="room-issue-type" data-room="${no}"><option value="">유형 선택 안 함</option>${types.map(type=>`<option value="${type}" ${draft.type===type?'selected':''}>${type}</option>`).join('')}</select></div><div class="field"><label for="room-issue-note-${no}">업무 메모 · 선택</label><textarea id="room-issue-note-${no}" class="input-control task-note" rows="3" data-control="room-issue-note" data-room="${no}" placeholder="개인정보를 제외한 객실 상태를 적어 주세요.">${esc(draft.note)}</textarea></div></div><div class="room-issue-picker"><div class="room-issue-picker-copy"><strong>이미지 여러 장</strong><span>한 번에 여러 이미지를 선택하고 등록 전 개별 제거할 수 있습니다.</span></div><input id="room-issue-files-${no}" class="sr-only" type="file" accept="image/*" multiple tabindex="-1" data-control="room-issue-files" data-room="${no}"><button class="btn btn-outline" type="button" data-action="choose-room-issue-files" data-room="${no}">${icon('camera','icon-sm')}이미지 선택</button></div>${renderRoomIssueDraftPhotos(no)}<button class="btn btn-primary btn-block" type="button" data-action="save-room-issue" data-room="${no}" ${hasDraft?'':'disabled'}>특이사항 등록 · 선택 ${draft.photos.length}장</button><p class="audit-note" style="margin:0">현재 탭 메모리에서만 미리보기를 유지하는 데모이며 실제 서버 업로드·영속 저장이 아닙니다.</p></div>`:'<p class="audit-note" style="margin:12px 0 0">메이드는 청소 중에만 특이사항을 등록할 수 있습니다. 저장된 기록은 관리자에게 그대로 공유됩니다.</p>';
+        return `${editor}${records.length?renderRoomIssueRecords(no):editable?'':'<div class="inline-empty"><h3>등록된 특이사항이 없습니다</h3><p>메이드가 저장한 특이사항과 사진이 여기에 표시됩니다.</p></div>'}`;
+      }
+      function renderCleaningInputSection(no,key,title,meta,body) {
+        const titleId=`cleaning-section-${groupsafe(no)}-${groupsafe(key)}`;
+        return `<section class="cleaning-section" data-cleaning-section="${esc(key)}" aria-labelledby="${titleId}"><div class="cleaning-section-head"><h3 id="${titleId}">${esc(title)}</h3><span data-cleaning-section-meta>${esc(meta)}</span></div><div class="cleaning-section-body">${body}</div></section>`;
+      }
+      function renderTaskInputSections(no,job) {
+        const {task,snapshot,requiredUploads}=taskRequirements(no), occupied=ROOMS.find(r=>r.no===no)?.occupancy==='occupied';
+        const editable=maidCanEditRoomIssue(no,job),bomb=bombRoomReport(no),bombMeta=bombRoomStatusMeta(bomb),groups=taskZoneGroups(task);
+        const doneUploads=task.uploads.filter(upload=>upload.status==='done').length,type=ROOM_TYPES[snapshot?.typeId||ROOMS.find(room=>room.no===no)?.type||'standard'];
+        const requiredGroups=groups.filter(group=>group.uploads.some(item=>item.required)),completedGroups=requiredGroups.filter(group=>group.uploads.filter(item=>item.required).every(item=>item.status==='done')).length;
+        const tvSafety=snapshot?.photos?.some(item=>item.id==='tv-on'||String(item.id).startsWith('tv-on-'))?' TV는 켜고 계정·QR·알림 없는 기본 화면으로 촬영하세요.':'';
+        const photoBody=`<div class="photo-template-banner"><div><strong>${esc(type.name)} · ${esc(snapshot?.name||'퇴실 청소')}</strong><span>필수 사진 ${requiredUploads.length}장 · 구역 버튼을 눌러 바로 촬영하세요.</span></div><div class="badge-row">${statusBadge(`${completedGroups}/${requiredGroups.length} 구역 완료`,completedGroups===requiredGroups.length?'green':'amber')}</div></div><div class="task-zone-progress"><div><span>완료 구역</span><strong>${completedGroups}/${requiredGroups.length}</strong></div><div><span>사진 촬영</span><strong>${doneUploads}/${task.uploads.length}</strong></div></div><div class="task-zone-safety">${icon('shield','icon-sm')}<span><strong>촬영 전 개인정보를 확인하세요.</strong><br>연락처·얼굴·고객 물품·거울 속 사람은 제외하세요.${tvSafety}</span></div><div class="task-zone-grid">${groups.map(group=>taskZoneCardMarkup(no,group,task,editable)).join('')}</div>`;
+        const candleBody=`<p class="audit-note" style="margin:12px 0 0">청소 결과를 입력하는 동안만 객실의 최종 촛불 수량을 조정할 수 있습니다.</p><div class="candle-stepper" role="group" aria-label="${no}호 청소 결과 촛불 수량"><button class="btn btn-outline" type="button" data-action="task-candle-change" data-room="${no}" data-delta="-1" aria-label="촛불 1개 줄이기" ${!editable||task.candle<1?'disabled':''}>−</button><div class="candle-stepper-value" aria-live="polite"><strong>${task.candle||0}개</strong><span>청소 완료 후 객실 수량</span></div><button class="btn btn-outline" type="button" data-action="task-candle-change" data-room="${no}" data-delta="1" aria-label="촛불 1개 늘리기" ${!editable||task.candle>=9?'disabled':''}>+</button></div>`;
+        return `<div class="cleaning-sections">${renderCleaningInputSection(no,'photos','구역별 사진 촬영',`${completedGroups}/${requiredGroups.length} 구역`,photoBody)}${renderCleaningInputSection(no,'bomb-room','폭탄방 신고',bombMeta.label,renderBombRoomPanel(no,job))}${renderCleaningInputSection(no,'room-issues','객실 특이사항',`${visibleRoomIssueRecords(no).length}건 · 선택 ${task.issueDraft.photos.length}장`,renderRoomIssueInput(no,editable))}${occupied?'':renderCleaningInputSection(no,'candles','촛불',`${task.candle||0}개`,candleBody)}</div>`;
+      }
+      function cleaningPrimary(no,job) {
+        const req=taskRequirements(no),access=attemptAccessStatus(no);
+        if(['scheduled','claimed','reclean'].includes(job)) return {label:access.allowed?(job==='reclean'?'재청소 시작':'일 시작'):access.reason,action:'start-cleaning',disabled:!access.allowed||isLocked()};
+        if(job==='cleaning') { const photosLeft=req.requiredUploads.filter(item=>item.status!=='done').length;return {label:photosLeft?`남은 필수 사진 ${photosLeft}장`:'현장 완료',action:'field-complete-v2',disabled:!!photosLeft||req.failed||isLocked()}; }
+        if(job==='upload'&&req.failed) return {label:'미전송 재시도',action:'retry-all-task-photos',disabled:isLocked()};
+        if(job==='upload') return {label:'청소 전체 제출',action:'submit-cleaning-v2',disabled:!req.requiredDone||isLocked()};
+        if(job==='inspection'||job==='approved') return {label:'제출 결과 보기',action:'demo-info',disabled:false};
+        return {label:'상세 확인',action:'demo-info',disabled:false};
+      }
+      function maidCanStart(no) {
+        const room=ROOMS.find(r=>r.no===no),job=state.jobs[no],task=taskState(no),attemptId=currentAttemptId(no),attempt=state.cleaningAttempts?.[attemptId];
+        return state.role==='maid'&&!isLocked()&&(signedInMaidIsActive()||maidCanCompleteRequiredReclean(no))&&room?.assignee===signedInMaidName()&&task.attemptId===attemptId&&attempt?.performerId===signedInMaidId()&&['active','reclean'].includes(attempt.status)&&['scheduled','claimed','reclean'].includes(job)&&attemptAccessStatus(no,attempt).allowed;
+      }
+      function maidCanEditCleaning(no,allowedJobs=['cleaning']) {
+        const room=ROOMS.find(item=>item.no===no),task=taskState(no),attempt=state.cleaningAttempts?.[task.attemptId];
+        return state.role==='maid'&&!isLocked()&&(signedInMaidIsActive()||maidCanContinueDeactivation(no)||maidCanCompleteRequiredReclean(no))&&room?.assignee===signedInMaidName()&&task.attemptId===currentAttemptId(no)&&attempt?.performerId===signedInMaidId()&&allowedJobs.includes(state.jobs[no]);
+      }
+      function renderCleaningDetailActiveCore(no) {
+        const baseRoom=ROOMS.find(r=>r.no===no)||ROOMS[0],currentAttempt=state.cleaningAttempts?.[currentAttemptId(no)]||null,currentRecord=currentSubmission(no);
+        if(!state.jobs[no]&&!currentAttempt&&!currentRecord)return state.role==='admin'?renderRoomDetail(no):renderCoach()+detailHeader('청소 작업이 없습니다','관리자에게 통보받은 본인 업무만 확인할 수 있습니다.')+'<section class="card card-pad"><div class="notice notice-info"><div><strong>생성된 청소 작업이 없습니다.</strong><br>객실 기본정보를 청소 배정으로 간주하지 않습니다.</div></div></section>';
+        const room=no==='332'&&state.conflict==='resolved'?{...baseRoom,checkout:state.conflictRecord.afterCheckout}:baseRoom,job=state.jobs[no];
+        const activeAttempt=state.cleaningAttempts?.[currentAttemptId(no)],activeGuestCount=guestCountForAttempt(activeAttempt),activeCheckout=activeAttempt?.checkoutSnapshot||room.checkout,activeCheckin=activeAttempt?.checkinSnapshot||room.checkin,activeRoomMeta=activeAttempt?.roomMetaSnapshot||roomMetadataSnapshot(no),activeType=ROOM_TYPES[activeRoomMeta?.typeId]||ROOM_TYPES[room.type],activeTypeName=activeRoomMeta?.typeName||activeType.name,activeTemplate=snapshotForAttempt(no,activeAttempt),activeRate=activeAttempt?.baseRateSnapshot??activeType.rate,activeKind=activeAttempt?.kind||(job==='reclean'?'재청소':'퇴실 청소'),activeMinutes=activeTemplate?.minutes??activeType.minutes,activeStageLabel=activeKind==='재청소'?(job==='reclean'?'재청소 · 시작 예정':`재청소 · ${statusLabel(job)}`):cleaningLabel(job);
+        const maidOwnsSubmission=['inspection','approved'].includes(job)&&currentSubmission(no)?.performerId===signedInMaidId();
+        if(state.role==='maid'&&room.assignee!==signedInMaidName()&&!maidOwnsSubmission)return renderCoach()+detailHeader('접근할 수 없는 업무','본인에게 배정되었거나 본인이 제출한 객실만 확인할 수 있습니다.')+'<section class="card card-pad"><div class="notice notice-danger"><div><strong>업무 접근이 차단됐습니다.</strong><br>목록으로 돌아가 관리자에게 배정받은 업무를 확인해 주세요.</div></div></section>';
+        if(job==='approved'&&!currentSubmission(no))return renderInspectionDetail(no);
+        if(state.role==='admin'&&(['inspection','approved'].includes(job)||(state.inspections[no]==='rejected'&&state.detail?.mode!=='reclean'))) return renderInspectionDetail(no);
+        const access=attemptAccessStatus(no,activeAttempt),rollover=rolloverMetaForRoom(no),start=access.start, reached=access.allowed, primary=cleaningPrimary(no,job), occupied=room.occupancy==='occupied', special=roomReservationStatus(room), preparationDeadline=activeAttempt?.deadlineSnapshot||shiftClockTime(special.checkin,-30)||'마감 없음';
+        if(state.role==='admin') return renderCoach()+renderNetworkNotice()+detailHeader(`${no}호 · ${activeStageLabel}`,`${activeKind} · ${activeTypeName} · ${money(activeRate)} · ${activeMinutes}분 · ${activeTemplate?.version||'데모'}`)+`<div class="detail-grid"><div class="detail-stack"><section class="card card-pad"><div class="section-head"><h3>작업 상태</h3>${statusBadge(statusLabel(job),['cleaning','upload'].includes(job)?'amber':'neutral')}</div>${rolloverBadgeMarkup(rollover)}<div class="info-grid"><div class="info-item"><span>담당</span><strong>${esc(room.assignee)}</strong></div><div class="info-item"><span>시작 가능</span><strong>${start}</strong></div>${rollover?`<div class="info-item"><span>계획 서비스일</span><strong>${esc(dateLabel(rollover.planDate))}</strong></div><div class="info-item"><span>현재 수행일</span><strong>${esc(dateLabel(rollover.effectiveDate))}</strong></div>`:''}<div class="info-item"><span>숙박 인원</span><strong>${activeGuestCount?guestCountLabel(activeGuestCount):'미기록'}</strong></div><div class="info-item"><span>이전 예약 체크아웃 → 다음 예약 체크인</span><strong>${esc(activeCheckout)} → ${esc(activeCheckin)}</strong></div><div class="info-item"><span>현재 단계</span><strong>${esc(activeStageLabel)}</strong></div></div>${activeKind==='재청소'?`<div class="notice notice-info" style="margin-top:12px"><div><strong>처음 청소한 본인에게 고정된 무급 재청소입니다.</strong><br>담당 취소·이관·별도 보상·폭탄방 추가요금 없이 완료 이력만 남깁니다.</div></div>`:''}${['public','draft','future','scheduled'].includes(job)?`<div style="margin-top:12px">${button('메이드 직접 배정','direct-assign','primary',`data-id="${no}"`)}</div>`:''}</section>${job==='upload'?`<section class="card card-pad">${renderTaskInputSections(no,job)}</section>`:''}</div><aside class="detail-stack"><section class="card card-pad"><h3>수행·제출 타임라인</h3>${renderCleaningTimeline(no,job)}</section></aside></div>`;
+        const activeCleaning=activeCleaningFor();
+        return renderCoach()+renderNetworkNotice()+detailHeader(`${no}호 · ${activeStageLabel}`,`${activeKind} · ${activeTypeName} · ${money(activeRate)} · ${activeMinutes}분 · ${activeTemplate?.version||'데모'}`)+`<div class="detail-grid"><div class="detail-stack"><section class="card card-pad"><div class="section-head"><h3>담당·출입</h3>${statusBadge(statusLabel(job),job==='cleaning'||job==='upload'?'amber':'neutral')}</div>${rolloverBadgeMarkup(rollover)}<div class="info-grid"><div class="info-item"><span>책임 메이드</span><strong>${esc(room.assignee)}</strong></div><div class="info-item"><span>업무일·출입</span><strong>${esc(access.effectiveDate||access.workDate||'확인 필요')} · ${esc(start)}${access.end?`–${esc(access.end)}`:''} · ${esc(access.reason)}</strong></div>${rollover?`<div class="info-item"><span>계획 서비스일</span><strong>${esc(dateLabel(rollover.planDate))}</strong></div><div class="info-item"><span>현재 수행일</span><strong>${esc(dateLabel(rollover.effectiveDate))}</strong></div>`:''}<div class="info-item"><span>숙박 인원</span><strong>${activeGuestCount?guestCountLabel(activeGuestCount):'미기록'}</strong></div><div class="info-item"><span>체크아웃</span><strong>${esc(activeCheckout)}</strong></div><div class="info-item"><span>준비 마감</span><strong>${preparationDeadline}</strong></div>${special.early?`<div class="info-item"><span>자동 체크인 상태</span><strong>${esc(reservationStatusText(special,'checkin'))}</strong></div>`:''}${special.late?`<div class="info-item"><span>자동 체크아웃 상태</span><strong>${esc(reservationStatusText(special,'checkout'))}</strong></div>`:''}</div>${['claimed','scheduled','reclean','cleaning'].includes(job)?`<div style="margin-top:12px">${renderPinRow(no,{editable:false,maid:true})}</div>`:''}${activeCleaning&&activeCleaning!==no&&['claimed','reclean'].includes(job)?`<div class="notice notice-warning" style="margin-top:12px">${activeCleaning}호가 이미 청소 중입니다. 현장 완료 전에는 이 작업을 시작할 수 없습니다.</div>`:''}</section><section class="card card-pad">${renderTaskInputSections(no,job)}</section></div><aside class="detail-stack"><section class="card card-pad"><h3>수행·제출 타임라인</h3>${renderCleaningTimeline(no,job)}</section>${activeKind==='재청소'?`<section class="card card-pad"><h3>재청소 담당 고정</h3><p class="audit-note">처음 청소한 본인에게만 귀속되는 무급 작업입니다. 담당 취소·이관·별도 보상은 지원하지 않습니다.</p>${statusBadge('본인 수행 · 0원','neutral')}</section>`:!['upload','inspection','approved'].includes(job)?`<section class="card card-pad"><h3>담당 취소</h3><p class="audit-note">현장 완료 전까지만 요청할 수 있고 관리자 승인 전 담당은 유지됩니다.</p>${button('담당 취소 요청','request-cancel','outline')}</section>`:''}</aside></div><div class="sticky-command"><button class="btn ${job==='upload'&&taskRequirements(no).failed?'btn-danger':'btn-primary'}" type="button" data-action="${primary.action}" data-id="${no}" ${primary.disabled?'disabled':''}>${primary.label}</button></div>`;
+      }
+
+      function renderCleaningDetail(no) {
+        let html=renderCleaningDetailActiveCore(no);
+        if(state.role!=='admin'||state.jobs[no]==='upload')return html;
+        if(state.jobs[no]==='inspection')html=html.replace('<strong>특이사항</strong>','<strong>기본 제출 메모</strong>');
+        const stackEnd='</div><aside class="detail-stack">',insertAt=html.indexOf(stackEnd);
+        if(insertAt<0)return html;
+        const submittedContext=['inspection','approved'].includes(state.jobs[no])||state.inspections[no]==='rejected',submission=submittedContext?(currentSubmission(no)||currentSubmissionRecord(no)):null,submittedIssues=submittedContext?(submission?.roomIssuesSnapshot||[]):undefined;
+        return html.slice(0,insertAt)+renderRoomIssuesSection(no,submittedIssues)+html.slice(insertAt);
+      }
+
+      function renderInspectionDetail(no) {
+        const room=ROOMS.find(r=>r.no===no)||ROOMS[0],status=state.inspections[no]||'pending',validSubmission=currentSubmission(no),submission=validSubmission||currentSubmissionRecord(no),submissionIntegrityOk=!!validSubmission,attempt=submission?.attemptId?state.cleaningAttempts?.[submission.attemptId]:null,submissionRoomMeta=submission?.roomMetaSnapshot||attempt?.roomMetaSnapshot||roomMetadataSnapshot(no),type=ROOM_TYPES[submissionRoomMeta?.typeId]||ROOM_TYPES[room.type],submittedTypeName=submissionRoomMeta?.typeName||type.name,submissionT
+
+===== '기타' occurrence 4 line 6830 =====
+
+tById(`bomb-room-note-${no}`)?.focus();return;}
+          const task=taskState(no),attempt=state.cleaningAttempts?.[task.attemptId],identity={performerId:attempt.performerId,performerName:attempt.performerName},report={id:`bomb-${no}-${Date.now()}`,attemptId:attempt.id,submissionId:null,room:no,status:'pending',reportedStage:bombRoomStageLabel(job),reportedAt:`${attemptWorkDate(attempt,state.selectedDate)} ${state.time}`,reportedBy:identity.performerName,reportedById:identity.performerId,note,baseRateSnapshot:cleaningBaseRate(no,null,attempt.baseRateSnapshot),submittedVersion:null,decidedAt:null,decidedBy:null,decisionReason:'',photos:draft.photos.map((photo,index)=>({...photo,label:`폭탄방 증빙 ${index+1}`}))};
+          state.bombRoomReports[report.id]=report;state.currentBombReportByRoom[no]=report.id;draft.note='';draft.photos=[];appendEvent(`${no}호 폭탄방 신고`,`${report.attemptId} · ${report.reportedStage} · 이미지 ${report.photos.length}장 · 해당 객실 ${money(report.baseRateSnapshot)} 승인 시 ${money(report.baseRateSnapshot*2)}`,{maidIds:[report.reportedById]});render();focusAfterRender(`[data-action="bomb-room-photo"][data-room="${no}"]`);toast(`${no}호 폭탄방 신고를 관리자 검수에 공유했습니다.`);return;
+        }
+        if(a==='approve-bomb-room'||a==='reject-bomb-room'){openBombRoomDecision(a==='approve-bomb-room'?'approve':'reject',id,el);return;}
+        if(a==='confirm-approve-bomb-room'){
+          const submission=currentSubmission(id),report=submittedBombRoomReport(id);if(state.role!=='admin'||state.inspections[id]!=='pending'||state.jobs[id]!=='inspection'||submission?.id!==el.dataset.submission||submission?.status!=='pending'||report?.id!==el.dataset.report||report?.submissionId!==submission.id||report?.status!=='pending'||isLocked()){closeModal();render();toast('폭탄방 신고 또는 동기화 상태가 바뀌어 승인하지 않았습니다.','error');return;}
+          report.status='approved';report.decidedAt=`${state.selectedDate} ${state.time}`;report.decidedBy='관리자';report.decisionReason='이미지 증빙 확인 · 폭탄방 인정';appendEvent(`${id}호 폭탄방 승인`,`${money(report.baseRateSnapshot)} + 추가 ${money(report.baseRateSnapshot)} = 해당 객실 ${money(report.baseRateSnapshot*2)}`,{maidIds:[report.reportedById]});closeModal();render();focusAfterRender(`[data-action="approve-inspection-v2"][data-id="${id}"]`);toast('해당 객실의 폭탄방 추가요금을 승인했습니다.');return;
+        }
+        if(a==='confirm-reject-bomb-room'){
+          const submission=currentSubmission(id),report=submittedBombRoomReport(id),reason=document.getElementById('bomb-room-reject-reason')?.value.trim()||'';if(!reason){toast('폭탄방 미인정 사유를 입력하세요.','error');document.getElementById('bomb-room-reject-reason')?.focus();return;}
+          if(state.role!=='admin'||state.inspections[id]!=='pending'||state.jobs[id]!=='inspection'||submission?.id!==el.dataset.submission||submission?.status!=='pending'||report?.id!==el.dataset.report||report?.submissionId!==submission.id||report?.status!=='pending'||isLocked()){closeModal();render();toast('폭탄방 신고 또는 동기화 상태가 바뀌어 결정하지 않았습니다.','error');return;}
+          report.status='rejected';report.decidedAt=`${state.selectedDate} ${state.time}`;report.decidedBy='관리자';report.decisionReason=reason;appendEvent(`${id}호 폭탄방 미인정`,`${reason} · 해당 객실 기본 ${money(report.baseRateSnapshot)} 적용`,{maidIds:[report.reportedById]});closeModal();render();focusAfterRender(`[data-action="approve-inspection-v2"][data-id="${id}"]`);toast('폭탄방 미인정 사유를 기록했습니다.');return;
+        }
+        if(a==='room-issue-photo'){openRoomIssuePhoto(el.dataset.room,el.dataset.issue,el.dataset.photo,el);return;}
+        if(a==='choose-room-issue-files'){
+          const no=el.dataset.room;
+          if(!maidCanEditRoomIssue(no)){toast('본인 담당 객실을 청소 중일 때만 특이사항 이미지를 선택할 수 있습니다.','error');return;}
+          document.getElementById(`room-issue-files-${no}`)?.click();return;
+        }
+        if(a==='remove-room-issue-photo'){
+          const no=el.dataset.room,draft=roomIssueDraft(no);
+          if(!maidCanEditRoomIssue(no)){toast('본인 담당 객실을 청소 중일 때만 선택 이미지를 제거할 수 있습니다.','error');return;}
+          const index=draft.photos.findIndex(photo=>photo.id===el.dataset.photo);if(index<0)return;
+          releaseRoomIssuePhoto(draft.photos[index]);draft.photos.splice(index,1);render();focusAfterRender(`[data-action="choose-room-issue-files"][data-room="${no}"]`);toast('선택한 이미지 한 장을 제거했습니다.');return;
+        }
+        if(a==='save-room-issue'){
+          const no=el.dataset.room,draft=roomIssueDraft(no),note=draft.note.trim();
+          if(!maidCanEditRoomIssue(no)){toast('본인 담당 객실을 청소 중일 때만 특이사항을 등록할 수 있습니다.','error');return;}
+          if(!note&&!draft.photos.length){toast('업무 메모나 이미지 중 하나 이상을 입력하세요.','error');return;}
+          if(containsRoomIssuePersonalData(note)){toast('연락처·이메일 같은 개인정보를 삭제한 뒤 등록하세요.','error');document.getElementById(`room-issue-note-${no}`)?.focus();return;}
+          const attempt=state.cleaningAttempts?.[taskState(no).attemptId],record={id:`ri-${no}-${Date.now()}`,room:no,attemptId:attempt?.id||null,submissionId:null,type:draft.type||(!note?'사진 기록':'기타'),blocksCheckin:draft.type==='시설 고장',note,createdBy:attempt?.performerName||'김민지1',createdById:attempt?.performerId||'m1',createdAt:`${state.selectedDate} ${state.time}`,status:'open',photos:draft.photos.map((photo,index)=>({...photo,label:`특이사항 사진 ${index+1}`}))};
+          ensureRoomIssueRecords(no).unshift(record);draft.type='';draft.note='';draft.photos=[];appendEvent(`${no}호 객실 특이사항 등록`,`${record.type} · 사진 ${record.photos.length}장 · 관리자 확인 대기`,{maidIds:[record.createdById]});render();focusAfterRender(record.photos.length?`[data-room-issue="${record.id}"] [data-action="room-issue-photo"]`:`[data-action="choose-room-issue-files"][data-room="${no}"]`);toast(`객실 특이사항과 이미지 ${record.photos.length}장을 관리자에게 공유했습니다.`);return;
+        }
+        if(a==='open-room-export'){openRoomExport(el);return;}
+        if(a==='export-rooms-csv'){downloadRoomExport('csv');return;}
+        if(a==='export-rooms-xls'){downloadRoomExport('xlsx');return;}
+        if(a==='open-calendar'){openCalendar(el,'room');return;}
+        if(a==='open-pay-calendar'){
+          const context=el.dataset.context==='maid-pay'?'maid-pay':'admin-pay';
+          const selected=context==='maid-pay'?(state.maidPaySelectedWeek||state.maidPayOpenWeek||'2026-08-03'):(state.adminPayWeek||'2026-08-03');
+          state.calendarMonth=selected.slice(0,7);openCalendar(el,context);return;
+        }
+        if(a==='open-work-history-calendar'){if(!workHistoryCalendarAllowed()){toast('관리자 근무 기록 화면에서만 주차를 선택할 수 있습니다.','error');return;}state.calendarMonth=state.workHistoryWeek.slice(0,7);openCalendar(el,'work-history');return;}
+        if(a==='calendar-month'){const [y,m]=state.calendarMonth.split('-').map(Number),d=new Date(y,m-1+Number(el.dataset.offset),1);state.calendarMonth=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;rerenderCalendar();return;}
+        if(a==='calendar-select'){
+          const context=state.calendarContext;
+          if(context==='reservation-week'){
+            const start=weekStartIso(el.dataset.date),room=state.reservationWeekRoom||'211';state.reservationWeekStart=start;state.calendarMonth=start.slice(0,7);state.calendarContext=null;reservationWeekHistoryOverride={room:String(room),weekStart:start};dismissModal();toast(`${weekRangeLabel(start)} 예약을 표시합니다.`);return;
+          }
+          if(context==='admin-pay'||context==='maid-pay'||context==='work-history'){
+            if(context==='work-history'&&!workHistoryCalendarAllowed()){closeModal();state.calendarContext=null;render();toast('관리자 근무 기록 화면에서만 주차를 바꿀 수 있습니다.','error');return;}
+            const start=context==='work-history'?normalizeWorkHistoryWeek(el.dataset.date):weekStartIso(el.dataset.date);
+            if(!start){toast('선택할 수 없는 주차입니다.','error');return;}
+            if(context==='admin-pay')state.adminPayWeek=start;
+            else if(context==='maid-pay'){state.maidPaySelectedWeek=start;state.maidPayOpenWeek=start;state.maidPayFilter='all';}
+            else state.workHistoryWeek=start;
+            closeModal();state.calendarContext=null;render();requestAnimationFrame(()=>document.querySelector(context==='work-history'?'[data-action="open-work-history-calendar"]':`[data-action="open-pay-calendar"][data-context="${context}"]`)?.focus());toast(`${weekRangeLabel(start)} ${context==='work-history'?'근무 기록':'지급 이력'}을 표시합니다.`);return;
+          }
+          applyOperationalDate(state,el.dataset.date);closeModal();state.calendarContext=null;render();requestAnimationFrame(()=>document.querySelector('[data-action="open-calendar"]')?.focus());toast(`${dateLabel()} 현황을 표시합니다.`);return;
+        }
+        if(a==='calendar-today'){
+          const context=state.calendarContext;
+          if(context==='reservation-week'){
+            const start=weekStartIso(state.selectedDate),room=state.reservationWeekRoom||'211';state.reservationWeekStart=start;state.calendarMonth=start.slice(0,7);state.calendarContext=null;reservationWeekHistoryOverride={room:String(room),weekStart:start};dismissModal();return;
+          }
+          if(context==='admin-pay'||context==='maid-pay'||context==='work-history'){
+            if(context==='work-history'&&!workHistoryCalendarAllowed()){closeModal();state.calendarContext=null;render();toast('관리자 근무 기록 화면에서만 주차를 바꿀 수 있습니다.','error');return;}
+            const start='2026-08-10';
+            if(context==='admin-pay')state.adminPayWeek=start;
+            else if(context==='maid-pay'){state.maidPaySelectedWeek=start;state.maidPayOpenWeek=start;state.maidPayFilter='all';}
+            else state.workHistoryWeek=start;
+            closeModal();state.calendarContext=null;render();requestAnimationFrame(()=>document.querySelector(context==='work-history'?'[data-action="open-work-history-calendar"]':`[data-action="open-pay-calendar"][data-context="${context}"]`)?.focus());return;
+          }
+          applyOperationalDate(state,'2026-08-15');closeModal();state.calendarContext=null;render();requestAnimationFrame(()=>document.querySelector('[data-action="open-calendar"]')?.focus());return;
+        }
+        if(a==='date-shift'){const d=dateObject();d.setDate(d.getDate()+Number(el.dataset.offset));applyOperationalDate(state,dateIso(d));render();requestAnimationFrame(()=>document.querySelector(`[data-action="date-shift"][data-offset="${el.dataset.offset}"]`)?.focus());return;}
+        if(a==='date-today'){applyOperationalDate(state,'2026-08-15');render();requestAnimationFrame(()=>document.querySelector('[data-action="date-today"]')?.focus());return;}
+        if(a==='toggle-section'){const key=el.dataset.key;state.todaySections[key]=!state.todaySections[key];render();requestAnimationFrame(()=>document.querySelector(`[data-action="toggle-section"][data-key="${key}"]`)?.focus());return;}
+        if(a==='clear-room-filters'){state.roomSearch='';state.roomTypeFilter='all';state.roomFilter='all';state.listMode='data';render();focusAfterRender('[data-control="room-filter"]');return;}
+        if(a==='edit-room-info'){openRoomInfoEditor(id,el);return;}
+        if(a==='save-room-info'){
+          const room=ROOMS.find(item=>item.no===id),expected=el.dataset.fingerprint||'',type=document.getElementById('room-info-type')?.value||'',elevator=document.getElementById('room-info-elevator')?.value??'',wasHeld=roomIsOnHold(id),occupancy=document.getElementById('room-info-occupancy')?.value||'';
+          if(!adminCanMutate()||!room||roomMasterFingerprint(room)!==expected){closeModal();render();toast('객실 정보 또는 관리자 상태가 바뀌어 저장하지 않았습니다. 다시 확인하세요.','error');return;}
+          if(!ROOM_TYPES[type]||!['','A','B','C'].includes(elevator)){toast('객실 타입과 엘리베이터 값을 다시 확인하세요.','error');return;}
+          const overCapacity=activeReservationsFor(state,id).find(reservation=>!reservationRecordIsPast(reservation)&&reservationGuestCount(reservation)>ROOM_TYPES[type].maxGuestCount);
+          if(overCapacity){toast(`${id}호 ${quickRangeLabel(overCapacity)} 예약이 ${reservationGuestCount(overCapacity)}명이라 최대 ${ROOM_TYPES[type].maxGuestCount}명인 ${ROOM_TYPES[type].name} 타입으로 바꿀 수 없습니다.`,'error');document.getElementById('room-info-type')?.focus();return;}
+          if(wasHeld&&!['vacant','occupied'].includes(occupancy)){toast('현재 투숙 상태를 선택해야 정보 확인 필요 상태를 해제할 수 있습니다.','error');document.getElementById('room-info-occupancy')?.focus();return;}
+          const before=`${ROOM_TYPES[room.type].name} · ${elevatorLabel(room)}${wasHeld?' · 정보 확인 필요':''}`;
+          room.type=type;room.elevator=elevator||null;
+          if(wasHeld){room.occupancyOverride=occupancy;room.occupancy=occupancy;room.catalogStatus='available';room.dataIssue=null;room.checkout=occupancy==='occupied'?'예정 미입력':'정보 없음';room.checkin=occupancy==='occupied'?'투숙 중':'정보 없음';}
+          const after=`${ROOM_TYPES[room.type].name} · ${elevatorLabel(room)}${wasHeld?` · ${room.occupancy==='occupied'?'투숙 중':'공실'}로 확인`:''}`;
+          appendEvent(`${id}호 객실 정보 수정`,`${before} → ${after} · 이후 새 작업부터 적용`,{roomId:id});
+          closeModal();render();focusAfterRender(`[data-action="edit-room-info"][data-id="${id}"]`);toast(wasHeld?'객실 정보를 확정하고 일반 운영 흐름을 열었습니다.':'객실 기본정보를 저장했습니다.');return;
+        }
+        if(a==='manual-checkout'){openManualCheckout(id,el);return;}
+        if(a==='confirm-manual-checkout'){
+          const room=ROOMS.find(item=>item.no===id),expected=el.dataset.fingerprint||'',blockingAttempt=manualCheckoutBlockingAttempt(id),unstartedAttempt=activeUnfinishedAttempt(id),pinViewed=unstartedAttempt&&roomPinWasViewed(id,unstartedAttempt.id);
+          if(!adminCanMutate()||!room||roomIsOnHold(id)||room.occupancy!=='occupied'||roomMasterFingerprint(room)!==expected||blockingAttempt){closeModal();render();toast(blockingAttempt?'진행 중인 청소 작업을 먼저 마무리하세요.':'투숙 상태 또는 관리자 최신 상태가 바뀌어 체크아웃하지 않았습니다.','error');return;}
+          const actualCheckoutAt=`${state.selectedDate}T${state.time}`,plannedCheckout=plannedCheckoutLabel(room),activeReservation=currentOccupiedReservation(room),manualDraftId=`manual-checkout-${id}-${state.selectedDate}`,reservationDraft=activeReservation?state.drafts.find(draft=>draft.reservationId===activeReservation.id)||null:null,existingDraft=reservationDraft||state.drafts.find(draft=>draft.id===manualDraftId)||state.drafts.find(draft=>draft.room===id&&draft.kind==='퇴실 청소'&&!draft.reservationId&&draft.date===state.selectedDate),templateSnapshot=existingDraft?.templateSnapshot||unstartedAttempt?.templateSnapshot||templateSnapshotFor(id,'퇴실 청소'),previousWorkDate=unstartedAttempt?attemptWorkDate(unstartedAttempt,state.selectedDate):null,previousAccessStart=unstartedAttempt?.accessStart||unstartedAttempt?.checkoutSnapshot||startTimeFor(id);
+          const nextReservation=activeReservationsFor(state,id).filter(reservation=>reservation.id!==activeReservation?.id).find(reservation=>reservation.checkInAt>=actualCheckoutAt)||null,sameDayNext=nextReservation?.checkInAt.slice(0,10)===state.selectedDate,nextCheckinSnapshot=sameDayNext?nextReservation.checkInAt.slice(11,16):DEFAULT_CHECKIN_TIME,nextDeadlineSnapshot=shiftClockTime(nextCheckinSnapshot,-30)||'15:30';
+          if(existingDraft){existingDraft.date=state.selectedDate;existingDraft.source='manual-checkout';existingDraft.actualCheckoutAt=actualCheckoutAt;if(activeReservation){if(!existingDraft.reservationId)existingDraft.reservationId=activeReservation.id;existingDraft.guestCount=reservationGuestCount(activeReservation);}if(!existingDraft.templateSnapshot)existingDraft.templateSnapshot=templateSnapshot;}
+          else if(!unstartedAttempt)state.drafts.push({id:manualDraftId,room:id,kind:'퇴실 청소',created:state.time,date:state.selectedDate,source:'manual-checkout',actualCheckoutAt,reservationId:activeReservation?.id||null,guestCount:activeReservation?reservationGuestCount(activeReservation):null,templateSnapshot});
+          const canonicalCheckoutDraft=existingDraft||state.drafts.find(draft=>draft.id===manualDraftId)||null;
+          if(canonicalCheckoutDraft)state.drafts=state.drafts.filter(draft=>{if(draft===canonicalCheckoutDraft)return true;const sameReservation=activeReservation&&draft.reservationId===activeReservation.id,sameUnlinkedDay=draft.room===id&&draft.kind==='퇴실 청소'&&!draft.reservationId&&draft.date===state.selectedDate;return !(draft.id===manualDraftId||sameReservation||sameUnlinkedDay);});
+          if(!unstartedAttempt){
+            const manualTarget={id:manualDraftId,room:id,type:room.type,kind:'퇴실 청소',date:state.selectedDate,checkout:state.time,checkin:nextCheckinSnapshot,deadline:nextDeadlineSnapshot,nextReservationId:sameDayNext?nextReservation.id:null,source:'manual',sourceLabel:'직접 등록 · 지금 체크아웃',reservationId:activeReservation?.id||null,guestCount:activeReservation?reservationGuestCount(activeReservation):null};
+            const existingTarget=state.manualAssignmentTargets.find(target=>target.id===manualDraftId),reopened=reopenCancelledManualCleaningTarget(manualTarget,'실제 체크아웃으로 퇴실 청소 다시 생성');if(!reopened){if(existingTarget)Object.assign(existingTarget,manualTarget);else state.manualAssignmentTargets.push(manualTarget);state.cleaningTargets[manualDraftId]=cleaningTargetSnapshot(manualTarget,state.selectedDate);}assignmentFor(manualTarget);
+          }
+          if(activeReservation){activeReservation.status='checked-out';activeReservation.actualCheckoutAt=actualCheckoutAt;activeReservation.completedAt=actualCheckoutAt;activeReservation.updatedAt=actualCheckoutAt;}
+          if(unstartedAttempt){
+            if(activeReservation&&!unstartedAttempt.reservationIdSnapshot)unstartedAttempt.reservationIdSnapshot=activeReservation.id;
+            if(activeReservation&&unstartedAttempt.reservationIdSnapshot===activeReservation.id&&!guestCountForAttempt(unstartedAttempt))unstartedAttempt.guestCountSnapshot=reservationGuestCount(activeReservation);
+            if(pinViewed){maskPin();appendEvent(`${id}호 PIN lease 종료`,'실제 체크아웃 시각 변경 · 기존 조회 원문 폐기 · 새 시작 시각부터 재조회',{maidIds:unstartedAttempt.performerId?[unstartedAttempt.performerId]:[],roomId:id,attemptId:unstartedAttempt.id});}
+            Object.assign(unstartedAttempt,{workDate:previousWorkDate||state.selectedDate,effectiveDate:state.selectedDate,accessStart:state.time,checkoutSnapshot:state.time,checkinSnapshot:nextCheckinSnapshot,deadlineSnapshot:nextDeadlineSnapshot,nextReservationIdSnapshot:sameDayNext?nextReservation.id:null,actualCheckoutAt,accessReviewRequired:false});recordManualCheckoutScheduleChange(id,unstartedAttempt,previousWorkDate,previousAccessStart);
+          }
+          const cancelledStayover=state.drafts.filter(draft=>draft.room===id&&draft.kind==='연박 청소').length;
+          const cancelledStayoverTargets=cancelPendingStayoverTargetsAfterCheckout(id),cancelledStayoverDraftIds=new Set(state.drafts.filter(draft=>draft.room===id&&draft.kind==='연박 청소').map(draft=>draft.id));
+          state.drafts=state.drafts.filter(draft=>!cancelledStayoverDraftIds.has(draft.id));state.selectedDrafts=state.selectedDrafts.filter(draftId=>!cancelledStayoverDraftIds.has(draftId));
+          room.occupancy='vacant';room.plannedCheckoutAt=plannedCheckout==='미입력'?null:plannedCheckout;room.actualCheckoutAt=actualCheckoutAt;delete room.currentStayReservationId;delete room.stayoverRequest;projectReservationState(state,id);room.checkout=`${state.time} 완료`;room.checkin=room.nextCheckinAt?room.nextCheckinAt.slice(11,16):'예정 없음';if(!unstartedAttempt){room.assignee='미정';state.jobs[id]='draft';}state.candles[id]=0;
+          const cleaningResult=unstartedAttempt?`기존 ${unstartedAttempt.performerName} 담당·${unstartedAttempt.id} 회차 유지`:'퇴실 청소 초안 1건';
+          appendEvent(`${id}호 지금 체크아웃`,`${dateLabel(state.selectedDate)} ${state.time} 실제 퇴실 · 예정 ${plannedCheckout} 보존 · ${cleaningResult}${activeReservation?` · 예약 ${activeReservation.id} 실제 종료`:''}${cancelledStayover||cancelledStayoverTargets?' · 미시작 투숙 중 청소 요청 종료':''}`,{roomId:id});
+          closeModal();render();focusAfterRender(`[data-action="room-detail"][data-id="${id}"]`);toast(unstartedAttempt?`${id}호를 공실로 바꾸고 기존 청소 담당·회차의 시작 시각을 갱신했습니다.`:`${id}호를 공실·청소 필요로 바꾸고 퇴실 청소 초안을 연결했습니다.`);return;
+        }
+        if(a==='manual-checkin'){openManualCheckin(id,el);return;}
+        if(a==='confirm-manual-checkin'){
+          const room=ROOMS.find(item=>item.no===id),expected=el.dataset.fingerprint||'',presentation=roomPresentation(id);
+          if(!adminCanMutate()||!room||roomIsOnHold(id)||room.occupancy!=='vacant'||roomMasterFingerprint(room)!==expected||presentation.available!==true){closeModal();render();toast('객실 준비 상태 또는 관리자 최신 상태가 바뀌어 투숙을 시작하지 않았습니다.','error');return;}
+          const actualCheckinAt=`${state.selectedDate}T${state.time}`,linkedReservation=activeReservationsFor(state,id).find(reservation=>reservation.checkInAt.slice(0,10)===state.selectedDate&&reservation.checkOutAt>actualCheckinAt)||activeReservationsFor(state,id).find(reservation=>reservation.id===room.reservationProjectionId)||null;
+          room.occupancy='occupied';room.actualCheckinAt=actualCheckinAt;room.currentStayReservationId=linkedReservation?.id||null;room.plannedCheckoutAt=linkedRe

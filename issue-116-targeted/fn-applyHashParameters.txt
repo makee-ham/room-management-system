@@ -1,0 +1,25 @@
+function applyHashParameters(params) {
+        if(!params.has('scenario'))return false;
+        state=makeScenario(Number(params.get('scenario'))||0);hydrateTemplateSnapshotsForState();
+        if(['admin','maid'].includes(params.get('role')))state.role=params.get('role');
+        if(state.detail&&!detailAllowedForRole(state.detail.type,state.role))state.detail=null;
+        if(state.role==='admin'&&adminNav.some(n=>n.id===params.get('view')))state.adminView=params.get('view');
+        if(state.role==='maid'&&maidNav.some(n=>n.id===params.get('view')))state.maidView=params.get('view');
+        if(/^2026-08-(0[1-9]|[12]\d|3[01])$/.test(params.get('date')||''))applyOperationalDate(state,params.get('date'));
+        if(['today','tomorrow'].includes(params.get('cleaningDay'))){state.cleaningTab=`assignment-${params.get('cleaningDay')}`;syncAssignmentDateForCleaningTab(state);}
+        const requestedRoomFilter=['catalog','default'].includes(params.get('filter'))?'vacant':params.get('filter');
+        if(['all','vacant','available','blocked','cleaning','occupied','checkout-inspection','extra-guests','candle','issues','early','late'].includes(requestedRoomFilter))state.roomFilter=requestedRoomFilter;
+        if(['all',...Object.keys(ROOM_TYPES)].includes(params.get('type')))state.roomTypeFilter=params.get('type');
+        if(['all',...Object.keys(ROOM_TYPES)].includes(params.get('assignmentType')))state.assignmentTypeFilter=params.get('assignmentType');
+        if(/^\d{0,6}$/.test(params.get('q')||''))state.roomSearch=params.get('q')||'';
+        const bookingAnchor=params.get('bookingAnchor')||'',legacyBookingMonth=params.get('bookingMonth')||'';
+        if(/^\d{4}-(0[1-9]|1[0-2])-([0-2]\d|3[01])$/.test(bookingAnchor)){state.quickReservationAnchorDate=bookingAnchor;state.quickReservationFollowsToday=false;}
+        else if(/^\d{4}-(0[1-9]|1[0-2])$/.test(legacyBookingMonth)){state.quickReservationAnchorDate=`${legacyBookingMonth}-15`;state.quickReservationFollowsToday=false;}
+        else{state.quickReservationAnchorDate=DEMO_TODAY;state.quickReservationFollowsToday=true;}
+        if(['all',...Object.keys(ROOM_TYPES)].includes(params.get('bookingType')))state.quickReservationType=params.get('bookingType');
+        if(/^\d{0,6}$/.test(params.get('bookingQ')||''))state.quickReservationSearch=params.get('bookingQ')||'';
+        const detailValue=params.get('detail');
+        if(detailValue){state.detail=null;const separator=detailValue.indexOf(':'),type=separator>0?detailValue.slice(0,separator):'',id=separator>0?detailValue.slice(separator+1):'';if(detailAllowedForRole(type,state.role)&&id)state.detail={type,id,...(params.get('mode')?{mode:params.get('mode')}:{})};}
+        if(state.cleaningTab==='assignment-today')activateNotifiedAssignmentsForDate(state.selectedDate);
+        return true;
+      }

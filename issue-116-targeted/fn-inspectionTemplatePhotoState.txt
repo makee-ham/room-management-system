@@ -1,0 +1,6 @@
+function inspectionTemplatePhotoState(upload) {
+        if(upload.status==='done')return {label:`촬영 완료 · ${inspectionPhotoTime(upload)}`,tone:'green',icon:'check'};
+        if(upload.status==='failed')return {label:`전송 실패 · ${inspectionPhotoTime(upload)}`,tone:'red',icon:'alert'};
+        if(upload.status==='uploading')return {label:'전송 중',tone:'blue',icon:'clock'};
+        return {label:upload.required?'필수 사진 누락':'선택 사진 없음',tone:upload.required?'red':'neutral',icon:'camera'};
+      }

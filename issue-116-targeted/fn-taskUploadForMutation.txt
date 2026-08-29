@@ -1,0 +1,5 @@
+function taskUploadForMutation(no,photoId,attemptId,allowedJobs=['cleaning']) {
+        if(!maidCanEditCleaning(no,allowedJobs))return null;
+        const resolved=taskUploadByIdentity(no,photoId,attemptId),currentId=currentAttemptId(no);
+        return resolved&&currentId===attemptId?resolved:null;
+      }

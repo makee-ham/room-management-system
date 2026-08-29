@@ -1,0 +1,3 @@
+function photoSlotContract(items=[]) {
+        return items.map((item,index)=>({order:index,id:String(item.id),zone:item.zone||'사진',label:item.label||String(item.id),description:item.description||'청소 완료 상태를 촬영합니다.',required:item.required!==false,multiple:!!item.multiple,repeatable:!!item.repeatable,instance:Number(item.instance)||1,instanceCount:Number(item.instanceCount)||1}));
+      }

@@ -1,0 +1,14 @@
+function taskState(no) {
+        const attemptId=state.currentAttemptByRoom?.[no]||null,attempt=attemptId?state.cleaningAttempts?.[attemptId]:null,snapshot=snapshotForAttempt(no,attempt);
+        if(!state.taskInputs[no]) state.taskInputs[no]=createTaskInputsFromSnapshot(snapshot,{attemptId,checklist:{},uploads:[],note:'',candle:state.candles[no]||0});
+        let task=state.taskInputs[no];
+        if(snapshot&&(task.attemptId!==attemptId||task.templateId!==snapshot.id||task.templateVersion!==snapshot.version)){
+          task=createTaskInputsFromSnapshot(snapshot,{...task,attemptId});state.taskInputs[no]=task;
+        }
+        const fixtures=['bed','bath','floor','supply'];
+        if(!task.attemptId)task.attemptId=attemptId;
+        task.uploads.forEach((upload,index)=>{if(!upload.image)upload.image={...demoUploadImageFixture(fixtures[index]||'bed')};});
+        if(!task.issueDraft)task.issueDraft={type:'',note:'',photos:[]};
+        if(!task.bombRoomDraft)task.bombRoomDraft={note:'',photos:[]};
+        return task;
+      }

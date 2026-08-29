@@ -1,0 +1,1 @@
+function bindSubmissionEvidenceSnapshots(submission,attempt,{includeUnscoped=false}

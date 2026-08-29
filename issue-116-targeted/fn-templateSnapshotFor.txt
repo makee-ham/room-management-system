@@ -1,0 +1,22 @@
+function templateSnapshotFor(roomNo,kind='퇴실 청소') {
+        const room=ROOMS.find(item=>item.no===roomNo), typeId=room?.type||'standard';
+        const kindId=({'퇴실 청소':'checkout','연박 청소':'stayover','재청소':'reclean'})[kind]||'checkout';
+        const template=templateById(`${typeId}:${kindId}`);
+        if(!template) return null;
+        const freezeItems=items=>Object.freeze(items.map(item=>Object.freeze({...item})));
+        const layoutProfile=layoutProfileFor(roomNo,typeId),photos=kindId==='checkout'?expandPhotoRules(roomNo,typeId,template.photos):template.photos;
+        return Object.freeze({
+          id:template.id,
+          templateId:template.id,
+          typeId,
+          kindId,
+          name:template.name,
+          version:template.version,
+          requirementsMode:'photo-only-v1',
+          minutes:template.minutes,
+          rate:ROOM_TYPES[typeId].rate,
+          evidence:PHOTO_TEMPLATE_EVIDENCE[typeId],
+          layoutProfile,
+          photos:freezeItems(photos)
+        });
+      }

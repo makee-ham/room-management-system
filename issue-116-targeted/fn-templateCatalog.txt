@@ -1,0 +1,10 @@
+function templateCatalog() {
+        if(!state.templateCatalog) {
+          state.templateCatalog={};
+          Object.keys(ROOM_TYPES).forEach(typeId=>TEMPLATE_KIND_ORDER.forEach(kindId=>{
+            const source=TEMPLATE_KIND_DEMO[kindId], id=`${typeId}:${kindId}`,photos=kindId==='checkout'?TYPE_PHOTO_GROUPS[typeId]:source.photos;
+            state.templateCatalog[id]={id,typeId,kindId,name:source.name,version:source.version,requirementsMode:source.requirementsMode,minutes:TEMPLATE_TIME_DEMO[typeId][kindId],photos:photos.map(item=>({...item})),lastSaved:'2026.08.18 12:00',history:[]};
+          }));
+        }
+        return state.templateCatalog;
+      }

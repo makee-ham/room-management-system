@@ -1,0 +1,1 @@
+function taskPhotoInputId(no,photoId,source) { return `task-photo-${source}-${no}-${photoId}`.replace(/[^a-zA-Z0-9_-]/g,'-'); }

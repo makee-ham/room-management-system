@@ -1,0 +1,8 @@
+function expandPhotoRules(roomNo,typeId,rules) {
+        const profile=layoutProfileFor(roomNo,typeId);
+        return rules.flatMap(rule=>{
+          if(rule.conditionalBy&&!profile[rule.conditionalBy])return [];
+          const count=rule.repeatBy?Math.max(1,Number(profile[rule.repeatBy])||1):1;
+          return Array.from({length:count},(_,index)=>({...rule,id:count>1?`${rule.id}-${index+1}`:rule.id,label:count>1?`${rule.label} ${index+1}`:rule.label,instance:index+1,instanceCount:count}));
+        });
+      }

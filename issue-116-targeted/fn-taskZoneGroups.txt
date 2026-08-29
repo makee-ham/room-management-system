@@ -1,0 +1,9 @@
+function taskZoneGroups(task) {
+        const groups=[],byZone=new Map();
+        task.uploads.forEach(upload=>{
+          const zone=upload.zone||'사진';
+          if(!byZone.has(zone)){const group={zone,uploads:[]};byZone.set(zone,group);groups.push(group);}
+          byZone.get(zone).uploads.push(upload);
+        });
+        return groups;
+      }

@@ -1,0 +1,5 @@
+function uploadFromPhotoRule(rule,status='empty',priorUpload=null) {
+        const upload={...demoUpload(rule.id,rule.label,rule.required,status,rule.fixture||'supply'),zone:rule.zone||'사진',description:rule.description||'청소 완료 상태를 촬영합니다.',multiple:!!rule.multiple,repeatable:!!rule.repeatable,instance:rule.instance||1,instanceCount:rule.instanceCount||1};
+        if(priorUpload?.image)upload.image={...priorUpload.image};
+        return upload;
+      }

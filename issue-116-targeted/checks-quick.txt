@@ -1,0 +1,3622 @@
+m 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const required = [
+  'AGENTS.md',
+  'manifest.json',
+  'SHA256SUMS.txt',
+  'DOCS/FINAL_UX_AUDIT.md',
+  'DOCS/14_CLICKABLE_WIREFRAME_HANDOFF.md',
+  'DOCS/15_TWO_PASS_AUDIT_RESULT.md',
+  'DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md',
+  'DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md',
+  'DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md',
+  'DOCS/WIREFRAME_TASK_PROMPT.md',
+  'WIREFRAME/index.html',
+  'WIREFRAME/README.md',
+  'WIREFRAME/QA.md',
+  'WIREFRAME/screenshots/admin-desktop-1440.png',
+  'WIREFRAME/screenshots/admin-mobile-390.png',
+  'WIREFRAME/screenshots/maid-mobile-390.png',
+  'WIREFRAME/QA/screenshots/admin-mobile-rooms-unified.png',
+  'WIREFRAME/QA/screenshots/admin-mobile-inspection-gallery.png',
+  'WIREFRAME/QA/screenshots/admin-mobile-inspection-photo.png',
+  'WIREFRAME/QA/screenshots/admin-mobile-pay-calendar.png',
+  'WIREFRAME/QA/screenshots/admin-auto-early-late-1440.png',
+  'WIREFRAME/QA/screenshots/admin-auto-early-late-390.png',
+  'WIREFRAME/QA/screenshots/maid-weekly-availability-390.png',
+  'WIREFRAME/QA/screenshots/maid-room-issue-multi-photo-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-issue-gallery-1440.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-type-filter-1440.png',
+  'WIREFRAME/QA/screenshots/admin-maid-order-board-390.png',
+  'WIREFRAME/QA/screenshots/admin-maid-order-total-1440.png',
+  'WIREFRAME/QA/screenshots/admin-partial-assignment-390.png',
+  'WIREFRAME/QA/screenshots/admin-weekly-worktable-symbols-390.png',
+  'WIREFRAME/QA/screenshots/admin-weekly-work-history-calendar-1440.png',
+  'WIREFRAME/QA/screenshots/admin-weekly-work-history-calendar-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-catalog-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-catalog-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-four-states-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-priority-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-stay-progress-390.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-early-late-1440.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-early-late-390.png',
+  'WIREFRAME/QA/screenshots/admin-available-room-edit-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-info-edit-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-info-edit-390.png',
+  'WIREFRAME/QA/screenshots/admin-manual-checkout-390.png',
+  'WIREFRAME/QA/screenshots/admin-quick-booking-1440.png',
+  'WIREFRAME/QA/screenshots/admin-quick-booking-390.png',
+  'WIREFRAME/QA/screenshots/admin-quick-booking-sticky-header-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-total-filter-1440.png',
+  'WIREFRAME/QA/screenshots/admin-calendar-standard-1440.png',
+  'WIREFRAME/QA/screenshots/admin-calendar-standard-390.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-cancel-1440.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-cancel-390.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-guests-1440.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-guests-390.png',
+  'WIREFRAME/QA/screenshots/maid-reservation-guests-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-guest-count-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-guest-count-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-390.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-elevator-1440.png',
+  'WIREFRAME/QA/screenshots/admin-random-assignment-1440.png',
+  'WIREFRAME/QA/screenshots/admin-random-assignment-390.png',
+  'WIREFRAME/QA/screenshots/maid-bomb-room-report-390.png',
+  'WIREFRAME/QA/screenshots/admin-bomb-room-inspection-390.png',
+  'WIREFRAME/QA/screenshots/admin-bomb-room-payroll-1440.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-cleaning-ledger-1440.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-cleaning-ledger-390.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-per-maid-toggle-1440.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-per-maid-toggle-390.png',
+  'WIREFRAME/QA/screenshots/maid-bomb-room-pay-history-390.png',
+  'WIREFRAME/QA/screenshots/admin-type-photo-template-1440.png',
+  'WIREFRAME/QA/screenshots/maid-type-photo-template-390.png',
+  'WIREFRAME/QA/screenshots/maid-zone-camera-1440.png',
+  'WIREFRAME/QA/screenshots/maid-zone-camera-390.png',
+  'WIREFRAME/QA/screenshots/maid-tv-on-required-390.png',
+  'WIREFRAME/QA/screenshots/admin-tv-on-inspection-1440.png',
+  'WIREFRAME/QA/screenshots/admin-copy-cleanup-1440.png',
+  'WIREFRAME/QA/screenshots/admin-info-tooltip-390.png',
+  'WIREFRAME/QA/screenshots/maid-copy-cleanup-390.png',
+  'WIREFRAME/QA/screenshots/maid-info-tooltip-390.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-rollover-1440.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-rollover-390.png',
+  'WIREFRAME/QA/screenshots/maid-cleaning-rollover-390.png',
+  'WIREFRAME/QA/screenshots/admin-occupied-reservation-1440.png',
+  'WIREFRAME/QA/screenshots/admin-occupied-reservation-390.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-day-tabs-1440.png',
+  'WIREFRAME/QA/screenshots/admin-same-day-adjustment-390.png',
+  'WIREFRAME/QA/screenshots/maid-same-day-change-notice-390.png',
+  'WIREFRAME/reference/redesign-concepts/admin-inspection.png',
+  'WIREFRAME/reference/redesign-concepts/admin-next-day-assignment.png',
+  'WIREFRAME/reference/redesign-concepts/maid-weekly-availability.png',
+  'WIREFRAME/reference/redesign-concepts/admin-quick-booking-1440.png',
+  'WIREFRAME/reference/redesign-concepts/admin-quick-booking-390.png',
+];
+
+const missing = required.filter((file) => !existsSync(resolve(root, file)));
+if (missing.length) {
+  throw new Error(`Required files missing:\n${missing.join('\n')}`);
+}
+
+const requiredPngEvidence = [
+  'WIREFRAME/QA/screenshots/admin-reservation-cancel-1440.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-cancel-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-guest-count-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-guest-count-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-390.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-day-tabs-1440.png',
+  'WIREFRAME/QA/screenshots/admin-same-day-adjustment-390.png',
+  'WIREFRAME/QA/screenshots/maid-same-day-change-notice-390.png',
+];
+const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const invalidPngEvidence = requiredPngEvidence.filter((file) => {
+  const bytes = readFileSync(resolve(root, file));
+  return bytes.length < pngSignature.length || !bytes.subarray(0, pngSignature.length).equals(pngSignature);
+});
+if (invalidPngEvidence.length) {
+  throw new Error(`Required PNG evidence has an invalid file signature:\n${invalidPngEvidence.join('\n')}`);
+}
+
+const portableDocs = [
+  'README.md',
+  'AGENTS.md',
+  'DOCS/00_START_HERE.md',
+  'DOCS/CODEX_PROMPT.md',
+  'DOCS/14_CLICKABLE_WIREFRAME_HANDOFF.md',
+  'DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md',
+  'DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md',
+  'DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md',
+  'DOCS/WIREFRAME_TASK_PROMPT.md',
+  'WIREFRAME/README.md',
+  'WIREFRAME/QA.md',
+];
+const windowsPath = /(?:^|[\s(`])(?:[A-Za-z]:[\\/])/m;
+const nonPortable = portableDocs.filter((file) => windowsPath.test(readFileSync(resolve(root, file), 'utf8')));
+if (nonPortable.length) {
+  throw new Error(`Windows absolute paths remain in portable docs:\n${nonPortable.join('\n')}`);
+}
+
+const html = readFileSync(resolve(root, 'WIREFRAME/index.html'), 'utf8');
+const inlineScripts = [...html.matchAll(/<script\b(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)].map((match) => match[1]);
+if (!inlineScripts.length) throw new Error('No inline application script found.');
+for (const script of inlineScripts) new Function(script);
+if (/<(?:script|link)\b[^>]*(?:src|href)=["']https?:\/\//i.test(html)) {
+  throw new Error('External script or stylesheet dependency found in WIREFRAME/index.html.');
+}
+for (const contract of [
+  'function infoTip(id,label,text',
+  'data-info-tip aria-label=',
+  'aria-expanded="false"',
+  'aria-controls="${panelId}"',
+  '<span class="info-tip-mark" aria-hidden="true">ⓘ</span>',
+  'role="tooltip" hidden',
+  'function closeInfoTips(',
+  'function toggleInfoTip(trigger)',
+  'function applyAdminCopyPolicy(root)',
+  'function applyMaidCopyPolicy(root)',
+  "if(state.role==='maid'){applyMaidCopyPolicy(root);return;}",
+  "'maid-schedule','근무 가능일'",
+  "'maid-pay','주급 내역'",
+  "'촬영 방법','구역별 필수 사진을 촬영하세요.",
+  '.help-title { display:flex; align-items:center; gap:7px;',
+  '.info-tip-trigger { display:grid; place-items:center; width:44px; height:44px',
+  '.info-tip-mark { display:grid; place-items:center; width:22px; height:22px; border:0; font-size:19px;',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin copy/help contract missing: ${contract}`);
+}
+if (html.includes('<span class="info-tip-mark" aria-hidden="true">!</spa
+
+import { fileURLToPath } from 'node:url';
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const required = [
+  'AGENTS.md',
+  'manifest.json',
+  'SHA256SUMS.txt',
+  'DOCS/FINAL_UX_AUDIT.md',
+  'DOCS/14_CLICKABLE_WIREFRAME_HANDOFF.md',
+  'DOCS/15_TWO_PASS_AUDIT_RESULT.md',
+  'DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md',
+  'DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md',
+  'DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md',
+  'DOCS/WIREFRAME_TASK_PROMPT.md',
+  'WIREFRAME/index.html',
+  'WIREFRAME/README.md',
+  'WIREFRAME/QA.md',
+  'WIREFRAME/screenshots/admin-desktop-1440.png',
+  'WIREFRAME/screenshots/admin-mobile-390.png',
+  'WIREFRAME/screenshots/maid-mobile-390.png',
+  'WIREFRAME/QA/screenshots/admin-mobile-rooms-unified.png',
+  'WIREFRAME/QA/screenshots/admin-mobile-inspection-gallery.png',
+  'WIREFRAME/QA/screenshots/admin-mobile-inspection-photo.png',
+  'WIREFRAME/QA/screenshots/admin-mobile-pay-calendar.png',
+  'WIREFRAME/QA/screenshots/admin-auto-early-late-1440.png',
+  'WIREFRAME/QA/screenshots/admin-auto-early-late-390.png',
+  'WIREFRAME/QA/screenshots/maid-weekly-availability-390.png',
+  'WIREFRAME/QA/screenshots/maid-room-issue-multi-photo-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-issue-gallery-1440.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-type-filter-1440.png',
+  'WIREFRAME/QA/screenshots/admin-maid-order-board-390.png',
+  'WIREFRAME/QA/screenshots/admin-maid-order-total-1440.png',
+  'WIREFRAME/QA/screenshots/admin-partial-assignment-390.png',
+  'WIREFRAME/QA/screenshots/admin-weekly-worktable-symbols-390.png',
+  'WIREFRAME/QA/screenshots/admin-weekly-work-history-calendar-1440.png',
+  'WIREFRAME/QA/screenshots/admin-weekly-work-history-calendar-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-catalog-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-catalog-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-four-states-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-priority-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-stay-progress-390.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-early-late-1440.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-early-late-390.png',
+  'WIREFRAME/QA/screenshots/admin-available-room-edit-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-info-edit-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-info-edit-390.png',
+  'WIREFRAME/QA/screenshots/admin-manual-checkout-390.png',
+  'WIREFRAME/QA/screenshots/admin-quick-booking-1440.png',
+  'WIREFRAME/QA/screenshots/admin-quick-booking-390.png',
+  'WIREFRAME/QA/screenshots/admin-quick-booking-sticky-header-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-total-filter-1440.png',
+  'WIREFRAME/QA/screenshots/admin-calendar-standard-1440.png',
+  'WIREFRAME/QA/screenshots/admin-calendar-standard-390.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-cancel-1440.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-cancel-390.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-guests-1440.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-guests-390.png',
+  'WIREFRAME/QA/screenshots/maid-reservation-guests-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-guest-count-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-guest-count-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-390.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-elevator-1440.png',
+  'WIREFRAME/QA/screenshots/admin-random-assignment-1440.png',
+  'WIREFRAME/QA/screenshots/admin-random-assignment-390.png',
+  'WIREFRAME/QA/screenshots/maid-bomb-room-report-390.png',
+  'WIREFRAME/QA/screenshots/admin-bomb-room-inspection-390.png',
+  'WIREFRAME/QA/screenshots/admin-bomb-room-payroll-1440.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-cleaning-ledger-1440.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-cleaning-ledger-390.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-per-maid-toggle-1440.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-per-maid-toggle-390.png',
+  'WIREFRAME/QA/screenshots/maid-bomb-room-pay-history-390.png',
+  'WIREFRAME/QA/screenshots/admin-type-photo-template-1440.png',
+  'WIREFRAME/QA/screenshots/maid-type-photo-template-390.png',
+  'WIREFRAME/QA/screenshots/maid-zone-camera-1440.png',
+  'WIREFRAME/QA/screenshots/maid-zone-camera-390.png',
+  'WIREFRAME/QA/screenshots/maid-tv-on-required-390.png',
+  'WIREFRAME/QA/screenshots/admin-tv-on-inspection-1440.png',
+  'WIREFRAME/QA/screenshots/admin-copy-cleanup-1440.png',
+  'WIREFRAME/QA/screenshots/admin-info-tooltip-390.png',
+  'WIREFRAME/QA/screenshots/maid-copy-cleanup-390.png',
+  'WIREFRAME/QA/screenshots/maid-info-tooltip-390.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-rollover-1440.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-rollover-390.png',
+  'WIREFRAME/QA/screenshots/maid-cleaning-rollover-390.png',
+  'WIREFRAME/QA/screenshots/admin-occupied-reservation-1440.png',
+  'WIREFRAME/QA/screenshots/admin-occupied-reservation-390.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-day-tabs-1440.png',
+  'WIREFRAME/QA/screenshots/admin-same-day-adjustment-390.png',
+  'WIREFRAME/QA/screenshots/maid-same-day-change-notice-390.png',
+  'WIREFRAME/reference/redesign-concepts/admin-inspection.png',
+  'WIREFRAME/reference/redesign-concepts/admin-next-day-assignment.png',
+  'WIREFRAME/reference/redesign-concepts/maid-weekly-availability.png',
+  'WIREFRAME/reference/redesign-concepts/admin-quick-booking-1440.png',
+  'WIREFRAME/reference/redesign-concepts/admin-quick-booking-390.png',
+];
+
+const missing = required.filter((file) => !existsSync(resolve(root, file)));
+if (missing.length) {
+  throw new Error(`Required files missing:\n${missing.join('\n')}`);
+}
+
+const requiredPngEvidence = [
+  'WIREFRAME/QA/screenshots/admin-reservation-cancel-1440.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-cancel-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-guest-count-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-guest-count-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-390.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-day-tabs-1440.png',
+  'WIREFRAME/QA/screenshots/admin-same-day-adjustment-390.png',
+  'WIREFRAME/QA/screenshots/maid-same-day-change-notice-390.png',
+];
+const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const invalidPngEvidence = requiredPngEvidence.filter((file) => {
+  const bytes = readFileSync(resolve(root, file));
+  return bytes.length < pngSignature.length || !bytes.subarray(0, pngSignature.length).equals(pngSignature);
+});
+if (invalidPngEvidence.length) {
+  throw new Error(`Required PNG evidence has an invalid file signature:\n${invalidPngEvidence.join('\n')}`);
+}
+
+const portableDocs = [
+  'README.md',
+  'AGENTS.md',
+  'DOCS/00_START_HERE.md',
+  'DOCS/CODEX_PROMPT.md',
+  'DOCS/14_CLICKABLE_WIREFRAME_HANDOFF.md',
+  'DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md',
+  'DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md',
+  'DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md',
+  'DOCS/WIREFRAME_TASK_PROMPT.md',
+  'WIREFRAME/README.md',
+  'WIREFRAME/QA.md',
+];
+const windowsPath = /(?:^|[\s(`])(?:[A-Za-z]:[\\/])/m;
+const nonPortable = portableDocs.filter((file) => windowsPath.test(readFileSync(resolve(root, file), 'utf8')));
+if (nonPortable.length) {
+  throw new Error(`Windows absolute paths remain in portable docs:\n${nonPortable.join('\n')}`);
+}
+
+const html = readFileSync(resolve(root, 'WIREFRAME/index.html'), 'utf8');
+const inlineScripts = [...html.matchAll(/<script\b(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)].map((match) => match[1]);
+if (!inlineScripts.length) throw new Error('No inline application script found.');
+for (const script of inlineScripts) new Function(script);
+if (/<(?:script|link)\b[^>]*(?:src|href)=["']https?:\/\//i.test(html)) {
+  throw new Error('External script or stylesheet dependency found in WIREFRAME/index.html.');
+}
+for (const contract of [
+  'function infoTip(id,label,text',
+  'data-info-tip aria-label=',
+  'aria-expanded="false"',
+  'aria-controls="${panelId}"',
+  '<span class="info-tip-mark" aria-hidden="true">ⓘ</span>',
+  'role="tooltip" hidden',
+  'function closeInfoTips(',
+  'function toggleInfoTip(trigger)',
+  'function applyAdminCopyPolicy(root)',
+  'function applyMaidCopyPolicy(root)',
+  "if(state.role==='maid'){applyMaidCopyPolicy(root);return;}",
+  "'maid-schedule','근무 가능일'",
+  "'maid-pay','주급 내역'",
+  "'촬영 방법','구역별 필수 사진을 촬영하세요.",
+  '.help-title { display:flex; align-items:center; gap:7px;',
+  '.info-tip-trigger { display:grid; place-items:center; width:44px; height:44px',
+  '.info-tip-mark { display:grid; place-items:center; width:22px; height:22px; border:0; font-size:19px;',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin copy/help contract missing: ${contract}`);
+}
+if (html.includes('<span class="info-tip-mark" aria-hidden="true">!</span>')) {
+  throw new Error('Legacy exclamation help glyph re
+
+solve(dirname(fileURLToPath(import.meta.url)), '..');
+const required = [
+  'AGENTS.md',
+  'manifest.json',
+  'SHA256SUMS.txt',
+  'DOCS/FINAL_UX_AUDIT.md',
+  'DOCS/14_CLICKABLE_WIREFRAME_HANDOFF.md',
+  'DOCS/15_TWO_PASS_AUDIT_RESULT.md',
+  'DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md',
+  'DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md',
+  'DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md',
+  'DOCS/WIREFRAME_TASK_PROMPT.md',
+  'WIREFRAME/index.html',
+  'WIREFRAME/README.md',
+  'WIREFRAME/QA.md',
+  'WIREFRAME/screenshots/admin-desktop-1440.png',
+  'WIREFRAME/screenshots/admin-mobile-390.png',
+  'WIREFRAME/screenshots/maid-mobile-390.png',
+  'WIREFRAME/QA/screenshots/admin-mobile-rooms-unified.png',
+  'WIREFRAME/QA/screenshots/admin-mobile-inspection-gallery.png',
+  'WIREFRAME/QA/screenshots/admin-mobile-inspection-photo.png',
+  'WIREFRAME/QA/screenshots/admin-mobile-pay-calendar.png',
+  'WIREFRAME/QA/screenshots/admin-auto-early-late-1440.png',
+  'WIREFRAME/QA/screenshots/admin-auto-early-late-390.png',
+  'WIREFRAME/QA/screenshots/maid-weekly-availability-390.png',
+  'WIREFRAME/QA/screenshots/maid-room-issue-multi-photo-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-issue-gallery-1440.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-type-filter-1440.png',
+  'WIREFRAME/QA/screenshots/admin-maid-order-board-390.png',
+  'WIREFRAME/QA/screenshots/admin-maid-order-total-1440.png',
+  'WIREFRAME/QA/screenshots/admin-partial-assignment-390.png',
+  'WIREFRAME/QA/screenshots/admin-weekly-worktable-symbols-390.png',
+  'WIREFRAME/QA/screenshots/admin-weekly-work-history-calendar-1440.png',
+  'WIREFRAME/QA/screenshots/admin-weekly-work-history-calendar-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-catalog-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-catalog-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-four-states-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-priority-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-stay-progress-390.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-early-late-1440.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-early-late-390.png',
+  'WIREFRAME/QA/screenshots/admin-available-room-edit-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-info-edit-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-info-edit-390.png',
+  'WIREFRAME/QA/screenshots/admin-manual-checkout-390.png',
+  'WIREFRAME/QA/screenshots/admin-quick-booking-1440.png',
+  'WIREFRAME/QA/screenshots/admin-quick-booking-390.png',
+  'WIREFRAME/QA/screenshots/admin-quick-booking-sticky-header-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-total-filter-1440.png',
+  'WIREFRAME/QA/screenshots/admin-calendar-standard-1440.png',
+  'WIREFRAME/QA/screenshots/admin-calendar-standard-390.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-cancel-1440.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-cancel-390.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-guests-1440.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-guests-390.png',
+  'WIREFRAME/QA/screenshots/maid-reservation-guests-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-guest-count-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-guest-count-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-390.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-elevator-1440.png',
+  'WIREFRAME/QA/screenshots/admin-random-assignment-1440.png',
+  'WIREFRAME/QA/screenshots/admin-random-assignment-390.png',
+  'WIREFRAME/QA/screenshots/maid-bomb-room-report-390.png',
+  'WIREFRAME/QA/screenshots/admin-bomb-room-inspection-390.png',
+  'WIREFRAME/QA/screenshots/admin-bomb-room-payroll-1440.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-cleaning-ledger-1440.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-cleaning-ledger-390.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-per-maid-toggle-1440.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-per-maid-toggle-390.png',
+  'WIREFRAME/QA/screenshots/maid-bomb-room-pay-history-390.png',
+  'WIREFRAME/QA/screenshots/admin-type-photo-template-1440.png',
+  'WIREFRAME/QA/screenshots/maid-type-photo-template-390.png',
+  'WIREFRAME/QA/screenshots/maid-zone-camera-1440.png',
+  'WIREFRAME/QA/screenshots/maid-zone-camera-390.png',
+  'WIREFRAME/QA/screenshots/maid-tv-on-required-390.png',
+  'WIREFRAME/QA/screenshots/admin-tv-on-inspection-1440.png',
+  'WIREFRAME/QA/screenshots/admin-copy-cleanup-1440.png',
+  'WIREFRAME/QA/screenshots/admin-info-tooltip-390.png',
+  'WIREFRAME/QA/screenshots/maid-copy-cleanup-390.png',
+  'WIREFRAME/QA/screenshots/maid-info-tooltip-390.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-rollover-1440.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-rollover-390.png',
+  'WIREFRAME/QA/screenshots/maid-cleaning-rollover-390.png',
+  'WIREFRAME/QA/screenshots/admin-occupied-reservation-1440.png',
+  'WIREFRAME/QA/screenshots/admin-occupied-reservation-390.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-day-tabs-1440.png',
+  'WIREFRAME/QA/screenshots/admin-same-day-adjustment-390.png',
+  'WIREFRAME/QA/screenshots/maid-same-day-change-notice-390.png',
+  'WIREFRAME/reference/redesign-concepts/admin-inspection.png',
+  'WIREFRAME/reference/redesign-concepts/admin-next-day-assignment.png',
+  'WIREFRAME/reference/redesign-concepts/maid-weekly-availability.png',
+  'WIREFRAME/reference/redesign-concepts/admin-quick-booking-1440.png',
+  'WIREFRAME/reference/redesign-concepts/admin-quick-booking-390.png',
+];
+
+const missing = required.filter((file) => !existsSync(resolve(root, file)));
+if (missing.length) {
+  throw new Error(`Required files missing:\n${missing.join('\n')}`);
+}
+
+const requiredPngEvidence = [
+  'WIREFRAME/QA/screenshots/admin-reservation-cancel-1440.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-cancel-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-guest-count-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-guest-count-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-390.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-day-tabs-1440.png',
+  'WIREFRAME/QA/screenshots/admin-same-day-adjustment-390.png',
+  'WIREFRAME/QA/screenshots/maid-same-day-change-notice-390.png',
+];
+const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const invalidPngEvidence = requiredPngEvidence.filter((file) => {
+  const bytes = readFileSync(resolve(root, file));
+  return bytes.length < pngSignature.length || !bytes.subarray(0, pngSignature.length).equals(pngSignature);
+});
+if (invalidPngEvidence.length) {
+  throw new Error(`Required PNG evidence has an invalid file signature:\n${invalidPngEvidence.join('\n')}`);
+}
+
+const portableDocs = [
+  'README.md',
+  'AGENTS.md',
+  'DOCS/00_START_HERE.md',
+  'DOCS/CODEX_PROMPT.md',
+  'DOCS/14_CLICKABLE_WIREFRAME_HANDOFF.md',
+  'DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md',
+  'DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md',
+  'DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md',
+  'DOCS/WIREFRAME_TASK_PROMPT.md',
+  'WIREFRAME/README.md',
+  'WIREFRAME/QA.md',
+];
+const windowsPath = /(?:^|[\s(`])(?:[A-Za-z]:[\\/])/m;
+const nonPortable = portableDocs.filter((file) => windowsPath.test(readFileSync(resolve(root, file), 'utf8')));
+if (nonPortable.length) {
+  throw new Error(`Windows absolute paths remain in portable docs:\n${nonPortable.join('\n')}`);
+}
+
+const html = readFileSync(resolve(root, 'WIREFRAME/index.html'), 'utf8');
+const inlineScripts = [...html.matchAll(/<script\b(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)].map((match) => match[1]);
+if (!inlineScripts.length) throw new Error('No inline application script found.');
+for (const script of inlineScripts) new Function(script);
+if (/<(?:script|link)\b[^>]*(?:src|href)=["']https?:\/\//i.test(html)) {
+  throw new Error('External script or stylesheet dependency found in WIREFRAME/index.html.');
+}
+for (const contract of [
+  'function infoTip(id,label,text',
+  'data-info-tip aria-label=',
+  'aria-expanded="false"',
+  'aria-controls="${panelId}"',
+  '<span class="info-tip-mark" aria-hidden="true">ⓘ</span>',
+  'role="tooltip" hidden',
+  'function closeInfoTips(',
+  'function toggleInfoTip(trigger)',
+  'function applyAdminCopyPolicy(root)',
+  'function applyMaidCopyPolicy(root)',
+  "if(state.role==='maid'){applyMaidCopyPolicy(root);return;}",
+  "'maid-schedule','근무 가능일'",
+  "'maid-pay','주급 내역'",
+  "'촬영 방법','구역별 필수 사진을 촬영하세요.",
+  '.help-title { display:flex; align-items:center; gap:7px;',
+  '.info-tip-trigger { display:grid; place-items:center; width:44px; height:44px',
+  '.info-tip-mark { display:grid; place-items:center; width:22px; height:22px; border:0; font-size:19px;',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin copy/help contract missing: ${contract}`);
+}
+if (html.includes('<span class="info-tip-mark" aria-hidden="true">!</span>')) {
+  throw new Error('Legacy exclamation help glyph remains; use the ⓘ symbol.');
+}
+const availabilityPhaseStart
+
+min-reservation-guests-1440.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-guests-390.png',
+  'WIREFRAME/QA/screenshots/maid-reservation-guests-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-guest-count-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-guest-count-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-390.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-elevator-1440.png',
+  'WIREFRAME/QA/screenshots/admin-random-assignment-1440.png',
+  'WIREFRAME/QA/screenshots/admin-random-assignment-390.png',
+  'WIREFRAME/QA/screenshots/maid-bomb-room-report-390.png',
+  'WIREFRAME/QA/screenshots/admin-bomb-room-inspection-390.png',
+  'WIREFRAME/QA/screenshots/admin-bomb-room-payroll-1440.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-cleaning-ledger-1440.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-cleaning-ledger-390.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-per-maid-toggle-1440.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-per-maid-toggle-390.png',
+  'WIREFRAME/QA/screenshots/maid-bomb-room-pay-history-390.png',
+  'WIREFRAME/QA/screenshots/admin-type-photo-template-1440.png',
+  'WIREFRAME/QA/screenshots/maid-type-photo-template-390.png',
+  'WIREFRAME/QA/screenshots/maid-zone-camera-1440.png',
+  'WIREFRAME/QA/screenshots/maid-zone-camera-390.png',
+  'WIREFRAME/QA/screenshots/maid-tv-on-required-390.png',
+  'WIREFRAME/QA/screenshots/admin-tv-on-inspection-1440.png',
+  'WIREFRAME/QA/screenshots/admin-copy-cleanup-1440.png',
+  'WIREFRAME/QA/screenshots/admin-info-tooltip-390.png',
+  'WIREFRAME/QA/screenshots/maid-copy-cleanup-390.png',
+  'WIREFRAME/QA/screenshots/maid-info-tooltip-390.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-rollover-1440.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-rollover-390.png',
+  'WIREFRAME/QA/screenshots/maid-cleaning-rollover-390.png',
+  'WIREFRAME/QA/screenshots/admin-occupied-reservation-1440.png',
+  'WIREFRAME/QA/screenshots/admin-occupied-reservation-390.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-day-tabs-1440.png',
+  'WIREFRAME/QA/screenshots/admin-same-day-adjustment-390.png',
+  'WIREFRAME/QA/screenshots/maid-same-day-change-notice-390.png',
+  'WIREFRAME/reference/redesign-concepts/admin-inspection.png',
+  'WIREFRAME/reference/redesign-concepts/admin-next-day-assignment.png',
+  'WIREFRAME/reference/redesign-concepts/maid-weekly-availability.png',
+  'WIREFRAME/reference/redesign-concepts/admin-quick-booking-1440.png',
+  'WIREFRAME/reference/redesign-concepts/admin-quick-booking-390.png',
+];
+
+const missing = required.filter((file) => !existsSync(resolve(root, file)));
+if (missing.length) {
+  throw new Error(`Required files missing:\n${missing.join('\n')}`);
+}
+
+const requiredPngEvidence = [
+  'WIREFRAME/QA/screenshots/admin-reservation-cancel-1440.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-cancel-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-guest-count-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-guest-count-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-390.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-day-tabs-1440.png',
+  'WIREFRAME/QA/screenshots/admin-same-day-adjustment-390.png',
+  'WIREFRAME/QA/screenshots/maid-same-day-change-notice-390.png',
+];
+const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const invalidPngEvidence = requiredPngEvidence.filter((file) => {
+  const bytes = readFileSync(resolve(root, file));
+  return bytes.length < pngSignature.length || !bytes.subarray(0, pngSignature.length).equals(pngSignature);
+});
+if (invalidPngEvidence.length) {
+  throw new Error(`Required PNG evidence has an invalid file signature:\n${invalidPngEvidence.join('\n')}`);
+}
+
+const portableDocs = [
+  'README.md',
+  'AGENTS.md',
+  'DOCS/00_START_HERE.md',
+  'DOCS/CODEX_PROMPT.md',
+  'DOCS/14_CLICKABLE_WIREFRAME_HANDOFF.md',
+  'DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md',
+  'DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md',
+  'DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md',
+  'DOCS/WIREFRAME_TASK_PROMPT.md',
+  'WIREFRAME/README.md',
+  'WIREFRAME/QA.md',
+];
+const windowsPath = /(?:^|[\s(`])(?:[A-Za-z]:[\\/])/m;
+const nonPortable = portableDocs.filter((file) => windowsPath.test(readFileSync(resolve(root, file), 'utf8')));
+if (nonPortable.length) {
+  throw new Error(`Windows absolute paths remain in portable docs:\n${nonPortable.join('\n')}`);
+}
+
+const html = readFileSync(resolve(root, 'WIREFRAME/index.html'), 'utf8');
+const inlineScripts = [...html.matchAll(/<script\b(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)].map((match) => match[1]);
+if (!inlineScripts.length) throw new Error('No inline application script found.');
+for (const script of inlineScripts) new Function(script);
+if (/<(?:script|link)\b[^>]*(?:src|href)=["']https?:\/\//i.test(html)) {
+  throw new Error('External script or stylesheet dependency found in WIREFRAME/index.html.');
+}
+for (const contract of [
+  'function infoTip(id,label,text',
+  'data-info-tip aria-label=',
+  'aria-expanded="false"',
+  'aria-controls="${panelId}"',
+  '<span class="info-tip-mark" aria-hidden="true">ⓘ</span>',
+  'role="tooltip" hidden',
+  'function closeInfoTips(',
+  'function toggleInfoTip(trigger)',
+  'function applyAdminCopyPolicy(root)',
+  'function applyMaidCopyPolicy(root)',
+  "if(state.role==='maid'){applyMaidCopyPolicy(root);return;}",
+  "'maid-schedule','근무 가능일'",
+  "'maid-pay','주급 내역'",
+  "'촬영 방법','구역별 필수 사진을 촬영하세요.",
+  '.help-title { display:flex; align-items:center; gap:7px;',
+  '.info-tip-trigger { display:grid; place-items:center; width:44px; height:44px',
+  '.info-tip-mark { display:grid; place-items:center; width:22px; height:22px; border:0; font-size:19px;',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin copy/help contract missing: ${contract}`);
+}
+if (html.includes('<span class="info-tip-mark" aria-hidden="true">!</span>')) {
+  throw new Error('Legacy exclamation help glyph remains; use the ⓘ symbol.');
+}
+const availabilityPhaseStart = html.indexOf('function availabilitySubmissionPhase()');
+const availabilityPhaseSource = html.slice(availabilityPhaseStart, html.indexOf('function availabilityCell', availabilityPhaseStart));
+if (availabilityPhaseStart < 0) throw new Error('Maid availability submission phase source could not be resolved.');
+for (const contract of [
+  "AVAILABILITY_OPEN_TIME='12:00'",
+  "AVAILABILITY_CLOSE_TIME='23:59'",
+  'minutes<=closingMinutes',
+  '일요일 ${AVAILABILITY_OPEN_TIME}부터 ${AVAILABILITY_CLOSE_TIME}까지',
+  '일요일 23:59 마감 후',
+]) {
+  if (!html.includes(contract)) throw new Error(`Maid availability submission window contract missing: ${contract}`);
+}
+if (availabilityPhaseSource.includes("timeMinutes('22:00')") || /일요일[^\n]{0,40}22:00/.test(html)) {
+  throw new Error('Legacy Sunday 22:00 maid availability deadline remains.');
+}
+const availabilityEditStart = html.indexOf("if(a==='edit-week-availability')");
+const availabilityEditSource = html.slice(availabilityEditStart, html.indexOf("if(a==='request-availability-change')", availabilityEditStart));
+if (availabilityEditStart < 0) throw new Error('Maid availability edit handler source could not be resolved.');
+for (const contract of ['state.availabilityEditing=true', "state.availabilityDraft=[...(record?.days||[])]"]) {
+  if (!availabilityEditSource.includes(contract)) throw new Error(`Maid availability edit-draft contract missing: ${contract}`);
+}
+if (/availabilitySubmitted\s*=\s*false|\.status\s*=\s*['"]draft['"]/.test(availabilityEditSource)) {
+  throw new Error('Editing maid availability must not invalidate the last submitted record before resubmission.');
+}
+for (const contract of ['state.availabilitySubmitted&&!state.availabilityEditing', 'state.availabilityEditing=false;state.availabilityChangeRequested=false']) {
+  if (!html.includes(contract)) throw new Error(`Maid availability committed-draft separation missing: ${contract}`);
+}
+const maidSource = html.match(/const MAIDS\s*=\s*\[([\s\S]*?)\n\s*\];/)?.[1];
+const maidIds = [...(maidSource || '').matchAll(/id:'(m\d+)'/g)].map((match) => match[1]);
+if (maidIds.length !== 9 || new Set(maidIds).size !== 9) {
+  throw new Error(`Large-team maid fixture mismatch: ${maidIds.length} rows / ${new Set(maidIds).size} unique IDs.`);
+}
+for (const contract of [
+  'random-assignments',
+  'undo-random-assignment',
+  '총 청소요금 균형 우선',
+  '같은 엘리베이터·가까운 호수',
+  '메이드별 청소 순서 수정',
+  'maxAssigned=Math.max(...results.map(result=>result.assigned))',
+  'results.filter(result=>result.assigned===maxAssigned).sort((left,right)=>left.payGap-right.payGap||left.payDeviation-right.payDeviation||left.zoneRankTotal-right.zoneRankTotal||left.roomDistanceTotal-right.roomDistanceTotal',
+  'assignmentTargetRate(item)',
+  'assignmentPricingSnapshot(item)',
+  'rateSnapshot:snapshot.rate',
+  'minutesSnapshot:snapshot.minutes',
+  'elevatorSnapshot:snapshot.elevator',
+  'randomAssignmen
+
+rvation-guests-390.png',
+  'WIREFRAME/QA/screenshots/maid-reservation-guests-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-guest-count-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-guest-count-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-390.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-elevator-1440.png',
+  'WIREFRAME/QA/screenshots/admin-random-assignment-1440.png',
+  'WIREFRAME/QA/screenshots/admin-random-assignment-390.png',
+  'WIREFRAME/QA/screenshots/maid-bomb-room-report-390.png',
+  'WIREFRAME/QA/screenshots/admin-bomb-room-inspection-390.png',
+  'WIREFRAME/QA/screenshots/admin-bomb-room-payroll-1440.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-cleaning-ledger-1440.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-cleaning-ledger-390.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-per-maid-toggle-1440.png',
+  'WIREFRAME/QA/screenshots/admin-payroll-per-maid-toggle-390.png',
+  'WIREFRAME/QA/screenshots/maid-bomb-room-pay-history-390.png',
+  'WIREFRAME/QA/screenshots/admin-type-photo-template-1440.png',
+  'WIREFRAME/QA/screenshots/maid-type-photo-template-390.png',
+  'WIREFRAME/QA/screenshots/maid-zone-camera-1440.png',
+  'WIREFRAME/QA/screenshots/maid-zone-camera-390.png',
+  'WIREFRAME/QA/screenshots/maid-tv-on-required-390.png',
+  'WIREFRAME/QA/screenshots/admin-tv-on-inspection-1440.png',
+  'WIREFRAME/QA/screenshots/admin-copy-cleanup-1440.png',
+  'WIREFRAME/QA/screenshots/admin-info-tooltip-390.png',
+  'WIREFRAME/QA/screenshots/maid-copy-cleanup-390.png',
+  'WIREFRAME/QA/screenshots/maid-info-tooltip-390.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-rollover-1440.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-rollover-390.png',
+  'WIREFRAME/QA/screenshots/maid-cleaning-rollover-390.png',
+  'WIREFRAME/QA/screenshots/admin-occupied-reservation-1440.png',
+  'WIREFRAME/QA/screenshots/admin-occupied-reservation-390.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-day-tabs-1440.png',
+  'WIREFRAME/QA/screenshots/admin-same-day-adjustment-390.png',
+  'WIREFRAME/QA/screenshots/maid-same-day-change-notice-390.png',
+  'WIREFRAME/reference/redesign-concepts/admin-inspection.png',
+  'WIREFRAME/reference/redesign-concepts/admin-next-day-assignment.png',
+  'WIREFRAME/reference/redesign-concepts/maid-weekly-availability.png',
+  'WIREFRAME/reference/redesign-concepts/admin-quick-booking-1440.png',
+  'WIREFRAME/reference/redesign-concepts/admin-quick-booking-390.png',
+];
+
+const missing = required.filter((file) => !existsSync(resolve(root, file)));
+if (missing.length) {
+  throw new Error(`Required files missing:\n${missing.join('\n')}`);
+}
+
+const requiredPngEvidence = [
+  'WIREFRAME/QA/screenshots/admin-reservation-cancel-1440.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-cancel-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-guest-count-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-card-guest-count-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-1440.png',
+  'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-390.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-day-tabs-1440.png',
+  'WIREFRAME/QA/screenshots/admin-same-day-adjustment-390.png',
+  'WIREFRAME/QA/screenshots/maid-same-day-change-notice-390.png',
+];
+const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const invalidPngEvidence = requiredPngEvidence.filter((file) => {
+  const bytes = readFileSync(resolve(root, file));
+  return bytes.length < pngSignature.length || !bytes.subarray(0, pngSignature.length).equals(pngSignature);
+});
+if (invalidPngEvidence.length) {
+  throw new Error(`Required PNG evidence has an invalid file signature:\n${invalidPngEvidence.join('\n')}`);
+}
+
+const portableDocs = [
+  'README.md',
+  'AGENTS.md',
+  'DOCS/00_START_HERE.md',
+  'DOCS/CODEX_PROMPT.md',
+  'DOCS/14_CLICKABLE_WIREFRAME_HANDOFF.md',
+  'DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md',
+  'DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md',
+  'DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md',
+  'DOCS/WIREFRAME_TASK_PROMPT.md',
+  'WIREFRAME/README.md',
+  'WIREFRAME/QA.md',
+];
+const windowsPath = /(?:^|[\s(`])(?:[A-Za-z]:[\\/])/m;
+const nonPortable = portableDocs.filter((file) => windowsPath.test(readFileSync(resolve(root, file), 'utf8')));
+if (nonPortable.length) {
+  throw new Error(`Windows absolute paths remain in portable docs:\n${nonPortable.join('\n')}`);
+}
+
+const html = readFileSync(resolve(root, 'WIREFRAME/index.html'), 'utf8');
+const inlineScripts = [...html.matchAll(/<script\b(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)].map((match) => match[1]);
+if (!inlineScripts.length) throw new Error('No inline application script found.');
+for (const script of inlineScripts) new Function(script);
+if (/<(?:script|link)\b[^>]*(?:src|href)=["']https?:\/\//i.test(html)) {
+  throw new Error('External script or stylesheet dependency found in WIREFRAME/index.html.');
+}
+for (const contract of [
+  'function infoTip(id,label,text',
+  'data-info-tip aria-label=',
+  'aria-expanded="false"',
+  'aria-controls="${panelId}"',
+  '<span class="info-tip-mark" aria-hidden="true">ⓘ</span>',
+  'role="tooltip" hidden',
+  'function closeInfoTips(',
+  'function toggleInfoTip(trigger)',
+  'function applyAdminCopyPolicy(root)',
+  'function applyMaidCopyPolicy(root)',
+  "if(state.role==='maid'){applyMaidCopyPolicy(root);return;}",
+  "'maid-schedule','근무 가능일'",
+  "'maid-pay','주급 내역'",
+  "'촬영 방법','구역별 필수 사진을 촬영하세요.",
+  '.help-title { display:flex; align-items:center; gap:7px;',
+  '.info-tip-trigger { display:grid; place-items:center; width:44px; height:44px',
+  '.info-tip-mark { display:grid; place-items:center; width:22px; height:22px; border:0; font-size:19px;',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin copy/help contract missing: ${contract}`);
+}
+if (html.includes('<span class="info-tip-mark" aria-hidden="true">!</span>')) {
+  throw new Error('Legacy exclamation help glyph remains; use the ⓘ symbol.');
+}
+const availabilityPhaseStart = html.indexOf('function availabilitySubmissionPhase()');
+const availabilityPhaseSource = html.slice(availabilityPhaseStart, html.indexOf('function availabilityCell', availabilityPhaseStart));
+if (availabilityPhaseStart < 0) throw new Error('Maid availability submission phase source could not be resolved.');
+for (const contract of [
+  "AVAILABILITY_OPEN_TIME='12:00'",
+  "AVAILABILITY_CLOSE_TIME='23:59'",
+  'minutes<=closingMinutes',
+  '일요일 ${AVAILABILITY_OPEN_TIME}부터 ${AVAILABILITY_CLOSE_TIME}까지',
+  '일요일 23:59 마감 후',
+]) {
+  if (!html.includes(contract)) throw new Error(`Maid availability submission window contract missing: ${contract}`);
+}
+if (availabilityPhaseSource.includes("timeMinutes('22:00')") || /일요일[^\n]{0,40}22:00/.test(html)) {
+  throw new Error('Legacy Sunday 22:00 maid availability deadline remains.');
+}
+const availabilityEditStart = html.indexOf("if(a==='edit-week-availability')");
+const availabilityEditSource = html.slice(availabilityEditStart, html.indexOf("if(a==='request-availability-change')", availabilityEditStart));
+if (availabilityEditStart < 0) throw new Error('Maid availability edit handler source could not be resolved.');
+for (const contract of ['state.availabilityEditing=true', "state.availabilityDraft=[...(record?.days||[])]"]) {
+  if (!availabilityEditSource.includes(contract)) throw new Error(`Maid availability edit-draft contract missing: ${contract}`);
+}
+if (/availabilitySubmitted\s*=\s*false|\.status\s*=\s*['"]draft['"]/.test(availabilityEditSource)) {
+  throw new Error('Editing maid availability must not invalidate the last submitted record before resubmission.');
+}
+for (const contract of ['state.availabilitySubmitted&&!state.availabilityEditing', 'state.availabilityEditing=false;state.availabilityChangeRequested=false']) {
+  if (!html.includes(contract)) throw new Error(`Maid availability committed-draft separation missing: ${contract}`);
+}
+const maidSource = html.match(/const MAIDS\s*=\s*\[([\s\S]*?)\n\s*\];/)?.[1];
+const maidIds = [...(maidSource || '').matchAll(/id:'(m\d+)'/g)].map((match) => match[1]);
+if (maidIds.length !== 9 || new Set(maidIds).size !== 9) {
+  throw new Error(`Large-team maid fixture mismatch: ${maidIds.length} rows / ${new Set(maidIds).size} unique IDs.`);
+}
+for (const contract of [
+  'random-assignments',
+  'undo-random-assignment',
+  '총 청소요금 균형 우선',
+  '같은 엘리베이터·가까운 호수',
+  '메이드별 청소 순서 수정',
+  'maxAssigned=Math.max(...results.map(result=>result.assigned))',
+  'results.filter(result=>result.assigned===maxAssigned).sort((left,right)=>left.payGap-right.payGap||left.payDeviation-right.payDeviation||left.zoneRankTotal-right.zoneRankTotal||left.roomDistanceTotal-right.roomDistanceTotal',
+  'assignmentTargetRate(item)',
+  'assignmentPricingSnapshot(item)',
+  'rateSnapshot:snapshot.rate',
+  'minutesSnapshot:snapshot.minutes',
+  'elevatorSnapshot:snapshot.elevator',
+  'randomAssignmentStateMatches',
+  'data-location="board"',
+  'maid-order-schedule-badges
+
+i.test(html)) {
+  throw new Error('Legacy long-stay UI or state contracts remain in WIREFRAME/index.html.');
+}
+for (const contract of [
+  "key:'blocked',tone:'red',status:'배정 불가'",
+  "key:'cleaning',tone:'amber',status:'청소 필요'",
+  "key:'occupied',tone:'neutral',status:'투숙 중'",
+  "key:'available',tone:'green',status:'배정 가능'",
+  'roomCleaningStageLabel(job)',
+  'cardReservationStatus(no)',
+  "{id:'reservation-demo-142'",
+  'label:`연박 ${day}/${total}일차`',
+]) {
+  if (!html.includes(contract)) throw new Error(`Four-state room card contract missing: ${contract}`);
+}
+const roomPresentationSource = html.slice(html.indexOf('function roomPresentation(no)'), html.indexOf('function renderPinRow', html.indexOf('function roomPresentation(no)')));
+const roomPresentationOrder = ["if(blockers.length)return", "if(room.occupancy==='occupied')return", "if(cleaning)return", "key:'available'"]
+  .map((marker) => roomPresentationSource.indexOf(marker));
+if (roomPresentationOrder.some((index) => index < 0) || roomPresentationOrder.some((index, position) => position && index <= roomPresentationOrder[position - 1])) {
+  throw new Error(`Room card priority must remain blocked > occupied (with subordinate cleaning) > cleaning > available: ${roomPresentationOrder.join(', ')}`);
+}
+for (const contract of [
+  'function roomCleaningControl(no)',
+  "label:'청소 요청'",
+  "label:'청소 취소'",
+  "confirmLabel:request?'청소 취소':'청소 대기열에 넣기'",
+  "if(state.roomFilter==='occupied')return r.occupancy==='occupied'",
+  "if(state.roomFilter==='cleaning')return roomNeedsCleaningNow(r.no)",
+  'data-room-cleaning-control=\"${no}\"',
+  "청소 필요 · ${p.cleaningKind||'청소'}",
+]) {
+  if (!html.includes(contract)) throw new Error(`Room cleaning request contract missing: ${contract}`);
+}
+for (const forbidden of ['ON으로 변경', 'OFF로 변경', '청소 필요 ON', '청소 필요 OFF']) {
+  if (html.includes(forbidden)) throw new Error(`Legacy cleaning switch copy remains: ${forbidden}`);
+}
+const roomCardStart = html.indexOf('function roomCard(no)');
+const roomCardEnd = html.indexOf('function cleaningLabel', roomCardStart);
+if (roomCardStart < 0 || roomCardEnd <= roomCardStart) throw new Error('Room card source block not found.');
+const roomCardSource = html.slice(roomCardStart, roomCardEnd);
+for (const removed of ['room-work-line', 'concept-cleaning-row', '가장 가까운 일정', '예약 없음 · 바로 등록']) {
+  if (roomCardSource.includes(removed)) throw new Error(`Redundant room-card reservation summary returned: ${removed}`);
+}
+for (const contract of [
+  'class="room-quick-actions"',
+  'data-action="${closestReservation?\'quick-reservation-edit\':\'reservation-edit\'}"',
+  "reservationActionLabel=weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`",
+  ":pastReservationCount?`예약 기록 ${pastReservationCount}건`:room.occupancy==='occupied'&&!occupiedReservationEnd(room)?'투숙 정보 입력':'예약 등록'",
+]) {
+  if (!roomCardSource.includes(contract)) throw new Error(`Compact room-card reservation action missing: ${contract}`);
+}
+
+for (const contract of [
+  "if(a==='edit-room-info')",
+  "if(a==='save-room-info')",
+  'id="room-info-number"',
+  'readonly aria-readonly="true"',
+  'id="room-info-type"',
+  'id="room-info-elevator"',
+  'roomMasterFingerprint(room)',
+  'adminCanMutate()',
+  'appendEvent(`${id}호 객실 정보 수정`',
+  '이후 새 작업부터 적용',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin room master edit contract missing: ${contract}`);
+}
+for (const contract of [
+  "if(a==='manual-checkout')",
+  "if(a==='confirm-manual-checkout')",
+  "room.occupancy!=='occupied'",
+  'activeUnfinishedAttempt(id)',
+  'recordManualCheckoutScheduleChange(id,unstartedAttempt,previousWorkDate,previousAccessStart)',
+  'attemptId:currentAttemptId(no)||null',
+  "draft.kind==='퇴실 청소'",
+  "activeReservation.status='checked-out'",
+  'existingDraft.reservationId=activeReservation.id',
+  'projectReservationState(state,id)',
+  "room.occupancy='vacant'",
+  'room.actualCheckoutAt=actualCheckoutAt',
+  'delete room.actualCheckoutAt',
+  '예정 ${plannedCheckout} 보존',
+  '퇴실 청소 초안 1건',
+  'appendEvent(`${id}호 지금 체크아웃`',
+]) {
+  if (!html.includes(contract)) throw new Error(`Manual checkout contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'const INITIAL_RESERVATIONS',
+  "{id:'quickReservation',label:'간편 예약'",
+  "if (state.adminView==='quickReservation') return renderQuickReservation()",
+  'reservationOverlaps(roomNo,checkInAt,checkOutAt,ignoreId',
+  'initialReservationDrafts()',
+  "activeReservationsFor(targetState).filter(reservation=>reservation.checkOutAt.slice(0,10)===assignmentDate)",
+  'cleaningAssignmentForReservation(reservation)',
+  'data-action="quick-reservation-edit"',
+  "'quick-reservation-undo'",
+  'quickTouchArmTimer=setTimeout',
+  'Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)',
+  'quickSuppressClickUntil=Date.now()+500',
+  'quickGridScrollLeft:null',
+  'state.quickGridScrollLeft=null',
+  '--quick-room-col:112px',
+  'class="quick-room-link"',
+  'tabindex="${rowIndex===0?',
+  '${room.no}호 객실 상세 열기',
+  "if(state.adminView==='quickReservation'&&!state.detail)rememberQuickGridViewport()",
+  '검색어 또는 객실 유형 필터를 바꿔 주세요.',
+  'rowIndex===0&&iso===focusDate',
+  "['ArrowUp','ArrowDown','Home','End'].includes(event.key)",
+]) {
+  if (!html.includes(contract)) throw new Error(`Quick reservation contract missing: ${contract}`);
+}
+for (const removedContract of [
+  'quickReservationElevator',
+  'quick-reservation-elevator',
+  'bookingElevator',
+  'quickRoomCleaner',
+  'quick-room-cleaner',
+]) {
+  if (html.includes(removedContract)) throw new Error(`Removed quick reservation filter or cleaner contract returned: ${removedContract}`);
+}
+const quickGridStart = html.indexOf('function quickCellMarkup');
+const quickGridEnd = html.indexOf('function rememberQuickGridViewport', quickGridStart);
+if (quickGridStart < 0 || quickGridEnd <= quickGridStart) throw new Error('Quick reservation grid scope is missing.');
+const quickGridScope = html.slice(quickGridStart, quickGridEnd);
+for (const removedCopy of ['퇴실 청소 담당','청소 미배정','assignedCount=monthReservations','유형·엘리베이터 필터']) {
+  if (quickGridScope.includes(removedCopy)) throw new Error(`Removed quick reservation grid copy returned: ${removedCopy}`);
+}
+for (const contract of [
+  "const CALENDAR_WEEKDAYS=Object.freeze(['일','월','화','수','목','금','토'])",
+  'const KR_HOLIDAY_FIXTURE=Object.freeze({',
+  "jurisdiction:'KR',mode:'demo-static',coverage:['2026-01-01','2026-12-31']",
+  "'2026-01-01':{name:'신정'",
+  "'2026-05-01':{name:'노동절'",
+  "'2026-06-03':{name:'제9회 전국동시지방선거'",
+  "'2026-07-17':{name:'제헌절'",
+  "'2026-08-15':{name:'광복절'",
+  "'2026-08-17':{name:'광복절 대체공휴일'",
+  "'2026-09-25':{name:'추석'",
+  "'2026-12-25':{name:'기독탄신일'",
+  'function calendarDayMeta(iso)',
+  "tone:holiday?'holiday':isSunday?'sunday':isSaturday?'saturday':'weekday'",
+  'function calendarWeekdayHeaderMarkup()',
+  'function calendarDateAriaLabel(iso',
+  'offset=first.getDay(),start=',
+  'Array.from({length:42}',
+  'calendarWeekdayHeaderMarkup()',
+  'calendarDayMeta(iso)',
+  'calendar-holiday-mark',
+  '.calendar-day.is-saturday:not(.is-holiday)',
+  '.quick-day-header.is-saturday:not(.is-holiday)',
+]) {
+  if (!html.includes(contract)) throw new Error(`Sunday-first Korean calendar contract missing: ${contract}`);
+}
+const calendarStart = html.indexOf('function calendarMarkup');
+const calendarEnd = html.indexOf('function openCalendar', calendarStart);
+if (calendarStart < 0 || calendarEnd <= calendarStart) throw new Error('Shared calendar scope is missing.');
+const calendarScope = html.slice(calendarStart, calendarEnd);
+for (const removedCalendarContract of [
+  "weekMode?['월','화','수','목','금','토','일']",
+  '(first.getDay()+6)%7',
+]) {
+  if (calendarScope.includes(removedCalendarContract)) throw new Error(`Monday-first calendar layout returned: ${removedCalendarContract}`);
+}
+for (const removedQuickCalendarContract of ['.quick-day-header.weekend','weekend=[0,6]']) {
+  if (html.includes(removedQuickCalendarContract)) throw new Error(`Combined red weekend styling returned: ${removedQuickCalendarContract}`);
+}
+for (const businessWeekContract of [
+  'offset=(d.getDay()+6)%7',
+  'mondayOffset=-((date.getUTCDay()+6)%7)',
+  '날짜를 누르면 그 날짜가 포함된 월요일–일요일 주차를 선택합니다.',
+]) {
+  if (!html.includes(businessWeekContract)) throw new Error(`Monday-to-Sunday business-week meaning changed: ${businessWeekContract}`);
+}
+const reservationCheckinLabel = '<label for="res-checkin">1. 체크인 일시</label>';
+const reservationCheckoutLabel = '<label for="res-checkout">2. 체크아웃 일시</label>';
+if (html.indexOf(reservationCheckinLabel) < 0 || html.indexOf(reservationCheckoutLabel) <= html.indexOf(reservationCheckinLabel)) {
+  throw new Error('Single-reservation form must render check-in before check-out.');
+}
+const roomTypesStart = html.indexOf('const ROOM_TYPES = {');
+const roomTypesEnd = html.indexOf('};', roomTypesStart);
+if (roomTypesStart < 0 || roomTypesEnd <= roomTypesStart) throw new Error('ROOM_TYPES guest policy source could not be resolved.');
+const roomTypesSource = html.slice(roomTy
+
+r state contracts remain in WIREFRAME/index.html.');
+}
+for (const contract of [
+  "key:'blocked',tone:'red',status:'배정 불가'",
+  "key:'cleaning',tone:'amber',status:'청소 필요'",
+  "key:'occupied',tone:'neutral',status:'투숙 중'",
+  "key:'available',tone:'green',status:'배정 가능'",
+  'roomCleaningStageLabel(job)',
+  'cardReservationStatus(no)',
+  "{id:'reservation-demo-142'",
+  'label:`연박 ${day}/${total}일차`',
+]) {
+  if (!html.includes(contract)) throw new Error(`Four-state room card contract missing: ${contract}`);
+}
+const roomPresentationSource = html.slice(html.indexOf('function roomPresentation(no)'), html.indexOf('function renderPinRow', html.indexOf('function roomPresentation(no)')));
+const roomPresentationOrder = ["if(blockers.length)return", "if(room.occupancy==='occupied')return", "if(cleaning)return", "key:'available'"]
+  .map((marker) => roomPresentationSource.indexOf(marker));
+if (roomPresentationOrder.some((index) => index < 0) || roomPresentationOrder.some((index, position) => position && index <= roomPresentationOrder[position - 1])) {
+  throw new Error(`Room card priority must remain blocked > occupied (with subordinate cleaning) > cleaning > available: ${roomPresentationOrder.join(', ')}`);
+}
+for (const contract of [
+  'function roomCleaningControl(no)',
+  "label:'청소 요청'",
+  "label:'청소 취소'",
+  "confirmLabel:request?'청소 취소':'청소 대기열에 넣기'",
+  "if(state.roomFilter==='occupied')return r.occupancy==='occupied'",
+  "if(state.roomFilter==='cleaning')return roomNeedsCleaningNow(r.no)",
+  'data-room-cleaning-control=\"${no}\"',
+  "청소 필요 · ${p.cleaningKind||'청소'}",
+]) {
+  if (!html.includes(contract)) throw new Error(`Room cleaning request contract missing: ${contract}`);
+}
+for (const forbidden of ['ON으로 변경', 'OFF로 변경', '청소 필요 ON', '청소 필요 OFF']) {
+  if (html.includes(forbidden)) throw new Error(`Legacy cleaning switch copy remains: ${forbidden}`);
+}
+const roomCardStart = html.indexOf('function roomCard(no)');
+const roomCardEnd = html.indexOf('function cleaningLabel', roomCardStart);
+if (roomCardStart < 0 || roomCardEnd <= roomCardStart) throw new Error('Room card source block not found.');
+const roomCardSource = html.slice(roomCardStart, roomCardEnd);
+for (const removed of ['room-work-line', 'concept-cleaning-row', '가장 가까운 일정', '예약 없음 · 바로 등록']) {
+  if (roomCardSource.includes(removed)) throw new Error(`Redundant room-card reservation summary returned: ${removed}`);
+}
+for (const contract of [
+  'class="room-quick-actions"',
+  'data-action="${closestReservation?\'quick-reservation-edit\':\'reservation-edit\'}"',
+  "reservationActionLabel=weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`",
+  ":pastReservationCount?`예약 기록 ${pastReservationCount}건`:room.occupancy==='occupied'&&!occupiedReservationEnd(room)?'투숙 정보 입력':'예약 등록'",
+]) {
+  if (!roomCardSource.includes(contract)) throw new Error(`Compact room-card reservation action missing: ${contract}`);
+}
+
+for (const contract of [
+  "if(a==='edit-room-info')",
+  "if(a==='save-room-info')",
+  'id="room-info-number"',
+  'readonly aria-readonly="true"',
+  'id="room-info-type"',
+  'id="room-info-elevator"',
+  'roomMasterFingerprint(room)',
+  'adminCanMutate()',
+  'appendEvent(`${id}호 객실 정보 수정`',
+  '이후 새 작업부터 적용',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin room master edit contract missing: ${contract}`);
+}
+for (const contract of [
+  "if(a==='manual-checkout')",
+  "if(a==='confirm-manual-checkout')",
+  "room.occupancy!=='occupied'",
+  'activeUnfinishedAttempt(id)',
+  'recordManualCheckoutScheduleChange(id,unstartedAttempt,previousWorkDate,previousAccessStart)',
+  'attemptId:currentAttemptId(no)||null',
+  "draft.kind==='퇴실 청소'",
+  "activeReservation.status='checked-out'",
+  'existingDraft.reservationId=activeReservation.id',
+  'projectReservationState(state,id)',
+  "room.occupancy='vacant'",
+  'room.actualCheckoutAt=actualCheckoutAt',
+  'delete room.actualCheckoutAt',
+  '예정 ${plannedCheckout} 보존',
+  '퇴실 청소 초안 1건',
+  'appendEvent(`${id}호 지금 체크아웃`',
+]) {
+  if (!html.includes(contract)) throw new Error(`Manual checkout contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'const INITIAL_RESERVATIONS',
+  "{id:'quickReservation',label:'간편 예약'",
+  "if (state.adminView==='quickReservation') return renderQuickReservation()",
+  'reservationOverlaps(roomNo,checkInAt,checkOutAt,ignoreId',
+  'initialReservationDrafts()',
+  "activeReservationsFor(targetState).filter(reservation=>reservation.checkOutAt.slice(0,10)===assignmentDate)",
+  'cleaningAssignmentForReservation(reservation)',
+  'data-action="quick-reservation-edit"',
+  "'quick-reservation-undo'",
+  'quickTouchArmTimer=setTimeout',
+  'Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)',
+  'quickSuppressClickUntil=Date.now()+500',
+  'quickGridScrollLeft:null',
+  'state.quickGridScrollLeft=null',
+  '--quick-room-col:112px',
+  'class="quick-room-link"',
+  'tabindex="${rowIndex===0?',
+  '${room.no}호 객실 상세 열기',
+  "if(state.adminView==='quickReservation'&&!state.detail)rememberQuickGridViewport()",
+  '검색어 또는 객실 유형 필터를 바꿔 주세요.',
+  'rowIndex===0&&iso===focusDate',
+  "['ArrowUp','ArrowDown','Home','End'].includes(event.key)",
+]) {
+  if (!html.includes(contract)) throw new Error(`Quick reservation contract missing: ${contract}`);
+}
+for (const removedContract of [
+  'quickReservationElevator',
+  'quick-reservation-elevator',
+  'bookingElevator',
+  'quickRoomCleaner',
+  'quick-room-cleaner',
+]) {
+  if (html.includes(removedContract)) throw new Error(`Removed quick reservation filter or cleaner contract returned: ${removedContract}`);
+}
+const quickGridStart = html.indexOf('function quickCellMarkup');
+const quickGridEnd = html.indexOf('function rememberQuickGridViewport', quickGridStart);
+if (quickGridStart < 0 || quickGridEnd <= quickGridStart) throw new Error('Quick reservation grid scope is missing.');
+const quickGridScope = html.slice(quickGridStart, quickGridEnd);
+for (const removedCopy of ['퇴실 청소 담당','청소 미배정','assignedCount=monthReservations','유형·엘리베이터 필터']) {
+  if (quickGridScope.includes(removedCopy)) throw new Error(`Removed quick reservation grid copy returned: ${removedCopy}`);
+}
+for (const contract of [
+  "const CALENDAR_WEEKDAYS=Object.freeze(['일','월','화','수','목','금','토'])",
+  'const KR_HOLIDAY_FIXTURE=Object.freeze({',
+  "jurisdiction:'KR',mode:'demo-static',coverage:['2026-01-01','2026-12-31']",
+  "'2026-01-01':{name:'신정'",
+  "'2026-05-01':{name:'노동절'",
+  "'2026-06-03':{name:'제9회 전국동시지방선거'",
+  "'2026-07-17':{name:'제헌절'",
+  "'2026-08-15':{name:'광복절'",
+  "'2026-08-17':{name:'광복절 대체공휴일'",
+  "'2026-09-25':{name:'추석'",
+  "'2026-12-25':{name:'기독탄신일'",
+  'function calendarDayMeta(iso)',
+  "tone:holiday?'holiday':isSunday?'sunday':isSaturday?'saturday':'weekday'",
+  'function calendarWeekdayHeaderMarkup()',
+  'function calendarDateAriaLabel(iso',
+  'offset=first.getDay(),start=',
+  'Array.from({length:42}',
+  'calendarWeekdayHeaderMarkup()',
+  'calendarDayMeta(iso)',
+  'calendar-holiday-mark',
+  '.calendar-day.is-saturday:not(.is-holiday)',
+  '.quick-day-header.is-saturday:not(.is-holiday)',
+]) {
+  if (!html.includes(contract)) throw new Error(`Sunday-first Korean calendar contract missing: ${contract}`);
+}
+const calendarStart = html.indexOf('function calendarMarkup');
+const calendarEnd = html.indexOf('function openCalendar', calendarStart);
+if (calendarStart < 0 || calendarEnd <= calendarStart) throw new Error('Shared calendar scope is missing.');
+const calendarScope = html.slice(calendarStart, calendarEnd);
+for (const removedCalendarContract of [
+  "weekMode?['월','화','수','목','금','토','일']",
+  '(first.getDay()+6)%7',
+]) {
+  if (calendarScope.includes(removedCalendarContract)) throw new Error(`Monday-first calendar layout returned: ${removedCalendarContract}`);
+}
+for (const removedQuickCalendarContract of ['.quick-day-header.weekend','weekend=[0,6]']) {
+  if (html.includes(removedQuickCalendarContract)) throw new Error(`Combined red weekend styling returned: ${removedQuickCalendarContract}`);
+}
+for (const businessWeekContract of [
+  'offset=(d.getDay()+6)%7',
+  'mondayOffset=-((date.getUTCDay()+6)%7)',
+  '날짜를 누르면 그 날짜가 포함된 월요일–일요일 주차를 선택합니다.',
+]) {
+  if (!html.includes(businessWeekContract)) throw new Error(`Monday-to-Sunday business-week meaning changed: ${businessWeekContract}`);
+}
+const reservationCheckinLabel = '<label for="res-checkin">1. 체크인 일시</label>';
+const reservationCheckoutLabel = '<label for="res-checkout">2. 체크아웃 일시</label>';
+if (html.indexOf(reservationCheckinLabel) < 0 || html.indexOf(reservationCheckoutLabel) <= html.indexOf(reservationCheckinLabel)) {
+  throw new Error('Single-reservation form must render check-in before check-out.');
+}
+const roomTypesStart = html.indexOf('const ROOM_TYPES = {');
+const roomTypesEnd = html.indexOf('};', roomTypesStart);
+if (roomTypesStart < 0 || roomTypesEnd <= roomTypesStart) throw new Error('ROOM_TYPES guest policy source could not be resolved.');
+const roomTypesSource = html.slice(roomTypesStart, roomTypesEnd);
+const expectedReservationGuestP
+
+);
+}
+for (const forbidden of ['ON으로 변경', 'OFF로 변경', '청소 필요 ON', '청소 필요 OFF']) {
+  if (html.includes(forbidden)) throw new Error(`Legacy cleaning switch copy remains: ${forbidden}`);
+}
+const roomCardStart = html.indexOf('function roomCard(no)');
+const roomCardEnd = html.indexOf('function cleaningLabel', roomCardStart);
+if (roomCardStart < 0 || roomCardEnd <= roomCardStart) throw new Error('Room card source block not found.');
+const roomCardSource = html.slice(roomCardStart, roomCardEnd);
+for (const removed of ['room-work-line', 'concept-cleaning-row', '가장 가까운 일정', '예약 없음 · 바로 등록']) {
+  if (roomCardSource.includes(removed)) throw new Error(`Redundant room-card reservation summary returned: ${removed}`);
+}
+for (const contract of [
+  'class="room-quick-actions"',
+  'data-action="${closestReservation?\'quick-reservation-edit\':\'reservation-edit\'}"',
+  "reservationActionLabel=weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`",
+  ":pastReservationCount?`예약 기록 ${pastReservationCount}건`:room.occupancy==='occupied'&&!occupiedReservationEnd(room)?'투숙 정보 입력':'예약 등록'",
+]) {
+  if (!roomCardSource.includes(contract)) throw new Error(`Compact room-card reservation action missing: ${contract}`);
+}
+
+for (const contract of [
+  "if(a==='edit-room-info')",
+  "if(a==='save-room-info')",
+  'id="room-info-number"',
+  'readonly aria-readonly="true"',
+  'id="room-info-type"',
+  'id="room-info-elevator"',
+  'roomMasterFingerprint(room)',
+  'adminCanMutate()',
+  'appendEvent(`${id}호 객실 정보 수정`',
+  '이후 새 작업부터 적용',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin room master edit contract missing: ${contract}`);
+}
+for (const contract of [
+  "if(a==='manual-checkout')",
+  "if(a==='confirm-manual-checkout')",
+  "room.occupancy!=='occupied'",
+  'activeUnfinishedAttempt(id)',
+  'recordManualCheckoutScheduleChange(id,unstartedAttempt,previousWorkDate,previousAccessStart)',
+  'attemptId:currentAttemptId(no)||null',
+  "draft.kind==='퇴실 청소'",
+  "activeReservation.status='checked-out'",
+  'existingDraft.reservationId=activeReservation.id',
+  'projectReservationState(state,id)',
+  "room.occupancy='vacant'",
+  'room.actualCheckoutAt=actualCheckoutAt',
+  'delete room.actualCheckoutAt',
+  '예정 ${plannedCheckout} 보존',
+  '퇴실 청소 초안 1건',
+  'appendEvent(`${id}호 지금 체크아웃`',
+]) {
+  if (!html.includes(contract)) throw new Error(`Manual checkout contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'const INITIAL_RESERVATIONS',
+  "{id:'quickReservation',label:'간편 예약'",
+  "if (state.adminView==='quickReservation') return renderQuickReservation()",
+  'reservationOverlaps(roomNo,checkInAt,checkOutAt,ignoreId',
+  'initialReservationDrafts()',
+  "activeReservationsFor(targetState).filter(reservation=>reservation.checkOutAt.slice(0,10)===assignmentDate)",
+  'cleaningAssignmentForReservation(reservation)',
+  'data-action="quick-reservation-edit"',
+  "'quick-reservation-undo'",
+  'quickTouchArmTimer=setTimeout',
+  'Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)',
+  'quickSuppressClickUntil=Date.now()+500',
+  'quickGridScrollLeft:null',
+  'state.quickGridScrollLeft=null',
+  '--quick-room-col:112px',
+  'class="quick-room-link"',
+  'tabindex="${rowIndex===0?',
+  '${room.no}호 객실 상세 열기',
+  "if(state.adminView==='quickReservation'&&!state.detail)rememberQuickGridViewport()",
+  '검색어 또는 객실 유형 필터를 바꿔 주세요.',
+  'rowIndex===0&&iso===focusDate',
+  "['ArrowUp','ArrowDown','Home','End'].includes(event.key)",
+]) {
+  if (!html.includes(contract)) throw new Error(`Quick reservation contract missing: ${contract}`);
+}
+for (const removedContract of [
+  'quickReservationElevator',
+  'quick-reservation-elevator',
+  'bookingElevator',
+  'quickRoomCleaner',
+  'quick-room-cleaner',
+]) {
+  if (html.includes(removedContract)) throw new Error(`Removed quick reservation filter or cleaner contract returned: ${removedContract}`);
+}
+const quickGridStart = html.indexOf('function quickCellMarkup');
+const quickGridEnd = html.indexOf('function rememberQuickGridViewport', quickGridStart);
+if (quickGridStart < 0 || quickGridEnd <= quickGridStart) throw new Error('Quick reservation grid scope is missing.');
+const quickGridScope = html.slice(quickGridStart, quickGridEnd);
+for (const removedCopy of ['퇴실 청소 담당','청소 미배정','assignedCount=monthReservations','유형·엘리베이터 필터']) {
+  if (quickGridScope.includes(removedCopy)) throw new Error(`Removed quick reservation grid copy returned: ${removedCopy}`);
+}
+for (const contract of [
+  "const CALENDAR_WEEKDAYS=Object.freeze(['일','월','화','수','목','금','토'])",
+  'const KR_HOLIDAY_FIXTURE=Object.freeze({',
+  "jurisdiction:'KR',mode:'demo-static',coverage:['2026-01-01','2026-12-31']",
+  "'2026-01-01':{name:'신정'",
+  "'2026-05-01':{name:'노동절'",
+  "'2026-06-03':{name:'제9회 전국동시지방선거'",
+  "'2026-07-17':{name:'제헌절'",
+  "'2026-08-15':{name:'광복절'",
+  "'2026-08-17':{name:'광복절 대체공휴일'",
+  "'2026-09-25':{name:'추석'",
+  "'2026-12-25':{name:'기독탄신일'",
+  'function calendarDayMeta(iso)',
+  "tone:holiday?'holiday':isSunday?'sunday':isSaturday?'saturday':'weekday'",
+  'function calendarWeekdayHeaderMarkup()',
+  'function calendarDateAriaLabel(iso',
+  'offset=first.getDay(),start=',
+  'Array.from({length:42}',
+  'calendarWeekdayHeaderMarkup()',
+  'calendarDayMeta(iso)',
+  'calendar-holiday-mark',
+  '.calendar-day.is-saturday:not(.is-holiday)',
+  '.quick-day-header.is-saturday:not(.is-holiday)',
+]) {
+  if (!html.includes(contract)) throw new Error(`Sunday-first Korean calendar contract missing: ${contract}`);
+}
+const calendarStart = html.indexOf('function calendarMarkup');
+const calendarEnd = html.indexOf('function openCalendar', calendarStart);
+if (calendarStart < 0 || calendarEnd <= calendarStart) throw new Error('Shared calendar scope is missing.');
+const calendarScope = html.slice(calendarStart, calendarEnd);
+for (const removedCalendarContract of [
+  "weekMode?['월','화','수','목','금','토','일']",
+  '(first.getDay()+6)%7',
+]) {
+  if (calendarScope.includes(removedCalendarContract)) throw new Error(`Monday-first calendar layout returned: ${removedCalendarContract}`);
+}
+for (const removedQuickCalendarContract of ['.quick-day-header.weekend','weekend=[0,6]']) {
+  if (html.includes(removedQuickCalendarContract)) throw new Error(`Combined red weekend styling returned: ${removedQuickCalendarContract}`);
+}
+for (const businessWeekContract of [
+  'offset=(d.getDay()+6)%7',
+  'mondayOffset=-((date.getUTCDay()+6)%7)',
+  '날짜를 누르면 그 날짜가 포함된 월요일–일요일 주차를 선택합니다.',
+]) {
+  if (!html.includes(businessWeekContract)) throw new Error(`Monday-to-Sunday business-week meaning changed: ${businessWeekContract}`);
+}
+const reservationCheckinLabel = '<label for="res-checkin">1. 체크인 일시</label>';
+const reservationCheckoutLabel = '<label for="res-checkout">2. 체크아웃 일시</label>';
+if (html.indexOf(reservationCheckinLabel) < 0 || html.indexOf(reservationCheckoutLabel) <= html.indexOf(reservationCheckinLabel)) {
+  throw new Error('Single-reservation form must render check-in before check-out.');
+}
+const roomTypesStart = html.indexOf('const ROOM_TYPES = {');
+const roomTypesEnd = html.indexOf('};', roomTypesStart);
+if (roomTypesStart < 0 || roomTypesEnd <= roomTypesStart) throw new Error('ROOM_TYPES guest policy source could not be resolved.');
+const roomTypesSource = html.slice(roomTypesStart, roomTypesEnd);
+const expectedReservationGuestPolicies = {
+  standard: [2, 2],
+  premium: [2, 3],
+  oceanPremium: [2, 4],
+  oceanFamily: [4, 6],
+};
+for (const [typeId, expected] of Object.entries(expectedReservationGuestPolicies)) {
+  const match = roomTypesSource.match(new RegExp(`${typeId}:\\s*\\{[^}]*defaultGuestCount:(\\d+)\\s*,\\s*maxGuestCount:(\\d+)`));
+  const actual = match ? [Number(match[1]), Number(match[2])] : [];
+  if (actual.length !== 2 || actual.some((value, index) => value !== expected[index])) {
+    throw new Error(`Reservation guest policy mismatch for ${typeId}: ${actual.join('/') || 'missing'} (expected ${expected.join('/')}).`);
+  }
+}
+for (const contract of [
+  'function guestPolicyForRoom(roomNo)',
+  'function reservationGuestCount(reservation)',
+  "Object.hasOwn(reservation,'guestCount')",
+  'guestCount:guestPolicyForRoom(reservation.room).defaultGuestCount',
+  'reservationGuestCount(reservation),reservation.status',
+  'Number.isInteger(value)&&value>=1?value:policy.defaultGuestCount',
+  "return Number.isInteger(Number(value))&&Number(value)>=1?`${Number(value)}명`:'인원 미기록'",
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation guest data contract missing: ${contract}`);
+}
+const guestUpsertStart = html.indexOf('function upsertReservationRecord');
+const guestUpsertEnd = html.indexOf('function clearOrphanedReservationDraftJob', guestUpsertStart);
+if (guestUpsertStart < 0 || guestUpsertEnd <= guestUpsertStart) throw new Error('Reservation guest upsert source could not be resolved.');
+const guestUpsertSource = html.slice(guestUpsertStart, guestUpsertEnd);
+for (const contract of [
+  'policy.defaultGuestCount):Number(guestCount)',
+  '!Number.isInteger(resolvedGuestCount)||resolv
+
+N', '청소 필요 OFF']) {
+  if (html.includes(forbidden)) throw new Error(`Legacy cleaning switch copy remains: ${forbidden}`);
+}
+const roomCardStart = html.indexOf('function roomCard(no)');
+const roomCardEnd = html.indexOf('function cleaningLabel', roomCardStart);
+if (roomCardStart < 0 || roomCardEnd <= roomCardStart) throw new Error('Room card source block not found.');
+const roomCardSource = html.slice(roomCardStart, roomCardEnd);
+for (const removed of ['room-work-line', 'concept-cleaning-row', '가장 가까운 일정', '예약 없음 · 바로 등록']) {
+  if (roomCardSource.includes(removed)) throw new Error(`Redundant room-card reservation summary returned: ${removed}`);
+}
+for (const contract of [
+  'class="room-quick-actions"',
+  'data-action="${closestReservation?\'quick-reservation-edit\':\'reservation-edit\'}"',
+  "reservationActionLabel=weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`",
+  ":pastReservationCount?`예약 기록 ${pastReservationCount}건`:room.occupancy==='occupied'&&!occupiedReservationEnd(room)?'투숙 정보 입력':'예약 등록'",
+]) {
+  if (!roomCardSource.includes(contract)) throw new Error(`Compact room-card reservation action missing: ${contract}`);
+}
+
+for (const contract of [
+  "if(a==='edit-room-info')",
+  "if(a==='save-room-info')",
+  'id="room-info-number"',
+  'readonly aria-readonly="true"',
+  'id="room-info-type"',
+  'id="room-info-elevator"',
+  'roomMasterFingerprint(room)',
+  'adminCanMutate()',
+  'appendEvent(`${id}호 객실 정보 수정`',
+  '이후 새 작업부터 적용',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin room master edit contract missing: ${contract}`);
+}
+for (const contract of [
+  "if(a==='manual-checkout')",
+  "if(a==='confirm-manual-checkout')",
+  "room.occupancy!=='occupied'",
+  'activeUnfinishedAttempt(id)',
+  'recordManualCheckoutScheduleChange(id,unstartedAttempt,previousWorkDate,previousAccessStart)',
+  'attemptId:currentAttemptId(no)||null',
+  "draft.kind==='퇴실 청소'",
+  "activeReservation.status='checked-out'",
+  'existingDraft.reservationId=activeReservation.id',
+  'projectReservationState(state,id)',
+  "room.occupancy='vacant'",
+  'room.actualCheckoutAt=actualCheckoutAt',
+  'delete room.actualCheckoutAt',
+  '예정 ${plannedCheckout} 보존',
+  '퇴실 청소 초안 1건',
+  'appendEvent(`${id}호 지금 체크아웃`',
+]) {
+  if (!html.includes(contract)) throw new Error(`Manual checkout contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'const INITIAL_RESERVATIONS',
+  "{id:'quickReservation',label:'간편 예약'",
+  "if (state.adminView==='quickReservation') return renderQuickReservation()",
+  'reservationOverlaps(roomNo,checkInAt,checkOutAt,ignoreId',
+  'initialReservationDrafts()',
+  "activeReservationsFor(targetState).filter(reservation=>reservation.checkOutAt.slice(0,10)===assignmentDate)",
+  'cleaningAssignmentForReservation(reservation)',
+  'data-action="quick-reservation-edit"',
+  "'quick-reservation-undo'",
+  'quickTouchArmTimer=setTimeout',
+  'Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)',
+  'quickSuppressClickUntil=Date.now()+500',
+  'quickGridScrollLeft:null',
+  'state.quickGridScrollLeft=null',
+  '--quick-room-col:112px',
+  'class="quick-room-link"',
+  'tabindex="${rowIndex===0?',
+  '${room.no}호 객실 상세 열기',
+  "if(state.adminView==='quickReservation'&&!state.detail)rememberQuickGridViewport()",
+  '검색어 또는 객실 유형 필터를 바꿔 주세요.',
+  'rowIndex===0&&iso===focusDate',
+  "['ArrowUp','ArrowDown','Home','End'].includes(event.key)",
+]) {
+  if (!html.includes(contract)) throw new Error(`Quick reservation contract missing: ${contract}`);
+}
+for (const removedContract of [
+  'quickReservationElevator',
+  'quick-reservation-elevator',
+  'bookingElevator',
+  'quickRoomCleaner',
+  'quick-room-cleaner',
+]) {
+  if (html.includes(removedContract)) throw new Error(`Removed quick reservation filter or cleaner contract returned: ${removedContract}`);
+}
+const quickGridStart = html.indexOf('function quickCellMarkup');
+const quickGridEnd = html.indexOf('function rememberQuickGridViewport', quickGridStart);
+if (quickGridStart < 0 || quickGridEnd <= quickGridStart) throw new Error('Quick reservation grid scope is missing.');
+const quickGridScope = html.slice(quickGridStart, quickGridEnd);
+for (const removedCopy of ['퇴실 청소 담당','청소 미배정','assignedCount=monthReservations','유형·엘리베이터 필터']) {
+  if (quickGridScope.includes(removedCopy)) throw new Error(`Removed quick reservation grid copy returned: ${removedCopy}`);
+}
+for (const contract of [
+  "const CALENDAR_WEEKDAYS=Object.freeze(['일','월','화','수','목','금','토'])",
+  'const KR_HOLIDAY_FIXTURE=Object.freeze({',
+  "jurisdiction:'KR',mode:'demo-static',coverage:['2026-01-01','2026-12-31']",
+  "'2026-01-01':{name:'신정'",
+  "'2026-05-01':{name:'노동절'",
+  "'2026-06-03':{name:'제9회 전국동시지방선거'",
+  "'2026-07-17':{name:'제헌절'",
+  "'2026-08-15':{name:'광복절'",
+  "'2026-08-17':{name:'광복절 대체공휴일'",
+  "'2026-09-25':{name:'추석'",
+  "'2026-12-25':{name:'기독탄신일'",
+  'function calendarDayMeta(iso)',
+  "tone:holiday?'holiday':isSunday?'sunday':isSaturday?'saturday':'weekday'",
+  'function calendarWeekdayHeaderMarkup()',
+  'function calendarDateAriaLabel(iso',
+  'offset=first.getDay(),start=',
+  'Array.from({length:42}',
+  'calendarWeekdayHeaderMarkup()',
+  'calendarDayMeta(iso)',
+  'calendar-holiday-mark',
+  '.calendar-day.is-saturday:not(.is-holiday)',
+  '.quick-day-header.is-saturday:not(.is-holiday)',
+]) {
+  if (!html.includes(contract)) throw new Error(`Sunday-first Korean calendar contract missing: ${contract}`);
+}
+const calendarStart = html.indexOf('function calendarMarkup');
+const calendarEnd = html.indexOf('function openCalendar', calendarStart);
+if (calendarStart < 0 || calendarEnd <= calendarStart) throw new Error('Shared calendar scope is missing.');
+const calendarScope = html.slice(calendarStart, calendarEnd);
+for (const removedCalendarContract of [
+  "weekMode?['월','화','수','목','금','토','일']",
+  '(first.getDay()+6)%7',
+]) {
+  if (calendarScope.includes(removedCalendarContract)) throw new Error(`Monday-first calendar layout returned: ${removedCalendarContract}`);
+}
+for (const removedQuickCalendarContract of ['.quick-day-header.weekend','weekend=[0,6]']) {
+  if (html.includes(removedQuickCalendarContract)) throw new Error(`Combined red weekend styling returned: ${removedQuickCalendarContract}`);
+}
+for (const businessWeekContract of [
+  'offset=(d.getDay()+6)%7',
+  'mondayOffset=-((date.getUTCDay()+6)%7)',
+  '날짜를 누르면 그 날짜가 포함된 월요일–일요일 주차를 선택합니다.',
+]) {
+  if (!html.includes(businessWeekContract)) throw new Error(`Monday-to-Sunday business-week meaning changed: ${businessWeekContract}`);
+}
+const reservationCheckinLabel = '<label for="res-checkin">1. 체크인 일시</label>';
+const reservationCheckoutLabel = '<label for="res-checkout">2. 체크아웃 일시</label>';
+if (html.indexOf(reservationCheckinLabel) < 0 || html.indexOf(reservationCheckoutLabel) <= html.indexOf(reservationCheckinLabel)) {
+  throw new Error('Single-reservation form must render check-in before check-out.');
+}
+const roomTypesStart = html.indexOf('const ROOM_TYPES = {');
+const roomTypesEnd = html.indexOf('};', roomTypesStart);
+if (roomTypesStart < 0 || roomTypesEnd <= roomTypesStart) throw new Error('ROOM_TYPES guest policy source could not be resolved.');
+const roomTypesSource = html.slice(roomTypesStart, roomTypesEnd);
+const expectedReservationGuestPolicies = {
+  standard: [2, 2],
+  premium: [2, 3],
+  oceanPremium: [2, 4],
+  oceanFamily: [4, 6],
+};
+for (const [typeId, expected] of Object.entries(expectedReservationGuestPolicies)) {
+  const match = roomTypesSource.match(new RegExp(`${typeId}:\\s*\\{[^}]*defaultGuestCount:(\\d+)\\s*,\\s*maxGuestCount:(\\d+)`));
+  const actual = match ? [Number(match[1]), Number(match[2])] : [];
+  if (actual.length !== 2 || actual.some((value, index) => value !== expected[index])) {
+    throw new Error(`Reservation guest policy mismatch for ${typeId}: ${actual.join('/') || 'missing'} (expected ${expected.join('/')}).`);
+  }
+}
+for (const contract of [
+  'function guestPolicyForRoom(roomNo)',
+  'function reservationGuestCount(reservation)',
+  "Object.hasOwn(reservation,'guestCount')",
+  'guestCount:guestPolicyForRoom(reservation.room).defaultGuestCount',
+  'reservationGuestCount(reservation),reservation.status',
+  'Number.isInteger(value)&&value>=1?value:policy.defaultGuestCount',
+  "return Number.isInteger(Number(value))&&Number(value)>=1?`${Number(value)}명`:'인원 미기록'",
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation guest data contract missing: ${contract}`);
+}
+const guestUpsertStart = html.indexOf('function upsertReservationRecord');
+const guestUpsertEnd = html.indexOf('function clearOrphanedReservationDraftJob', guestUpsertStart);
+if (guestUpsertStart < 0 || guestUpsertEnd <= guestUpsertStart) throw new Error('Reservation guest upsert source could not be resolved.');
+const guestUpsertSource = html.slice(guestUpsertStart, guestUpsertEnd);
+for (const contract of [
+  'policy.defaultGuestCount):Number(guestCount)',
+  '!Number.isInteger(resolvedGuestCount)||resolvedGuestCount<1||resolvedGuestCount>policy.maxGuestCount',
+  
+
+ncludes(forbidden)) throw new Error(`Legacy cleaning switch copy remains: ${forbidden}`);
+}
+const roomCardStart = html.indexOf('function roomCard(no)');
+const roomCardEnd = html.indexOf('function cleaningLabel', roomCardStart);
+if (roomCardStart < 0 || roomCardEnd <= roomCardStart) throw new Error('Room card source block not found.');
+const roomCardSource = html.slice(roomCardStart, roomCardEnd);
+for (const removed of ['room-work-line', 'concept-cleaning-row', '가장 가까운 일정', '예약 없음 · 바로 등록']) {
+  if (roomCardSource.includes(removed)) throw new Error(`Redundant room-card reservation summary returned: ${removed}`);
+}
+for (const contract of [
+  'class="room-quick-actions"',
+  'data-action="${closestReservation?\'quick-reservation-edit\':\'reservation-edit\'}"',
+  "reservationActionLabel=weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`",
+  ":pastReservationCount?`예약 기록 ${pastReservationCount}건`:room.occupancy==='occupied'&&!occupiedReservationEnd(room)?'투숙 정보 입력':'예약 등록'",
+]) {
+  if (!roomCardSource.includes(contract)) throw new Error(`Compact room-card reservation action missing: ${contract}`);
+}
+
+for (const contract of [
+  "if(a==='edit-room-info')",
+  "if(a==='save-room-info')",
+  'id="room-info-number"',
+  'readonly aria-readonly="true"',
+  'id="room-info-type"',
+  'id="room-info-elevator"',
+  'roomMasterFingerprint(room)',
+  'adminCanMutate()',
+  'appendEvent(`${id}호 객실 정보 수정`',
+  '이후 새 작업부터 적용',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin room master edit contract missing: ${contract}`);
+}
+for (const contract of [
+  "if(a==='manual-checkout')",
+  "if(a==='confirm-manual-checkout')",
+  "room.occupancy!=='occupied'",
+  'activeUnfinishedAttempt(id)',
+  'recordManualCheckoutScheduleChange(id,unstartedAttempt,previousWorkDate,previousAccessStart)',
+  'attemptId:currentAttemptId(no)||null',
+  "draft.kind==='퇴실 청소'",
+  "activeReservation.status='checked-out'",
+  'existingDraft.reservationId=activeReservation.id',
+  'projectReservationState(state,id)',
+  "room.occupancy='vacant'",
+  'room.actualCheckoutAt=actualCheckoutAt',
+  'delete room.actualCheckoutAt',
+  '예정 ${plannedCheckout} 보존',
+  '퇴실 청소 초안 1건',
+  'appendEvent(`${id}호 지금 체크아웃`',
+]) {
+  if (!html.includes(contract)) throw new Error(`Manual checkout contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'const INITIAL_RESERVATIONS',
+  "{id:'quickReservation',label:'간편 예약'",
+  "if (state.adminView==='quickReservation') return renderQuickReservation()",
+  'reservationOverlaps(roomNo,checkInAt,checkOutAt,ignoreId',
+  'initialReservationDrafts()',
+  "activeReservationsFor(targetState).filter(reservation=>reservation.checkOutAt.slice(0,10)===assignmentDate)",
+  'cleaningAssignmentForReservation(reservation)',
+  'data-action="quick-reservation-edit"',
+  "'quick-reservation-undo'",
+  'quickTouchArmTimer=setTimeout',
+  'Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)',
+  'quickSuppressClickUntil=Date.now()+500',
+  'quickGridScrollLeft:null',
+  'state.quickGridScrollLeft=null',
+  '--quick-room-col:112px',
+  'class="quick-room-link"',
+  'tabindex="${rowIndex===0?',
+  '${room.no}호 객실 상세 열기',
+  "if(state.adminView==='quickReservation'&&!state.detail)rememberQuickGridViewport()",
+  '검색어 또는 객실 유형 필터를 바꿔 주세요.',
+  'rowIndex===0&&iso===focusDate',
+  "['ArrowUp','ArrowDown','Home','End'].includes(event.key)",
+]) {
+  if (!html.includes(contract)) throw new Error(`Quick reservation contract missing: ${contract}`);
+}
+for (const removedContract of [
+  'quickReservationElevator',
+  'quick-reservation-elevator',
+  'bookingElevator',
+  'quickRoomCleaner',
+  'quick-room-cleaner',
+]) {
+  if (html.includes(removedContract)) throw new Error(`Removed quick reservation filter or cleaner contract returned: ${removedContract}`);
+}
+const quickGridStart = html.indexOf('function quickCellMarkup');
+const quickGridEnd = html.indexOf('function rememberQuickGridViewport', quickGridStart);
+if (quickGridStart < 0 || quickGridEnd <= quickGridStart) throw new Error('Quick reservation grid scope is missing.');
+const quickGridScope = html.slice(quickGridStart, quickGridEnd);
+for (const removedCopy of ['퇴실 청소 담당','청소 미배정','assignedCount=monthReservations','유형·엘리베이터 필터']) {
+  if (quickGridScope.includes(removedCopy)) throw new Error(`Removed quick reservation grid copy returned: ${removedCopy}`);
+}
+for (const contract of [
+  "const CALENDAR_WEEKDAYS=Object.freeze(['일','월','화','수','목','금','토'])",
+  'const KR_HOLIDAY_FIXTURE=Object.freeze({',
+  "jurisdiction:'KR',mode:'demo-static',coverage:['2026-01-01','2026-12-31']",
+  "'2026-01-01':{name:'신정'",
+  "'2026-05-01':{name:'노동절'",
+  "'2026-06-03':{name:'제9회 전국동시지방선거'",
+  "'2026-07-17':{name:'제헌절'",
+  "'2026-08-15':{name:'광복절'",
+  "'2026-08-17':{name:'광복절 대체공휴일'",
+  "'2026-09-25':{name:'추석'",
+  "'2026-12-25':{name:'기독탄신일'",
+  'function calendarDayMeta(iso)',
+  "tone:holiday?'holiday':isSunday?'sunday':isSaturday?'saturday':'weekday'",
+  'function calendarWeekdayHeaderMarkup()',
+  'function calendarDateAriaLabel(iso',
+  'offset=first.getDay(),start=',
+  'Array.from({length:42}',
+  'calendarWeekdayHeaderMarkup()',
+  'calendarDayMeta(iso)',
+  'calendar-holiday-mark',
+  '.calendar-day.is-saturday:not(.is-holiday)',
+  '.quick-day-header.is-saturday:not(.is-holiday)',
+]) {
+  if (!html.includes(contract)) throw new Error(`Sunday-first Korean calendar contract missing: ${contract}`);
+}
+const calendarStart = html.indexOf('function calendarMarkup');
+const calendarEnd = html.indexOf('function openCalendar', calendarStart);
+if (calendarStart < 0 || calendarEnd <= calendarStart) throw new Error('Shared calendar scope is missing.');
+const calendarScope = html.slice(calendarStart, calendarEnd);
+for (const removedCalendarContract of [
+  "weekMode?['월','화','수','목','금','토','일']",
+  '(first.getDay()+6)%7',
+]) {
+  if (calendarScope.includes(removedCalendarContract)) throw new Error(`Monday-first calendar layout returned: ${removedCalendarContract}`);
+}
+for (const removedQuickCalendarContract of ['.quick-day-header.weekend','weekend=[0,6]']) {
+  if (html.includes(removedQuickCalendarContract)) throw new Error(`Combined red weekend styling returned: ${removedQuickCalendarContract}`);
+}
+for (const businessWeekContract of [
+  'offset=(d.getDay()+6)%7',
+  'mondayOffset=-((date.getUTCDay()+6)%7)',
+  '날짜를 누르면 그 날짜가 포함된 월요일–일요일 주차를 선택합니다.',
+]) {
+  if (!html.includes(businessWeekContract)) throw new Error(`Monday-to-Sunday business-week meaning changed: ${businessWeekContract}`);
+}
+const reservationCheckinLabel = '<label for="res-checkin">1. 체크인 일시</label>';
+const reservationCheckoutLabel = '<label for="res-checkout">2. 체크아웃 일시</label>';
+if (html.indexOf(reservationCheckinLabel) < 0 || html.indexOf(reservationCheckoutLabel) <= html.indexOf(reservationCheckinLabel)) {
+  throw new Error('Single-reservation form must render check-in before check-out.');
+}
+const roomTypesStart = html.indexOf('const ROOM_TYPES = {');
+const roomTypesEnd = html.indexOf('};', roomTypesStart);
+if (roomTypesStart < 0 || roomTypesEnd <= roomTypesStart) throw new Error('ROOM_TYPES guest policy source could not be resolved.');
+const roomTypesSource = html.slice(roomTypesStart, roomTypesEnd);
+const expectedReservationGuestPolicies = {
+  standard: [2, 2],
+  premium: [2, 3],
+  oceanPremium: [2, 4],
+  oceanFamily: [4, 6],
+};
+for (const [typeId, expected] of Object.entries(expectedReservationGuestPolicies)) {
+  const match = roomTypesSource.match(new RegExp(`${typeId}:\\s*\\{[^}]*defaultGuestCount:(\\d+)\\s*,\\s*maxGuestCount:(\\d+)`));
+  const actual = match ? [Number(match[1]), Number(match[2])] : [];
+  if (actual.length !== 2 || actual.some((value, index) => value !== expected[index])) {
+    throw new Error(`Reservation guest policy mismatch for ${typeId}: ${actual.join('/') || 'missing'} (expected ${expected.join('/')}).`);
+  }
+}
+for (const contract of [
+  'function guestPolicyForRoom(roomNo)',
+  'function reservationGuestCount(reservation)',
+  "Object.hasOwn(reservation,'guestCount')",
+  'guestCount:guestPolicyForRoom(reservation.room).defaultGuestCount',
+  'reservationGuestCount(reservation),reservation.status',
+  'Number.isInteger(value)&&value>=1?value:policy.defaultGuestCount',
+  "return Number.isInteger(Number(value))&&Number(value)>=1?`${Number(value)}명`:'인원 미기록'",
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation guest data contract missing: ${contract}`);
+}
+const guestUpsertStart = html.indexOf('function upsertReservationRecord');
+const guestUpsertEnd = html.indexOf('function clearOrphanedReservationDraftJob', guestUpsertStart);
+if (guestUpsertStart < 0 || guestUpsertEnd <= guestUpsertStart) throw new Error('Reservation guest upsert source could not be resolved.');
+const guestUpsertSource = html.slice(guestUpsertStart, guestUpsertEnd);
+for (const contract of [
+  'policy.defaultGuestCount):Number(guestCount)',
+  '!Number.isInteger(resolvedGuestCount)||resolvedGuestCount<1||resolvedGuestCount>policy.maxGuestCount',
+  'guestError:true',
+  'guestCount
+
+ror('Room card source block not found.');
+const roomCardSource = html.slice(roomCardStart, roomCardEnd);
+for (const removed of ['room-work-line', 'concept-cleaning-row', '가장 가까운 일정', '예약 없음 · 바로 등록']) {
+  if (roomCardSource.includes(removed)) throw new Error(`Redundant room-card reservation summary returned: ${removed}`);
+}
+for (const contract of [
+  'class="room-quick-actions"',
+  'data-action="${closestReservation?\'quick-reservation-edit\':\'reservation-edit\'}"',
+  "reservationActionLabel=weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`",
+  ":pastReservationCount?`예약 기록 ${pastReservationCount}건`:room.occupancy==='occupied'&&!occupiedReservationEnd(room)?'투숙 정보 입력':'예약 등록'",
+]) {
+  if (!roomCardSource.includes(contract)) throw new Error(`Compact room-card reservation action missing: ${contract}`);
+}
+
+for (const contract of [
+  "if(a==='edit-room-info')",
+  "if(a==='save-room-info')",
+  'id="room-info-number"',
+  'readonly aria-readonly="true"',
+  'id="room-info-type"',
+  'id="room-info-elevator"',
+  'roomMasterFingerprint(room)',
+  'adminCanMutate()',
+  'appendEvent(`${id}호 객실 정보 수정`',
+  '이후 새 작업부터 적용',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin room master edit contract missing: ${contract}`);
+}
+for (const contract of [
+  "if(a==='manual-checkout')",
+  "if(a==='confirm-manual-checkout')",
+  "room.occupancy!=='occupied'",
+  'activeUnfinishedAttempt(id)',
+  'recordManualCheckoutScheduleChange(id,unstartedAttempt,previousWorkDate,previousAccessStart)',
+  'attemptId:currentAttemptId(no)||null',
+  "draft.kind==='퇴실 청소'",
+  "activeReservation.status='checked-out'",
+  'existingDraft.reservationId=activeReservation.id',
+  'projectReservationState(state,id)',
+  "room.occupancy='vacant'",
+  'room.actualCheckoutAt=actualCheckoutAt',
+  'delete room.actualCheckoutAt',
+  '예정 ${plannedCheckout} 보존',
+  '퇴실 청소 초안 1건',
+  'appendEvent(`${id}호 지금 체크아웃`',
+]) {
+  if (!html.includes(contract)) throw new Error(`Manual checkout contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'const INITIAL_RESERVATIONS',
+  "{id:'quickReservation',label:'간편 예약'",
+  "if (state.adminView==='quickReservation') return renderQuickReservation()",
+  'reservationOverlaps(roomNo,checkInAt,checkOutAt,ignoreId',
+  'initialReservationDrafts()',
+  "activeReservationsFor(targetState).filter(reservation=>reservation.checkOutAt.slice(0,10)===assignmentDate)",
+  'cleaningAssignmentForReservation(reservation)',
+  'data-action="quick-reservation-edit"',
+  "'quick-reservation-undo'",
+  'quickTouchArmTimer=setTimeout',
+  'Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)',
+  'quickSuppressClickUntil=Date.now()+500',
+  'quickGridScrollLeft:null',
+  'state.quickGridScrollLeft=null',
+  '--quick-room-col:112px',
+  'class="quick-room-link"',
+  'tabindex="${rowIndex===0?',
+  '${room.no}호 객실 상세 열기',
+  "if(state.adminView==='quickReservation'&&!state.detail)rememberQuickGridViewport()",
+  '검색어 또는 객실 유형 필터를 바꿔 주세요.',
+  'rowIndex===0&&iso===focusDate',
+  "['ArrowUp','ArrowDown','Home','End'].includes(event.key)",
+]) {
+  if (!html.includes(contract)) throw new Error(`Quick reservation contract missing: ${contract}`);
+}
+for (const removedContract of [
+  'quickReservationElevator',
+  'quick-reservation-elevator',
+  'bookingElevator',
+  'quickRoomCleaner',
+  'quick-room-cleaner',
+]) {
+  if (html.includes(removedContract)) throw new Error(`Removed quick reservation filter or cleaner contract returned: ${removedContract}`);
+}
+const quickGridStart = html.indexOf('function quickCellMarkup');
+const quickGridEnd = html.indexOf('function rememberQuickGridViewport', quickGridStart);
+if (quickGridStart < 0 || quickGridEnd <= quickGridStart) throw new Error('Quick reservation grid scope is missing.');
+const quickGridScope = html.slice(quickGridStart, quickGridEnd);
+for (const removedCopy of ['퇴실 청소 담당','청소 미배정','assignedCount=monthReservations','유형·엘리베이터 필터']) {
+  if (quickGridScope.includes(removedCopy)) throw new Error(`Removed quick reservation grid copy returned: ${removedCopy}`);
+}
+for (const contract of [
+  "const CALENDAR_WEEKDAYS=Object.freeze(['일','월','화','수','목','금','토'])",
+  'const KR_HOLIDAY_FIXTURE=Object.freeze({',
+  "jurisdiction:'KR',mode:'demo-static',coverage:['2026-01-01','2026-12-31']",
+  "'2026-01-01':{name:'신정'",
+  "'2026-05-01':{name:'노동절'",
+  "'2026-06-03':{name:'제9회 전국동시지방선거'",
+  "'2026-07-17':{name:'제헌절'",
+  "'2026-08-15':{name:'광복절'",
+  "'2026-08-17':{name:'광복절 대체공휴일'",
+  "'2026-09-25':{name:'추석'",
+  "'2026-12-25':{name:'기독탄신일'",
+  'function calendarDayMeta(iso)',
+  "tone:holiday?'holiday':isSunday?'sunday':isSaturday?'saturday':'weekday'",
+  'function calendarWeekdayHeaderMarkup()',
+  'function calendarDateAriaLabel(iso',
+  'offset=first.getDay(),start=',
+  'Array.from({length:42}',
+  'calendarWeekdayHeaderMarkup()',
+  'calendarDayMeta(iso)',
+  'calendar-holiday-mark',
+  '.calendar-day.is-saturday:not(.is-holiday)',
+  '.quick-day-header.is-saturday:not(.is-holiday)',
+]) {
+  if (!html.includes(contract)) throw new Error(`Sunday-first Korean calendar contract missing: ${contract}`);
+}
+const calendarStart = html.indexOf('function calendarMarkup');
+const calendarEnd = html.indexOf('function openCalendar', calendarStart);
+if (calendarStart < 0 || calendarEnd <= calendarStart) throw new Error('Shared calendar scope is missing.');
+const calendarScope = html.slice(calendarStart, calendarEnd);
+for (const removedCalendarContract of [
+  "weekMode?['월','화','수','목','금','토','일']",
+  '(first.getDay()+6)%7',
+]) {
+  if (calendarScope.includes(removedCalendarContract)) throw new Error(`Monday-first calendar layout returned: ${removedCalendarContract}`);
+}
+for (const removedQuickCalendarContract of ['.quick-day-header.weekend','weekend=[0,6]']) {
+  if (html.includes(removedQuickCalendarContract)) throw new Error(`Combined red weekend styling returned: ${removedQuickCalendarContract}`);
+}
+for (const businessWeekContract of [
+  'offset=(d.getDay()+6)%7',
+  'mondayOffset=-((date.getUTCDay()+6)%7)',
+  '날짜를 누르면 그 날짜가 포함된 월요일–일요일 주차를 선택합니다.',
+]) {
+  if (!html.includes(businessWeekContract)) throw new Error(`Monday-to-Sunday business-week meaning changed: ${businessWeekContract}`);
+}
+const reservationCheckinLabel = '<label for="res-checkin">1. 체크인 일시</label>';
+const reservationCheckoutLabel = '<label for="res-checkout">2. 체크아웃 일시</label>';
+if (html.indexOf(reservationCheckinLabel) < 0 || html.indexOf(reservationCheckoutLabel) <= html.indexOf(reservationCheckinLabel)) {
+  throw new Error('Single-reservation form must render check-in before check-out.');
+}
+const roomTypesStart = html.indexOf('const ROOM_TYPES = {');
+const roomTypesEnd = html.indexOf('};', roomTypesStart);
+if (roomTypesStart < 0 || roomTypesEnd <= roomTypesStart) throw new Error('ROOM_TYPES guest policy source could not be resolved.');
+const roomTypesSource = html.slice(roomTypesStart, roomTypesEnd);
+const expectedReservationGuestPolicies = {
+  standard: [2, 2],
+  premium: [2, 3],
+  oceanPremium: [2, 4],
+  oceanFamily: [4, 6],
+};
+for (const [typeId, expected] of Object.entries(expectedReservationGuestPolicies)) {
+  const match = roomTypesSource.match(new RegExp(`${typeId}:\\s*\\{[^}]*defaultGuestCount:(\\d+)\\s*,\\s*maxGuestCount:(\\d+)`));
+  const actual = match ? [Number(match[1]), Number(match[2])] : [];
+  if (actual.length !== 2 || actual.some((value, index) => value !== expected[index])) {
+    throw new Error(`Reservation guest policy mismatch for ${typeId}: ${actual.join('/') || 'missing'} (expected ${expected.join('/')}).`);
+  }
+}
+for (const contract of [
+  'function guestPolicyForRoom(roomNo)',
+  'function reservationGuestCount(reservation)',
+  "Object.hasOwn(reservation,'guestCount')",
+  'guestCount:guestPolicyForRoom(reservation.room).defaultGuestCount',
+  'reservationGuestCount(reservation),reservation.status',
+  'Number.isInteger(value)&&value>=1?value:policy.defaultGuestCount',
+  "return Number.isInteger(Number(value))&&Number(value)>=1?`${Number(value)}명`:'인원 미기록'",
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation guest data contract missing: ${contract}`);
+}
+const guestUpsertStart = html.indexOf('function upsertReservationRecord');
+const guestUpsertEnd = html.indexOf('function clearOrphanedReservationDraftJob', guestUpsertStart);
+if (guestUpsertStart < 0 || guestUpsertEnd <= guestUpsertStart) throw new Error('Reservation guest upsert source could not be resolved.');
+const guestUpsertSource = html.slice(guestUpsertStart, guestUpsertEnd);
+for (const contract of [
+  'policy.defaultGuestCount):Number(guestCount)',
+  '!Number.isInteger(resolvedGuestCount)||resolvedGuestCount<1||resolvedGuestCount>policy.maxGuestCount',
+  'guestError:true',
+  'guestCountChanged=!!before&&reservationGuestCount(before)!==resolvedGuestCount',
+  'cleaningChanges=reservationCleaningChanges(beforeReservations,prospectiveReservations)',
+  'roomCleaningChanged=cleaningChanges.length>0',
+  'reservationCleaningChangeTouchesPublic(cleaningChanges,room.no)',
+  'reservatio
+
+t found.');
+const roomCardSource = html.slice(roomCardStart, roomCardEnd);
+for (const removed of ['room-work-line', 'concept-cleaning-row', '가장 가까운 일정', '예약 없음 · 바로 등록']) {
+  if (roomCardSource.includes(removed)) throw new Error(`Redundant room-card reservation summary returned: ${removed}`);
+}
+for (const contract of [
+  'class="room-quick-actions"',
+  'data-action="${closestReservation?\'quick-reservation-edit\':\'reservation-edit\'}"',
+  "reservationActionLabel=weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`",
+  ":pastReservationCount?`예약 기록 ${pastReservationCount}건`:room.occupancy==='occupied'&&!occupiedReservationEnd(room)?'투숙 정보 입력':'예약 등록'",
+]) {
+  if (!roomCardSource.includes(contract)) throw new Error(`Compact room-card reservation action missing: ${contract}`);
+}
+
+for (const contract of [
+  "if(a==='edit-room-info')",
+  "if(a==='save-room-info')",
+  'id="room-info-number"',
+  'readonly aria-readonly="true"',
+  'id="room-info-type"',
+  'id="room-info-elevator"',
+  'roomMasterFingerprint(room)',
+  'adminCanMutate()',
+  'appendEvent(`${id}호 객실 정보 수정`',
+  '이후 새 작업부터 적용',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin room master edit contract missing: ${contract}`);
+}
+for (const contract of [
+  "if(a==='manual-checkout')",
+  "if(a==='confirm-manual-checkout')",
+  "room.occupancy!=='occupied'",
+  'activeUnfinishedAttempt(id)',
+  'recordManualCheckoutScheduleChange(id,unstartedAttempt,previousWorkDate,previousAccessStart)',
+  'attemptId:currentAttemptId(no)||null',
+  "draft.kind==='퇴실 청소'",
+  "activeReservation.status='checked-out'",
+  'existingDraft.reservationId=activeReservation.id',
+  'projectReservationState(state,id)',
+  "room.occupancy='vacant'",
+  'room.actualCheckoutAt=actualCheckoutAt',
+  'delete room.actualCheckoutAt',
+  '예정 ${plannedCheckout} 보존',
+  '퇴실 청소 초안 1건',
+  'appendEvent(`${id}호 지금 체크아웃`',
+]) {
+  if (!html.includes(contract)) throw new Error(`Manual checkout contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'const INITIAL_RESERVATIONS',
+  "{id:'quickReservation',label:'간편 예약'",
+  "if (state.adminView==='quickReservation') return renderQuickReservation()",
+  'reservationOverlaps(roomNo,checkInAt,checkOutAt,ignoreId',
+  'initialReservationDrafts()',
+  "activeReservationsFor(targetState).filter(reservation=>reservation.checkOutAt.slice(0,10)===assignmentDate)",
+  'cleaningAssignmentForReservation(reservation)',
+  'data-action="quick-reservation-edit"',
+  "'quick-reservation-undo'",
+  'quickTouchArmTimer=setTimeout',
+  'Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)',
+  'quickSuppressClickUntil=Date.now()+500',
+  'quickGridScrollLeft:null',
+  'state.quickGridScrollLeft=null',
+  '--quick-room-col:112px',
+  'class="quick-room-link"',
+  'tabindex="${rowIndex===0?',
+  '${room.no}호 객실 상세 열기',
+  "if(state.adminView==='quickReservation'&&!state.detail)rememberQuickGridViewport()",
+  '검색어 또는 객실 유형 필터를 바꿔 주세요.',
+  'rowIndex===0&&iso===focusDate',
+  "['ArrowUp','ArrowDown','Home','End'].includes(event.key)",
+]) {
+  if (!html.includes(contract)) throw new Error(`Quick reservation contract missing: ${contract}`);
+}
+for (const removedContract of [
+  'quickReservationElevator',
+  'quick-reservation-elevator',
+  'bookingElevator',
+  'quickRoomCleaner',
+  'quick-room-cleaner',
+]) {
+  if (html.includes(removedContract)) throw new Error(`Removed quick reservation filter or cleaner contract returned: ${removedContract}`);
+}
+const quickGridStart = html.indexOf('function quickCellMarkup');
+const quickGridEnd = html.indexOf('function rememberQuickGridViewport', quickGridStart);
+if (quickGridStart < 0 || quickGridEnd <= quickGridStart) throw new Error('Quick reservation grid scope is missing.');
+const quickGridScope = html.slice(quickGridStart, quickGridEnd);
+for (const removedCopy of ['퇴실 청소 담당','청소 미배정','assignedCount=monthReservations','유형·엘리베이터 필터']) {
+  if (quickGridScope.includes(removedCopy)) throw new Error(`Removed quick reservation grid copy returned: ${removedCopy}`);
+}
+for (const contract of [
+  "const CALENDAR_WEEKDAYS=Object.freeze(['일','월','화','수','목','금','토'])",
+  'const KR_HOLIDAY_FIXTURE=Object.freeze({',
+  "jurisdiction:'KR',mode:'demo-static',coverage:['2026-01-01','2026-12-31']",
+  "'2026-01-01':{name:'신정'",
+  "'2026-05-01':{name:'노동절'",
+  "'2026-06-03':{name:'제9회 전국동시지방선거'",
+  "'2026-07-17':{name:'제헌절'",
+  "'2026-08-15':{name:'광복절'",
+  "'2026-08-17':{name:'광복절 대체공휴일'",
+  "'2026-09-25':{name:'추석'",
+  "'2026-12-25':{name:'기독탄신일'",
+  'function calendarDayMeta(iso)',
+  "tone:holiday?'holiday':isSunday?'sunday':isSaturday?'saturday':'weekday'",
+  'function calendarWeekdayHeaderMarkup()',
+  'function calendarDateAriaLabel(iso',
+  'offset=first.getDay(),start=',
+  'Array.from({length:42}',
+  'calendarWeekdayHeaderMarkup()',
+  'calendarDayMeta(iso)',
+  'calendar-holiday-mark',
+  '.calendar-day.is-saturday:not(.is-holiday)',
+  '.quick-day-header.is-saturday:not(.is-holiday)',
+]) {
+  if (!html.includes(contract)) throw new Error(`Sunday-first Korean calendar contract missing: ${contract}`);
+}
+const calendarStart = html.indexOf('function calendarMarkup');
+const calendarEnd = html.indexOf('function openCalendar', calendarStart);
+if (calendarStart < 0 || calendarEnd <= calendarStart) throw new Error('Shared calendar scope is missing.');
+const calendarScope = html.slice(calendarStart, calendarEnd);
+for (const removedCalendarContract of [
+  "weekMode?['월','화','수','목','금','토','일']",
+  '(first.getDay()+6)%7',
+]) {
+  if (calendarScope.includes(removedCalendarContract)) throw new Error(`Monday-first calendar layout returned: ${removedCalendarContract}`);
+}
+for (const removedQuickCalendarContract of ['.quick-day-header.weekend','weekend=[0,6]']) {
+  if (html.includes(removedQuickCalendarContract)) throw new Error(`Combined red weekend styling returned: ${removedQuickCalendarContract}`);
+}
+for (const businessWeekContract of [
+  'offset=(d.getDay()+6)%7',
+  'mondayOffset=-((date.getUTCDay()+6)%7)',
+  '날짜를 누르면 그 날짜가 포함된 월요일–일요일 주차를 선택합니다.',
+]) {
+  if (!html.includes(businessWeekContract)) throw new Error(`Monday-to-Sunday business-week meaning changed: ${businessWeekContract}`);
+}
+const reservationCheckinLabel = '<label for="res-checkin">1. 체크인 일시</label>';
+const reservationCheckoutLabel = '<label for="res-checkout">2. 체크아웃 일시</label>';
+if (html.indexOf(reservationCheckinLabel) < 0 || html.indexOf(reservationCheckoutLabel) <= html.indexOf(reservationCheckinLabel)) {
+  throw new Error('Single-reservation form must render check-in before check-out.');
+}
+const roomTypesStart = html.indexOf('const ROOM_TYPES = {');
+const roomTypesEnd = html.indexOf('};', roomTypesStart);
+if (roomTypesStart < 0 || roomTypesEnd <= roomTypesStart) throw new Error('ROOM_TYPES guest policy source could not be resolved.');
+const roomTypesSource = html.slice(roomTypesStart, roomTypesEnd);
+const expectedReservationGuestPolicies = {
+  standard: [2, 2],
+  premium: [2, 3],
+  oceanPremium: [2, 4],
+  oceanFamily: [4, 6],
+};
+for (const [typeId, expected] of Object.entries(expectedReservationGuestPolicies)) {
+  const match = roomTypesSource.match(new RegExp(`${typeId}:\\s*\\{[^}]*defaultGuestCount:(\\d+)\\s*,\\s*maxGuestCount:(\\d+)`));
+  const actual = match ? [Number(match[1]), Number(match[2])] : [];
+  if (actual.length !== 2 || actual.some((value, index) => value !== expected[index])) {
+    throw new Error(`Reservation guest policy mismatch for ${typeId}: ${actual.join('/') || 'missing'} (expected ${expected.join('/')}).`);
+  }
+}
+for (const contract of [
+  'function guestPolicyForRoom(roomNo)',
+  'function reservationGuestCount(reservation)',
+  "Object.hasOwn(reservation,'guestCount')",
+  'guestCount:guestPolicyForRoom(reservation.room).defaultGuestCount',
+  'reservationGuestCount(reservation),reservation.status',
+  'Number.isInteger(value)&&value>=1?value:policy.defaultGuestCount',
+  "return Number.isInteger(Number(value))&&Number(value)>=1?`${Number(value)}명`:'인원 미기록'",
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation guest data contract missing: ${contract}`);
+}
+const guestUpsertStart = html.indexOf('function upsertReservationRecord');
+const guestUpsertEnd = html.indexOf('function clearOrphanedReservationDraftJob', guestUpsertStart);
+if (guestUpsertStart < 0 || guestUpsertEnd <= guestUpsertStart) throw new Error('Reservation guest upsert source could not be resolved.');
+const guestUpsertSource = html.slice(guestUpsertStart, guestUpsertEnd);
+for (const contract of [
+  'policy.defaultGuestCount):Number(guestCount)',
+  '!Number.isInteger(resolvedGuestCount)||resolvedGuestCount<1||resolvedGuestCount>policy.maxGuestCount',
+  'guestError:true',
+  'guestCountChanged=!!before&&reservationGuestCount(before)!==resolvedGuestCount',
+  'cleaningChanges=reservationCleaningChanges(beforeReservations,prospectiveReservations)',
+  'roomCleaningChanged=cleaningChanges.length>0',
+  'reservationCleaningChangeTouchesPublic(cleaningChanges,room.no)',
+  'reservationCleaningChangeTouchesRandom(c
+
+rce = html.slice(roomCardStart, roomCardEnd);
+for (const removed of ['room-work-line', 'concept-cleaning-row', '가장 가까운 일정', '예약 없음 · 바로 등록']) {
+  if (roomCardSource.includes(removed)) throw new Error(`Redundant room-card reservation summary returned: ${removed}`);
+}
+for (const contract of [
+  'class="room-quick-actions"',
+  'data-action="${closestReservation?\'quick-reservation-edit\':\'reservation-edit\'}"',
+  "reservationActionLabel=weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`",
+  ":pastReservationCount?`예약 기록 ${pastReservationCount}건`:room.occupancy==='occupied'&&!occupiedReservationEnd(room)?'투숙 정보 입력':'예약 등록'",
+]) {
+  if (!roomCardSource.includes(contract)) throw new Error(`Compact room-card reservation action missing: ${contract}`);
+}
+
+for (const contract of [
+  "if(a==='edit-room-info')",
+  "if(a==='save-room-info')",
+  'id="room-info-number"',
+  'readonly aria-readonly="true"',
+  'id="room-info-type"',
+  'id="room-info-elevator"',
+  'roomMasterFingerprint(room)',
+  'adminCanMutate()',
+  'appendEvent(`${id}호 객실 정보 수정`',
+  '이후 새 작업부터 적용',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin room master edit contract missing: ${contract}`);
+}
+for (const contract of [
+  "if(a==='manual-checkout')",
+  "if(a==='confirm-manual-checkout')",
+  "room.occupancy!=='occupied'",
+  'activeUnfinishedAttempt(id)',
+  'recordManualCheckoutScheduleChange(id,unstartedAttempt,previousWorkDate,previousAccessStart)',
+  'attemptId:currentAttemptId(no)||null',
+  "draft.kind==='퇴실 청소'",
+  "activeReservation.status='checked-out'",
+  'existingDraft.reservationId=activeReservation.id',
+  'projectReservationState(state,id)',
+  "room.occupancy='vacant'",
+  'room.actualCheckoutAt=actualCheckoutAt',
+  'delete room.actualCheckoutAt',
+  '예정 ${plannedCheckout} 보존',
+  '퇴실 청소 초안 1건',
+  'appendEvent(`${id}호 지금 체크아웃`',
+]) {
+  if (!html.includes(contract)) throw new Error(`Manual checkout contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'const INITIAL_RESERVATIONS',
+  "{id:'quickReservation',label:'간편 예약'",
+  "if (state.adminView==='quickReservation') return renderQuickReservation()",
+  'reservationOverlaps(roomNo,checkInAt,checkOutAt,ignoreId',
+  'initialReservationDrafts()',
+  "activeReservationsFor(targetState).filter(reservation=>reservation.checkOutAt.slice(0,10)===assignmentDate)",
+  'cleaningAssignmentForReservation(reservation)',
+  'data-action="quick-reservation-edit"',
+  "'quick-reservation-undo'",
+  'quickTouchArmTimer=setTimeout',
+  'Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)',
+  'quickSuppressClickUntil=Date.now()+500',
+  'quickGridScrollLeft:null',
+  'state.quickGridScrollLeft=null',
+  '--quick-room-col:112px',
+  'class="quick-room-link"',
+  'tabindex="${rowIndex===0?',
+  '${room.no}호 객실 상세 열기',
+  "if(state.adminView==='quickReservation'&&!state.detail)rememberQuickGridViewport()",
+  '검색어 또는 객실 유형 필터를 바꿔 주세요.',
+  'rowIndex===0&&iso===focusDate',
+  "['ArrowUp','ArrowDown','Home','End'].includes(event.key)",
+]) {
+  if (!html.includes(contract)) throw new Error(`Quick reservation contract missing: ${contract}`);
+}
+for (const removedContract of [
+  'quickReservationElevator',
+  'quick-reservation-elevator',
+  'bookingElevator',
+  'quickRoomCleaner',
+  'quick-room-cleaner',
+]) {
+  if (html.includes(removedContract)) throw new Error(`Removed quick reservation filter or cleaner contract returned: ${removedContract}`);
+}
+const quickGridStart = html.indexOf('function quickCellMarkup');
+const quickGridEnd = html.indexOf('function rememberQuickGridViewport', quickGridStart);
+if (quickGridStart < 0 || quickGridEnd <= quickGridStart) throw new Error('Quick reservation grid scope is missing.');
+const quickGridScope = html.slice(quickGridStart, quickGridEnd);
+for (const removedCopy of ['퇴실 청소 담당','청소 미배정','assignedCount=monthReservations','유형·엘리베이터 필터']) {
+  if (quickGridScope.includes(removedCopy)) throw new Error(`Removed quick reservation grid copy returned: ${removedCopy}`);
+}
+for (const contract of [
+  "const CALENDAR_WEEKDAYS=Object.freeze(['일','월','화','수','목','금','토'])",
+  'const KR_HOLIDAY_FIXTURE=Object.freeze({',
+  "jurisdiction:'KR',mode:'demo-static',coverage:['2026-01-01','2026-12-31']",
+  "'2026-01-01':{name:'신정'",
+  "'2026-05-01':{name:'노동절'",
+  "'2026-06-03':{name:'제9회 전국동시지방선거'",
+  "'2026-07-17':{name:'제헌절'",
+  "'2026-08-15':{name:'광복절'",
+  "'2026-08-17':{name:'광복절 대체공휴일'",
+  "'2026-09-25':{name:'추석'",
+  "'2026-12-25':{name:'기독탄신일'",
+  'function calendarDayMeta(iso)',
+  "tone:holiday?'holiday':isSunday?'sunday':isSaturday?'saturday':'weekday'",
+  'function calendarWeekdayHeaderMarkup()',
+  'function calendarDateAriaLabel(iso',
+  'offset=first.getDay(),start=',
+  'Array.from({length:42}',
+  'calendarWeekdayHeaderMarkup()',
+  'calendarDayMeta(iso)',
+  'calendar-holiday-mark',
+  '.calendar-day.is-saturday:not(.is-holiday)',
+  '.quick-day-header.is-saturday:not(.is-holiday)',
+]) {
+  if (!html.includes(contract)) throw new Error(`Sunday-first Korean calendar contract missing: ${contract}`);
+}
+const calendarStart = html.indexOf('function calendarMarkup');
+const calendarEnd = html.indexOf('function openCalendar', calendarStart);
+if (calendarStart < 0 || calendarEnd <= calendarStart) throw new Error('Shared calendar scope is missing.');
+const calendarScope = html.slice(calendarStart, calendarEnd);
+for (const removedCalendarContract of [
+  "weekMode?['월','화','수','목','금','토','일']",
+  '(first.getDay()+6)%7',
+]) {
+  if (calendarScope.includes(removedCalendarContract)) throw new Error(`Monday-first calendar layout returned: ${removedCalendarContract}`);
+}
+for (const removedQuickCalendarContract of ['.quick-day-header.weekend','weekend=[0,6]']) {
+  if (html.includes(removedQuickCalendarContract)) throw new Error(`Combined red weekend styling returned: ${removedQuickCalendarContract}`);
+}
+for (const businessWeekContract of [
+  'offset=(d.getDay()+6)%7',
+  'mondayOffset=-((date.getUTCDay()+6)%7)',
+  '날짜를 누르면 그 날짜가 포함된 월요일–일요일 주차를 선택합니다.',
+]) {
+  if (!html.includes(businessWeekContract)) throw new Error(`Monday-to-Sunday business-week meaning changed: ${businessWeekContract}`);
+}
+const reservationCheckinLabel = '<label for="res-checkin">1. 체크인 일시</label>';
+const reservationCheckoutLabel = '<label for="res-checkout">2. 체크아웃 일시</label>';
+if (html.indexOf(reservationCheckinLabel) < 0 || html.indexOf(reservationCheckoutLabel) <= html.indexOf(reservationCheckinLabel)) {
+  throw new Error('Single-reservation form must render check-in before check-out.');
+}
+const roomTypesStart = html.indexOf('const ROOM_TYPES = {');
+const roomTypesEnd = html.indexOf('};', roomTypesStart);
+if (roomTypesStart < 0 || roomTypesEnd <= roomTypesStart) throw new Error('ROOM_TYPES guest policy source could not be resolved.');
+const roomTypesSource = html.slice(roomTypesStart, roomTypesEnd);
+const expectedReservationGuestPolicies = {
+  standard: [2, 2],
+  premium: [2, 3],
+  oceanPremium: [2, 4],
+  oceanFamily: [4, 6],
+};
+for (const [typeId, expected] of Object.entries(expectedReservationGuestPolicies)) {
+  const match = roomTypesSource.match(new RegExp(`${typeId}:\\s*\\{[^}]*defaultGuestCount:(\\d+)\\s*,\\s*maxGuestCount:(\\d+)`));
+  const actual = match ? [Number(match[1]), Number(match[2])] : [];
+  if (actual.length !== 2 || actual.some((value, index) => value !== expected[index])) {
+    throw new Error(`Reservation guest policy mismatch for ${typeId}: ${actual.join('/') || 'missing'} (expected ${expected.join('/')}).`);
+  }
+}
+for (const contract of [
+  'function guestPolicyForRoom(roomNo)',
+  'function reservationGuestCount(reservation)',
+  "Object.hasOwn(reservation,'guestCount')",
+  'guestCount:guestPolicyForRoom(reservation.room).defaultGuestCount',
+  'reservationGuestCount(reservation),reservation.status',
+  'Number.isInteger(value)&&value>=1?value:policy.defaultGuestCount',
+  "return Number.isInteger(Number(value))&&Number(value)>=1?`${Number(value)}명`:'인원 미기록'",
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation guest data contract missing: ${contract}`);
+}
+const guestUpsertStart = html.indexOf('function upsertReservationRecord');
+const guestUpsertEnd = html.indexOf('function clearOrphanedReservationDraftJob', guestUpsertStart);
+if (guestUpsertStart < 0 || guestUpsertEnd <= guestUpsertStart) throw new Error('Reservation guest upsert source could not be resolved.');
+const guestUpsertSource = html.slice(guestUpsertStart, guestUpsertEnd);
+for (const contract of [
+  'policy.defaultGuestCount):Number(guestCount)',
+  '!Number.isInteger(resolvedGuestCount)||resolvedGuestCount<1||resolvedGuestCount>policy.maxGuestCount',
+  'guestError:true',
+  'guestCountChanged=!!before&&reservationGuestCount(before)!==resolvedGuestCount',
+  'cleaningChanges=reservationCleaningChanges(beforeReservations,prospectiveReservations)',
+  'roomCleaningChanged=cleaningChanges.length>0',
+  'reservationCleaningChangeTouchesPublic(cleaningChanges,room.no)',
+  'reservationCleaningChangeTouchesRandom(cleaningChanges)',
+  'guestCou
+
+ne', 'concept-cleaning-row', '가장 가까운 일정', '예약 없음 · 바로 등록']) {
+  if (roomCardSource.includes(removed)) throw new Error(`Redundant room-card reservation summary returned: ${removed}`);
+}
+for (const contract of [
+  'class="room-quick-actions"',
+  'data-action="${closestReservation?\'quick-reservation-edit\':\'reservation-edit\'}"',
+  "reservationActionLabel=weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`",
+  ":pastReservationCount?`예약 기록 ${pastReservationCount}건`:room.occupancy==='occupied'&&!occupiedReservationEnd(room)?'투숙 정보 입력':'예약 등록'",
+]) {
+  if (!roomCardSource.includes(contract)) throw new Error(`Compact room-card reservation action missing: ${contract}`);
+}
+
+for (const contract of [
+  "if(a==='edit-room-info')",
+  "if(a==='save-room-info')",
+  'id="room-info-number"',
+  'readonly aria-readonly="true"',
+  'id="room-info-type"',
+  'id="room-info-elevator"',
+  'roomMasterFingerprint(room)',
+  'adminCanMutate()',
+  'appendEvent(`${id}호 객실 정보 수정`',
+  '이후 새 작업부터 적용',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin room master edit contract missing: ${contract}`);
+}
+for (const contract of [
+  "if(a==='manual-checkout')",
+  "if(a==='confirm-manual-checkout')",
+  "room.occupancy!=='occupied'",
+  'activeUnfinishedAttempt(id)',
+  'recordManualCheckoutScheduleChange(id,unstartedAttempt,previousWorkDate,previousAccessStart)',
+  'attemptId:currentAttemptId(no)||null',
+  "draft.kind==='퇴실 청소'",
+  "activeReservation.status='checked-out'",
+  'existingDraft.reservationId=activeReservation.id',
+  'projectReservationState(state,id)',
+  "room.occupancy='vacant'",
+  'room.actualCheckoutAt=actualCheckoutAt',
+  'delete room.actualCheckoutAt',
+  '예정 ${plannedCheckout} 보존',
+  '퇴실 청소 초안 1건',
+  'appendEvent(`${id}호 지금 체크아웃`',
+]) {
+  if (!html.includes(contract)) throw new Error(`Manual checkout contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'const INITIAL_RESERVATIONS',
+  "{id:'quickReservation',label:'간편 예약'",
+  "if (state.adminView==='quickReservation') return renderQuickReservation()",
+  'reservationOverlaps(roomNo,checkInAt,checkOutAt,ignoreId',
+  'initialReservationDrafts()',
+  "activeReservationsFor(targetState).filter(reservation=>reservation.checkOutAt.slice(0,10)===assignmentDate)",
+  'cleaningAssignmentForReservation(reservation)',
+  'data-action="quick-reservation-edit"',
+  "'quick-reservation-undo'",
+  'quickTouchArmTimer=setTimeout',
+  'Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)',
+  'quickSuppressClickUntil=Date.now()+500',
+  'quickGridScrollLeft:null',
+  'state.quickGridScrollLeft=null',
+  '--quick-room-col:112px',
+  'class="quick-room-link"',
+  'tabindex="${rowIndex===0?',
+  '${room.no}호 객실 상세 열기',
+  "if(state.adminView==='quickReservation'&&!state.detail)rememberQuickGridViewport()",
+  '검색어 또는 객실 유형 필터를 바꿔 주세요.',
+  'rowIndex===0&&iso===focusDate',
+  "['ArrowUp','ArrowDown','Home','End'].includes(event.key)",
+]) {
+  if (!html.includes(contract)) throw new Error(`Quick reservation contract missing: ${contract}`);
+}
+for (const removedContract of [
+  'quickReservationElevator',
+  'quick-reservation-elevator',
+  'bookingElevator',
+  'quickRoomCleaner',
+  'quick-room-cleaner',
+]) {
+  if (html.includes(removedContract)) throw new Error(`Removed quick reservation filter or cleaner contract returned: ${removedContract}`);
+}
+const quickGridStart = html.indexOf('function quickCellMarkup');
+const quickGridEnd = html.indexOf('function rememberQuickGridViewport', quickGridStart);
+if (quickGridStart < 0 || quickGridEnd <= quickGridStart) throw new Error('Quick reservation grid scope is missing.');
+const quickGridScope = html.slice(quickGridStart, quickGridEnd);
+for (const removedCopy of ['퇴실 청소 담당','청소 미배정','assignedCount=monthReservations','유형·엘리베이터 필터']) {
+  if (quickGridScope.includes(removedCopy)) throw new Error(`Removed quick reservation grid copy returned: ${removedCopy}`);
+}
+for (const contract of [
+  "const CALENDAR_WEEKDAYS=Object.freeze(['일','월','화','수','목','금','토'])",
+  'const KR_HOLIDAY_FIXTURE=Object.freeze({',
+  "jurisdiction:'KR',mode:'demo-static',coverage:['2026-01-01','2026-12-31']",
+  "'2026-01-01':{name:'신정'",
+  "'2026-05-01':{name:'노동절'",
+  "'2026-06-03':{name:'제9회 전국동시지방선거'",
+  "'2026-07-17':{name:'제헌절'",
+  "'2026-08-15':{name:'광복절'",
+  "'2026-08-17':{name:'광복절 대체공휴일'",
+  "'2026-09-25':{name:'추석'",
+  "'2026-12-25':{name:'기독탄신일'",
+  'function calendarDayMeta(iso)',
+  "tone:holiday?'holiday':isSunday?'sunday':isSaturday?'saturday':'weekday'",
+  'function calendarWeekdayHeaderMarkup()',
+  'function calendarDateAriaLabel(iso',
+  'offset=first.getDay(),start=',
+  'Array.from({length:42}',
+  'calendarWeekdayHeaderMarkup()',
+  'calendarDayMeta(iso)',
+  'calendar-holiday-mark',
+  '.calendar-day.is-saturday:not(.is-holiday)',
+  '.quick-day-header.is-saturday:not(.is-holiday)',
+]) {
+  if (!html.includes(contract)) throw new Error(`Sunday-first Korean calendar contract missing: ${contract}`);
+}
+const calendarStart = html.indexOf('function calendarMarkup');
+const calendarEnd = html.indexOf('function openCalendar', calendarStart);
+if (calendarStart < 0 || calendarEnd <= calendarStart) throw new Error('Shared calendar scope is missing.');
+const calendarScope = html.slice(calendarStart, calendarEnd);
+for (const removedCalendarContract of [
+  "weekMode?['월','화','수','목','금','토','일']",
+  '(first.getDay()+6)%7',
+]) {
+  if (calendarScope.includes(removedCalendarContract)) throw new Error(`Monday-first calendar layout returned: ${removedCalendarContract}`);
+}
+for (const removedQuickCalendarContract of ['.quick-day-header.weekend','weekend=[0,6]']) {
+  if (html.includes(removedQuickCalendarContract)) throw new Error(`Combined red weekend styling returned: ${removedQuickCalendarContract}`);
+}
+for (const businessWeekContract of [
+  'offset=(d.getDay()+6)%7',
+  'mondayOffset=-((date.getUTCDay()+6)%7)',
+  '날짜를 누르면 그 날짜가 포함된 월요일–일요일 주차를 선택합니다.',
+]) {
+  if (!html.includes(businessWeekContract)) throw new Error(`Monday-to-Sunday business-week meaning changed: ${businessWeekContract}`);
+}
+const reservationCheckinLabel = '<label for="res-checkin">1. 체크인 일시</label>';
+const reservationCheckoutLabel = '<label for="res-checkout">2. 체크아웃 일시</label>';
+if (html.indexOf(reservationCheckinLabel) < 0 || html.indexOf(reservationCheckoutLabel) <= html.indexOf(reservationCheckinLabel)) {
+  throw new Error('Single-reservation form must render check-in before check-out.');
+}
+const roomTypesStart = html.indexOf('const ROOM_TYPES = {');
+const roomTypesEnd = html.indexOf('};', roomTypesStart);
+if (roomTypesStart < 0 || roomTypesEnd <= roomTypesStart) throw new Error('ROOM_TYPES guest policy source could not be resolved.');
+const roomTypesSource = html.slice(roomTypesStart, roomTypesEnd);
+const expectedReservationGuestPolicies = {
+  standard: [2, 2],
+  premium: [2, 3],
+  oceanPremium: [2, 4],
+  oceanFamily: [4, 6],
+};
+for (const [typeId, expected] of Object.entries(expectedReservationGuestPolicies)) {
+  const match = roomTypesSource.match(new RegExp(`${typeId}:\\s*\\{[^}]*defaultGuestCount:(\\d+)\\s*,\\s*maxGuestCount:(\\d+)`));
+  const actual = match ? [Number(match[1]), Number(match[2])] : [];
+  if (actual.length !== 2 || actual.some((value, index) => value !== expected[index])) {
+    throw new Error(`Reservation guest policy mismatch for ${typeId}: ${actual.join('/') || 'missing'} (expected ${expected.join('/')}).`);
+  }
+}
+for (const contract of [
+  'function guestPolicyForRoom(roomNo)',
+  'function reservationGuestCount(reservation)',
+  "Object.hasOwn(reservation,'guestCount')",
+  'guestCount:guestPolicyForRoom(reservation.room).defaultGuestCount',
+  'reservationGuestCount(reservation),reservation.status',
+  'Number.isInteger(value)&&value>=1?value:policy.defaultGuestCount',
+  "return Number.isInteger(Number(value))&&Number(value)>=1?`${Number(value)}명`:'인원 미기록'",
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation guest data contract missing: ${contract}`);
+}
+const guestUpsertStart = html.indexOf('function upsertReservationRecord');
+const guestUpsertEnd = html.indexOf('function clearOrphanedReservationDraftJob', guestUpsertStart);
+if (guestUpsertStart < 0 || guestUpsertEnd <= guestUpsertStart) throw new Error('Reservation guest upsert source could not be resolved.');
+const guestUpsertSource = html.slice(guestUpsertStart, guestUpsertEnd);
+for (const contract of [
+  'policy.defaultGuestCount):Number(guestCount)',
+  '!Number.isInteger(resolvedGuestCount)||resolvedGuestCount<1||resolvedGuestCount>policy.maxGuestCount',
+  'guestError:true',
+  'guestCountChanged=!!before&&reservationGuestCount(before)!==resolvedGuestCount',
+  'cleaningChanges=reservationCleaningChanges(beforeReservations,prospectiveReservations)',
+  'roomCleaningChanged=cleaningChanges.length>0',
+  'reservationCleaningChangeTouchesPublic(cleaningChanges,room.no)',
+  'reservationCleaningChangeTouchesRandom(cleaningChanges)',
+  'guestCount:resolvedGuestCount',
+  'syncReservationCleaningDraft(reservation,before)',
+]) {
+
+약 없음 · 바로 등록']) {
+  if (roomCardSource.includes(removed)) throw new Error(`Redundant room-card reservation summary returned: ${removed}`);
+}
+for (const contract of [
+  'class="room-quick-actions"',
+  'data-action="${closestReservation?\'quick-reservation-edit\':\'reservation-edit\'}"',
+  "reservationActionLabel=weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`",
+  ":pastReservationCount?`예약 기록 ${pastReservationCount}건`:room.occupancy==='occupied'&&!occupiedReservationEnd(room)?'투숙 정보 입력':'예약 등록'",
+]) {
+  if (!roomCardSource.includes(contract)) throw new Error(`Compact room-card reservation action missing: ${contract}`);
+}
+
+for (const contract of [
+  "if(a==='edit-room-info')",
+  "if(a==='save-room-info')",
+  'id="room-info-number"',
+  'readonly aria-readonly="true"',
+  'id="room-info-type"',
+  'id="room-info-elevator"',
+  'roomMasterFingerprint(room)',
+  'adminCanMutate()',
+  'appendEvent(`${id}호 객실 정보 수정`',
+  '이후 새 작업부터 적용',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin room master edit contract missing: ${contract}`);
+}
+for (const contract of [
+  "if(a==='manual-checkout')",
+  "if(a==='confirm-manual-checkout')",
+  "room.occupancy!=='occupied'",
+  'activeUnfinishedAttempt(id)',
+  'recordManualCheckoutScheduleChange(id,unstartedAttempt,previousWorkDate,previousAccessStart)',
+  'attemptId:currentAttemptId(no)||null',
+  "draft.kind==='퇴실 청소'",
+  "activeReservation.status='checked-out'",
+  'existingDraft.reservationId=activeReservation.id',
+  'projectReservationState(state,id)',
+  "room.occupancy='vacant'",
+  'room.actualCheckoutAt=actualCheckoutAt',
+  'delete room.actualCheckoutAt',
+  '예정 ${plannedCheckout} 보존',
+  '퇴실 청소 초안 1건',
+  'appendEvent(`${id}호 지금 체크아웃`',
+]) {
+  if (!html.includes(contract)) throw new Error(`Manual checkout contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'const INITIAL_RESERVATIONS',
+  "{id:'quickReservation',label:'간편 예약'",
+  "if (state.adminView==='quickReservation') return renderQuickReservation()",
+  'reservationOverlaps(roomNo,checkInAt,checkOutAt,ignoreId',
+  'initialReservationDrafts()',
+  "activeReservationsFor(targetState).filter(reservation=>reservation.checkOutAt.slice(0,10)===assignmentDate)",
+  'cleaningAssignmentForReservation(reservation)',
+  'data-action="quick-reservation-edit"',
+  "'quick-reservation-undo'",
+  'quickTouchArmTimer=setTimeout',
+  'Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)',
+  'quickSuppressClickUntil=Date.now()+500',
+  'quickGridScrollLeft:null',
+  'state.quickGridScrollLeft=null',
+  '--quick-room-col:112px',
+  'class="quick-room-link"',
+  'tabindex="${rowIndex===0?',
+  '${room.no}호 객실 상세 열기',
+  "if(state.adminView==='quickReservation'&&!state.detail)rememberQuickGridViewport()",
+  '검색어 또는 객실 유형 필터를 바꿔 주세요.',
+  'rowIndex===0&&iso===focusDate',
+  "['ArrowUp','ArrowDown','Home','End'].includes(event.key)",
+]) {
+  if (!html.includes(contract)) throw new Error(`Quick reservation contract missing: ${contract}`);
+}
+for (const removedContract of [
+  'quickReservationElevator',
+  'quick-reservation-elevator',
+  'bookingElevator',
+  'quickRoomCleaner',
+  'quick-room-cleaner',
+]) {
+  if (html.includes(removedContract)) throw new Error(`Removed quick reservation filter or cleaner contract returned: ${removedContract}`);
+}
+const quickGridStart = html.indexOf('function quickCellMarkup');
+const quickGridEnd = html.indexOf('function rememberQuickGridViewport', quickGridStart);
+if (quickGridStart < 0 || quickGridEnd <= quickGridStart) throw new Error('Quick reservation grid scope is missing.');
+const quickGridScope = html.slice(quickGridStart, quickGridEnd);
+for (const removedCopy of ['퇴실 청소 담당','청소 미배정','assignedCount=monthReservations','유형·엘리베이터 필터']) {
+  if (quickGridScope.includes(removedCopy)) throw new Error(`Removed quick reservation grid copy returned: ${removedCopy}`);
+}
+for (const contract of [
+  "const CALENDAR_WEEKDAYS=Object.freeze(['일','월','화','수','목','금','토'])",
+  'const KR_HOLIDAY_FIXTURE=Object.freeze({',
+  "jurisdiction:'KR',mode:'demo-static',coverage:['2026-01-01','2026-12-31']",
+  "'2026-01-01':{name:'신정'",
+  "'2026-05-01':{name:'노동절'",
+  "'2026-06-03':{name:'제9회 전국동시지방선거'",
+  "'2026-07-17':{name:'제헌절'",
+  "'2026-08-15':{name:'광복절'",
+  "'2026-08-17':{name:'광복절 대체공휴일'",
+  "'2026-09-25':{name:'추석'",
+  "'2026-12-25':{name:'기독탄신일'",
+  'function calendarDayMeta(iso)',
+  "tone:holiday?'holiday':isSunday?'sunday':isSaturday?'saturday':'weekday'",
+  'function calendarWeekdayHeaderMarkup()',
+  'function calendarDateAriaLabel(iso',
+  'offset=first.getDay(),start=',
+  'Array.from({length:42}',
+  'calendarWeekdayHeaderMarkup()',
+  'calendarDayMeta(iso)',
+  'calendar-holiday-mark',
+  '.calendar-day.is-saturday:not(.is-holiday)',
+  '.quick-day-header.is-saturday:not(.is-holiday)',
+]) {
+  if (!html.includes(contract)) throw new Error(`Sunday-first Korean calendar contract missing: ${contract}`);
+}
+const calendarStart = html.indexOf('function calendarMarkup');
+const calendarEnd = html.indexOf('function openCalendar', calendarStart);
+if (calendarStart < 0 || calendarEnd <= calendarStart) throw new Error('Shared calendar scope is missing.');
+const calendarScope = html.slice(calendarStart, calendarEnd);
+for (const removedCalendarContract of [
+  "weekMode?['월','화','수','목','금','토','일']",
+  '(first.getDay()+6)%7',
+]) {
+  if (calendarScope.includes(removedCalendarContract)) throw new Error(`Monday-first calendar layout returned: ${removedCalendarContract}`);
+}
+for (const removedQuickCalendarContract of ['.quick-day-header.weekend','weekend=[0,6]']) {
+  if (html.includes(removedQuickCalendarContract)) throw new Error(`Combined red weekend styling returned: ${removedQuickCalendarContract}`);
+}
+for (const businessWeekContract of [
+  'offset=(d.getDay()+6)%7',
+  'mondayOffset=-((date.getUTCDay()+6)%7)',
+  '날짜를 누르면 그 날짜가 포함된 월요일–일요일 주차를 선택합니다.',
+]) {
+  if (!html.includes(businessWeekContract)) throw new Error(`Monday-to-Sunday business-week meaning changed: ${businessWeekContract}`);
+}
+const reservationCheckinLabel = '<label for="res-checkin">1. 체크인 일시</label>';
+const reservationCheckoutLabel = '<label for="res-checkout">2. 체크아웃 일시</label>';
+if (html.indexOf(reservationCheckinLabel) < 0 || html.indexOf(reservationCheckoutLabel) <= html.indexOf(reservationCheckinLabel)) {
+  throw new Error('Single-reservation form must render check-in before check-out.');
+}
+const roomTypesStart = html.indexOf('const ROOM_TYPES = {');
+const roomTypesEnd = html.indexOf('};', roomTypesStart);
+if (roomTypesStart < 0 || roomTypesEnd <= roomTypesStart) throw new Error('ROOM_TYPES guest policy source could not be resolved.');
+const roomTypesSource = html.slice(roomTypesStart, roomTypesEnd);
+const expectedReservationGuestPolicies = {
+  standard: [2, 2],
+  premium: [2, 3],
+  oceanPremium: [2, 4],
+  oceanFamily: [4, 6],
+};
+for (const [typeId, expected] of Object.entries(expectedReservationGuestPolicies)) {
+  const match = roomTypesSource.match(new RegExp(`${typeId}:\\s*\\{[^}]*defaultGuestCount:(\\d+)\\s*,\\s*maxGuestCount:(\\d+)`));
+  const actual = match ? [Number(match[1]), Number(match[2])] : [];
+  if (actual.length !== 2 || actual.some((value, index) => value !== expected[index])) {
+    throw new Error(`Reservation guest policy mismatch for ${typeId}: ${actual.join('/') || 'missing'} (expected ${expected.join('/')}).`);
+  }
+}
+for (const contract of [
+  'function guestPolicyForRoom(roomNo)',
+  'function reservationGuestCount(reservation)',
+  "Object.hasOwn(reservation,'guestCount')",
+  'guestCount:guestPolicyForRoom(reservation.room).defaultGuestCount',
+  'reservationGuestCount(reservation),reservation.status',
+  'Number.isInteger(value)&&value>=1?value:policy.defaultGuestCount',
+  "return Number.isInteger(Number(value))&&Number(value)>=1?`${Number(value)}명`:'인원 미기록'",
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation guest data contract missing: ${contract}`);
+}
+const guestUpsertStart = html.indexOf('function upsertReservationRecord');
+const guestUpsertEnd = html.indexOf('function clearOrphanedReservationDraftJob', guestUpsertStart);
+if (guestUpsertStart < 0 || guestUpsertEnd <= guestUpsertStart) throw new Error('Reservation guest upsert source could not be resolved.');
+const guestUpsertSource = html.slice(guestUpsertStart, guestUpsertEnd);
+for (const contract of [
+  'policy.defaultGuestCount):Number(guestCount)',
+  '!Number.isInteger(resolvedGuestCount)||resolvedGuestCount<1||resolvedGuestCount>policy.maxGuestCount',
+  'guestError:true',
+  'guestCountChanged=!!before&&reservationGuestCount(before)!==resolvedGuestCount',
+  'cleaningChanges=reservationCleaningChanges(beforeReservations,prospectiveReservations)',
+  'roomCleaningChanged=cleaningChanges.length>0',
+  'reservationCleaningChangeTouchesPublic(cleaningChanges,room.no)',
+  'reservationCleaningChangeTouchesRandom(cleaningChanges)',
+  'guestCount:resolvedGuestCount',
+  'syncReservationCleaningDraft(reservation,before)',
+]) {
+  if (!guestUpsertSource.includes(contract)
+
+ce.includes(removed)) throw new Error(`Redundant room-card reservation summary returned: ${removed}`);
+}
+for (const contract of [
+  'class="room-quick-actions"',
+  'data-action="${closestReservation?\'quick-reservation-edit\':\'reservation-edit\'}"',
+  "reservationActionLabel=weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`",
+  ":pastReservationCount?`예약 기록 ${pastReservationCount}건`:room.occupancy==='occupied'&&!occupiedReservationEnd(room)?'투숙 정보 입력':'예약 등록'",
+]) {
+  if (!roomCardSource.includes(contract)) throw new Error(`Compact room-card reservation action missing: ${contract}`);
+}
+
+for (const contract of [
+  "if(a==='edit-room-info')",
+  "if(a==='save-room-info')",
+  'id="room-info-number"',
+  'readonly aria-readonly="true"',
+  'id="room-info-type"',
+  'id="room-info-elevator"',
+  'roomMasterFingerprint(room)',
+  'adminCanMutate()',
+  'appendEvent(`${id}호 객실 정보 수정`',
+  '이후 새 작업부터 적용',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin room master edit contract missing: ${contract}`);
+}
+for (const contract of [
+  "if(a==='manual-checkout')",
+  "if(a==='confirm-manual-checkout')",
+  "room.occupancy!=='occupied'",
+  'activeUnfinishedAttempt(id)',
+  'recordManualCheckoutScheduleChange(id,unstartedAttempt,previousWorkDate,previousAccessStart)',
+  'attemptId:currentAttemptId(no)||null',
+  "draft.kind==='퇴실 청소'",
+  "activeReservation.status='checked-out'",
+  'existingDraft.reservationId=activeReservation.id',
+  'projectReservationState(state,id)',
+  "room.occupancy='vacant'",
+  'room.actualCheckoutAt=actualCheckoutAt',
+  'delete room.actualCheckoutAt',
+  '예정 ${plannedCheckout} 보존',
+  '퇴실 청소 초안 1건',
+  'appendEvent(`${id}호 지금 체크아웃`',
+]) {
+  if (!html.includes(contract)) throw new Error(`Manual checkout contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'const INITIAL_RESERVATIONS',
+  "{id:'quickReservation',label:'간편 예약'",
+  "if (state.adminView==='quickReservation') return renderQuickReservation()",
+  'reservationOverlaps(roomNo,checkInAt,checkOutAt,ignoreId',
+  'initialReservationDrafts()',
+  "activeReservationsFor(targetState).filter(reservation=>reservation.checkOutAt.slice(0,10)===assignmentDate)",
+  'cleaningAssignmentForReservation(reservation)',
+  'data-action="quick-reservation-edit"',
+  "'quick-reservation-undo'",
+  'quickTouchArmTimer=setTimeout',
+  'Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)',
+  'quickSuppressClickUntil=Date.now()+500',
+  'quickGridScrollLeft:null',
+  'state.quickGridScrollLeft=null',
+  '--quick-room-col:112px',
+  'class="quick-room-link"',
+  'tabindex="${rowIndex===0?',
+  '${room.no}호 객실 상세 열기',
+  "if(state.adminView==='quickReservation'&&!state.detail)rememberQuickGridViewport()",
+  '검색어 또는 객실 유형 필터를 바꿔 주세요.',
+  'rowIndex===0&&iso===focusDate',
+  "['ArrowUp','ArrowDown','Home','End'].includes(event.key)",
+]) {
+  if (!html.includes(contract)) throw new Error(`Quick reservation contract missing: ${contract}`);
+}
+for (const removedContract of [
+  'quickReservationElevator',
+  'quick-reservation-elevator',
+  'bookingElevator',
+  'quickRoomCleaner',
+  'quick-room-cleaner',
+]) {
+  if (html.includes(removedContract)) throw new Error(`Removed quick reservation filter or cleaner contract returned: ${removedContract}`);
+}
+const quickGridStart = html.indexOf('function quickCellMarkup');
+const quickGridEnd = html.indexOf('function rememberQuickGridViewport', quickGridStart);
+if (quickGridStart < 0 || quickGridEnd <= quickGridStart) throw new Error('Quick reservation grid scope is missing.');
+const quickGridScope = html.slice(quickGridStart, quickGridEnd);
+for (const removedCopy of ['퇴실 청소 담당','청소 미배정','assignedCount=monthReservations','유형·엘리베이터 필터']) {
+  if (quickGridScope.includes(removedCopy)) throw new Error(`Removed quick reservation grid copy returned: ${removedCopy}`);
+}
+for (const contract of [
+  "const CALENDAR_WEEKDAYS=Object.freeze(['일','월','화','수','목','금','토'])",
+  'const KR_HOLIDAY_FIXTURE=Object.freeze({',
+  "jurisdiction:'KR',mode:'demo-static',coverage:['2026-01-01','2026-12-31']",
+  "'2026-01-01':{name:'신정'",
+  "'2026-05-01':{name:'노동절'",
+  "'2026-06-03':{name:'제9회 전국동시지방선거'",
+  "'2026-07-17':{name:'제헌절'",
+  "'2026-08-15':{name:'광복절'",
+  "'2026-08-17':{name:'광복절 대체공휴일'",
+  "'2026-09-25':{name:'추석'",
+  "'2026-12-25':{name:'기독탄신일'",
+  'function calendarDayMeta(iso)',
+  "tone:holiday?'holiday':isSunday?'sunday':isSaturday?'saturday':'weekday'",
+  'function calendarWeekdayHeaderMarkup()',
+  'function calendarDateAriaLabel(iso',
+  'offset=first.getDay(),start=',
+  'Array.from({length:42}',
+  'calendarWeekdayHeaderMarkup()',
+  'calendarDayMeta(iso)',
+  'calendar-holiday-mark',
+  '.calendar-day.is-saturday:not(.is-holiday)',
+  '.quick-day-header.is-saturday:not(.is-holiday)',
+]) {
+  if (!html.includes(contract)) throw new Error(`Sunday-first Korean calendar contract missing: ${contract}`);
+}
+const calendarStart = html.indexOf('function calendarMarkup');
+const calendarEnd = html.indexOf('function openCalendar', calendarStart);
+if (calendarStart < 0 || calendarEnd <= calendarStart) throw new Error('Shared calendar scope is missing.');
+const calendarScope = html.slice(calendarStart, calendarEnd);
+for (const removedCalendarContract of [
+  "weekMode?['월','화','수','목','금','토','일']",
+  '(first.getDay()+6)%7',
+]) {
+  if (calendarScope.includes(removedCalendarContract)) throw new Error(`Monday-first calendar layout returned: ${removedCalendarContract}`);
+}
+for (const removedQuickCalendarContract of ['.quick-day-header.weekend','weekend=[0,6]']) {
+  if (html.includes(removedQuickCalendarContract)) throw new Error(`Combined red weekend styling returned: ${removedQuickCalendarContract}`);
+}
+for (const businessWeekContract of [
+  'offset=(d.getDay()+6)%7',
+  'mondayOffset=-((date.getUTCDay()+6)%7)',
+  '날짜를 누르면 그 날짜가 포함된 월요일–일요일 주차를 선택합니다.',
+]) {
+  if (!html.includes(businessWeekContract)) throw new Error(`Monday-to-Sunday business-week meaning changed: ${businessWeekContract}`);
+}
+const reservationCheckinLabel = '<label for="res-checkin">1. 체크인 일시</label>';
+const reservationCheckoutLabel = '<label for="res-checkout">2. 체크아웃 일시</label>';
+if (html.indexOf(reservationCheckinLabel) < 0 || html.indexOf(reservationCheckoutLabel) <= html.indexOf(reservationCheckinLabel)) {
+  throw new Error('Single-reservation form must render check-in before check-out.');
+}
+const roomTypesStart = html.indexOf('const ROOM_TYPES = {');
+const roomTypesEnd = html.indexOf('};', roomTypesStart);
+if (roomTypesStart < 0 || roomTypesEnd <= roomTypesStart) throw new Error('ROOM_TYPES guest policy source could not be resolved.');
+const roomTypesSource = html.slice(roomTypesStart, roomTypesEnd);
+const expectedReservationGuestPolicies = {
+  standard: [2, 2],
+  premium: [2, 3],
+  oceanPremium: [2, 4],
+  oceanFamily: [4, 6],
+};
+for (const [typeId, expected] of Object.entries(expectedReservationGuestPolicies)) {
+  const match = roomTypesSource.match(new RegExp(`${typeId}:\\s*\\{[^}]*defaultGuestCount:(\\d+)\\s*,\\s*maxGuestCount:(\\d+)`));
+  const actual = match ? [Number(match[1]), Number(match[2])] : [];
+  if (actual.length !== 2 || actual.some((value, index) => value !== expected[index])) {
+    throw new Error(`Reservation guest policy mismatch for ${typeId}: ${actual.join('/') || 'missing'} (expected ${expected.join('/')}).`);
+  }
+}
+for (const contract of [
+  'function guestPolicyForRoom(roomNo)',
+  'function reservationGuestCount(reservation)',
+  "Object.hasOwn(reservation,'guestCount')",
+  'guestCount:guestPolicyForRoom(reservation.room).defaultGuestCount',
+  'reservationGuestCount(reservation),reservation.status',
+  'Number.isInteger(value)&&value>=1?value:policy.defaultGuestCount',
+  "return Number.isInteger(Number(value))&&Number(value)>=1?`${Number(value)}명`:'인원 미기록'",
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation guest data contract missing: ${contract}`);
+}
+const guestUpsertStart = html.indexOf('function upsertReservationRecord');
+const guestUpsertEnd = html.indexOf('function clearOrphanedReservationDraftJob', guestUpsertStart);
+if (guestUpsertStart < 0 || guestUpsertEnd <= guestUpsertStart) throw new Error('Reservation guest upsert source could not be resolved.');
+const guestUpsertSource = html.slice(guestUpsertStart, guestUpsertEnd);
+for (const contract of [
+  'policy.defaultGuestCount):Number(guestCount)',
+  '!Number.isInteger(resolvedGuestCount)||resolvedGuestCount<1||resolvedGuestCount>policy.maxGuestCount',
+  'guestError:true',
+  'guestCountChanged=!!before&&reservationGuestCount(before)!==resolvedGuestCount',
+  'cleaningChanges=reservationCleaningChanges(beforeReservations,prospectiveReservations)',
+  'roomCleaningChanged=cleaningChanges.length>0',
+  'reservationCleaningChangeTouchesPublic(cleaningChanges,room.no)',
+  'reservationCleaningChangeTouchesRandom(cleaningChanges)',
+  'guestCount:resolvedGuestCount',
+  'syncReservationCleaningDraft(reservation,before)',
+]) {
+  if (!guestUpsertSource.includes(contract)) throw new Error(`Reservation guest
+
+Error(`Redundant room-card reservation summary returned: ${removed}`);
+}
+for (const contract of [
+  'class="room-quick-actions"',
+  'data-action="${closestReservation?\'quick-reservation-edit\':\'reservation-edit\'}"',
+  "reservationActionLabel=weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`",
+  ":pastReservationCount?`예약 기록 ${pastReservationCount}건`:room.occupancy==='occupied'&&!occupiedReservationEnd(room)?'투숙 정보 입력':'예약 등록'",
+]) {
+  if (!roomCardSource.includes(contract)) throw new Error(`Compact room-card reservation action missing: ${contract}`);
+}
+
+for (const contract of [
+  "if(a==='edit-room-info')",
+  "if(a==='save-room-info')",
+  'id="room-info-number"',
+  'readonly aria-readonly="true"',
+  'id="room-info-type"',
+  'id="room-info-elevator"',
+  'roomMasterFingerprint(room)',
+  'adminCanMutate()',
+  'appendEvent(`${id}호 객실 정보 수정`',
+  '이후 새 작업부터 적용',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin room master edit contract missing: ${contract}`);
+}
+for (const contract of [
+  "if(a==='manual-checkout')",
+  "if(a==='confirm-manual-checkout')",
+  "room.occupancy!=='occupied'",
+  'activeUnfinishedAttempt(id)',
+  'recordManualCheckoutScheduleChange(id,unstartedAttempt,previousWorkDate,previousAccessStart)',
+  'attemptId:currentAttemptId(no)||null',
+  "draft.kind==='퇴실 청소'",
+  "activeReservation.status='checked-out'",
+  'existingDraft.reservationId=activeReservation.id',
+  'projectReservationState(state,id)',
+  "room.occupancy='vacant'",
+  'room.actualCheckoutAt=actualCheckoutAt',
+  'delete room.actualCheckoutAt',
+  '예정 ${plannedCheckout} 보존',
+  '퇴실 청소 초안 1건',
+  'appendEvent(`${id}호 지금 체크아웃`',
+]) {
+  if (!html.includes(contract)) throw new Error(`Manual checkout contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'const INITIAL_RESERVATIONS',
+  "{id:'quickReservation',label:'간편 예약'",
+  "if (state.adminView==='quickReservation') return renderQuickReservation()",
+  'reservationOverlaps(roomNo,checkInAt,checkOutAt,ignoreId',
+  'initialReservationDrafts()',
+  "activeReservationsFor(targetState).filter(reservation=>reservation.checkOutAt.slice(0,10)===assignmentDate)",
+  'cleaningAssignmentForReservation(reservation)',
+  'data-action="quick-reservation-edit"',
+  "'quick-reservation-undo'",
+  'quickTouchArmTimer=setTimeout',
+  'Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)',
+  'quickSuppressClickUntil=Date.now()+500',
+  'quickGridScrollLeft:null',
+  'state.quickGridScrollLeft=null',
+  '--quick-room-col:112px',
+  'class="quick-room-link"',
+  'tabindex="${rowIndex===0?',
+  '${room.no}호 객실 상세 열기',
+  "if(state.adminView==='quickReservation'&&!state.detail)rememberQuickGridViewport()",
+  '검색어 또는 객실 유형 필터를 바꿔 주세요.',
+  'rowIndex===0&&iso===focusDate',
+  "['ArrowUp','ArrowDown','Home','End'].includes(event.key)",
+]) {
+  if (!html.includes(contract)) throw new Error(`Quick reservation contract missing: ${contract}`);
+}
+for (const removedContract of [
+  'quickReservationElevator',
+  'quick-reservation-elevator',
+  'bookingElevator',
+  'quickRoomCleaner',
+  'quick-room-cleaner',
+]) {
+  if (html.includes(removedContract)) throw new Error(`Removed quick reservation filter or cleaner contract returned: ${removedContract}`);
+}
+const quickGridStart = html.indexOf('function quickCellMarkup');
+const quickGridEnd = html.indexOf('function rememberQuickGridViewport', quickGridStart);
+if (quickGridStart < 0 || quickGridEnd <= quickGridStart) throw new Error('Quick reservation grid scope is missing.');
+const quickGridScope = html.slice(quickGridStart, quickGridEnd);
+for (const removedCopy of ['퇴실 청소 담당','청소 미배정','assignedCount=monthReservations','유형·엘리베이터 필터']) {
+  if (quickGridScope.includes(removedCopy)) throw new Error(`Removed quick reservation grid copy returned: ${removedCopy}`);
+}
+for (const contract of [
+  "const CALENDAR_WEEKDAYS=Object.freeze(['일','월','화','수','목','금','토'])",
+  'const KR_HOLIDAY_FIXTURE=Object.freeze({',
+  "jurisdiction:'KR',mode:'demo-static',coverage:['2026-01-01','2026-12-31']",
+  "'2026-01-01':{name:'신정'",
+  "'2026-05-01':{name:'노동절'",
+  "'2026-06-03':{name:'제9회 전국동시지방선거'",
+  "'2026-07-17':{name:'제헌절'",
+  "'2026-08-15':{name:'광복절'",
+  "'2026-08-17':{name:'광복절 대체공휴일'",
+  "'2026-09-25':{name:'추석'",
+  "'2026-12-25':{name:'기독탄신일'",
+  'function calendarDayMeta(iso)',
+  "tone:holiday?'holiday':isSunday?'sunday':isSaturday?'saturday':'weekday'",
+  'function calendarWeekdayHeaderMarkup()',
+  'function calendarDateAriaLabel(iso',
+  'offset=first.getDay(),start=',
+  'Array.from({length:42}',
+  'calendarWeekdayHeaderMarkup()',
+  'calendarDayMeta(iso)',
+  'calendar-holiday-mark',
+  '.calendar-day.is-saturday:not(.is-holiday)',
+  '.quick-day-header.is-saturday:not(.is-holiday)',
+]) {
+  if (!html.includes(contract)) throw new Error(`Sunday-first Korean calendar contract missing: ${contract}`);
+}
+const calendarStart = html.indexOf('function calendarMarkup');
+const calendarEnd = html.indexOf('function openCalendar', calendarStart);
+if (calendarStart < 0 || calendarEnd <= calendarStart) throw new Error('Shared calendar scope is missing.');
+const calendarScope = html.slice(calendarStart, calendarEnd);
+for (const removedCalendarContract of [
+  "weekMode?['월','화','수','목','금','토','일']",
+  '(first.getDay()+6)%7',
+]) {
+  if (calendarScope.includes(removedCalendarContract)) throw new Error(`Monday-first calendar layout returned: ${removedCalendarContract}`);
+}
+for (const removedQuickCalendarContract of ['.quick-day-header.weekend','weekend=[0,6]']) {
+  if (html.includes(removedQuickCalendarContract)) throw new Error(`Combined red weekend styling returned: ${removedQuickCalendarContract}`);
+}
+for (const businessWeekContract of [
+  'offset=(d.getDay()+6)%7',
+  'mondayOffset=-((date.getUTCDay()+6)%7)',
+  '날짜를 누르면 그 날짜가 포함된 월요일–일요일 주차를 선택합니다.',
+]) {
+  if (!html.includes(businessWeekContract)) throw new Error(`Monday-to-Sunday business-week meaning changed: ${businessWeekContract}`);
+}
+const reservationCheckinLabel = '<label for="res-checkin">1. 체크인 일시</label>';
+const reservationCheckoutLabel = '<label for="res-checkout">2. 체크아웃 일시</label>';
+if (html.indexOf(reservationCheckinLabel) < 0 || html.indexOf(reservationCheckoutLabel) <= html.indexOf(reservationCheckinLabel)) {
+  throw new Error('Single-reservation form must render check-in before check-out.');
+}
+const roomTypesStart = html.indexOf('const ROOM_TYPES = {');
+const roomTypesEnd = html.indexOf('};', roomTypesStart);
+if (roomTypesStart < 0 || roomTypesEnd <= roomTypesStart) throw new Error('ROOM_TYPES guest policy source could not be resolved.');
+const roomTypesSource = html.slice(roomTypesStart, roomTypesEnd);
+const expectedReservationGuestPolicies = {
+  standard: [2, 2],
+  premium: [2, 3],
+  oceanPremium: [2, 4],
+  oceanFamily: [4, 6],
+};
+for (const [typeId, expected] of Object.entries(expectedReservationGuestPolicies)) {
+  const match = roomTypesSource.match(new RegExp(`${typeId}:\\s*\\{[^}]*defaultGuestCount:(\\d+)\\s*,\\s*maxGuestCount:(\\d+)`));
+  const actual = match ? [Number(match[1]), Number(match[2])] : [];
+  if (actual.length !== 2 || actual.some((value, index) => value !== expected[index])) {
+    throw new Error(`Reservation guest policy mismatch for ${typeId}: ${actual.join('/') || 'missing'} (expected ${expected.join('/')}).`);
+  }
+}
+for (const contract of [
+  'function guestPolicyForRoom(roomNo)',
+  'function reservationGuestCount(reservation)',
+  "Object.hasOwn(reservation,'guestCount')",
+  'guestCount:guestPolicyForRoom(reservation.room).defaultGuestCount',
+  'reservationGuestCount(reservation),reservation.status',
+  'Number.isInteger(value)&&value>=1?value:policy.defaultGuestCount',
+  "return Number.isInteger(Number(value))&&Number(value)>=1?`${Number(value)}명`:'인원 미기록'",
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation guest data contract missing: ${contract}`);
+}
+const guestUpsertStart = html.indexOf('function upsertReservationRecord');
+const guestUpsertEnd = html.indexOf('function clearOrphanedReservationDraftJob', guestUpsertStart);
+if (guestUpsertStart < 0 || guestUpsertEnd <= guestUpsertStart) throw new Error('Reservation guest upsert source could not be resolved.');
+const guestUpsertSource = html.slice(guestUpsertStart, guestUpsertEnd);
+for (const contract of [
+  'policy.defaultGuestCount):Number(guestCount)',
+  '!Number.isInteger(resolvedGuestCount)||resolvedGuestCount<1||resolvedGuestCount>policy.maxGuestCount',
+  'guestError:true',
+  'guestCountChanged=!!before&&reservationGuestCount(before)!==resolvedGuestCount',
+  'cleaningChanges=reservationCleaningChanges(beforeReservations,prospectiveReservations)',
+  'roomCleaningChanged=cleaningChanges.length>0',
+  'reservationCleaningChangeTouchesPublic(cleaningChanges,room.no)',
+  'reservationCleaningChangeTouchesRandom(cleaningChanges)',
+  'guestCount:resolvedGuestCount',
+  'syncReservationCleaningDraft(reservation,before)',
+]) {
+  if (!guestUpsertSource.includes(contract)) throw new Error(`Reservation guest upsert contract missing: ${cont
+
+ation summary returned: ${removed}`);
+}
+for (const contract of [
+  'class="room-quick-actions"',
+  'data-action="${closestReservation?\'quick-reservation-edit\':\'reservation-edit\'}"',
+  "reservationActionLabel=weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`",
+  ":pastReservationCount?`예약 기록 ${pastReservationCount}건`:room.occupancy==='occupied'&&!occupiedReservationEnd(room)?'투숙 정보 입력':'예약 등록'",
+]) {
+  if (!roomCardSource.includes(contract)) throw new Error(`Compact room-card reservation action missing: ${contract}`);
+}
+
+for (const contract of [
+  "if(a==='edit-room-info')",
+  "if(a==='save-room-info')",
+  'id="room-info-number"',
+  'readonly aria-readonly="true"',
+  'id="room-info-type"',
+  'id="room-info-elevator"',
+  'roomMasterFingerprint(room)',
+  'adminCanMutate()',
+  'appendEvent(`${id}호 객실 정보 수정`',
+  '이후 새 작업부터 적용',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin room master edit contract missing: ${contract}`);
+}
+for (const contract of [
+  "if(a==='manual-checkout')",
+  "if(a==='confirm-manual-checkout')",
+  "room.occupancy!=='occupied'",
+  'activeUnfinishedAttempt(id)',
+  'recordManualCheckoutScheduleChange(id,unstartedAttempt,previousWorkDate,previousAccessStart)',
+  'attemptId:currentAttemptId(no)||null',
+  "draft.kind==='퇴실 청소'",
+  "activeReservation.status='checked-out'",
+  'existingDraft.reservationId=activeReservation.id',
+  'projectReservationState(state,id)',
+  "room.occupancy='vacant'",
+  'room.actualCheckoutAt=actualCheckoutAt',
+  'delete room.actualCheckoutAt',
+  '예정 ${plannedCheckout} 보존',
+  '퇴실 청소 초안 1건',
+  'appendEvent(`${id}호 지금 체크아웃`',
+]) {
+  if (!html.includes(contract)) throw new Error(`Manual checkout contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'const INITIAL_RESERVATIONS',
+  "{id:'quickReservation',label:'간편 예약'",
+  "if (state.adminView==='quickReservation') return renderQuickReservation()",
+  'reservationOverlaps(roomNo,checkInAt,checkOutAt,ignoreId',
+  'initialReservationDrafts()',
+  "activeReservationsFor(targetState).filter(reservation=>reservation.checkOutAt.slice(0,10)===assignmentDate)",
+  'cleaningAssignmentForReservation(reservation)',
+  'data-action="quick-reservation-edit"',
+  "'quick-reservation-undo'",
+  'quickTouchArmTimer=setTimeout',
+  'Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)',
+  'quickSuppressClickUntil=Date.now()+500',
+  'quickGridScrollLeft:null',
+  'state.quickGridScrollLeft=null',
+  '--quick-room-col:112px',
+  'class="quick-room-link"',
+  'tabindex="${rowIndex===0?',
+  '${room.no}호 객실 상세 열기',
+  "if(state.adminView==='quickReservation'&&!state.detail)rememberQuickGridViewport()",
+  '검색어 또는 객실 유형 필터를 바꿔 주세요.',
+  'rowIndex===0&&iso===focusDate',
+  "['ArrowUp','ArrowDown','Home','End'].includes(event.key)",
+]) {
+  if (!html.includes(contract)) throw new Error(`Quick reservation contract missing: ${contract}`);
+}
+for (const removedContract of [
+  'quickReservationElevator',
+  'quick-reservation-elevator',
+  'bookingElevator',
+  'quickRoomCleaner',
+  'quick-room-cleaner',
+]) {
+  if (html.includes(removedContract)) throw new Error(`Removed quick reservation filter or cleaner contract returned: ${removedContract}`);
+}
+const quickGridStart = html.indexOf('function quickCellMarkup');
+const quickGridEnd = html.indexOf('function rememberQuickGridViewport', quickGridStart);
+if (quickGridStart < 0 || quickGridEnd <= quickGridStart) throw new Error('Quick reservation grid scope is missing.');
+const quickGridScope = html.slice(quickGridStart, quickGridEnd);
+for (const removedCopy of ['퇴실 청소 담당','청소 미배정','assignedCount=monthReservations','유형·엘리베이터 필터']) {
+  if (quickGridScope.includes(removedCopy)) throw new Error(`Removed quick reservation grid copy returned: ${removedCopy}`);
+}
+for (const contract of [
+  "const CALENDAR_WEEKDAYS=Object.freeze(['일','월','화','수','목','금','토'])",
+  'const KR_HOLIDAY_FIXTURE=Object.freeze({',
+  "jurisdiction:'KR',mode:'demo-static',coverage:['2026-01-01','2026-12-31']",
+  "'2026-01-01':{name:'신정'",
+  "'2026-05-01':{name:'노동절'",
+  "'2026-06-03':{name:'제9회 전국동시지방선거'",
+  "'2026-07-17':{name:'제헌절'",
+  "'2026-08-15':{name:'광복절'",
+  "'2026-08-17':{name:'광복절 대체공휴일'",
+  "'2026-09-25':{name:'추석'",
+  "'2026-12-25':{name:'기독탄신일'",
+  'function calendarDayMeta(iso)',
+  "tone:holiday?'holiday':isSunday?'sunday':isSaturday?'saturday':'weekday'",
+  'function calendarWeekdayHeaderMarkup()',
+  'function calendarDateAriaLabel(iso',
+  'offset=first.getDay(),start=',
+  'Array.from({length:42}',
+  'calendarWeekdayHeaderMarkup()',
+  'calendarDayMeta(iso)',
+  'calendar-holiday-mark',
+  '.calendar-day.is-saturday:not(.is-holiday)',
+  '.quick-day-header.is-saturday:not(.is-holiday)',
+]) {
+  if (!html.includes(contract)) throw new Error(`Sunday-first Korean calendar contract missing: ${contract}`);
+}
+const calendarStart = html.indexOf('function calendarMarkup');
+const calendarEnd = html.indexOf('function openCalendar', calendarStart);
+if (calendarStart < 0 || calendarEnd <= calendarStart) throw new Error('Shared calendar scope is missing.');
+const calendarScope = html.slice(calendarStart, calendarEnd);
+for (const removedCalendarContract of [
+  "weekMode?['월','화','수','목','금','토','일']",
+  '(first.getDay()+6)%7',
+]) {
+  if (calendarScope.includes(removedCalendarContract)) throw new Error(`Monday-first calendar layout returned: ${removedCalendarContract}`);
+}
+for (const removedQuickCalendarContract of ['.quick-day-header.weekend','weekend=[0,6]']) {
+  if (html.includes(removedQuickCalendarContract)) throw new Error(`Combined red weekend styling returned: ${removedQuickCalendarContract}`);
+}
+for (const businessWeekContract of [
+  'offset=(d.getDay()+6)%7',
+  'mondayOffset=-((date.getUTCDay()+6)%7)',
+  '날짜를 누르면 그 날짜가 포함된 월요일–일요일 주차를 선택합니다.',
+]) {
+  if (!html.includes(businessWeekContract)) throw new Error(`Monday-to-Sunday business-week meaning changed: ${businessWeekContract}`);
+}
+const reservationCheckinLabel = '<label for="res-checkin">1. 체크인 일시</label>';
+const reservationCheckoutLabel = '<label for="res-checkout">2. 체크아웃 일시</label>';
+if (html.indexOf(reservationCheckinLabel) < 0 || html.indexOf(reservationCheckoutLabel) <= html.indexOf(reservationCheckinLabel)) {
+  throw new Error('Single-reservation form must render check-in before check-out.');
+}
+const roomTypesStart = html.indexOf('const ROOM_TYPES = {');
+const roomTypesEnd = html.indexOf('};', roomTypesStart);
+if (roomTypesStart < 0 || roomTypesEnd <= roomTypesStart) throw new Error('ROOM_TYPES guest policy source could not be resolved.');
+const roomTypesSource = html.slice(roomTypesStart, roomTypesEnd);
+const expectedReservationGuestPolicies = {
+  standard: [2, 2],
+  premium: [2, 3],
+  oceanPremium: [2, 4],
+  oceanFamily: [4, 6],
+};
+for (const [typeId, expected] of Object.entries(expectedReservationGuestPolicies)) {
+  const match = roomTypesSource.match(new RegExp(`${typeId}:\\s*\\{[^}]*defaultGuestCount:(\\d+)\\s*,\\s*maxGuestCount:(\\d+)`));
+  const actual = match ? [Number(match[1]), Number(match[2])] : [];
+  if (actual.length !== 2 || actual.some((value, index) => value !== expected[index])) {
+    throw new Error(`Reservation guest policy mismatch for ${typeId}: ${actual.join('/') || 'missing'} (expected ${expected.join('/')}).`);
+  }
+}
+for (const contract of [
+  'function guestPolicyForRoom(roomNo)',
+  'function reservationGuestCount(reservation)',
+  "Object.hasOwn(reservation,'guestCount')",
+  'guestCount:guestPolicyForRoom(reservation.room).defaultGuestCount',
+  'reservationGuestCount(reservation),reservation.status',
+  'Number.isInteger(value)&&value>=1?value:policy.defaultGuestCount',
+  "return Number.isInteger(Number(value))&&Number(value)>=1?`${Number(value)}명`:'인원 미기록'",
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation guest data contract missing: ${contract}`);
+}
+const guestUpsertStart = html.indexOf('function upsertReservationRecord');
+const guestUpsertEnd = html.indexOf('function clearOrphanedReservationDraftJob', guestUpsertStart);
+if (guestUpsertStart < 0 || guestUpsertEnd <= guestUpsertStart) throw new Error('Reservation guest upsert source could not be resolved.');
+const guestUpsertSource = html.slice(guestUpsertStart, guestUpsertEnd);
+for (const contract of [
+  'policy.defaultGuestCount):Number(guestCount)',
+  '!Number.isInteger(resolvedGuestCount)||resolvedGuestCount<1||resolvedGuestCount>policy.maxGuestCount',
+  'guestError:true',
+  'guestCountChanged=!!before&&reservationGuestCount(before)!==resolvedGuestCount',
+  'cleaningChanges=reservationCleaningChanges(beforeReservations,prospectiveReservations)',
+  'roomCleaningChanged=cleaningChanges.length>0',
+  'reservationCleaningChangeTouchesPublic(cleaningChanges,room.no)',
+  'reservationCleaningChangeTouchesRandom(cleaningChanges)',
+  'guestCount:resolvedGuestCount',
+  'syncReservationCleaningDraft(reservation,before)',
+]) {
+  if (!guestUpsertSource.includes(contract)) throw new Error(`Reservation guest upsert contract missing: ${contract}`);
+}
+for (const contract of
+
+ata-action="${closestReservation?\'quick-reservation-edit\':\'reservation-edit\'}"',
+  "reservationActionLabel=weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`",
+  ":pastReservationCount?`예약 기록 ${pastReservationCount}건`:room.occupancy==='occupied'&&!occupiedReservationEnd(room)?'투숙 정보 입력':'예약 등록'",
+]) {
+  if (!roomCardSource.includes(contract)) throw new Error(`Compact room-card reservation action missing: ${contract}`);
+}
+
+for (const contract of [
+  "if(a==='edit-room-info')",
+  "if(a==='save-room-info')",
+  'id="room-info-number"',
+  'readonly aria-readonly="true"',
+  'id="room-info-type"',
+  'id="room-info-elevator"',
+  'roomMasterFingerprint(room)',
+  'adminCanMutate()',
+  'appendEvent(`${id}호 객실 정보 수정`',
+  '이후 새 작업부터 적용',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin room master edit contract missing: ${contract}`);
+}
+for (const contract of [
+  "if(a==='manual-checkout')",
+  "if(a==='confirm-manual-checkout')",
+  "room.occupancy!=='occupied'",
+  'activeUnfinishedAttempt(id)',
+  'recordManualCheckoutScheduleChange(id,unstartedAttempt,previousWorkDate,previousAccessStart)',
+  'attemptId:currentAttemptId(no)||null',
+  "draft.kind==='퇴실 청소'",
+  "activeReservation.status='checked-out'",
+  'existingDraft.reservationId=activeReservation.id',
+  'projectReservationState(state,id)',
+  "room.occupancy='vacant'",
+  'room.actualCheckoutAt=actualCheckoutAt',
+  'delete room.actualCheckoutAt',
+  '예정 ${plannedCheckout} 보존',
+  '퇴실 청소 초안 1건',
+  'appendEvent(`${id}호 지금 체크아웃`',
+]) {
+  if (!html.includes(contract)) throw new Error(`Manual checkout contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'const INITIAL_RESERVATIONS',
+  "{id:'quickReservation',label:'간편 예약'",
+  "if (state.adminView==='quickReservation') return renderQuickReservation()",
+  'reservationOverlaps(roomNo,checkInAt,checkOutAt,ignoreId',
+  'initialReservationDrafts()',
+  "activeReservationsFor(targetState).filter(reservation=>reservation.checkOutAt.slice(0,10)===assignmentDate)",
+  'cleaningAssignmentForReservation(reservation)',
+  'data-action="quick-reservation-edit"',
+  "'quick-reservation-undo'",
+  'quickTouchArmTimer=setTimeout',
+  'Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)',
+  'quickSuppressClickUntil=Date.now()+500',
+  'quickGridScrollLeft:null',
+  'state.quickGridScrollLeft=null',
+  '--quick-room-col:112px',
+  'class="quick-room-link"',
+  'tabindex="${rowIndex===0?',
+  '${room.no}호 객실 상세 열기',
+  "if(state.adminView==='quickReservation'&&!state.detail)rememberQuickGridViewport()",
+  '검색어 또는 객실 유형 필터를 바꿔 주세요.',
+  'rowIndex===0&&iso===focusDate',
+  "['ArrowUp','ArrowDown','Home','End'].includes(event.key)",
+]) {
+  if (!html.includes(contract)) throw new Error(`Quick reservation contract missing: ${contract}`);
+}
+for (const removedContract of [
+  'quickReservationElevator',
+  'quick-reservation-elevator',
+  'bookingElevator',
+  'quickRoomCleaner',
+  'quick-room-cleaner',
+]) {
+  if (html.includes(removedContract)) throw new Error(`Removed quick reservation filter or cleaner contract returned: ${removedContract}`);
+}
+const quickGridStart = html.indexOf('function quickCellMarkup');
+const quickGridEnd = html.indexOf('function rememberQuickGridViewport', quickGridStart);
+if (quickGridStart < 0 || quickGridEnd <= quickGridStart) throw new Error('Quick reservation grid scope is missing.');
+const quickGridScope = html.slice(quickGridStart, quickGridEnd);
+for (const removedCopy of ['퇴실 청소 담당','청소 미배정','assignedCount=monthReservations','유형·엘리베이터 필터']) {
+  if (quickGridScope.includes(removedCopy)) throw new Error(`Removed quick reservation grid copy returned: ${removedCopy}`);
+}
+for (const contract of [
+  "const CALENDAR_WEEKDAYS=Object.freeze(['일','월','화','수','목','금','토'])",
+  'const KR_HOLIDAY_FIXTURE=Object.freeze({',
+  "jurisdiction:'KR',mode:'demo-static',coverage:['2026-01-01','2026-12-31']",
+  "'2026-01-01':{name:'신정'",
+  "'2026-05-01':{name:'노동절'",
+  "'2026-06-03':{name:'제9회 전국동시지방선거'",
+  "'2026-07-17':{name:'제헌절'",
+  "'2026-08-15':{name:'광복절'",
+  "'2026-08-17':{name:'광복절 대체공휴일'",
+  "'2026-09-25':{name:'추석'",
+  "'2026-12-25':{name:'기독탄신일'",
+  'function calendarDayMeta(iso)',
+  "tone:holiday?'holiday':isSunday?'sunday':isSaturday?'saturday':'weekday'",
+  'function calendarWeekdayHeaderMarkup()',
+  'function calendarDateAriaLabel(iso',
+  'offset=first.getDay(),start=',
+  'Array.from({length:42}',
+  'calendarWeekdayHeaderMarkup()',
+  'calendarDayMeta(iso)',
+  'calendar-holiday-mark',
+  '.calendar-day.is-saturday:not(.is-holiday)',
+  '.quick-day-header.is-saturday:not(.is-holiday)',
+]) {
+  if (!html.includes(contract)) throw new Error(`Sunday-first Korean calendar contract missing: ${contract}`);
+}
+const calendarStart = html.indexOf('function calendarMarkup');
+const calendarEnd = html.indexOf('function openCalendar', calendarStart);
+if (calendarStart < 0 || calendarEnd <= calendarStart) throw new Error('Shared calendar scope is missing.');
+const calendarScope = html.slice(calendarStart, calendarEnd);
+for (const removedCalendarContract of [
+  "weekMode?['월','화','수','목','금','토','일']",
+  '(first.getDay()+6)%7',
+]) {
+  if (calendarScope.includes(removedCalendarContract)) throw new Error(`Monday-first calendar layout returned: ${removedCalendarContract}`);
+}
+for (const removedQuickCalendarContract of ['.quick-day-header.weekend','weekend=[0,6]']) {
+  if (html.includes(removedQuickCalendarContract)) throw new Error(`Combined red weekend styling returned: ${removedQuickCalendarContract}`);
+}
+for (const businessWeekContract of [
+  'offset=(d.getDay()+6)%7',
+  'mondayOffset=-((date.getUTCDay()+6)%7)',
+  '날짜를 누르면 그 날짜가 포함된 월요일–일요일 주차를 선택합니다.',
+]) {
+  if (!html.includes(businessWeekContract)) throw new Error(`Monday-to-Sunday business-week meaning changed: ${businessWeekContract}`);
+}
+const reservationCheckinLabel = '<label for="res-checkin">1. 체크인 일시</label>';
+const reservationCheckoutLabel = '<label for="res-checkout">2. 체크아웃 일시</label>';
+if (html.indexOf(reservationCheckinLabel) < 0 || html.indexOf(reservationCheckoutLabel) <= html.indexOf(reservationCheckinLabel)) {
+  throw new Error('Single-reservation form must render check-in before check-out.');
+}
+const roomTypesStart = html.indexOf('const ROOM_TYPES = {');
+const roomTypesEnd = html.indexOf('};', roomTypesStart);
+if (roomTypesStart < 0 || roomTypesEnd <= roomTypesStart) throw new Error('ROOM_TYPES guest policy source could not be resolved.');
+const roomTypesSource = html.slice(roomTypesStart, roomTypesEnd);
+const expectedReservationGuestPolicies = {
+  standard: [2, 2],
+  premium: [2, 3],
+  oceanPremium: [2, 4],
+  oceanFamily: [4, 6],
+};
+for (const [typeId, expected] of Object.entries(expectedReservationGuestPolicies)) {
+  const match = roomTypesSource.match(new RegExp(`${typeId}:\\s*\\{[^}]*defaultGuestCount:(\\d+)\\s*,\\s*maxGuestCount:(\\d+)`));
+  const actual = match ? [Number(match[1]), Number(match[2])] : [];
+  if (actual.length !== 2 || actual.some((value, index) => value !== expected[index])) {
+    throw new Error(`Reservation guest policy mismatch for ${typeId}: ${actual.join('/') || 'missing'} (expected ${expected.join('/')}).`);
+  }
+}
+for (const contract of [
+  'function guestPolicyForRoom(roomNo)',
+  'function reservationGuestCount(reservation)',
+  "Object.hasOwn(reservation,'guestCount')",
+  'guestCount:guestPolicyForRoom(reservation.room).defaultGuestCount',
+  'reservationGuestCount(reservation),reservation.status',
+  'Number.isInteger(value)&&value>=1?value:policy.defaultGuestCount',
+  "return Number.isInteger(Number(value))&&Number(value)>=1?`${Number(value)}명`:'인원 미기록'",
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation guest data contract missing: ${contract}`);
+}
+const guestUpsertStart = html.indexOf('function upsertReservationRecord');
+const guestUpsertEnd = html.indexOf('function clearOrphanedReservationDraftJob', guestUpsertStart);
+if (guestUpsertStart < 0 || guestUpsertEnd <= guestUpsertStart) throw new Error('Reservation guest upsert source could not be resolved.');
+const guestUpsertSource = html.slice(guestUpsertStart, guestUpsertEnd);
+for (const contract of [
+  'policy.defaultGuestCount):Number(guestCount)',
+  '!Number.isInteger(resolvedGuestCount)||resolvedGuestCount<1||resolvedGuestCount>policy.maxGuestCount',
+  'guestError:true',
+  'guestCountChanged=!!before&&reservationGuestCount(before)!==resolvedGuestCount',
+  'cleaningChanges=reservationCleaningChanges(beforeReservations,prospectiveReservations)',
+  'roomCleaningChanged=cleaningChanges.length>0',
+  'reservationCleaningChangeTouchesPublic(cleaningChanges,room.no)',
+  'reservationCleaningChangeTouchesRandom(cleaningChanges)',
+  'guestCount:resolvedGuestCount',
+  'syncReservationCleaningDraft(reservation,before)',
+]) {
+  if (!guestUpsertSource.includes(contract)) throw new Error(`Reservation guest upsert contract missing: ${contract}`);
+}
+for (const contract of [
+  "upsertReservationRecord({roomNo,checkInAt:range.checkInAt,checkOutAt:range.checkOutAt,source:'g
+
+reservation-edit\':\'reservation-edit\'}"',
+  "reservationActionLabel=weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`",
+  ":pastReservationCount?`예약 기록 ${pastReservationCount}건`:room.occupancy==='occupied'&&!occupiedReservationEnd(room)?'투숙 정보 입력':'예약 등록'",
+]) {
+  if (!roomCardSource.includes(contract)) throw new Error(`Compact room-card reservation action missing: ${contract}`);
+}
+
+for (const contract of [
+  "if(a==='edit-room-info')",
+  "if(a==='save-room-info')",
+  'id="room-info-number"',
+  'readonly aria-readonly="true"',
+  'id="room-info-type"',
+  'id="room-info-elevator"',
+  'roomMasterFingerprint(room)',
+  'adminCanMutate()',
+  'appendEvent(`${id}호 객실 정보 수정`',
+  '이후 새 작업부터 적용',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin room master edit contract missing: ${contract}`);
+}
+for (const contract of [
+  "if(a==='manual-checkout')",
+  "if(a==='confirm-manual-checkout')",
+  "room.occupancy!=='occupied'",
+  'activeUnfinishedAttempt(id)',
+  'recordManualCheckoutScheduleChange(id,unstartedAttempt,previousWorkDate,previousAccessStart)',
+  'attemptId:currentAttemptId(no)||null',
+  "draft.kind==='퇴실 청소'",
+  "activeReservation.status='checked-out'",
+  'existingDraft.reservationId=activeReservation.id',
+  'projectReservationState(state,id)',
+  "room.occupancy='vacant'",
+  'room.actualCheckoutAt=actualCheckoutAt',
+  'delete room.actualCheckoutAt',
+  '예정 ${plannedCheckout} 보존',
+  '퇴실 청소 초안 1건',
+  'appendEvent(`${id}호 지금 체크아웃`',
+]) {
+  if (!html.includes(contract)) throw new Error(`Manual checkout contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'const INITIAL_RESERVATIONS',
+  "{id:'quickReservation',label:'간편 예약'",
+  "if (state.adminView==='quickReservation') return renderQuickReservation()",
+  'reservationOverlaps(roomNo,checkInAt,checkOutAt,ignoreId',
+  'initialReservationDrafts()',
+  "activeReservationsFor(targetState).filter(reservation=>reservation.checkOutAt.slice(0,10)===assignmentDate)",
+  'cleaningAssignmentForReservation(reservation)',
+  'data-action="quick-reservation-edit"',
+  "'quick-reservation-undo'",
+  'quickTouchArmTimer=setTimeout',
+  'Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)',
+  'quickSuppressClickUntil=Date.now()+500',
+  'quickGridScrollLeft:null',
+  'state.quickGridScrollLeft=null',
+  '--quick-room-col:112px',
+  'class="quick-room-link"',
+  'tabindex="${rowIndex===0?',
+  '${room.no}호 객실 상세 열기',
+  "if(state.adminView==='quickReservation'&&!state.detail)rememberQuickGridViewport()",
+  '검색어 또는 객실 유형 필터를 바꿔 주세요.',
+  'rowIndex===0&&iso===focusDate',
+  "['ArrowUp','ArrowDown','Home','End'].includes(event.key)",
+]) {
+  if (!html.includes(contract)) throw new Error(`Quick reservation contract missing: ${contract}`);
+}
+for (const removedContract of [
+  'quickReservationElevator',
+  'quick-reservation-elevator',
+  'bookingElevator',
+  'quickRoomCleaner',
+  'quick-room-cleaner',
+]) {
+  if (html.includes(removedContract)) throw new Error(`Removed quick reservation filter or cleaner contract returned: ${removedContract}`);
+}
+const quickGridStart = html.indexOf('function quickCellMarkup');
+const quickGridEnd = html.indexOf('function rememberQuickGridViewport', quickGridStart);
+if (quickGridStart < 0 || quickGridEnd <= quickGridStart) throw new Error('Quick reservation grid scope is missing.');
+const quickGridScope = html.slice(quickGridStart, quickGridEnd);
+for (const removedCopy of ['퇴실 청소 담당','청소 미배정','assignedCount=monthReservations','유형·엘리베이터 필터']) {
+  if (quickGridScope.includes(removedCopy)) throw new Error(`Removed quick reservation grid copy returned: ${removedCopy}`);
+}
+for (const contract of [
+  "const CALENDAR_WEEKDAYS=Object.freeze(['일','월','화','수','목','금','토'])",
+  'const KR_HOLIDAY_FIXTURE=Object.freeze({',
+  "jurisdiction:'KR',mode:'demo-static',coverage:['2026-01-01','2026-12-31']",
+  "'2026-01-01':{name:'신정'",
+  "'2026-05-01':{name:'노동절'",
+  "'2026-06-03':{name:'제9회 전국동시지방선거'",
+  "'2026-07-17':{name:'제헌절'",
+  "'2026-08-15':{name:'광복절'",
+  "'2026-08-17':{name:'광복절 대체공휴일'",
+  "'2026-09-25':{name:'추석'",
+  "'2026-12-25':{name:'기독탄신일'",
+  'function calendarDayMeta(iso)',
+  "tone:holiday?'holiday':isSunday?'sunday':isSaturday?'saturday':'weekday'",
+  'function calendarWeekdayHeaderMarkup()',
+  'function calendarDateAriaLabel(iso',
+  'offset=first.getDay(),start=',
+  'Array.from({length:42}',
+  'calendarWeekdayHeaderMarkup()',
+  'calendarDayMeta(iso)',
+  'calendar-holiday-mark',
+  '.calendar-day.is-saturday:not(.is-holiday)',
+  '.quick-day-header.is-saturday:not(.is-holiday)',
+]) {
+  if (!html.includes(contract)) throw new Error(`Sunday-first Korean calendar contract missing: ${contract}`);
+}
+const calendarStart = html.indexOf('function calendarMarkup');
+const calendarEnd = html.indexOf('function openCalendar', calendarStart);
+if (calendarStart < 0 || calendarEnd <= calendarStart) throw new Error('Shared calendar scope is missing.');
+const calendarScope = html.slice(calendarStart, calendarEnd);
+for (const removedCalendarContract of [
+  "weekMode?['월','화','수','목','금','토','일']",
+  '(first.getDay()+6)%7',
+]) {
+  if (calendarScope.includes(removedCalendarContract)) throw new Error(`Monday-first calendar layout returned: ${removedCalendarContract}`);
+}
+for (const removedQuickCalendarContract of ['.quick-day-header.weekend','weekend=[0,6]']) {
+  if (html.includes(removedQuickCalendarContract)) throw new Error(`Combined red weekend styling returned: ${removedQuickCalendarContract}`);
+}
+for (const businessWeekContract of [
+  'offset=(d.getDay()+6)%7',
+  'mondayOffset=-((date.getUTCDay()+6)%7)',
+  '날짜를 누르면 그 날짜가 포함된 월요일–일요일 주차를 선택합니다.',
+]) {
+  if (!html.includes(businessWeekContract)) throw new Error(`Monday-to-Sunday business-week meaning changed: ${businessWeekContract}`);
+}
+const reservationCheckinLabel = '<label for="res-checkin">1. 체크인 일시</label>';
+const reservationCheckoutLabel = '<label for="res-checkout">2. 체크아웃 일시</label>';
+if (html.indexOf(reservationCheckinLabel) < 0 || html.indexOf(reservationCheckoutLabel) <= html.indexOf(reservationCheckinLabel)) {
+  throw new Error('Single-reservation form must render check-in before check-out.');
+}
+const roomTypesStart = html.indexOf('const ROOM_TYPES = {');
+const roomTypesEnd = html.indexOf('};', roomTypesStart);
+if (roomTypesStart < 0 || roomTypesEnd <= roomTypesStart) throw new Error('ROOM_TYPES guest policy source could not be resolved.');
+const roomTypesSource = html.slice(roomTypesStart, roomTypesEnd);
+const expectedReservationGuestPolicies = {
+  standard: [2, 2],
+  premium: [2, 3],
+  oceanPremium: [2, 4],
+  oceanFamily: [4, 6],
+};
+for (const [typeId, expected] of Object.entries(expectedReservationGuestPolicies)) {
+  const match = roomTypesSource.match(new RegExp(`${typeId}:\\s*\\{[^}]*defaultGuestCount:(\\d+)\\s*,\\s*maxGuestCount:(\\d+)`));
+  const actual = match ? [Number(match[1]), Number(match[2])] : [];
+  if (actual.length !== 2 || actual.some((value, index) => value !== expected[index])) {
+    throw new Error(`Reservation guest policy mismatch for ${typeId}: ${actual.join('/') || 'missing'} (expected ${expected.join('/')}).`);
+  }
+}
+for (const contract of [
+  'function guestPolicyForRoom(roomNo)',
+  'function reservationGuestCount(reservation)',
+  "Object.hasOwn(reservation,'guestCount')",
+  'guestCount:guestPolicyForRoom(reservation.room).defaultGuestCount',
+  'reservationGuestCount(reservation),reservation.status',
+  'Number.isInteger(value)&&value>=1?value:policy.defaultGuestCount',
+  "return Number.isInteger(Number(value))&&Number(value)>=1?`${Number(value)}명`:'인원 미기록'",
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation guest data contract missing: ${contract}`);
+}
+const guestUpsertStart = html.indexOf('function upsertReservationRecord');
+const guestUpsertEnd = html.indexOf('function clearOrphanedReservationDraftJob', guestUpsertStart);
+if (guestUpsertStart < 0 || guestUpsertEnd <= guestUpsertStart) throw new Error('Reservation guest upsert source could not be resolved.');
+const guestUpsertSource = html.slice(guestUpsertStart, guestUpsertEnd);
+for (const contract of [
+  'policy.defaultGuestCount):Number(guestCount)',
+  '!Number.isInteger(resolvedGuestCount)||resolvedGuestCount<1||resolvedGuestCount>policy.maxGuestCount',
+  'guestError:true',
+  'guestCountChanged=!!before&&reservationGuestCount(before)!==resolvedGuestCount',
+  'cleaningChanges=reservationCleaningChanges(beforeReservations,prospectiveReservations)',
+  'roomCleaningChanged=cleaningChanges.length>0',
+  'reservationCleaningChangeTouchesPublic(cleaningChanges,room.no)',
+  'reservationCleaningChangeTouchesRandom(cleaningChanges)',
+  'guestCount:resolvedGuestCount',
+  'syncReservationCleaningDraft(reservation,before)',
+]) {
+  if (!guestUpsertSource.includes(contract)) throw new Error(`Reservation guest upsert contract missing: ${contract}`);
+}
+for (const contract of [
+  "upsertReservationRecord({roomNo,checkInAt:range.checkInAt,checkOutAt:range.checkOutAt,source:'grid'})",
+  'reservationGuestCount(result.

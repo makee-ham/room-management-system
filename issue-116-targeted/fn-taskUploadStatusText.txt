@@ -1,0 +1,6 @@
+function taskUploadStatusText(upload) {
+        if(upload.status==='uploading')return '사진 확인 중';
+        if(upload.status==='failed')return '전송 실패 · 다시 촬영';
+        if(upload.status==='done')return upload.image?.objectUrl?'현장 촬영 완료':'사진 완료';
+        return upload.required?'필수 사진 없음':'선택 사진 없음';
+      }

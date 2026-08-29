@@ -1,0 +1,4 @@
+function taskRequirements(no) {
+        const task=taskState(no),snapshot=task.templateSnapshot||snapshotForAttempt(no,state.cleaningAttempts?.[task.attemptId]),requiredUploads=task.uploads.filter(upload=>upload.required),requiredDone=requiredUploads.every(upload=>upload.status==='done'),failed=task.uploads.some(upload=>upload.status==='failed'||upload.status==='uploading');
+        return {task,snapshot,requiredDone,failed,requiredUploads};
+      }

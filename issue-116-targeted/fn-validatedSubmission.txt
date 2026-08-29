@@ -1,0 +1,38 @@
+function validatedSubmission(submission) {
+        const attempt=submission?.attemptId?state.cleaningAttempts?.[submission.attemptId]||null:null;
+        if(!submission||state.cleaningSubmissions?.[submission.id]!==submission||!attempt)return null;
+        const lineageOk=attempt.id===submission.attemptId&&attempt.room===submission.room&&attempt.performerId===submission.performerId&&attempt.performerName===submission.performerName&&attempt.kind===submission.kind&&attempt.baseRateSnapshot===submission.baseRateSnapshot&&(attempt.reservationIdSnapshot||null)===(submission.reservationIdSnapshot||null)&&(attempt.guestCountSnapshot??null)===(submission.guestCountSnapshot??null);
+        if(!lineageOk)return null;
+        const attemptMeta=attempt.roomMetaSnapshot,submissionMeta=submission.roomMetaSnapshot;
+        if(!attemptMeta||!submissionMeta||attemptMeta.roomNo!==submissionMeta.roomNo||attemptMeta.typeId!==submissionMeta.typeId||attemptMeta.typeName!==submissionMeta.typeName||attemptMeta.elevator!==submissionMeta.elevator)return null;
+        const completedDate=timestampIsoDate(submission.completedAt,''),submittedDate=timestampIsoDate(submission.submittedAt,'');
+        if(!completedDate||attempt.completedAt!==submission.completedAt||completedDate<attemptPlanDate(attempt,'')||!submittedDate||submittedDate<completedDate||weekStartIso(completedDate)!==submission.weekStart)return null;
+        const attemptTemplate=attempt.templateSnapshot,submissionTemplate=submission.templateSnapshot;
+        if(!attemptTemplate||!submissionTemplate||submission.templateId!==submissionTemplate.id||attemptTemplate.id!==submissionTemplate.id||attemptTemplate.version!==submissionTemplate.version||attemptTemplate.typeId!==submissionTemplate.typeId||attemptTemplate.kindId!==submissionTemplate.kindId||attemptTemplate.requirementsMode!==submissionTemplate.requirementsMode)return null;
+        if(submissionTemplate.requirementsMode==='photo-only-v1'&&Object.keys(submission.checklist||{}).length)return null;
+        const expectedPhotos=(submissionTemplate.photos||[]).map(item=>item.id).sort(),actualPhotos=(submission.uploads||[]).map(item=>item.id).sort();
+        if(expectedPhotos.join('|')!==actualPhotos.join('|'))return null;
+        if((submissionTemplate.photos||[]).some(item=>item.required&&submission.uploads?.find(upload=>upload.id===item.id)?.status!=='done'))return null;
+        if((submission.uploads||[]).some(upload=>['failed','uploading'].includes(upload.status)))return null;
+        if(!Array.isArray(submission.roomIssueIds)||!Array.isArray(submission.roomIssuesSnapshot)||!Number.isInteger(Number(submission.candleCountSnapshot))||Number(submission.candleCountSnapshot)<0)return null;
+        const issueIds=submission.roomIssueIds.map(id=>String(id||'')),issueSnapshots=submission.roomIssuesSnapshot,snapshotIssueIds=issueSnapshots.map(record=>String(record?.id||''));
+        if(issueIds.some(id=>!id)||snapshotIssueIds.some(id=>!id)||new Set(issueIds).size!==issueIds.length||new Set(snapshotIssueIds).size!==snapshotIssueIds.length||[...issueIds].sort().join('|')!==[...snapshotIssueIds].sort().join('|'))return null;
+        const liveIssuesById=new Map(roomIssueRecords(submission.room).map(record=>[String(record.id),record]));
+        const issueLineageOk=issueSnapshots.every(record=>{
+          if(!record)return false;
+          const live=liveIssuesById.get(String(record.id));
+          if(!Array.isArray(record.photos)||!live||!Array.isArray(live.photos))return false;
+          const snapshotPhotoIds=record.photos.map(photo=>String(photo?.id||'')),livePhotoIds=live.photos.map(photo=>String(photo?.id||'')),snapshotPhotoSignatures=record.photos.map(evidencePhotoSignature).sort(),livePhotoSignatures=live.photos.map(evidencePhotoSignature).sort();
+          if(snapshotPhotoIds.some(id=>!id)||new Set(snapshotPhotoIds).size!==snapshotPhotoIds.length||[...snapshotPhotoIds].sort().join('|')!==[...livePhotoIds].sort().join('|')||snapshotPhotoSignatures.join('|')!==livePhotoSignatures.join('|'))return false;
+          return record.room===submission.room&&record.attemptId===submission.attemptId&&record.submissionId===submission.id&&record.createdById===submission.performerId&&record.createdBy===submission.performerName&&live.room===submission.room&&live.attemptId===submission.attemptId&&live.submissionId===submission.id&&live.createdById===submission.performerId&&live.createdBy===submission.performerName;
+        });
+        if(!issueLineageOk)return null;
+        if(submission.reportId){
+          const reportSnapshot=submission.bombRoomReportSnapshot,liveReport=state.bombRoomReports?.[submission.reportId];
+          if(!reportSnapshot||reportSnapshot.id!==submission.reportId||reportSnapshot.submissionId!==submission.id||reportSnapshot.attemptId!==submission.attemptId||reportSnapshot.room!==submission.room||reportSnapshot.reportedById!==submission.performerId||reportSnapshot.reportedBy!==submission.performerName||reportSnapshot.baseRateSnapshot!==submission.baseRateSnapshot||!Array.isArray(reportSnapshot.photos)||!reportSnapshot.photos.length)return null;
+          if(!liveReport||liveReport.id!==submission.reportId||liveReport.submissionId!==submission.id||liveReport.attemptId!==submission.attemptId||liveReport.room!==submission.room||liveReport.reportedById!==submission.performerId||liveReport.reportedBy!==submission.performerName||liveReport.baseRateSnapshot!==submission.baseRateSnapshot||!Array.isArray(liveReport.photos)||!liveReport.photos.length)return null;
+          const snapshotReportPhotoIds=reportSnapshot.photos.map(photo=>String(photo?.id||'')),liveReportPhotoIds=liveReport.photos.map(photo=>String(photo?.id||''));
+          if(snapshotReportPhotoIds.some(id=>!id)||new Set(snapshotReportPhotoIds).size!==snapshotReportPhotoIds.length||[...snapshotReportPhotoIds].sort().join('|')!==[...liveReportPhotoIds].sort().join('|')||reportSnapshot.photos.map(evidencePhotoSignature).sort().join('|')!==liveReport.photos.map(evidencePhotoSignature).sort().join('|'))return null;
+        }
+        return submission;
+      }

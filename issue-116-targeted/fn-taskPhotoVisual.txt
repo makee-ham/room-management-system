@@ -1,0 +1,5 @@
+function taskPhotoVisual(upload) {
+        if(upload.image?.objectUrl)return `<img src="${esc(upload.image.src)}" alt="${esc(upload.label)} 현장 촬영 미리보기">`;
+        if(['done','failed'].includes(upload.status)&&upload.image)return inspectionPhotoSvg(upload,upload.label);
+        return icon(upload.status==='uploading'?'clock':'camera');
+      }

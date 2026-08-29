@@ -1,0 +1,506 @@
+n-quick-booking-sticky-header-390.png',
+  'admin-room-total-filter-1440.png',
+]) {
+  if (!qa.includes(contract)) throw new Error(`Sticky date/total-room QA documentation missing: ${contract}`);
+}
+for (const contract of [
+  '모바일 고정 날짜 머리글·전체 객실 필터',
+  '고정 날짜 머리글과 객실 예약 본문의 가로 위치는 양방향으로 동기화',
+  '`전체 객실`이다',
+  '121개 객실 전체',
+]) {
+  if (!wireframeReadme.includes(contract)) throw new Error(`Sticky date/total-room README documentation missing: ${contract}`);
+}
+
+for (const contract of [
+  'quickReservationAnchorDate',
+  'QUICK_RESERVATION_PAST_DAYS=7',
+  'QUICK_RESERVATION_FUTURE_DAYS=21',
+  'QUICK_RESERVATION_DAY_COUNT=QUICK_RESERVATION_PAST_DAYS+1+QUICK_RESERVATION_FUTURE_DAYS',
+  'function quickWindowBounds(',
+  'function quickWindowDates(',
+  'function reservationInQuickWindow(',
+  'data-offset="-7"',
+  'data-offset="7"',
+  "params.set('bookingAnchor',route.quickAnchor)",
+  '지난 날짜 · 조회만 가능',
+  'is-month-start',
+  'function quickGridAnchorScrollLeft(',
+  'reservation-demo-cross-month-516',
+  'reservation-demo-cross-month-623',
+  '선택한 29일 기준',
+]) {
+  if (!html.includes(contract)) throw new Error(`Quick reservation 29-day contract missing: ${contract}`);
+}
+if (html.includes('function quickMonthDates(') || html.includes('function reservationInMonth(')) {
+  throw new Error('Legacy month-bounded quick reservation helpers remain.');
+}
+for (const contract of ['간편 예약 29일 연속 보기', '`-7일 ~ +21일`', 'bookingAnchor=YYYY-MM-DD']) {
+  if (!wireframeReadme.includes(contract)) throw new Error(`Quick reservation 29-day README contract missing: ${contract}`);
+}
+for (const contract of ['간편 예약 29일 연속 보기', '2026-08-08~2026-09-05', '8/31~9/3 연박']) {
+  if (!qa.includes(contract)) throw new Error(`Quick reservation 29-day QA contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'function inspectionTemplateUploadItems(',
+  'function inspectionTemplateGroups(',
+  'function inspectionTemplatePhotoState(',
+  'function renderInspectionTemplatePhoto(',
+  'function renderInspectionTemplateGroup(',
+  'function renderInspectionTemplateReview(',
+  'template?.photos||[]',
+  'actualById=new Map',
+  "status:actual?.status||'missing'",
+  'data-template-photo=',
+  'data-template-zone=',
+  'data-template-required=',
+  'data-template-status=',
+  '메이드 청소 템플릿 기준 검수',
+  '제출 당시 구역·항목·순서 그대로 확인',
+  '필수 사진 누락',
+  'TV 항목은 켜짐·화면 출력 요구사항까지 확인하세요.',
+  '${renderInspectionTemplateReview(no,submissionTemplate,submission,attempt)}',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin/maid inspection-template parity contract missing: ${contract}`);
+}
+const activeInspectionStart=html.lastIndexOf('function renderInspectionDetail(no)');
+const activeInspectionEnd=html.indexOf('function renderPayDetail()',activeInspectionStart);
+const activeInspectionSource=html.slice(activeInspectionStart,activeInspectionEnd);
+if(activeInspectionStart<0||activeInspectionEnd<=activeInspectionStart||activeInspectionSource.includes('renderInspectionGallery(no)')||activeInspectionSource.includes('submittedUploads.length')){
+  throw new Error('Active admin inspection still uses the legacy flat photo gallery.');
+}
+for (const contract of ['관리자 검수·메이드 청소 템플릿 통일','templateSnapshot','필수 사진 누락','TV 켜짐·화면 출력 항목']) {
+  if (!wireframeReadme.includes(contract)) throw new Error(`Inspection-template parity README contract missing: ${contract}`);
+}
+for (const contract of ['관리자 검수·메이드 청소 템플릿 통일','필수 완료/전체 필수','전송 실패·필수 누락','data-template-version']) {
+  if (!qa.includes(contract)) throw new Error(`Inspection-template parity QA contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'function durableLedgerSnapshot(',
+  'function durableLedgerFingerprint(',
+  'function assertNoDuplicateDurableRecords(',
+  "throw new Error('렌더링 중 예약·청소 제출·급여·지급 원장이 변경되었습니다.')",
+  'function reservationPayloadMatches(',
+  'duplicateReservation=!id?',
+  'unchangedReservation=!!previous',
+  'duplicate:true,unchanged:true',
+  'dedupeKey:`reservation:${reservation.id}:${reservationFingerprint(reservation)}`',
+  'function submissionForAttempt(',
+  'function createCleaningSubmissionRecord(',
+  'submissionId=`submission-${attemptId}`',
+  'dedupeKey:`submission:${attemptId}`',
+  'dedupeKey:`approval:${submission.id}:paid`',
+  'if(previous.status===status)return previous.status',
+  'mutationActionLocks=new Set()',
+  'mutationActions=new Set(',
+  'window.__CASTLE_TEST__=Object.freeze',
+  'repeatRender:',
+  'createReservationTest:',
+  'prepareSubmission:',
+  'confirmEarning:',
+  'setPaymentStatus:',
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation/cleaning/payroll idempotency contract missing: ${contract}`);
+}
+const upsertIdempotencyStart=html.indexOf('function upsertReservationRecord');
+const upsertIdempotencyEnd=html.indexOf('function clearOrphanedReservationDraftJob',upsertIdempotencyStart);
+const upsertIdempotencySource=html.slice(upsertIdempotencyStart,upsertIdempotencyEnd);
+if(!upsertIdempotencySource.includes('duplicateReservation')||!upsertIdempotencySource.includes('unchangedReservation')||upsertIdempotencySource.indexOf('duplicateReservation')>upsertIdempotencySource.indexOf('++state.reservationSequence')){
+  throw new Error('Reservation duplicate guard must run before generating a new reservation ID.');
+}
+const submissionIdempotencyStart=html.indexOf('function createCleaningSubmissionRecord');
+const submissionIdempotencyEnd=html.indexOf('function activeBombRoomReport',submissionIdempotencyStart);
+const submissionIdempotencySource=html.slice(submissionIdempotencyStart,submissionIdempotencyEnd);
+if(!submissionIdempotencySource.includes('submissionForAttempt(attemptId)')||/Date\.now\(|\+\+cleaningSubmissionSequence/.test(submissionIdempotencySource)){
+  throw new Error('Cleaning submission identity must be stable per attempt and must not use time/random sequence IDs.');
+}
+for (const contract of ['예약·청소·급여 멱등성과 중복 방지','DB 유니크 제약','API idempotency key']) {
+  if (!wireframeReadme.includes(contract)) throw new Error(`Idempotency README contract missing: ${contract}`);
+}
+for (const contract of ['예약·청소·급여 멱등성·중복 방지 회귀 검사','render()`를 12회','같은 청소 `attemptId`','earningRecords[submissionId]']) {
+  if (!qa.includes(contract)) throw new Error(`Idempotency QA contract missing: ${contract}`);
+}
+
+console.log('Per-maid weekly payment static contracts: passed');
+console.log('Admin copy/help static contracts: passed');
+console.log('Maid copy/help static contracts: passed');
+console.log('Maid photo-only workflow static contracts: passed');
+console.log('Required TV-on checkout photo static contracts: passed');
+console.log('Maid availability submission window static contracts: passed');
+console.log('Cleaning rollover static contracts: passed');
+console.log('Reservation guest-count static contracts: passed');
+console.log('Portable path scan: passed');
+console.log(`Room master contract: ${catalogIds.length} rooms / ${initialOccupiedIds.length} initially occupied / ${dataIssueIds.length} data issue`);
+console.log(`Final UX audit SHA-256: ${auditHash}`);
+console.log(`Wireframe SHA-256: ${indexHash}`);
+console.log('Manifest hashes: passed');
+for (const contract of [
+  'manualCleaningSequence:0, manualCleaningRequests:{}',
+  'function activeManualCleaningRequest(no,targetState=state)',
+  'function createManualCleaningRequest(no)',
+  'function cancelManualCleaningRequest(no)',
+  'function completeManualCleaningRequestForAttempt(no,attempt)',
+  'data-action="toggle-room-cleaning"',
+  "if(a==='confirm-room-cleaning-on')",
+  "if(a==='confirm-room-cleaning-off')",
+  'if(activeManualCleaningRequest(no))return true;',
+]) {
+  if (!html.includes(contract)) throw new Error(`Manual cleaning toggle contract missing: ${contract}`);
+}
+const manualCleaningActionSet = html.slice(html.indexOf('const rebuiltActions='), html.indexOf('const deprecatedStateActions='));
+if (!manualCleaningActionSet.includes("'toggle-room-cleaning'") || !manualCleaningActionSet.includes("'confirm-room-cleaning-on'") || !manualCleaningActionSet.includes("'confirm-room-cleaning-off'")) {
+  throw new Error('Manual cleaning toggle actions are not registered.');
+}
+console.log('Manual room-cleaning toggle static contracts: passed');
+
+for (const contract of [
+  'function operationalMoment(targetState=state)',
+  'function reservationAtOperationalMoment(roomNo,targetState=state)',
+  'function latestCheckedOutReservationForRoom(roomNo,targetState=state)',
+  'function roomCheckoutCleaningDue(no,targetState=state)',
+  "reservation.checkInAt<=moment&&moment<reservation.checkOutAt",
+  '입실·퇴실은 예약 시각에 자동 반영됩니다.',
+]) {
+  if (!html.includes(contract)) throw new Error(`Automatic occupancy contract missing: ${contract}`);
+}
+const occupancyActionsSource=html.slice(html.indexOf('const rebuiltActions='),html.indexOf('const deprecatedStateActions='));
+for (const removed of ["'manual-checkout'","'confirm-manual-checkout'","'manual-checkin'","'confirm-manual-checkin'"]) {
+  if (occupancyActionsSource.includes(removed)) throw new Error(`Manual occupancy action remains registered: ${removed}`);
+}
+console.lo
+
+onInQuickWindow(',
+  'data-offset="-7"',
+  'data-offset="7"',
+  "params.set('bookingAnchor',route.quickAnchor)",
+  '지난 날짜 · 조회만 가능',
+  'is-month-start',
+  'function quickGridAnchorScrollLeft(',
+  'reservation-demo-cross-month-516',
+  'reservation-demo-cross-month-623',
+  '선택한 29일 기준',
+]) {
+  if (!html.includes(contract)) throw new Error(`Quick reservation 29-day contract missing: ${contract}`);
+}
+if (html.includes('function quickMonthDates(') || html.includes('function reservationInMonth(')) {
+  throw new Error('Legacy month-bounded quick reservation helpers remain.');
+}
+for (const contract of ['간편 예약 29일 연속 보기', '`-7일 ~ +21일`', 'bookingAnchor=YYYY-MM-DD']) {
+  if (!wireframeReadme.includes(contract)) throw new Error(`Quick reservation 29-day README contract missing: ${contract}`);
+}
+for (const contract of ['간편 예약 29일 연속 보기', '2026-08-08~2026-09-05', '8/31~9/3 연박']) {
+  if (!qa.includes(contract)) throw new Error(`Quick reservation 29-day QA contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'function inspectionTemplateUploadItems(',
+  'function inspectionTemplateGroups(',
+  'function inspectionTemplatePhotoState(',
+  'function renderInspectionTemplatePhoto(',
+  'function renderInspectionTemplateGroup(',
+  'function renderInspectionTemplateReview(',
+  'template?.photos||[]',
+  'actualById=new Map',
+  "status:actual?.status||'missing'",
+  'data-template-photo=',
+  'data-template-zone=',
+  'data-template-required=',
+  'data-template-status=',
+  '메이드 청소 템플릿 기준 검수',
+  '제출 당시 구역·항목·순서 그대로 확인',
+  '필수 사진 누락',
+  'TV 항목은 켜짐·화면 출력 요구사항까지 확인하세요.',
+  '${renderInspectionTemplateReview(no,submissionTemplate,submission,attempt)}',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin/maid inspection-template parity contract missing: ${contract}`);
+}
+const activeInspectionStart=html.lastIndexOf('function renderInspectionDetail(no)');
+const activeInspectionEnd=html.indexOf('function renderPayDetail()',activeInspectionStart);
+const activeInspectionSource=html.slice(activeInspectionStart,activeInspectionEnd);
+if(activeInspectionStart<0||activeInspectionEnd<=activeInspectionStart||activeInspectionSource.includes('renderInspectionGallery(no)')||activeInspectionSource.includes('submittedUploads.length')){
+  throw new Error('Active admin inspection still uses the legacy flat photo gallery.');
+}
+for (const contract of ['관리자 검수·메이드 청소 템플릿 통일','templateSnapshot','필수 사진 누락','TV 켜짐·화면 출력 항목']) {
+  if (!wireframeReadme.includes(contract)) throw new Error(`Inspection-template parity README contract missing: ${contract}`);
+}
+for (const contract of ['관리자 검수·메이드 청소 템플릿 통일','필수 완료/전체 필수','전송 실패·필수 누락','data-template-version']) {
+  if (!qa.includes(contract)) throw new Error(`Inspection-template parity QA contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'function durableLedgerSnapshot(',
+  'function durableLedgerFingerprint(',
+  'function assertNoDuplicateDurableRecords(',
+  "throw new Error('렌더링 중 예약·청소 제출·급여·지급 원장이 변경되었습니다.')",
+  'function reservationPayloadMatches(',
+  'duplicateReservation=!id?',
+  'unchangedReservation=!!previous',
+  'duplicate:true,unchanged:true',
+  'dedupeKey:`reservation:${reservation.id}:${reservationFingerprint(reservation)}`',
+  'function submissionForAttempt(',
+  'function createCleaningSubmissionRecord(',
+  'submissionId=`submission-${attemptId}`',
+  'dedupeKey:`submission:${attemptId}`',
+  'dedupeKey:`approval:${submission.id}:paid`',
+  'if(previous.status===status)return previous.status',
+  'mutationActionLocks=new Set()',
+  'mutationActions=new Set(',
+  'window.__CASTLE_TEST__=Object.freeze',
+  'repeatRender:',
+  'createReservationTest:',
+  'prepareSubmission:',
+  'confirmEarning:',
+  'setPaymentStatus:',
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation/cleaning/payroll idempotency contract missing: ${contract}`);
+}
+const upsertIdempotencyStart=html.indexOf('function upsertReservationRecord');
+const upsertIdempotencyEnd=html.indexOf('function clearOrphanedReservationDraftJob',upsertIdempotencyStart);
+const upsertIdempotencySource=html.slice(upsertIdempotencyStart,upsertIdempotencyEnd);
+if(!upsertIdempotencySource.includes('duplicateReservation')||!upsertIdempotencySource.includes('unchangedReservation')||upsertIdempotencySource.indexOf('duplicateReservation')>upsertIdempotencySource.indexOf('++state.reservationSequence')){
+  throw new Error('Reservation duplicate guard must run before generating a new reservation ID.');
+}
+const submissionIdempotencyStart=html.indexOf('function createCleaningSubmissionRecord');
+const submissionIdempotencyEnd=html.indexOf('function activeBombRoomReport',submissionIdempotencyStart);
+const submissionIdempotencySource=html.slice(submissionIdempotencyStart,submissionIdempotencyEnd);
+if(!submissionIdempotencySource.includes('submissionForAttempt(attemptId)')||/Date\.now\(|\+\+cleaningSubmissionSequence/.test(submissionIdempotencySource)){
+  throw new Error('Cleaning submission identity must be stable per attempt and must not use time/random sequence IDs.');
+}
+for (const contract of ['예약·청소·급여 멱등성과 중복 방지','DB 유니크 제약','API idempotency key']) {
+  if (!wireframeReadme.includes(contract)) throw new Error(`Idempotency README contract missing: ${contract}`);
+}
+for (const contract of ['예약·청소·급여 멱등성·중복 방지 회귀 검사','render()`를 12회','같은 청소 `attemptId`','earningRecords[submissionId]']) {
+  if (!qa.includes(contract)) throw new Error(`Idempotency QA contract missing: ${contract}`);
+}
+
+console.log('Per-maid weekly payment static contracts: passed');
+console.log('Admin copy/help static contracts: passed');
+console.log('Maid copy/help static contracts: passed');
+console.log('Maid photo-only workflow static contracts: passed');
+console.log('Required TV-on checkout photo static contracts: passed');
+console.log('Maid availability submission window static contracts: passed');
+console.log('Cleaning rollover static contracts: passed');
+console.log('Reservation guest-count static contracts: passed');
+console.log('Portable path scan: passed');
+console.log(`Room master contract: ${catalogIds.length} rooms / ${initialOccupiedIds.length} initially occupied / ${dataIssueIds.length} data issue`);
+console.log(`Final UX audit SHA-256: ${auditHash}`);
+console.log(`Wireframe SHA-256: ${indexHash}`);
+console.log('Manifest hashes: passed');
+for (const contract of [
+  'manualCleaningSequence:0, manualCleaningRequests:{}',
+  'function activeManualCleaningRequest(no,targetState=state)',
+  'function createManualCleaningRequest(no)',
+  'function cancelManualCleaningRequest(no)',
+  'function completeManualCleaningRequestForAttempt(no,attempt)',
+  'data-action="toggle-room-cleaning"',
+  "if(a==='confirm-room-cleaning-on')",
+  "if(a==='confirm-room-cleaning-off')",
+  'if(activeManualCleaningRequest(no))return true;',
+]) {
+  if (!html.includes(contract)) throw new Error(`Manual cleaning toggle contract missing: ${contract}`);
+}
+const manualCleaningActionSet = html.slice(html.indexOf('const rebuiltActions='), html.indexOf('const deprecatedStateActions='));
+if (!manualCleaningActionSet.includes("'toggle-room-cleaning'") || !manualCleaningActionSet.includes("'confirm-room-cleaning-on'") || !manualCleaningActionSet.includes("'confirm-room-cleaning-off'")) {
+  throw new Error('Manual cleaning toggle actions are not registered.');
+}
+console.log('Manual room-cleaning toggle static contracts: passed');
+
+for (const contract of [
+  'function operationalMoment(targetState=state)',
+  'function reservationAtOperationalMoment(roomNo,targetState=state)',
+  'function latestCheckedOutReservationForRoom(roomNo,targetState=state)',
+  'function roomCheckoutCleaningDue(no,targetState=state)',
+  "reservation.checkInAt<=moment&&moment<reservation.checkOutAt",
+  '입실·퇴실은 예약 시각에 자동 반영됩니다.',
+]) {
+  if (!html.includes(contract)) throw new Error(`Automatic occupancy contract missing: ${contract}`);
+}
+const occupancyActionsSource=html.slice(html.indexOf('const rebuiltActions='),html.indexOf('const deprecatedStateActions='));
+for (const removed of ["'manual-checkout'","'confirm-manual-checkout'","'manual-checkin'","'confirm-manual-checkin'"]) {
+  if (occupancyActionsSource.includes(removed)) throw new Error(`Manual occupancy action remains registered: ${removed}`);
+}
+console.log('Automatic reservation occupancy static contracts: passed');
+
+for (const contract of [
+  'checkoutInspections:{}',
+  'function checkoutInspectionPending(no,targetState=state)',
+  'function completeCheckoutInspection(no,{method=\'manual\',attempt=null}={})',
+  'function completeCheckoutInspectionForAttempt(no,attempt)',
+  'function renderCheckoutInspectionPanel(no)',
+  'data-filter="checkout-inspection"',
+  'value="checkout-inspection"',
+  "'complete-checkout-inspection'",
+  "if(a==='confirm-checkout-inspection')",
+]) {
+  if (!html.includes(contract)) throw new Error(`Checkout inspection contract missing: ${contract}`);
+}
+if (!html.includes('completeCheckoutInspectionForAttempt(id,attempt)')) throw new Error('Field completion does not clear checkout inspect
+
+-month-516',
+  'reservation-demo-cross-month-623',
+  '선택한 29일 기준',
+]) {
+  if (!html.includes(contract)) throw new Error(`Quick reservation 29-day contract missing: ${contract}`);
+}
+if (html.includes('function quickMonthDates(') || html.includes('function reservationInMonth(')) {
+  throw new Error('Legacy month-bounded quick reservation helpers remain.');
+}
+for (const contract of ['간편 예약 29일 연속 보기', '`-7일 ~ +21일`', 'bookingAnchor=YYYY-MM-DD']) {
+  if (!wireframeReadme.includes(contract)) throw new Error(`Quick reservation 29-day README contract missing: ${contract}`);
+}
+for (const contract of ['간편 예약 29일 연속 보기', '2026-08-08~2026-09-05', '8/31~9/3 연박']) {
+  if (!qa.includes(contract)) throw new Error(`Quick reservation 29-day QA contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'function inspectionTemplateUploadItems(',
+  'function inspectionTemplateGroups(',
+  'function inspectionTemplatePhotoState(',
+  'function renderInspectionTemplatePhoto(',
+  'function renderInspectionTemplateGroup(',
+  'function renderInspectionTemplateReview(',
+  'template?.photos||[]',
+  'actualById=new Map',
+  "status:actual?.status||'missing'",
+  'data-template-photo=',
+  'data-template-zone=',
+  'data-template-required=',
+  'data-template-status=',
+  '메이드 청소 템플릿 기준 검수',
+  '제출 당시 구역·항목·순서 그대로 확인',
+  '필수 사진 누락',
+  'TV 항목은 켜짐·화면 출력 요구사항까지 확인하세요.',
+  '${renderInspectionTemplateReview(no,submissionTemplate,submission,attempt)}',
+]) {
+  if (!html.includes(contract)) throw new Error(`Admin/maid inspection-template parity contract missing: ${contract}`);
+}
+const activeInspectionStart=html.lastIndexOf('function renderInspectionDetail(no)');
+const activeInspectionEnd=html.indexOf('function renderPayDetail()',activeInspectionStart);
+const activeInspectionSource=html.slice(activeInspectionStart,activeInspectionEnd);
+if(activeInspectionStart<0||activeInspectionEnd<=activeInspectionStart||activeInspectionSource.includes('renderInspectionGallery(no)')||activeInspectionSource.includes('submittedUploads.length')){
+  throw new Error('Active admin inspection still uses the legacy flat photo gallery.');
+}
+for (const contract of ['관리자 검수·메이드 청소 템플릿 통일','templateSnapshot','필수 사진 누락','TV 켜짐·화면 출력 항목']) {
+  if (!wireframeReadme.includes(contract)) throw new Error(`Inspection-template parity README contract missing: ${contract}`);
+}
+for (const contract of ['관리자 검수·메이드 청소 템플릿 통일','필수 완료/전체 필수','전송 실패·필수 누락','data-template-version']) {
+  if (!qa.includes(contract)) throw new Error(`Inspection-template parity QA contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'function durableLedgerSnapshot(',
+  'function durableLedgerFingerprint(',
+  'function assertNoDuplicateDurableRecords(',
+  "throw new Error('렌더링 중 예약·청소 제출·급여·지급 원장이 변경되었습니다.')",
+  'function reservationPayloadMatches(',
+  'duplicateReservation=!id?',
+  'unchangedReservation=!!previous',
+  'duplicate:true,unchanged:true',
+  'dedupeKey:`reservation:${reservation.id}:${reservationFingerprint(reservation)}`',
+  'function submissionForAttempt(',
+  'function createCleaningSubmissionRecord(',
+  'submissionId=`submission-${attemptId}`',
+  'dedupeKey:`submission:${attemptId}`',
+  'dedupeKey:`approval:${submission.id}:paid`',
+  'if(previous.status===status)return previous.status',
+  'mutationActionLocks=new Set()',
+  'mutationActions=new Set(',
+  'window.__CASTLE_TEST__=Object.freeze',
+  'repeatRender:',
+  'createReservationTest:',
+  'prepareSubmission:',
+  'confirmEarning:',
+  'setPaymentStatus:',
+]) {
+  if (!html.includes(contract)) throw new Error(`Reservation/cleaning/payroll idempotency contract missing: ${contract}`);
+}
+const upsertIdempotencyStart=html.indexOf('function upsertReservationRecord');
+const upsertIdempotencyEnd=html.indexOf('function clearOrphanedReservationDraftJob',upsertIdempotencyStart);
+const upsertIdempotencySource=html.slice(upsertIdempotencyStart,upsertIdempotencyEnd);
+if(!upsertIdempotencySource.includes('duplicateReservation')||!upsertIdempotencySource.includes('unchangedReservation')||upsertIdempotencySource.indexOf('duplicateReservation')>upsertIdempotencySource.indexOf('++state.reservationSequence')){
+  throw new Error('Reservation duplicate guard must run before generating a new reservation ID.');
+}
+const submissionIdempotencyStart=html.indexOf('function createCleaningSubmissionRecord');
+const submissionIdempotencyEnd=html.indexOf('function activeBombRoomReport',submissionIdempotencyStart);
+const submissionIdempotencySource=html.slice(submissionIdempotencyStart,submissionIdempotencyEnd);
+if(!submissionIdempotencySource.includes('submissionForAttempt(attemptId)')||/Date\.now\(|\+\+cleaningSubmissionSequence/.test(submissionIdempotencySource)){
+  throw new Error('Cleaning submission identity must be stable per attempt and must not use time/random sequence IDs.');
+}
+for (const contract of ['예약·청소·급여 멱등성과 중복 방지','DB 유니크 제약','API idempotency key']) {
+  if (!wireframeReadme.includes(contract)) throw new Error(`Idempotency README contract missing: ${contract}`);
+}
+for (const contract of ['예약·청소·급여 멱등성·중복 방지 회귀 검사','render()`를 12회','같은 청소 `attemptId`','earningRecords[submissionId]']) {
+  if (!qa.includes(contract)) throw new Error(`Idempotency QA contract missing: ${contract}`);
+}
+
+console.log('Per-maid weekly payment static contracts: passed');
+console.log('Admin copy/help static contracts: passed');
+console.log('Maid copy/help static contracts: passed');
+console.log('Maid photo-only workflow static contracts: passed');
+console.log('Required TV-on checkout photo static contracts: passed');
+console.log('Maid availability submission window static contracts: passed');
+console.log('Cleaning rollover static contracts: passed');
+console.log('Reservation guest-count static contracts: passed');
+console.log('Portable path scan: passed');
+console.log(`Room master contract: ${catalogIds.length} rooms / ${initialOccupiedIds.length} initially occupied / ${dataIssueIds.length} data issue`);
+console.log(`Final UX audit SHA-256: ${auditHash}`);
+console.log(`Wireframe SHA-256: ${indexHash}`);
+console.log('Manifest hashes: passed');
+for (const contract of [
+  'manualCleaningSequence:0, manualCleaningRequests:{}',
+  'function activeManualCleaningRequest(no,targetState=state)',
+  'function createManualCleaningRequest(no)',
+  'function cancelManualCleaningRequest(no)',
+  'function completeManualCleaningRequestForAttempt(no,attempt)',
+  'data-action="toggle-room-cleaning"',
+  "if(a==='confirm-room-cleaning-on')",
+  "if(a==='confirm-room-cleaning-off')",
+  'if(activeManualCleaningRequest(no))return true;',
+]) {
+  if (!html.includes(contract)) throw new Error(`Manual cleaning toggle contract missing: ${contract}`);
+}
+const manualCleaningActionSet = html.slice(html.indexOf('const rebuiltActions='), html.indexOf('const deprecatedStateActions='));
+if (!manualCleaningActionSet.includes("'toggle-room-cleaning'") || !manualCleaningActionSet.includes("'confirm-room-cleaning-on'") || !manualCleaningActionSet.includes("'confirm-room-cleaning-off'")) {
+  throw new Error('Manual cleaning toggle actions are not registered.');
+}
+console.log('Manual room-cleaning toggle static contracts: passed');
+
+for (const contract of [
+  'function operationalMoment(targetState=state)',
+  'function reservationAtOperationalMoment(roomNo,targetState=state)',
+  'function latestCheckedOutReservationForRoom(roomNo,targetState=state)',
+  'function roomCheckoutCleaningDue(no,targetState=state)',
+  "reservation.checkInAt<=moment&&moment<reservation.checkOutAt",
+  '입실·퇴실은 예약 시각에 자동 반영됩니다.',
+]) {
+  if (!html.includes(contract)) throw new Error(`Automatic occupancy contract missing: ${contract}`);
+}
+const occupancyActionsSource=html.slice(html.indexOf('const rebuiltActions='),html.indexOf('const deprecatedStateActions='));
+for (const removed of ["'manual-checkout'","'confirm-manual-checkout'","'manual-checkin'","'confirm-manual-checkin'"]) {
+  if (occupancyActionsSource.includes(removed)) throw new Error(`Manual occupancy action remains registered: ${removed}`);
+}
+console.log('Automatic reservation occupancy static contracts: passed');
+
+for (const contract of [
+  'checkoutInspections:{}',
+  'function checkoutInspectionPending(no,targetState=state)',
+  'function completeCheckoutInspection(no,{method=\'manual\',attempt=null}={})',
+  'function completeCheckoutInspectionForAttempt(no,attempt)',
+  'function renderCheckoutInspectionPanel(no)',
+  'data-filter="checkout-inspection"',
+  'value="checkout-inspection"',
+  "'complete-checkout-inspection'",
+  "if(a==='confirm-checkout-inspection')",
+]) {
+  if (!html.includes(contract)) throw new Error(`Checkout inspection contract missing: ${contract}`);
+}
+if (!html.includes('completeCheckoutInspectionForAttempt(id,attempt)')) throw new Error('Field completion does not clear checkout inspection.');
+console.log('Checkout inspection static contracts: passed');
+
+for (const contract of [
+  'id="scroll-to-top"',
+  'aria-label="맨 위로 이동"',
+  'const SCROLL_TOP_THRESHOLD=600',
+  'function scrollTopButtonShouldShow(

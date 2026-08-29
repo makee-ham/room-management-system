@@ -1,0 +1,3 @@
+function inspectionTemplateGroups(no,template,submission=currentSubmission(no),attempt=null) {
+        return taskZoneGroups({uploads:inspectionTemplateUploadItems(no,template,submission,attempt)});
+      }
