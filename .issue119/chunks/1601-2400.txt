@@ -1,0 +1,800 @@
+  1601 |       cursor: pointer;
+  1602 |       transition: transform .16s ease, background .16s ease, box-shadow .16s ease;
+  1603 |     }
+  1604 |     .scroll-top-button:hover { transform: translateY(-2px); background: var(--navy-2); box-shadow: 0 15px 32px rgba(20,36,55,.28); }
+  1605 |     .scroll-top-button:active { transform: translateY(0); }
+  1606 |     .scroll-top-button[hidden], body.modal-open .scroll-top-button { display: none !important; }
+  1607 |     .scroll-top-button .icon { width: 22px; height: 22px; }
+  1608 |     @media (max-width:720px) {
+  1609 |       .scroll-top-button {
+  1610 |         right: 14px;
+  1611 |         bottom: calc(var(--bottom-nav) + env(safe-area-inset-bottom) + 14px);
+  1612 |         width: 46px;
+  1613 |         min-width: 46px;
+  1614 |         height: 46px;
+  1615 |       }
+  1616 |     }
+  1617 |     @media (prefers-reduced-motion: reduce) {
+  1618 |       html { scroll-behavior: auto; }
+  1619 |       .scroll-top-button { transition: none; }
+  1620 |     }
+  1621 | 
+  1622 |   
+  1623 | 
+  1624 |     /* Event-based notification center */
+  1625 |     .notification-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+  1626 |     .notification-filter-group { display:flex; align-items:center; gap:6px; padding:4px; border:1px solid var(--line); border-radius:12px; background:var(--surface-soft); }
+  1627 |     .notification-filter-group .btn { min-height:38px; padding:7px 11px; }
+  1628 |     .notification-filter-group .btn[aria-pressed="true"] { color:#fff; background:var(--navy); border-color:var(--navy); }
+  1629 |     .notification-toolbar-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  1630 |     .notification-list { display:grid; gap:9px; }
+  1631 |     .notification-card { position:relative; display:grid; grid-template-columns:12px minmax(0,1fr) auto; align-items:start; gap:12px; width:100%; min-height:92px; padding:14px; border:1px solid var(--line); border-radius:13px; color:var(--ink); background:#fff; text-align:left; }
+  1632 |     .notification-card:hover { border-color:var(--line-strong); background:#fbfdff; }
+  1633 |     .notification-card.unread { border-color:#bfd4e5; background:#f5faff; box-shadow:inset 3px 0 0 var(--blue); }
+  1634 |     .notification-card.urgent { border-color:#efb5ba; background:var(--red-soft); box-shadow:inset 3px 0 0 var(--red); }
+  1635 |     .notification-dot { width:9px; height:9px; margin-top:7px; border-radius:50%; background:transparent; }
+  1636 |     .notification-card.unread .notification-dot { background:var(--blue); box-shadow:0 0 0 4px rgba(40,108,168,.12); }
+  1637 |     .notification-card.urgent .notification-dot { background:var(--red); box-shadow:0 0 0 4px rgba(207,51,64,.12); }
+  1638 |     .notification-copy { min-width:0; }
+  1639 |     .notification-title-line { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px; }
+  1640 |     .notification-title-line strong { font-size:14px; }
+  1641 |     .notification-copy p { margin:0 0 7px; color:var(--muted); font-size:13px; overflow-wrap:anywhere; }
+  1642 |     .notification-meta { display:flex; align-items:center; gap:7px; flex-wrap:wrap; color:var(--subtle); font-size:12px; }
+  1643 |     .notification-chip { display:inline-flex; align-items:center; min-height:24px; padding:2px 7px; border-radius:999px; color:var(--navy); background:#eef3f7; font-size:11px; font-weight:800; }
+  1644 |     .notification-chip.action { color:#8a5400; background:var(--amber-soft); }
+  1645 |     .notification-chip.handled { color:#17644d; background:var(--green-soft); }
+  1646 |     .notification-cta { display:flex; align-items:center; gap:5px; align-self:center; color:var(--navy); font-size:12px; font-weight:800; white-space:nowrap; }
+  1647 |     .notification-empty { padding:26px 18px; border:1px dashed var(--line-strong); border-radius:13px; background:var(--surface-soft); text-align:center; }
+  1648 |     .notification-empty h3 { margin-bottom:5px; }
+  1649 |     .notification-empty p { margin:0; color:var(--muted); font-size:13px; }
+  1650 |     .notification-activity { margin-top:18px; padding-top:16px; border-top:1px solid var(--line); }
+  1651 |     .notification-activity h3 { margin-bottom:4px; }
+  1652 |     .notification-activity > p { margin-bottom:10px; color:var(--muted); font-size:12px; }
+  1653 |     .notification-activity-list { display:grid; gap:7px; }
+  1654 |     .notification-activity-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; padding:10px 12px; border-radius:10px; background:var(--surface-soft); }
+  1655 |     .notification-activity-row strong { display:block; font-size:13px; }
+  1656 |     .notification-activity-row span { color:var(--muted); font-size:12px; }
+  1657 |     .notification-push-note { margin:0 0 12px; }
+  1658 |     /* All-maid lower account management */
+  1659 |     .maid-account-management { margin-top:4px; border-color:#efc3c7; background:#fffafa; }
+  1660 |     .maid-account-management .section-head { align-items:flex-start; }
+  1661 |     .maid-deactivation-gate { margin-top:12px; padding-top:12px; border-top:1px solid #efd5d7; }
+  1662 | 
+  1663 |     @media (max-width: 720px) {
+  1664 |       .notification-toolbar { align-items:stretch; }
+  1665 |       .notification-filter-group { width:100%; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
+  1666 |       .notification-toolbar-actions { width:100%; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+  1667 |       .notification-toolbar-actions .btn { width:100%; }
+  1668 |       .notification-card { grid-template-columns:10px minmax(0,1fr); padding:13px 12px; }
+  1669 |       .notification-cta { grid-column:2; justify-self:start; }
+  1670 |       .notification-activity-row { grid-template-columns:1fr; gap:3px; }
+  1671 |     }
+  1672 | 
+  1673 |   </style>
+  1674 | </head>
+  1675 | <body>
+  1676 |   <a class="skip-link" href="#main-content">본문으로 건너뛰기</a>
+  1677 |   <div id="app"></div>
+  1678 |   <div id="modal-root"></div>
+  1679 |   <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+  1680 |   <div id="assertive-live" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
+  1681 |   <button id="scroll-to-top" class="scroll-top-button" type="button" aria-label="맨 위로 이동" aria-hidden="true" title="맨 위로" hidden>
+  1682 |     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+  1683 |   </button>
+  1684 | 
+  1685 |   <script>
+  1686 |     (() => {
+  1687 |       'use strict';
+  1688 |       if('scrollRestoration' in history)history.scrollRestoration='manual';
+  1689 | 
+  1690 |       const ICONS = {
+  1691 |         home: '<path d="M3 10.8 12 3l9 7.8v9.1a1.1 1.1 0 0 1-1.1 1.1H4.1A1.1 1.1 0 0 1 3 19.9z"/><path d="M9 21v-7h6v7"/>',
+  1692 |         rooms: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h4M8 11h4M8 15h4M15 7h1M15 11h1M15 15h1"/>',
+  1693 |         users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+  1694 |         more: '<circle cx="5" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1" fill="currentColor" stroke="none"/>',
+  1695 |         bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>',
+  1696 |         briefcase: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2"/>',
+  1697 |         check: '<path d="m5 12 4 4L19 6"/>',
+  1698 |         wallet: '<path d="M4 5h14a2 2 0 0 1 2 2v12H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M16 11h6v5h-6a2.5 2.5 0 0 1 0-5z"/>',
+  1699 |         list: '<path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/>',
+  1700 |         calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+  1701 |         chevronLeft: '<path d="m15 18-6-6 6-6"/>',
+  1702 |         chevronRight: '<path d="m9 18 6-6-6-6"/>',
+  1703 |         x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  1704 |         alert: '<path d="M10.3 3.7 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.7a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
+  1705 |         clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  1706 |         upload: '<path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 21h14"/>',
+  1707 |         download: '<path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/>',
+  1708 |         refresh: '<path d="M20 7h-5V2M4 17h5v5"/><path d="M5.5 9A8 8 0 0 1 19 6.5L20 7M4 17l1-1a8 8 0 0 0 13.5-2"/>',
+  1709 |         shield: '<path d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5z"/><path d="m9 12 2 2 4-5"/>',
+  1710 |         key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l2 2M14 9l2 2"/>',
+  1711 |         camera: '<path d="M4 7h4l2-3h4l2 3h4a2 2 0 0 1 2 2v10H2V9a2 2 0 0 1 2-2z"/><circle cx="12" cy="13" r="4"/>',
+  1712 |         search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+  1713 |         mapPin: '<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0z"/><circle cx="12" cy="10" r="2.5"/>',
+  1714 |         filter: '<path d="M3 5h18l-7 8v6l-4 2v-8z"/>',
+  1715 |         arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  1716 |         arrowUp: '<path d="M12 19V5M6 11l6-6 6 6"/>',
+  1717 |         arrowDown: '<path d="M12 5v14M18 13l-6 6-6-6"/>',
+  1718 |         user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  1719 |         settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.6v-.1A1.7 1.7 0 0 0 8.5 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3V9.6h.1A1.7 1.7 0 0 0 4.6 8.5a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.1A1.7 1.7 0 0 0 15.5 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.1.4.3.7.6 1 .3.3.7.4 1.1.4h.1v4h-.1c-.4 0-.8.1-1.1.4-.3.3-.5.6-.6 1z"/>',
+  1720 |         logout: '<path d="M10 17l5-5-5-5M15 12H3"/><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>',
+  1721 |         candle: '<path d="M9 22V9h6v13M8 22h8M12 9c-2-2-1-5 1-7 1 2 3 3 2 5-.5 1-1.5 2-3 2z"/>',
+  1722 |         sync: '<path d="M20 11a8 8 0 0 0-14.8-4M4 3v4h4M4 13a8 8 0 0 0 14.8 4M20 21v-4h-4"/>',
+  1723 |         info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  1724 |         lock: '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>'
+  1725 |       };
+  1726 | 
+  1727 |       const icon = (name, cls = '') => `<svg class="icon ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name] || ICONS.more}</svg>`;
+  1728 |       const money = n => new Intl.NumberFormat('ko-KR').format(n) + '원';
+  1729 |       const esc = v => String(v ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  1730 |       const DEFAULT_CHECKIN_TIME='16:00', DEFAULT_CHECKOUT_TIME='11:00';
+  1731 |       const CALENDAR_WEEKDAYS=Object.freeze(['일','월','화','수','목','금','토']);
+  1732 |       const KR_HOLIDAY_FIXTURE=Object.freeze({
+  1733 |         jurisdiction:'KR',mode:'demo-static',coverage:['2026-01-01','2026-12-31'],verifiedAt:'2026-08-18',
+  1734 |         sources:Object.freeze([
+  1735 |           'https://www.kasa.go.kr/bbs/BBSMSTR_000000000010/view.do?nttId=B000000001860Pe2zT3',
+  1736 |           'https://www.law.go.kr/LSW/lsRvsDocListP.do?chrClsCd=010202&lsId=002404&lsRvsGubun=all',
+  1737 |           'https://www.nec.go.kr/site/nec/ex/bbs/View.do?bcIdx=289351&cbIdx=1104'
+  1738 |         ]),
+  1739 |         dates:Object.freeze({
+  1740 |           '2026-01-01':{name:'신정',kind:'national'},
+  1741 |           '2026-02-16':{name:'설날 연휴',kind:'traditional'},
+  1742 |           '2026-02-17':{name:'설날',kind:'traditional'},
+  1743 |           '2026-02-18':{name:'설날 연휴',kind:'traditional'},
+  1744 |           '2026-03-01':{name:'삼일절',kind:'national'},
+  1745 |           '2026-03-02':{name:'삼일절 대체공휴일',kind:'substitute'},
+  1746 |           '2026-05-01':{name:'노동절',kind:'national'},
+  1747 |           '2026-05-05':{name:'어린이날',kind:'national'},
+  1748 |           '2026-05-24':{name:'부처님오신날',kind:'traditional'},
+  1749 |           '2026-05-25':{name:'부처님오신날 대체공휴일',kind:'substitute'},
+  1750 |           '2026-06-03':{name:'제9회 전국동시지방선거',kind:'election'},
+  1751 |           '2026-06-06':{name:'현충일',kind:'national'},
+  1752 |           '2026-07-17':{name:'제헌절',kind:'national'},
+  1753 |           '2026-08-15':{name:'광복절',kind:'national'},
+  1754 |           '2026-08-17':{name:'광복절 대체공휴일',kind:'substitute'},
+  1755 |           '2026-09-24':{name:'추석 연휴',kind:'traditional'},
+  1756 |           '2026-09-25':{name:'추석',kind:'traditional'},
+  1757 |           '2026-09-26':{name:'추석 연휴',kind:'traditional'},
+  1758 |           '2026-10-03':{name:'개천절',kind:'national'},
+  1759 |           '2026-10-05':{name:'개천절 대체공휴일',kind:'substitute'},
+  1760 |           '2026-10-09':{name:'한글날',kind:'national'},
+  1761 |           '2026-12-25':{name:'기독탄신일',kind:'national'}
+  1762 |         })
+  1763 |       });
+  1764 | 
+  1765 |       function clockTime(value) {
+  1766 |         const matches=[...String(value||'').matchAll(/([01]\d|2[0-3]):([0-5]\d)/g)];
+  1767 |         return matches.length?matches[matches.length-1][0]:null;
+  1768 |       }
+  1769 |       function durationLabel(minutes) {
+  1770 |         const hours=Math.floor(minutes/60),remainder=minutes%60;
+  1771 |         return `${hours?`${hours}시간`:''}${hours&&remainder?' ':''}${remainder?`${remainder}분`:''}`||'0분';
+  1772 |       }
+  1773 |       function reservationTimeStatus(checkinValue,checkoutValue) {
+  1774 |         const checkin=clockTime(checkinValue),checkout=clockTime(checkoutValue);
+  1775 |         const earlyMinutes=checkin?Math.max(0,timeMinutes(DEFAULT_CHECKIN_TIME)-timeMinutes(checkin)):0;
+  1776 |         const lateMinutes=checkout?Math.max(0,timeMinutes(checkout)-timeMinutes(DEFAULT_CHECKOUT_TIME)):0;
+  1777 |         return {checkin,checkout,early:earlyMinutes>0,late:lateMinutes>0,earlyMinutes,lateMinutes,earlyOffset:durationLabel(earlyMinutes),lateOffset:durationLabel(lateMinutes)};
+  1778 |       }
+  1779 |       function roomReservationStatus(room) {
+  1780 |         return reservationTimeStatus(room?.reservationCheckinAt||room?.nextCheckinAt||room?.checkin,room?.reservationCheckoutAt||room?.nextCheckoutAt||room?.checkout);
+  1781 |       }
+  1782 |       function shiftClockTime(value,offsetMinutes) {
+  1783 |         const time=clockTime(value);
+  1784 |         if(!time)return null;
+  1785 |         const total=(timeMinutes(time)+offsetMinutes+1440)%1440;
+  1786 |         return `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`;
+  1787 |       }
+  1788 |       function reservationStatusText(status,kind) {
+  1789 |         if(kind==='checkin'&&!status.checkin)return '체크인 일정 없음';
+  1790 |         if(kind==='checkout'&&!status.checkout)return '체크아웃 일정 없음';
+  1791 |         if(kind==='checkin')return status.early?`얼리 체크인 · ${status.earlyOffset} · 체크인 ${status.checkin}`:`${status.checkin===DEFAULT_CHECKIN_TIME?'기본':'일반'} 체크인 · ${status.checkin||DEFAULT_CHECKIN_TIME}`;
+  1792 |         return status.late?`레이트 체크아웃 · ${status.lateOffset} · 체크아웃 ${status.checkout}`:`${status.checkout===DEFAULT_CHECKOUT_TIME?'기본':'일반'} 체크아웃 · ${status.checkout||DEFAULT_CHECKOUT_TIME}`;
+  1793 |       }
+  1794 | 
+  1795 |       const ROOM_TYPES = {
+  1796 |         standard: { name: '스탠다드', rate: 16000, minutes: 55, defaultGuestCount:2, maxGuestCount:2, rateSource:'객실현황(26.08) · 8월 시트' },
+  1797 |         premium: { name: '프리미어', rate: 20000, minutes: 65, defaultGuestCount:2, maxGuestCount:3, rateSource:'객실현황(26.08) · 8월 시트' },
+  1798 |         oceanPremium: { name: '파셜 오션뷰', rate: 20000, minutes: 70, defaultGuestCount:2, maxGuestCount:4, rateSource:'객실현황(26.08) · 8월 시트' },
+  1799 |         oceanFamily: { name: '패밀리 투룸', rate: 30000, minutes: 80, defaultGuestCount:4, maxGuestCount:6, rateSource:'객실현황(26.08) · 8월 시트' }
+  1800 |       };
+  1801 |       const ROOM_CATALOG_SOURCE = '객실현황(26.08) · 8월 시트';
+  1802 |       const ROOM_ELEVATOR_SOURCE = '2026-08-18 사용자 제공 건물 지도';
+  1803 |       const ROOM_STATUS_HOLDS = {'762':'현재 투숙 상태 확인 필요'};
+  1804 |       const INITIAL_OCCUPIED_ROOMS = Object.freeze({
+  1805 |         '553':{startedAt:'2025-11-29'},'629':{startedAt:'2025-05-01'},'139':{startedAt:null},
+  1806 |         '358':{startedAt:'2026-03-17'},'359':{startedAt:'2026-03-17'},'449':{startedAt:'2026-03-17'},
+  1807 |         '458':{startedAt:'2026-03-23'},'461':{startedAt:'2026-03-17'},'558':{startedAt:'2026-06-01'},
+  1808 |         '559':{startedAt:'2026-03-17'},'628':{startedAt:'2026-03-31'}
+  1809 |       });
+  1810 |       const ROOM_CATALOG = [
+  1811 |         ['350','standard','C'],['352','standard','C'],['516','standard','A'],['552','standard','C'],['556','standard','C'],['623','standard','A'],['652','standard','C'],['657','standard','B'],['660','standard','B'],['662','standard','B'],['720','standard','A'],['723','standard','A'],['726','standard','A'],['729','standard','B'],['750','standard','C'],['752','standard','C'],['753','standard','C'],['756','standard','C'],['760','standard','B'],['762','standard','B'],['553','standard','C'],['629','standard','B'],
+  1812 |         ['117','premium','A'],['135','premium','C'],['136','premium','C'],['240','premium','C'],['332','premium','B'],['454','premium','C'],['455','premium','C'],['459','premium','B'],['527','premium','A'],['528','premium','B'],['531','premium','B'],['534','premium','C'],['540','premium','C'],['541','premium','C'],['549','premium','C'],['554','premium','C'],['555','premium','C'],['561','premium','B'],['603','premium','B'],['621','premium','A'],['624','premium','A'],['634','premium','C'],['635','premium','C'],['649','premium','C'],['651','premium','C'],['654','premium','C'],['655','premium','C'],['658','premium','B'],['661','premium','B'],['721','premium','A'],['722','premium','A'],['724','premium','A'],['727','premium','A'],['730','premium','B'],['731','premium','B'],['732','premium','B'],['749','premium','C'],['751','premium','C'],['754','premium','C'],['755','premium','C'],['759','premium','B'],['761','premium','B'],['139','premium','C'],['358','premium','B'],['359','premium','B'],['449','premium','C'],['458','premium','B'],['461','premium','B'],['558','premium','B'],['559','premium','B'],['628','premium','B'],
+  1813 |         ['536','oceanPremium','C'],['639','oceanPremium','C'],['640','oceanPremium','C'],['641','oceanPremium','C'],['701','oceanPremium','B'],['704','oceanPremium','B'],['706','oceanPremium','A'],['707','oceanPremium','A'],['735','oceanPremium','C'],['738','oceanPremium','C'],['739','oceanPremium','C'],['740','oceanPremium','C'],['741','oceanPremium','C'],
+  1814 |         ['142','oceanFamily','C'],['211','oceanFamily','A'],['314','oceanFamily','A'],['410','oceanFamily','A'],['413','oceanFamily','A'],['415','oceanFamily','A'],['444','oceanFamily','C'],['509','oceanFamily','A'],['510','oceanFamily','A'],['511','oceanFamily','A'],['512','oceanFamily','A'],['514','oceanFamily','A'],['542','oceanFamily','C'],['544','oceanFamily','C'],['546','oceanFamily','C'],['608','oceanFamily','A'],['609','oceanFamily','A'],['610','oceanFamily','A'],['611','oceanFamily','A'],['612','oceanFamily','A'],['637','oceanFamily','C'],['645','oceanFamily','C'],['646','oceanFamily','C'],['647','oceanFamily','C'],['648','oceanFamily','C'],['708','oceanFamily','A'],['709','oceanFamily','A'],['712','oceanFamily','A'],['737','oceanFamily','C'],['743','oceanFamily','C'],['744','oceanFamily','C'],['745','oceanFamily','C'],['746','oceanFamily','C'],['747','oceanFamily','C'],['748','oceanFamily','C']
+  1815 |       ];
+  1816 |       const DEMO_ROOM_OVERRIDES = {
+  1817 |         '117':{checkout:'13:00',checkin:'16:00',assignee:'김민지1',occupancy:'occupied',cleaning:'scheduled',actualCheckinAt:'2026-08-14T16:00',plannedCheckoutAt:'2026-08-15T13:00',currentStayReservationId:'reservation-demo-117'},
+  1818 |         '350':{checkout:'완료',checkin:'15:00',assignee:'이서연',occupancy:'vacant',cleaning:'inspection',nextCheckoutAt:'2026-08-17T11:00',nextCheckinAt:'2026-08-17T15:00'},
+  1819 |         '332':{checkout:'11:00 완료',checkin:'16:00',assignee:'김민지1',occupancy:'vacant',cleaning:'cleaning',nextCheckoutAt:'2026-08-17T13:00',nextCheckinAt:'2026-08-17T16:00'},
+  1820 |         '528':{checkout:'10:00 완료',checkin:'14:00',assignee:'김민지1',occupancy:'vacant',cleaning:'upload'},
+  1821 |         '536':{checkout:'완료',checkin:'17:00',assignee:'김민지2',occupancy:'vacant',cleaning:'approved'},
+  1822 |         '639':{checkout:'11:00 완료',checkin:'16:00',assignee:'이서연',occupancy:'vacant',cleaning:'inspection',nextCheckoutAt:'2026-08-17T11:00',nextCheckinAt:'2026-08-17T16:00'},
+  1823 |         '142':{checkout:'연박 투숙',checkin:'투숙 중',assignee:'미정',occupancy:'occupied',actualCheckinAt:'2026-08-14T16:00',plannedCheckoutAt:'2026-08-18T11:00',currentStayReservationId:'reservation-demo-142',stayover:true,cleaning:'stayover-requested',stayoverRequest:{date:'2026-08-17',accessStart:'13:00',requestDue:'14:30',accessEnd:'15:00'}},
+  1824 |         '211':{checkout:'8/16 11:00',checkin:'8/15 16:00',assignee:'미정',occupancy:'vacant',cleaning:'future',nextCheckoutAt:'2026-08-17T11:00',nextCheckinAt:'2026-08-17T16:00'},
+  1825 |         '352':{checkout:'없음',checkin:'예정 없음',assignee:'미정',occupancy:'vacant',cleaning:'unassigned'}
+  1826 |       };
+  1827 |       const ROOM_BASELINE = ROOM_CATALOG.map(([no,type,elevator])=>{
+  1828 |         const occupiedSeed=INITIAL_OCCUPIED_ROOMS[no],hold=ROOM_STATUS_HOLDS[no];
+  1829 |         return {
+  1830 |           no,type,elevator,catalogSource:'2026-08',checkout:occupiedSeed?'예정 미입력':'정보 없음',checkin:occupiedSeed?'투숙 중':'정보 없음',assignee:'미정',
+  1831 |           catalogStatus:hold?'hold':'available',occupancy:occupiedSeed?'occupied':'vacant',cleaning:'idle',dataIssue:hold||null,
+  1832 |           occupancySeedSource:occupiedSeed?'8월 객실현황 초기값':null,...(DEMO_ROOM_OVERRIDES[no]||{})
+  1833 |         };
+  1834 |       });
+  1835 |       const cloneRoomRecord=room=>JSON.parse(JSON.stringify(room));
+  1836 |       const ROOMS = ROOM_BASELINE.map(cloneRoomRecord);
+  1837 |       function resetRoomCatalogState(){ROOMS.splice(0,ROOMS.length,...ROOM_BASELINE.map(cloneRoomRecord));}
+  1838 |       function guestPolicyForRoom(roomNo) {
+  1839 |         const room=ROOMS.find(item=>item.no===String(roomNo)),typeId=room?.type||'standard',type=ROOM_TYPES[typeId]||ROOM_TYPES.standard;
+  1840 |         return {typeId,defaultGuestCount:type.defaultGuestCount,maxGuestCount:type.maxGuestCount};
+  1841 |       }
+  1842 |       function reservationGuestCount(reservation) {
+  1843 |         const policy=guestPolicyForRoom(reservation?.room),value=Number(reservation?.guestCount);
+  1844 |         return Number.isInteger(value)&&value>=1?value:policy.defaultGuestCount;
+  1845 |       }
+  1846 |       function guestCountLabel(value) { return Number.isInteger(Number(value))&&Number(value)>=1?`${Number(value)}명`:'인원 미기록'; }
+  1847 |       function reservationHasExtraGuests(reservation) {
+  1848 |         return !!reservation&&reservationGuestCount(reservation)>guestPolicyForRoom(reservation.room).defaultGuestCount;
+  1849 |       }
+  1850 |       function roomHasExtraGuests(no) {
+  1851 |         const reservation=activeReservationsFor(state,String(no)).find(item=>!reservationRecordIsPast(item))||null;
+  1852 |         return reservationHasExtraGuests(reservation);
+  1853 |       }
+  1854 |       const INITIAL_RESERVATIONS = Object.freeze([
+  1855 |         {id:'reservation-demo-117',room:'117',checkInAt:'2026-08-14T16:00',checkOutAt:'2026-08-15T13:00',guestCount:2,source:'card',status:'active'},
+  1856 |         {id:'reservation-demo-142',room:'142',checkInAt:'2026-08-14T16:00',checkOutAt:'2026-08-18T11:00',source:'card',status:'active'},
+  1857 |         {id:'reservation-demo-350',room:'350',checkInAt:'2026-08-16T15:00',checkOutAt:'2026-08-17T11:00',source:'card',status:'active'},
+  1858 |         {id:'reservation-demo-350-next',room:'350',checkInAt:'2026-08-17T15:00',checkOutAt:'2026-08-18T11:00',source:'grid',status:'active'},
+  1859 |         {id:'reservation-demo-332',room:'332',checkInAt:'2026-08-16T16:00',checkOutAt:'2026-08-17T13:00',source:'card',status:'active'},
+  1860 |         {id:'reservation-demo-639',room:'639',checkInAt:'2026-08-16T16:00',checkOutAt:'2026-08-17T11:00',source:'card',status:'active'},
+  1861 |         {id:'reservation-demo-211',room:'211',checkInAt:'2026-08-16T16:00',checkOutAt:'2026-08-17T11:00',source:'card',status:'active'},
+  1862 |         {id:'reservation-demo-516-a',room:'516',checkInAt:'2026-08-17T16:00',checkOutAt:'2026-08-18T11:00',source:'grid',status:'active'},
+  1863 |         {id:'reservation-demo-516-b',room:'516',checkInAt:'2026-08-18T16:00',checkOutAt:'2026-08-19T11:00',source:'grid',status:'active'},
+  1864 |         {id:'reservation-demo-516-c',room:'516',checkInAt:'2026-08-19T16:00',checkOutAt:'2026-08-22T11:00',source:'grid',status:'active'},
+  1865 |         {id:'reservation-demo-516-d',room:'516',checkInAt:'2026-08-22T16:00',checkOutAt:'2026-08-23T11:00',source:'grid',status:'active'},
+  1866 |         {id:'reservation-demo-552-attention',room:'552',checkInAt:'2026-08-17T14:00',checkOutAt:'2026-08-19T11:00',source:'grid',status:'active'},
+  1867 |         {id:'reservation-demo-552',room:'552',checkInAt:'2026-08-24T16:00',checkOutAt:'2026-08-25T11:00',source:'grid',status:'active'},
+  1868 |         {id:'reservation-demo-556',room:'556',checkInAt:'2026-08-17T16:00',checkOutAt:'2026-08-21T11:00',source:'grid',status:'active'},
+  1869 |         {id:'reservation-demo-623',room:'623',checkInAt:'2026-08-15T16:00',checkOutAt:'2026-08-16T11:00',source:'grid',status:'active'},
+  1870 |         {id:'reservation-demo-652',room:'652',checkInAt:'2026-08-15T16:00',checkOutAt:'2026-08-18T11:00',source:'grid',status:'active'},
+  1871 |         {id:'reservation-demo-657',room:'657',checkInAt:'2026-08-20T16:00',checkOutAt:'2026-08-21T11:00',source:'grid',status:'active'},
+  1872 |         {id:'reservation-demo-660',room:'660',checkInAt:'2026-08-21T16:00',checkOutAt:'2026-08-22T11:00',source:'grid',status:'active'},
+  1873 |         {id:'reservation-demo-720',room:'720',checkInAt:'2026-08-16T16:00',checkOutAt:'2026-08-19T11:00',source:'grid',status:'active'},
+  1874 |         {id:'reservation-demo-723',room:'723',checkInAt:'2026-08-16T16:00',checkOutAt:'2026-08-20T11:00',source:'grid',status:'active'},
+  1875 |         {id:'reservation-demo-726-a',room:'726',checkInAt:'2026-08-15T16:00',checkOutAt:'2026-08-16T11:00',source:'grid',status:'active'},
+  1876 |         {id:'reservation-demo-726-b',room:'726',checkInAt:'2026-08-22T16:00',checkOutAt:'2026-08-23T11:00',source:'grid',status:'active'},
+  1877 |         {id:'reservation-demo-729',room:'729',checkInAt:'2026-08-15T16:00',checkOutAt:'2026-08-17T11:00',source:'grid',status:'active'},
+  1878 |         {id:'reservation-demo-752',room:'752',checkInAt:'2026-08-16T16:00',checkOutAt:'2026-08-19T11:00',source:'grid',status:'active'},
+  1879 |         {id:'reservation-demo-753-a',room:'753',checkInAt:'2026-08-15T16:00',checkOutAt:'2026-08-16T11:00',source:'grid',status:'active'},
+  1880 |         {id:'reservation-demo-753-b',room:'753',checkInAt:'2026-08-19T16:00',checkOutAt:'2026-08-20T11:00',source:'grid',status:'active'},
+  1881 |         {id:'reservation-demo-756',room:'756',checkInAt:'2026-08-15T16:00',checkOutAt:'2026-08-17T11:00',source:'grid',status:'active'},
+  1882 |         {id:'reservation-demo-cross-month-516',room:'516',checkInAt:'2026-08-31T16:00',checkOutAt:'2026-09-03T11:00',guestCount:2,source:'grid',status:'active'},
+  1883 |         {id:'reservation-demo-cross-month-623',room:'623',checkInAt:'2026-08-31T16:00',checkOutAt:'2026-09-01T11:00',guestCount:2,source:'grid',status:'active'}
+  1884 |       ]);
+  1885 |       function kstTodayIso(now=new Date()) {
+  1886 |         const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now).filter(part=>part.type!=='literal').map(part=>[part.type,part.value]));
+  1887 |         return `${parts.year}-${parts.month}-${parts.day}`;
+  1888 |       }
+  1889 | 
+  1890 |       const cloneReservation=reservation=>Object.hasOwn(reservation,'guestCount')?{...reservation}:{...reservation,guestCount:guestPolicyForRoom(reservation.room).defaultGuestCount};
+  1891 |       function initialReservationState(){return INITIAL_RESERVATIONS.map(cloneReservation);}
+  1892 |       function initialReservationDrafts(){return INITIAL_RESERVATIONS.map(reservation=>({id:`checkout-${reservation.id}`,room:reservation.room,kind:'퇴실 청소',created:'예약 연동',date:reservation.checkOutAt.slice(0,10),source:'reservation',reservationId:reservation.id,guestCount:reservationGuestCount(reservation),visibility:'private'}));}
+  1893 |       function activeReservationsFor(targetState,roomNo='') {
+  1894 |         return (targetState?.reservations||[]).filter(reservation=>reservation.status==='active'&&(!roomNo||reservation.room===String(roomNo))).sort((left,right)=>left.checkInAt.localeCompare(right.checkInAt)||left.id.localeCompare(right.id));
+  1895 |       }
+  1896 |       function reservationSevenDayWindow(anchorDate=state.selectedDate) {
+  1897 |         const startDate=weekStartIso(String(anchorDate||state.selectedDate).slice(0,10)),endDate=shiftIsoDate(startDate,6),endExclusive=shiftIsoDate(startDate,7);
+  1898 |         return {startDate,endDate,endExclusive,startAt:`${startDate}T00:00`,endAt:`${endExclusive}T00:00`};
+  1899 |       }
+  1900 |       function reservationBucketsForRoom(targetState,roomNo,anchorDate=targetState?.selectedDate||state.selectedDate) {
+  1901 |         const window=reservationSevenDayWindow(anchorDate),records=(targetState?.reservations||[]).filter(reservation=>reservation.room===String(roomNo)),active=records.filter(reservation=>reservation.status==='active').sort((left,right)=>left.checkInAt.localeCompare(right.checkInAt)||left.id.localeCompare(right.id));
+  1902 |         const weekRecords=records.filter(reservation=>reservation.checkInAt<window.endAt&&reservation.checkOutAt>window.startAt).sort((left,right)=>left.checkInAt.localeCompare(right.checkInAt)||left.id.localeCompare(right.id)),withinWeek=weekRecords.filter(reservation=>reservation.status==='active'),future=active.filter(reservation=>reservation.checkInAt>=window.endAt),history=records.filter(reservation=>reservation.status!=='active'||reservation.checkOutAt<=window.startAt).sort((left,right)=>(right.cancelledAt||right.updatedAt||right.checkOutAt).localeCompare(left.cancelledAt||left.updatedAt||left.checkOutAt)||right.id.localeCompare(left.id));
+  1903 |         return {window,records,active,weekRecords,withinWeek,future,history};
+  1904 |       }
+  1905 |       function reservationCurrentMoment() { return `${state.selectedDate}T${state.time}`; }
+  1906 |       function reservationRecordIsPast(reservation) {
+  1907 |         if(!reservation)return false;
+  1908 |         if(reservation.status!=='active')return true;
+  1909 |         const room=ROOMS.find(item=>item.no===reservation.room);
+  1910 |         if(room?.occupancy==='occupied'&&currentOccupiedReservation(room)?.id===reservation.id)return false;
+  1911 |         return reservation.checkOutAt<=reservationCurrentMoment();
+  1912 |       }
+  1913 |       function reservationWeekIsPast(start=state.reservationWeekStart) { return weekStartIso(String(start||state.selectedDate).slice(0,10))<weekStartIso(state.selectedDate); }
+  1914 |       function reservationHistoryStatus(reservation) {
+  1915 |         if(reservation?.status==='cancelled')return '취소됨';
+  1916 |         if(reservation?.status==='checked-out')return '체크아웃 완료';
+  1917 |         return '지난 예약';
+  1918 |       }
+  1919 |       function reservationNights(reservation) {
+  1920 |         if(!reservation)return 0;
+  1921 |         const start=dateObject(reservation.checkInAt.slice(0,10)),end=dateObject(reservation.checkOutAt.slice(0,10));
+  1922 |         return Math.max(1,Math.round((end-start)/86400000));
+  1923 |       }
+  1924 |       function roomStayProgress(room,reservations=activeReservationsFor(state,room?.no||'')) {
+  1925 |         if(room?.occupancy!=='occupied')return null;
+  1926 |         const pivot=`${state.selectedDate}T${state.time}`,reservation=reservations.find(item=>item.checkInAt<=pivot&&pivot<item.checkOutAt),total=reservationNights(reservation);
+  1927 |         if(!reservation||total<2)return null;
+  1928 |         const day=Math.max(1,Math.min(total,Math.round((dateObject(state.selectedDate)-dateObject(reservation.checkInAt.slice(0,10)))/86400000)+1));
+  1929 |         return {day,total,reservationId:reservation.id,label:`연박 ${day}/${total}일차`};
+  1930 |       }
+  1931 |       function reservationContainsNight(reservation,isoDate) {
+  1932 |         return reservation?.status==='active'&&reservation.checkInAt.slice(0,10)<=isoDate&&isoDate<reservation.checkOutAt.slice(0,10);
+  1933 |       }
+  1934 |       function reservationOverlaps(roomNo,checkInAt,checkOutAt,ignoreId='') {
+  1935 |         return activeReservationsFor(state,roomNo).find(reservation=>reservation.id!==ignoreId&&checkInAt<reservation.checkOutAt&&checkOutAt>reservation.checkInAt)||null;
+  1936 |       }
+  1937 |       function reservationFingerprint(reservation) {
+  1938 |         return reservation?[reservation.id,reservation.room,reservation.checkInAt,reservation.checkOutAt,reservationGuestCount(reservation),reservation.status,reservation.updatedAt||''].join('|'):'';
+  1939 |       }
+  1940 |       function reservationTurnoverSchedule(reservation,reservations=activeReservationsFor(state,reservation?.room||'')) {
+  1941 |         if(!reservation)return {nextReservationId:null,checkin:DEFAULT_CHECKIN_TIME,deadline:'15:30'};
+  1942 |         const nextReservation=reservations.find(candidate=>candidate.id!==reservation.id&&candidate.checkInAt>=reservation.checkOutAt),sameDay=nextReservation?.checkInAt.slice(0,10)===reservation.checkOutAt.slice(0,10),checkin=sameDay?nextReservation.checkInAt.slice(11,16):DEFAULT_CHECKIN_TIME;
+  1943 |         return {nextReservationId:sameDay?nextReservation.id:null,checkin,deadline:shiftClockTime(checkin,-30)||'15:30'};
+  1944 |       }
+  1945 |       function operationalMoment(targetState=state) { return `${targetState.selectedDate||'2026-08-15'}T${targetState.time||'00:00'}`; }
+  1946 |       function reservationAtOperationalMoment(roomNo,targetState=state) {
+  1947 |         const moment=operationalMoment(targetState);
+  1948 |         return activeReservationsFor(targetState,String(roomNo)).find(reservation=>reservation.checkInAt<=moment&&moment<reservation.checkOutAt)||null;
+  1949 |       }
+  1950 |       function latestCheckedOutReservationForRoom(roomNo,targetState=state) {
+  1951 |         const moment=operationalMoment(targetState);
+  1952 |         return (targetState.reservations||[]).filter(reservation=>reservation.room===String(roomNo)&&reservation.status!=='cancelled'&&reservation.checkOutAt<=moment).sort((left,right)=>right.checkOutAt.localeCompare(left.checkOutAt)||right.id.localeCompare(left.id))[0]||null;
+  1953 |       }
+  1954 |       function checkoutCleaningCompletedForReservation(reservation,targetState=state) {
+  1955 |         if(!reservation)return false;
+  1956 |         const attempts=Object.values(targetState.cleaningAttempts||{}).filter(attempt=>attempt?.room===reservation.room&&attempt.kind==='퇴실 청소'&&(attempt.reservationIdSnapshot===reservation.id||targetState.assignments?.[attempt.workTargetId]?.committedTarget?.reservationId===reservation.id));
+  1957 |         if(attempts.some(attempt=>!!attempt.completedAt||['upload','submitted','approved','rejected'].includes(attempt.status)))return true;
+  1958 |         return Object.values(targetState.cleaningSubmissions||{}).some(submission=>submission?.room===reservation.room&&submission.reservationIdSnapshot===reservation.id);
+  1959 |       }
+  1960 |       function roomCheckoutCleaningDue(no,targetState=state) {
+  1961 |         if(reservationAtOperationalMoment(no,targetState))return false;
+  1962 |         const reservation=latestCheckedOutReservationForRoom(no,targetState);
+  1963 |         return !!reservation&&!checkoutCleaningCompletedForReservation(reservation,targetState);
+  1964 |       }
+  1965 |       function checkoutInspectionRecordFor(reservationId,targetState=state) { return reservationId?targetState.checkoutInspections?.[reservationId]||null:null; }
+  1966 |       function checkoutInspectionReservationForRoom(no,targetState=state) {
+  1967 |         if(reservationAtOperationalMoment(no,targetState))return null;
+  1968 |         return latestCheckedOutReservationForRoom(no,targetState);
+  1969 |       }
+  1970 |       function checkoutInspectionPendingForReservation(reservation,targetState=state) {
+  1971 |         return !!reservation&&!checkoutInspectionRecordFor(reservation.id,targetState)&&!checkoutCleaningCompletedForReservation(reservation,targetState);
+  1972 |       }
+  1973 |       function checkoutInspectionPending(no,targetState=state) { return checkoutInspectionPendingForReservation(checkoutInspectionReservationForRoom(String(no),targetState),targetState); }
+  1974 |       function checkoutInspectionCompletion(no,targetState=state) {
+  1975 |         const reservation=checkoutInspectionReservationForRoom(String(no),targetState);if(!reservation)return null;
+  1976 |         const record=checkoutInspectionRecordFor(reservation.id,targetState);if(record)return record;
+  1977 |         if(checkoutCleaningCompletedForReservation(reservation,targetState))return {id:null,reservationId:reservation.id,room:reservation.room,checkoutAt:reservation.checkOutAt,completedAt:null,method:'cleaning-derived',attemptId:null};
+  1978 |         return null;
+  1979 |       }
+  1980 |       function completeCheckoutInspection(no,{method='manual',attempt=null}={}) {
+  1981 |         no=String(no);const reservation=attempt?.reservationIdSnapshot?(state.reservations||[]).find(item=>item.id===attempt.reservationIdSnapshot&&item.room===no)||null:checkoutInspectionReservationForRoom(no);
+  1982 |         if(!reservation||reservation.checkOutAt>operationalMoment(state))return {error:'체크아웃이 완료된 예약을 찾을 수 없습니다.'};
+  1983 |         const existing=checkoutInspectionRecordFor(reservation.id);if(existing)return {record:existing,created:false,duplicate:true};
+  1984 |         if(method==='cleaning'&&attempt&&(attempt.kind!=='퇴실 청소'||attempt.reservationIdSnapshot!==reservation.id))return {error:'해당 체크아웃 예약의 퇴실 청소가 아닙니다.'};
+  1985 |         if(method==='manual'&&!checkoutInspectionPendingForReservation(reservation))return {error:'이미 청소 완료로 점검이 대체되었거나 점검 대상이 아닙니다.'};
+  1986 |         const completedAt=attempt?.completedAt||`${state.selectedDate} ${state.time}`,record={id:`checkout-inspection-${reservation.id}`,reservationId:reservation.id,room:no,checkoutAt:reservation.checkOutAt,completedAt,method:method==='cleaning'?'cleaning':'manual',attemptId:attempt?.id||null,completedBy:method==='cleaning'?(attempt?.performerName||'메이드'):'관리자'};
+  1987 |         if(!state.checkoutInspections)state.checkoutInspections={};state.checkoutInspections[reservation.id]=record;appendEvent(`${no}호 퇴실점검 완료`,`${reservationMomentLabel(reservation.checkOutAt)} 퇴실 · ${record.method==='cleaning'?'퇴실 청소 현장 완료로 점검 대체':`관리자 점검 완료`} · 예약 ${reservation.id}`,{maidIds:attempt?.performerId?[attempt.performerId]:[],roomId:no,attemptId:attempt?.id||null,dedupeKey:`checkout-inspection:${reservation.id}`});assertNoDuplicateDurableRecords(state);return {record,created:true,duplicate:false};
+  1988 |       }
+  1989 |       function completeCheckoutInspectionForAttempt(no,attempt) {
+  1990 |         if(!attempt||attempt.kind!=='퇴실 청소'||!attempt.completedAt||!attempt.reservationIdSnapshot)return null;
+  1991 |         return completeCheckoutInspection(no,{method:'cleaning',attempt});
+  1992 |       }
+  1993 |       function renderCheckoutInspectionPanel(no) {
+  1994 |         const reservation=checkoutInspectionReservationForRoom(no);if(!reservation)return '';
+  1995 |         const pending=checkoutInspectionPendingForReservation(reservation),completion=checkoutInspectionCompletion(no),method=completion?.method;
+  1996 |         return `<section class="card card-pad" aria-labelledby="checkout-inspection-${no}" data-checkout-inspection-room="${no}" data-checkout-inspection-pending="${pending}"><div class="section-head"><div><h3 id="checkout-inspection-${no}">퇴실점검</h3><p class="audit-note">고객 퇴실 뒤 객실 상태를 청소 전에 확인하는 운영 단계입니다.</p></div>${statusBadge(pending?'점검 대상':'점검 완료',pending?'amber':'green')}</div><div class="info-grid"><div class="info-item"><span>대상 예약</span><strong>${esc(reservation.id)}</strong></div><div class="info-item"><span>체크아웃</span><strong>${esc(reservationMomentLabel(reservation.checkOutAt))}</strong></div><div class="info-item"><span>완료 방식</span><strong>${pending?'미완료':method==='manual'?'관리자 점검 완료':'퇴실 청소 완료로 대체'}</strong></div></div>${pending?`<div class="notice notice-warning" style="margin:12px 0 0"><div style="min-width:0;flex:1"><strong>청소 전 퇴실점검이 남아 있습니다.</strong><br>직접 점검 완료를 기록하거나 해당 예약의 퇴실 청소를 현장 완료하면 자동으로 해제됩니다.</div>${button('퇴실점검 완료','complete-checkout-inspection','primary',`data-id="${no}" ${isLocked()?'disabled':''}`)}</div>`:`<div class="notice notice-success" style="margin:12px 0 0"><div><strong>퇴실점검 상태가 해제되었습니다.</strong><br>${esc(method==='manual'?'관리자가 점검 완료를 기록했습니다.':'퇴실 청소 현장 완료가 점검을 대체했습니다.')}</div></div>`}</section>`;
+  1997 |       }
+  1998 |       function renderCheckoutInspectionQueueSummary() {
+  1999 |         const rooms=ROOMS.filter(room=>checkoutInspectionPending(room.no));if(!rooms.length)return '';
+  2000 |         return `<section class="notice notice-warning" aria-label="퇴실점검 대상 요약"><div style="min-width:0;flex:1"><strong>퇴실점검 대상 ${rooms.length}개 객실</strong><br>고객 퇴실 후 청소 전 확인이 남은 객실입니다. 청소가 현장 완료되면 자동으로 목록에서 빠집니다.</div><button class="btn btn-outline" type="button" data-action="filter-rooms" data-filter="checkout-inspection">대상 객실 보기</button></section>`;
+  2001 |       }
+  2002 | 
+  2003 |       function projectReservationState(targetState,roomNos=null) {
+  2004 |         const selected=roomNos?new Set([].concat(roomNos).map(String)):null,moment=operationalMoment(targetState);
+  2005 |         ROOMS.forEach(room=>{
+  2006 |           if(selected&&!selected.has(room.no))return;
+  2007 |           const reservations=activeReservationsFor(targetState,room.no),current=reservations.find(item=>item.checkInAt<=moment&&moment<item.checkOutAt)||null,future=reservations.find(item=>item.checkInAt>moment)||null,completed=(targetState.reservations||[]).filter(item=>item.room===room.no&&item.status!=='cancelled'&&item.checkOutAt<=moment).sort((left,right)=>right.checkOutAt.localeCompare(left.checkOutAt)||right.id.localeCompare(left.id))[0]||null,projected=current||future||completed||null;
+  2008 |           if(projected){room.reservationCheckinAt=projected.checkInAt;room.reservationCheckoutAt=projected.checkOutAt;room.nextCheckinAt=projected.checkInAt;room.nextCheckoutAt=projected.checkOutAt;room.reservationProjectionId=projected.id;room.checkin=projected.checkInAt.slice(11,16);room.checkout=projected.checkOutAt.slice(11,16);}else if(room.reservationProjectionId){delete room.reservationCheckinAt;delete room.reservationCheckoutAt;delete room.nextCheckinAt;delete room.nextCheckoutAt;delete room.reservationProjectionId;room.checkin='정보 없음';room.checkout='정보 없음';}
+  2009 |           const override=room.occupancyOverride;
+  2010 |           if(override==='occupied'&&!current){room.occupancy='occupied';room.checkin=room.actualCheckinAt?.slice(11,16)||'투숙 중';room.checkout=(room.plannedCheckoutAt||room.reservationCheckoutAt||'예정 미입력').slice?.(11,16)||'예정 미입력';return;}
+  2011 |           if(override==='vacant'&&!current){room.occupancy='vacant';delete room.actualCheckinAt;delete room.plannedCheckoutAt;delete room.currentStayReservationId;if(completed)room.actualCheckoutAt=completed.checkOutAt;return;}
+  2012 |           if(current){room.occupancy='occupied';room.actualCheckinAt=current.checkInAt;room.plannedCheckoutAt=current.checkOutAt;room.currentStayReservationId=current.id;delete room.actualCheckoutAt;room.checkin=current.checkInAt.slice(11,16);room.checkout=current.checkOutAt.slice(11,16);return;}
+  2013 |           room.occupancy='vacant';delete room.actualCheckinAt;delete room.plannedCheckoutAt;delete room.currentStayReservationId;if(completed)room.actualCheckoutAt=completed.checkOutAt;else delete room.actualCheckoutAt;
+  2014 |         });
+  2015 |       }
+  2016 |       function roomDataIssue(no){return ROOMS.find(room=>room.no===String(no))?.dataIssue||'';}
+  2017 |       function assignmentRoomHoldReason(no,targetState=state){
+  2018 |         const roomNo=String(no),dataIssue=roomDataIssue(roomNo);if(dataIssue)return dataIssue;
+  2019 |         if(targetState?.roomStopped?.[roomNo])return targetState.roomStopReasons?.[roomNo]||'운영 중지 · 청소 배정 제외';
+  2020 |         const candleCount=Number(targetState?.candles?.[roomNo]||0);if(candleCount>0)return `촛불 ${candleCount}개 회수 후 배정 가능`;
+  2021 |         return '';
+  2022 |       }
+  2023 |       function roomIsOnHold(no){return !!assignmentRoomHoldReason(no);}
+  2024 |       const MAIDS = [
+  2025 |         { id:'m1', name:'김민지1', phone:'•••• 4821', assigned:2, active:'332호 청소 중' },
+  2026 |         { id:'m2', name:'김민지2', phone:'•••• 1174', assigned:1, active:'업무 대기' },
+  2027 |         { id:'m3', name:'이서연', phone:'•••• 9032', assigned:2, active:'528호 업로드 대기' },
+  2028 |         { id:'m4', name:'박소영', phone:'•••• 6248', assigned:0, active:'업무 대기' },
+  2029 |         { id:'m5', name:'최은지', phone:'•••• 3516', assigned:0, active:'업무 대기' },
+  2030 |         { id:'m6', name:'정다현', phone:'•••• 8072', assigned:0, active:'업무 대기' },
+  2031 |         { id:'m7', name:'오세라', phone:'•••• 1940', assigned:0, active:'업무 대기' },
+  2032 |         { id:'m8', name:'한지민', phone:'•••• 7305', assigned:0, active:'업무 대기' },
+  2033 |         { id:'m9', name:'윤가영', phone:'•••• 5683', assigned:0, active:'업무 대기' }
+  2034 |       ];
+  2035 |       const INITIAL_MANUAL_ASSIGNMENT_TARGETS = [
+  2036 |         {id:'manual-352-checkout-2026-08-17',room:'352',type:'standard',kind:'퇴실 청소',date:'2026-08-17',checkout:'10:00',deadline:'14:30',source:'manual',sourceLabel:'직접 등록 · 현장 요청'}
+  2037 |       ];
+  2038 |       const SCALE_ASSIGNMENT_TARGETS = [
+  2039 |         {id:'manual-516-checkout-2026-08-17',room:'516',type:'standard',kind:'퇴실 청소',date:'2026-08-17',checkout:'10:30',deadline:'14:30',source:'manual',sourceLabel:'직접 등록 · 현장 요청'},
+  2040 |         {id:'manual-623-checkout-2026-08-17',room:'623',type:'standard',kind:'퇴실 청소',date:'2026-08-17',checkout:'11:00',deadline:'15:00',source:'manual',sourceLabel:'직접 등록 · 현장 요청'},
+  2041 |         {id:'manual-540-checkout-2026-08-17',room:'540',type:'premium',kind:'퇴실 청소',date:'2026-08-17',checkout:'10:00',deadline:'15:00',source:'manual',sourceLabel:'직접 등록 · 현장 요청'},
+  2042 |         {id:'manual-641-checkout-2026-08-17',room:'641',type:'oceanPremium',kind:'퇴실 청소',date:'2026-08-17',checkout:'11:00',deadline:'15:30',source:'manual',sourceLabel:'직접 등록 · 현장 요청'},
+  2043 |         {id:'manual-645-checkout-2026-08-17',room:'645',type:'oceanFamily',kind:'퇴실 청소',date:'2026-08-17',checkout:'10:30',deadline:'15:30',source:'manual',sourceLabel:'직접 등록 · 현장 요청'},
+  2044 |         {id:'manual-651-checkout-2026-08-17',room:'651',type:'premium',kind:'퇴실 청소',date:'2026-08-17',checkout:'11:00',deadline:'15:30',source:'manual',sourceLabel:'직접 등록 · 현장 요청'}
+  2045 |       ];
+  2046 | 
+  2047 |       const CURRENT_WEEK_ASSIGNMENT_AVAILABILITY = Object.freeze({
+  2048 |         m1:Object.freeze([0,1,3,4,5,6]),
+  2049 |         m2:Object.freeze([1,2,4,5,6]),
+  2050 |         m3:Object.freeze([0,2,3,4,5,6]),
+  2051 |         m4:Object.freeze([0,1,2,3,4,5,6]),
+  2052 |         m5:Object.freeze([0,2,3,5,6]),
+  2053 |         m6:Object.freeze([0,1,4,5,6]),
+  2054 |         m7:Object.freeze([1,2,4,5,6]),
+  2055 |         m8:Object.freeze([0,1,2,3,4,5,6]),
+  2056 |         m9:Object.freeze([0,3,4,5,6])
+  2057 |       });
+  2058 |       const TOMORROW_ASSIGNMENT_SIMULATION_DATE='2026-08-16';
+  2059 |       const TOMORROW_ASSIGNMENT_SIMULATION_TARGETS = Object.freeze([
+  2060 |         {room:'621',code:'checkout',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+  2061 |         {room:'352',code:'checkout',kind:'퇴실 청소',checkout:'10:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+  2062 |         {room:'516',code:'early',kind:'퇴실 청소',checkout:'11:00',checkin:'14:00',deadline:'13:30',source:'checkout',sourceLabel:'예약 체크아웃 · 얼리 체크인',guestCount:2},
+  2063 |         {room:'552',code:'checkout',kind:'퇴실 청소',checkout:'11:00',checkin:'15:00',deadline:'14:30',source:'checkout',sourceLabel:'예약 체크아웃 · 조기 입실',guestCount:2},
+  2064 |         {room:'556',code:'late',kind:'퇴실 청소',checkout:'13:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 레이트 체크아웃',guestCount:2},
+  2065 |         {room:'652',code:'checkout',kind:'퇴실 청소',checkout:'10:30',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+  2066 |         {room:'657',code:'checkout',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+  2067 |         {room:'660',code:'checkout',kind:'퇴실 청소',checkout:'10:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+  2068 |         {room:'662',code:'checkout',kind:'퇴실 청소',checkout:'12:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+  2069 |         {room:'720',code:'checkout',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+  2070 |         {room:'723',code:'checkout',kind:'퇴실 청소',checkout:'10:30',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+  2071 |         {room:'726',code:'checkout',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+  2072 |         {room:'729',code:'checkout',kind:'퇴실 청소',checkout:'12:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+  2073 |         {room:'750',code:'manual',kind:'퇴실 청소',checkout:'10:30',checkin:'16:00',deadline:'15:30',source:'manual',sourceLabel:'직접 등록 · 현장 요청',guestCount:2},
+  2074 |         {room:'752',code:'checkout',kind:'퇴실 청소',checkout:'10:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+  2075 |         {room:'753',code:'checkout',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+  2076 |         {room:'756',code:'checkout',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+  2077 |         {room:'760',code:'checkout',kind:'퇴실 청소',checkout:'12:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+  2078 |         {room:'762',code:'hold',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 정보 확인 필요',guestCount:2},
+  2079 |         {room:'135',code:'checkout',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:3},
+  2080 |         {room:'136',code:'checkout',kind:'퇴실 청소',checkout:'10:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+  2081 |         {room:'240',code:'checkout',kind:'퇴실 청소',checkout:'12:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:3},
+  2082 |         {room:'454',code:'checkout',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+  2083 |         {room:'455',code:'manual',kind:'퇴실 청소',checkout:'10:30',checkin:'16:00',deadline:'15:30',source:'manual',sourceLabel:'직접 등록 · 현장 추가 요청',guestCount:2},
+  2084 |         {room:'459',code:'checkout',kind:'퇴실 청소',checkout:'10:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:3},
+  2085 |         {room:'527',code:'checkout',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+  2086 |         {room:'531',code:'checkout',kind:'퇴실 청소',checkout:'12:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:3},
+  2087 |         {room:'534',code:'checkout',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 일반',guestCount:2},
+  2088 |         {room:'540',code:'started',kind:'퇴실 청소',checkout:'10:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 사전 청소 시작',guestCount:2},
+  2089 |         {room:'541',code:'stayover',kind:'연박 청소',accessStart:'12:30',requestDue:'14:00',accessEnd:'15:00',deadline:'14:00',source:'stayover',sourceLabel:'연박 청소 신청',guestCount:2},
+  2090 |         {room:'549',code:'stayover',kind:'연박 청소',accessStart:'13:00',requestDue:'14:30',accessEnd:'15:30',deadline:'14:30',source:'stayover',sourceLabel:'연박 청소 신청',guestCount:3},
+  2091 |         {room:'554',code:'manual',kind:'퇴실 청소',checkout:'11:30',checkin:'16:00',deadline:'15:30',source:'manual',sourceLabel:'직접 등록 · 추가 청소 요청',guestCount:2},
+  2092 |         {room:'640',code:'stayover',kind:'연박 청소',accessStart:'12:00',requestDue:'14:00',accessEnd:'15:00',deadline:'14:00',source:'stayover',sourceLabel:'연박 청소 신청',guestCount:4},
+  2093 |         {room:'608',code:'stopped',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 운영 중지',guestCount:4},
+  2094 |         {room:'211',code:'candle',kind:'퇴실 청소',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃 · 촛불 회수 필요',guestCount:4}
+  2095 |       ].map(item=>{
+  2096 |         const catalog=ROOM_CATALOG.find(([roomNo])=>roomNo===item.room),type=catalog?.[1]||'standard';
+  2097 |         return Object.freeze({id:`sim-${item.room}-${item.code}-${TOMORROW_ASSIGNMENT_SIMULATION_DATE}`,date:TOMORROW_ASSIGNMENT_SIMULATION_DATE,planDate:TOMORROW_ASSIGNMENT_SIMULATION_DATE,effectiveDate:TOMORROW_ASSIGNMENT_SIMULATION_DATE,type,...item});
+  2098 |       }));
+  2099 |       function applyTomorrowAssignmentSimulation(targetState) {
+  2100 |         const currentIds=new Set((targetState.manualAssignmentTargets||[]).map(item=>item.id));
+  2101 |         targetState.manualAssignmentTargets=targetState.manualAssignmentTargets||[];
+  2102 |         TOMORROW_ASSIGNMENT_SIMULATION_TARGETS.forEach(item=>{if(!currentIds.has(item.id))targetState.manualAssignmentTargets.push({...item});});
+  2103 |         targetState.availabilityHistory=targetState.availabilityHistory||[];
+  2104 |         Object.entries(CURRENT_WEEK_ASSIGNMENT_AVAILABILITY).forEach(([maidId,days],index)=>{
+  2105 |           const id=`availability-${maidId}-2026-08-10-v2`;
+  2106 |           targetState.availabilityHistory=targetState.availabilityHistory.filter(item=>item.id!==id);
+  2107 |           targetState.availabilityHistory.push({id,maidId,weekStart:'2026-08-10',days:[...days],submittedAt:`8/9 ${String(21-Math.floor(index/3)).padStart(2,'0')}:${String(12+index*4).padStart(2,'0')}`,version:2});
+  2108 |         });
+  2109 |         targetState.roomStopped=targetState.roomStopped||{};targetState.roomStopReasons=targetState.roomStopReasons||{};
+  2110 |         targetState.roomStopped['608']=true;targetState.roomStopReasons['608']='608호 운영 중지 · 청소 배정 제외';
+  2111 |         targetState.candles=targetState.candles||{};targetState.candles['211']=Math.max(1,Number(targetState.candles['211']||0));
+  2112 |         targetState.assignments=targetState.assignments||{};
+  2113 |         const notified623={id:'checkout-623-2026-08-16',room:'623',type:'standard',kind:'퇴실 청소',date:'2026-08-16',planDate:'2026-08-16',effectiveDate:'2026-08-16',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃',reservationId:'reservation-demo-623',guestCount:2,rateSnapshot:16000,minutesSnapshot:55,elevatorSnapshot:'A'};
+  2114 |         targetState.assignments[notified623.id]={maidId:'m2',order:1,status:'notified',previousMaidId:'m2',previousOrder:1,notifiedAt:'8월 15일 (토) 18:00',notificationRevision:1,committedTarget:{...notified623}};
+  2115 |         const startedTarget=TOMORROW_ASSIGNMENT_SIMULATION_TARGETS.find(item=>item.room==='540'),attemptId='attempt-540-simulation-20260816';
+  2116 |         targetState.assignments[startedTarget.id]={maidId:'m4',order:1,status:'notified',previousMaidId:'m4',previousOrder:1,notifiedAt:'8월 15일 (토) 09:35',notificationRevision:1,committedTarget:{...startedTarget,rateSnapshot:20000,minutesSnapshot:65,elevatorSnapshot:'C'}};
+  2117 |         targetState.jobs=targetState.jobs||{};targetState.jobs['540']='cleaning';
+  2118 |         targetState.currentAttemptByRoom=targetState.currentAttemptByRoom||{};targetState.currentAttemptByRoom['540']=attemptId;
+  2119 |         targetState.cleaningAttempts=targetState.cleaningAttempts||{};
+  2120 |         targetState.cleaningAttempts[attemptId]={id:attemptId,room:'540',performerId:'m4',performerName:'박소영',status:'cleaning',startedAt:'2026.08.15 09:40',createdAt:'2026.08.15 09:35',workDate:'2026-08-16',effectiveDate:'2026-08-16',workTargetId:startedTarget.id,kind:'퇴실 청소',baseRateSnapshot:20000,checkoutSnapshot:startedTarget.checkout,checkinSnapshot:startedTarget.checkin,deadlineSnapshot:startedTarget.deadline,guestCountSnapshot:startedTarget.guestCount};
+  2121 |         targetState.activeCleaningByMaid=targetState.activeCleaningByMaid||{};targetState.activeCleaningByMaid.m4='540';
+  2122 |         if(targetState.taskInputs?.['332']){
+  2123 |           const task=JSON.parse(JSON.stringify(targetState.taskInputs['332']));task.attemptId=attemptId;task.uploads=(task.uploads||[]).map((upload,index)=>({...upload,status:index===0?'done':'empty'}));targetState.taskInputs['540']=task;
+  2124 |         }
+  2125 |         const room540=ROOMS.find(room=>room.no==='540'),room623=ROOMS.find(room=>room.no==='623');
+  2126 |         if(room540){room540.assignee='박소영';room540.cleaning='cleaning';}
+  2127 |         if(room623)room623.assignee='김민지2';
+  2128 |         return targetState;
+  2129 |       }
+  2130 | 
+  2131 |       const WORK_HISTORY_FIXTURES = [
+  2132 |         {
+  2133 |           start:'2026-08-10',status:'마감 기록',
+  2134 |           records:{
+  2135 |             m1:{nameSnapshot:'김민지1',submitted:[0,1,3,4,5],assigned:[0,1,3,4],completed:[0,1,3,4],submittedAt:'8/9 21:14'},
+  2136 |             m2:{nameSnapshot:'김민지2',submitted:[1,2,4,5],assigned:[1,4,5],completed:[1,4],submittedAt:'8/9 20:38'},
+  2137 |             m3:{nameSnapshot:'이서연',submitted:[0,2,3,4,5,6],assigned:[0,2,3,5,6],completed:[0,2,3,5,6],submittedAt:'8/9 19:51'},
+  2138 |             m4:{nameSnapshot:'박소영',submitted:[0,1,2,3,4],assigned:[0,2,4],completed:[0,2,4],submittedAt:'8/9 19:34'},
+  2139 |             m5:{nameSnapshot:'최은지',submitted:[0,2,3,5],assigned:[0,3,5],completed:[0,3,5],submittedAt:'8/9 19:18'},
+  2140 |             m6:{nameSnapshot:'정다현',submitted:[0,1,4,5],assigned:[1,4,5],completed:[1,4,5],submittedAt:'8/9 19:02'},
+  2141 |             m7:{nameSnapshot:'오세라',submitted:[1,2,4],assigned:[1,2,4],completed:[1,2,4],submittedAt:'8/9 18:51'},
+  2142 |             m8:{nameSnapshot:'한지민',submitted:[0,1,2,3,4,5],assigned:[0,2,3,5],completed:[0,2,3,5],submittedAt:'8/9 18:36'},
+  2143 |             m9:{nameSnapshot:'윤가영',submitted:[0,3,4,6],assigned:[0,3,6],completed:[0,3,6],submittedAt:'8/9 18:22'}
+  2144 |           }
+  2145 |         },
+  2146 |         {
+  2147 |           start:'2026-08-03',status:'마감 기록',
+  2148 |           records:{
+  2149 |             m1:{nameSnapshot:'김민지1',submitted:[0,1,2,4,6],assigned:[0,1,4,6],completed:[0,1,4,6],submittedAt:'8/2 21:06'},
+  2150 |             m2:{nameSnapshot:'김민지2',submitted:[1,2,3,4,5],assigned:[1,2,3,5],completed:[1,2,3,5],submittedAt:'8/2 20:19'},
+  2151 |             m3:{nameSnapshot:'이서연',submitted:[0,2,3,4,6],assigned:[0,2,4,6],completed:[0,2,4,6],submittedAt:'8/2 19:43'},
+  2152 |             m4:{nameSnapshot:'박소영',submitted:[0,1,3,4,6],assigned:[0,3,4],completed:[0,3,4],submittedAt:'8/2 19:27'},
+  2153 |             m5:{nameSnapshot:'최은지',submitted:[0,2,4,5],assigned:[0,2,5],completed:[0,2,5],submittedAt:'8/2 19:12'},
+  2154 |             m6:{nameSnapshot:'정다현',submitted:[1,2,3,5],assigned:[1,3,5],completed:[1,3,5],submittedAt:'8/2 18:58'},
+  2155 |             m7:{nameSnapshot:'오세라',submitted:[0,2,4,6],assigned:[0,4,6],completed:[0,4,6],submittedAt:'8/2 18:43'},
+  2156 |             m8:{nameSnapshot:'한지민',submitted:[0,1,2,3,4,5],assigned:[1,2,4,5],completed:[1,2,4,5],submittedAt:'8/2 18:31'},
+  2157 |             m9:{nameSnapshot:'윤가영',submitted:[0,3,5,6],assigned:[0,3,6],completed:[0,3,6],submittedAt:'8/2 18:17'}
+  2158 |           }
+  2159 |         },
+  2160 |         {
+  2161 |           start:'2026-07-27',status:'마감 기록',
+  2162 |           records:{
+  2163 |             m1:{nameSnapshot:'김민지1',submitted:[0,1,3,4],assigned:[0,1,3],completed:[0,1,3],submittedAt:'7/26 20:58'},
+  2164 |             m2:{nameSnapshot:'김민지2',submitted:[1,2,4,5],assigned:[1,2,5],completed:[1,2,5],submittedAt:'7/26 20:22'},
+  2165 |             m3:{nameSnapshot:'이서연',submitted:[0,2,3,4,5,6],assigned:[0,2,3,4,6],completed:[0,2,3,4,6],submittedAt:'7/26 19:36'},
+  2166 |             m4:{nameSnapshot:'박소영',submitted:[0,1,2,4,5],assigned:[0,2,5],completed:[0,2,5],submittedAt:'7/26 19:21'},
+  2167 |             m5:{nameSnapshot:'최은지',submitted:[0,2,3,4],assigned:[0,3,4],completed:[0,3,4],submittedAt:'7/26 19:06'},
+  2168 |             m6:{nameSnapshot:'정다현',submitted:[1,2,4,5],assigned:[1,2,5],completed:[1,2,5],submittedAt:'7/26 18:52'},
+  2169 |             m7:{nameSnapshot:'오세라',submitted:[0,1,3,6],assigned:[0,3,6],completed:[0,3,6],submittedAt:'7/26 18:38'},
+  2170 |             m8:{nameSnapshot:'한지민',submitted:[0,1,2,3,4,5],assigned:[0,1,4,5],completed:[0,1,4,5],submittedAt:'7/26 18:24'},
+  2171 |             m9:{nameSnapshot:'윤가영',submitted:[0,2,4,6],assigned:[0,2,6],completed:[0,2,6],submittedAt:'7/26 18:09'}
+  2172 |           }
+  2173 |         }
+  2174 |       ];
+  2175 |       const PAYROLL_CLEANING_FIXTURES = {
+  2176 |         '2026-08-10':{
+  2177 |           m1:[
+  2178 |             {id:'pay-20260810-m1-352',room:'352',kind:'퇴실 청소',date:'8월 14일',base:16000},
+  2179 |             {id:'pay-20260810-m1-350',room:'350',kind:'퇴실 청소',date:'8월 13일',base:16000},
+  2180 |             {id:'pay-20260810-m1-332',room:'332',kind:'퇴실 청소',date:'8월 11일',base:20000}
+  2181 |           ],
+  2182 |           m2:[
+  2183 |             {id:'pay-20260810-m2-142',room:'142',kind:'연박 청소',date:'8월 14일',base:30000},
+  2184 |             {id:'pay-20260810-m2-332',room:'332',kind:'퇴실 청소',date:'8월 12일',base:20000},
+  2185 |             {id:'pay-20260810-m2-350',room:'350',kind:'퇴실 청소',date:'8월 10일',base:16000}
+  2186 |           ],
+  2187 |           m3:[
+  2188 |             {id:'pay-20260810-m3-142',room:'142',kind:'연박 청소',date:'8월 15일',base:30000},
+  2189 |             {id:'pay-20260810-m3-639',room:'639',kind:'퇴실 청소',date:'8월 13일',base:20000},
+  2190 |             {id:'pay-20260810-m3-332',room:'332',kind:'퇴실 청소',date:'8월 10일',base:20000}
+  2191 |           ]
+  2192 |         },
+  2193 |         '2026-08-03':{
+  2194 |           m1:[
+  2195 |             {id:'pay-20260803-m1-536',room:'536',kind:'퇴실 청소',date:'8월 9일',base:20000,bombBonus:20000,status:'폭탄방 승인 · ×2'},
+  2196 |             {id:'pay-20260803-m1-639',room:'639',kind:'퇴실 청소',date:'8월 8일',base:20000},
+  2197 |             {id:'pay-20260803-m1-142',room:'142',kind:'연박 청소',date:'8월 7일',base:30000},
+  2198 |             {id:'pay-20260803-m1-350-a',room:'350',kind:'퇴실 청소',date:'8월 6일',base:16000},
+  2199 |             {id:'pay-20260803-m1-352',room:'352',kind:'퇴실 청소',date:'8월 5일',base:16000},
+  2200 |             {id:'pay-20260803-m1-350-b',room:'350',kind:'퇴실 청소',date:'8월 3일',base:16000}
+  2201 |           ],
+  2202 |           m2:[
+  2203 |             {id:'pay-20260803-m2-645',room:'645',kind:'퇴실 청소',date:'8월 9일',base:30000},
+  2204 |             {id:'pay-20260803-m2-540',room:'540',kind:'퇴실 청소',date:'8월 8일',base:20000},
+  2205 |             {id:'pay-20260803-m2-516',room:'516',kind:'퇴실 청소',date:'8월 6일',base:16000},
+  2206 |             {id:'pay-20260803-m2-623',room:'623',kind:'퇴실 청소',date:'8월 5일',base:16000},
+  2207 |             {id:'pay-20260803-m2-350',room:'350',kind:'퇴실 청소',date:'8월 3일',base:16000}
+  2208 |           ],
+  2209 |           m3:[
+  2210 |             {id:'pay-20260803-m3-542',room:'542',kind:'퇴실 청소',date:'8월 9일',base:30000},
+  2211 |             {id:'pay-20260803-m3-641',room:'641',kind:'퇴실 청소',date:'8월 6일',base:20000},
+  2212 |             {id:'pay-20260803-m3-352',room:'352',kind:'퇴실 청소',date:'8월 4일',base:16000}
+  2213 |           ]
+  2214 |         },
+  2215 |         '2026-07-27':{
+  2216 |           m1:[
+  2217 |             {id:'pay-20260727-m1-142',room:'142',kind:'연박 청소',date:'8월 2일',base:30000},
+  2218 |             {id:'pay-20260727-m1-536',room:'536',kind:'퇴실 청소',date:'7월 31일',base:20000},
+  2219 |             {id:'pay-20260727-m1-332',room:'332',kind:'퇴실 청소',date:'7월 30일',base:20000},
+  2220 |             {id:'pay-20260727-m1-350',room:'350',kind:'퇴실 청소',date:'7월 29일',base:16000},
+  2221 |             {id:'pay-20260727-m1-352',room:'352',kind:'퇴실 청소',date:'7월 27일',base:16000}
+  2222 |           ],
+  2223 |           m2:[
+  2224 |             {id:'pay-20260727-m2-645',room:'645',kind:'퇴실 청소',date:'8월 2일',base:30000},
+  2225 |             {id:'pay-20260727-m2-540',room:'540',kind:'퇴실 청소',date:'7월 31일',base:20000},
+  2226 |             {id:'pay-20260727-m2-639',room:'639',kind:'퇴실 청소',date:'7월 29일',base:20000},
+  2227 |             {id:'pay-20260727-m2-350',room:'350',kind:'퇴실 청소',date:'7월 27일',base:16000}
+  2228 |           ],
+  2229 |           m3:[
+  2230 |             {id:'pay-20260727-m3-639',room:'639',kind:'퇴실 청소',date:'8월 1일',base:20000},
+  2231 |             {id:'pay-20260727-m3-641',room:'641',kind:'퇴실 청소',date:'7월 30일',base:20000},
+  2232 |             {id:'pay-20260727-m3-350',room:'350',kind:'퇴실 청소',date:'7월 28일',base:16000},
+  2233 |             {id:'pay-20260727-m3-352',room:'352',kind:'퇴실 청소',date:'7월 27일',base:16000}
+  2234 |           ]
+  2235 |         },
+  2236 |         '2026-07-20':{
+  2237 |           m1:[
+  2238 |             {id:'pay-20260720-m1-142',room:'142',kind:'연박 청소',date:'7월 26일',base:30000},
+  2239 |             {id:'pay-20260720-m1-332',room:'332',kind:'퇴실 청소',date:'7월 24일',base:20000},
+  2240 |             {id:'pay-20260720-m1-350',room:'350',kind:'퇴실 청소',date:'7월 22일',base:16000},
+  2241 |             {id:'pay-20260720-m1-352',room:'352',kind:'퇴실 청소',date:'7월 20일',base:16000}
+  2242 |           ],
+  2243 |           m2:[
+  2244 |             {id:'pay-20260720-m2-528',room:'528',kind:'퇴실 청소',date:'7월 26일',base:20000},
+  2245 |             {id:'pay-20260720-m2-350',room:'350',kind:'퇴실 청소',date:'7월 24일',base:16000},
+  2246 |             {id:'pay-20260720-m2-352',room:'352',kind:'퇴실 청소',date:'7월 22일',base:16000},
+  2247 |             {id:'pay-20260720-m2-516',room:'516',kind:'퇴실 청소',date:'7월 20일',base:16000}
+  2248 |           ],
+  2249 |           m3:[
+  2250 |             {id:'pay-20260720-m3-332',room:'332',kind:'퇴실 청소',date:'7월 25일',base:20000},
+  2251 |             {id:'pay-20260720-m3-536',room:'536',kind:'퇴실 청소',date:'7월 23일',base:20000},
+  2252 |             {id:'pay-20260720-m3-639',room:'639',kind:'퇴실 청소',date:'7월 21일',base:20000}
+  2253 |           ]
+  2254 |         },
+  2255 |         '2026-07-13':{
+  2256 |           m1:[
+  2257 |             {id:'pay-20260713-m1-536-a',room:'536',kind:'퇴실 청소',date:'7월 19일',base:20000},
+  2258 |             {id:'pay-20260713-m1-332',room:'332',kind:'퇴실 청소',date:'7월 17일',base:20000},
+  2259 |             {id:'pay-20260713-m1-142',room:'142',kind:'연박 청소',date:'7월 15일',base:30000},
+  2260 |             {id:'pay-20260713-m1-536-b',room:'536',kind:'퇴실 청소',date:'7월 13일',base:20000}
+  2261 |           ],
+  2262 |           m2:[
+  2263 |             {id:'pay-20260713-m2-528',room:'528',kind:'퇴실 청소',date:'7월 19일',base:20000},
+  2264 |             {id:'pay-20260713-m2-540',room:'540',kind:'퇴실 청소',date:'7월 17일',base:20000},
+  2265 |             {id:'pay-20260713-m2-639',room:'639',kind:'퇴실 청소',date:'7월 15일',base:20000},
+  2266 |             {id:'pay-20260713-m2-641',room:'641',kind:'퇴실 청소',date:'7월 13일',base:20000}
+  2267 |           ],
+  2268 |           m3:[
+  2269 |             {id:'pay-20260713-m3-350',room:'350',kind:'퇴실 청소',date:'7월 19일',base:16000},
+  2270 |             {id:'pay-20260713-m3-352',room:'352',kind:'퇴실 청소',date:'7월 17일',base:16000},
+  2271 |             {id:'pay-20260713-m3-516',room:'516',kind:'퇴실 청소',date:'7월 15일',base:16000},
+  2272 |             {id:'pay-20260713-m3-623',room:'623',kind:'퇴실 청소',date:'7월 13일',base:16000}
+  2273 |           ]
+  2274 |         },
+  2275 |         '2026-07-06':{
+  2276 |           m1:[
+  2277 |             {id:'pay-20260706-m1-142',room:'142',kind:'연박 청소',date:'7월 12일',base:30000},
+  2278 |             {id:'pay-20260706-m1-536',room:'536',kind:'퇴실 청소',date:'7월 10일',base:20000},
+  2279 |             {id:'pay-20260706-m1-332',room:'332',kind:'퇴실 청소',date:'7월 8일',base:20000},
+  2280 |             {id:'pay-20260706-m1-350',room:'350',kind:'퇴실 청소',date:'7월 6일',base:16000}
+  2281 |           ],
+  2282 |           m2:[
+  2283 |             {id:'pay-20260706-m2-528',room:'528',kind:'퇴실 청소',date:'7월 12일',base:20000},
+  2284 |             {id:'pay-20260706-m2-540',room:'540',kind:'퇴실 청소',date:'7월 10일',base:20000},
+  2285 |             {id:'pay-20260706-m2-639',room:'639',kind:'퇴실 청소',date:'7월 8일',base:20000},
+  2286 |             {id:'pay-20260706-m2-350',room:'350',kind:'퇴실 청소',date:'7월 6일',base:16000}
+  2287 |           ],
+  2288 |           m3:[
+  2289 |             {id:'pay-20260706-m3-332',room:'332',kind:'퇴실 청소',date:'7월 12일',base:20000},
+  2290 |             {id:'pay-20260706-m3-536',room:'536',kind:'퇴실 청소',date:'7월 9일',base:20000},
+  2291 |             {id:'pay-20260706-m3-639',room:'639',kind:'퇴실 청소',date:'7월 6일',base:20000}
+  2292 |           ]
+  2293 |         }
+  2294 |       };
+  2295 |       const SCENARIOS = {
+  2296 |         0: { title:'기본 운영판', role:'admin', view:'today', next:'오늘 조치 큐와 일별 객실 현황을 탐색하세요.' },
+  2297 |         1: { title:'일요일 다음 주 근무 가능일 제출', role:'maid', view:'schedule', next:'월·화·목·금을 선택하고 다음 주 가능일을 제출하세요.' },
+  2298 |         2: { title:'자동 청소대상 → 담당·순서 지정 → 통보', role:'admin', view:'cleaning', next:'자동·직접 등록 대상을 확인하고 담당과 메이드별 객실 청소 순서를 지정하세요.' },
+  2299 |         3: { title:'구역별 사진 → 업로드 실패/재시도 → 제출', role:'maid', view:'my', next:'528호 청소 상세에서 인증 사진을 완료하세요.' },
+  2300 |         4: { title:'전체 검수 → 승인 또는 반려·재청소', role:'admin', view:'cleaning', next:'검수 대상 목록 탭에서 639호 전체 제출을 검수하세요.' },
+  2301 |         5: { title:'촛불 1개 입실 차단 → 회수 → 준비 완료', role:'admin', view:'rooms', next:'350호 상세에서 촛불 1개를 회수하세요.' },
+  2302 |         6: { title:'레이트 체크아웃 → PIN·청소 충돌 해결', role:'admin', view:'rooms', next:'332호 영향 확인에서 조율·재계획·PIN 교체를 완료하세요.' },
+  2303 |         7: { title:'메이드 담당 취소 요청 → 관리자 결정', role:'admin', view:'today', next:'취소 요청 카드에서 승인 또는 거절하고 후속 처리를 고르세요.' },
+  2304 |         8: { title:'활성 예약 → 연박 청소 → 배정 준비 작업', role:'admin', view:'rooms', next:'142호 상세에서 연박 청소를 생성하세요.' },
+  2305 |         9: { title:'메이드 비활성 → 인계 → 업로드 전용', role:'admin', view:'maids', next:'김민지1 상세에서 영향을 확인하고 비활성 처리하세요.' },
+  2306 |         10:{ title:'메이드별 지급 진행 → 외부 송금 완료 기록', role:'admin', view:'maids', next:'주급 정산에서 한 메이드의 지급 진행을 시작하고 외부 송금 완료까지 기록하세요.' },
+  2307 |         11:{ title:'컴플레인 판정 → 확인/이의 → 종결', role:'admin', view:'maids', next:'김민지1 컴플레인 상세에서 판정하세요.' },
+  2308 |         12:{ title:'날짜·필터·스크롤 복원', role:'admin', view:'rooms', next:'날짜와 필터를 바꾼 뒤 객실 상세에 들어갔다가 돌아오세요.' },
+  2309 |         13:{ title:'목록 4상태와 오래된 데이터 행동 잠금', role:'admin', view:'today', next:'목록 상태 선택에서 불러오기·0건·필터 없음·오류를 전환하세요.' },
+  2310 |         14:{ title:'전날 미배정·미완료 청소 다음 날 이월', role:'admin', view:'cleaning', next:'전일 이월 객실의 담당을 다시 정하고, 진행 중 청소는 같은 사진 상태로 이어지는지 확인하세요.' }
+  2311 |       };
+  2312 | 
+  2313 |       function baseState(scenario = 0) {
+  2314 |         const cfg = SCENARIOS[scenario] || SCENARIOS[0];
+  2315 |         return {
+  2316 |           scenario:Number(scenario), role:cfg.role, currentMaidId:'m1', adminView:cfg.role === 'admin' ? cfg.view : 'today', maidView:cfg.role === 'maid' ? cfg.view : 'my',
+  2317 |           detail:null, returnContext:null, demoOpen:false, time:'10:32', network:'online', listMode:'data', loggedIn:true, loginMode:'normal',
+  2318 |           selectedDate:'2026-08-15', calendarMonth:'2026-08', calendarContext:null, reservationWeekStart:'2026-08-10', reservationWeekRoom:null, roomFilter:'all', roomTypeFilter:'all', roomSearch:'', selectedDrafts:[], reservationSaved:false,
+  2319 |           quickReservationAnchorDate:'2026-08-15', quickReservationFollowsToday:true, quickReservationType:'all', quickReservationSearch:'', quickGridScrollLeft:null, quickGridScrollTop:0, quickLastCreated:null,
+  2320 |           reservationSequence:INITIAL_RESERVATIONS.length, reservations:initialReservationState(),
+  2321 |           manualCleaningSequence:0, manualCleaningRequests:{}, checkoutInspections:{},
+  2322 |           publications:{}, cancelRequests:{},
+  2323 |           todaySections:{schedule:true,assignment:true,drafts:false,inspection:false,pay:false}, cleaningTab:'assignment-today', assignmentTypeFilter:'all', adminMaidTab:'workforce', adminPayWeek:'2026-08-03', workHistoryWeek:'2026-08-10', workHistoryMaid:'all',
+  2324 |           drafts:[{id:'d536-next',room:'536',kind:'퇴실 청소',created:'09:55',date:'8월 16일'},...initialReservationDrafts()],
+  2325 |           jobs:{'117':'scheduled','350':'inspection','332':'cleaning','528':'upload','536':'approved','639':'inspection','142':'stayover-requested','211':'draft','352':'approved'},
+  2326 |           candles:{'117':0,'350':0,'332':0,'528':0,'536':0,'639':0,'142':0,'211':1,'352':0},
+  2327 |           inspections:{'350':'pending','639':'pending'}, inspection:{room:'639',status:'pending',reclean:'none'}, earningsAddedByRoom:{}, earningRecords:{},
+  2328 |           currentAttemptByRoom:{'117':'attempt-117-20260815-a','350':'attempt-350-20260815-a','332':'attempt-332-20260815-a','528':'attempt-528-20260815-a','639':'attempt-639-20260815-a'},
+  2329 |           cleaningAttempts:{
+  2330 |             'attempt-117-20260815-a':{id:'attempt-117-20260815-a',room:'117',performerId:'m1',performerName:'김민지1',status:'active',startedAt:null,workDate:'2026-08-15',workTargetId:'checkout-117-2026-08-15',kind:'퇴실 청소',baseRateSnapshot:20000,accessStart:'13:00',reservationIdSnapshot:'reservation-demo-117',guestCountSnapshot:2,checkoutSnapshot:'13:00',checkinSnapshot:'16:00',deadlineSnapshot:'15:30',nextReservationIdSnapshot:null},
+  2331 |             'attempt-350-20260815-a':{id:'attempt-350-20260815-a',room:'350',performerId:'m3',performerName:'이서연',status:'submitted',startedAt:'2026.08.15 10:03',completedAt:'2026.08.15 10:46',workDate:'2026-08-15',workTargetId:'work-350-퇴실-청소-2026-08-15',kind:'퇴실 청소',baseRateSnapshot:16000},
+  2332 |             'attempt-332-20260815-a':{id:'attempt-332-20260815-a',room:'332',performerId:'m1',performerName:'김민지1',status:'cleaning',startedAt:'2026.08.15 10:03',workDate:'2026-08-15',workTargetId:'work-332-퇴실-청소-2026-08-15',kind:'퇴실 청소',baseRateSnapshot:20000},
+  2333 |             'attempt-528-20260815-a':{id:'attempt-528-20260815-a',room:'528',performerId:'m1',performerName:'김민지1',status:'upload',startedAt:'2026.08.15 10:03',workDate:'2026-08-15',workTargetId:'work-528-퇴실-청소-2026-08-15',kind:'퇴실 청소',baseRateSnapshot:20000},
+  2334 |             'attempt-639-20260815-a':{id:'attempt-639-20260815-a',room:'639',performerId:'m3',performerName:'이서연',status:'submitted',startedAt:'2026.08.15 10:03',completedAt:'2026.08.15 10:46',workDate:'2026-08-15',workTargetId:'work-639-퇴실-청소-2026-08-15',kind:'퇴실 청소',baseRateSnapshot:20000}
+  2335 |           },
+  2336 |           currentSubmissionByRoom:{'350':'submission-350-20260815-v2','639':'submission-639-20260815-v2'},
+  2337 |           cleaningSubmissions:{
+  2338 |             'submission-350-20260815-v2':{id:'submission-350-20260815-v2',attemptId:'attempt-350-20260815-a',room:'350',performerId:'m3',performerName:'이서연',weekStart:'2026-08-10',kind:'퇴실 청소',baseRateSnapshot:16000,status:'pending',completedAt:'2026.08.15 10:46',submittedAt:'2026.08.15 10:46',reportId:null,note:'',checklist:{bed:true,bath:true,floor:true,lock:true},uploads:[demoUpload('p1','침대·침구',true,'done','bed'),demoUpload('p2','욕실',true,'done','bath'),demoUpload('p3','바닥·먼지',false,'done','floor')]},
+  2339 |             'submission-639-20260815-v2':{id:'submission-639-20260815-v2',attemptId:'attempt-639-20260815-a',room:'639',performerId:'m3',performerName:'이서연',weekStart:'2026-08-10',kind:'퇴실 청소',baseRateSnapshot:20000,status:'pending',completedAt:'2026.08.15 10:46',submittedAt:'2026.08.15 10:46',reportId:'bomb-639-v2',note:'욕실 거울 얼룩을 추가 확인해 주세요.',checklist:{bed:true,bath:true,floor:true,lock:true},uploads:[demoUpload('p1','침대·침구',true,'done','bed'),demoUpload('p2','욕실',true,'done','bath'),demoUpload('p3','바닥·먼지',false,'done','floor'),demoUpload('p4','비품',false,'done','supply')]}
+  2340 |           },
+  2341 |           currentBombReportByRoom:{'639':'bomb-639-v2'},
+  2342 |           bombRoomReports:{
+  2343 |             'bomb-639-v2':{id:'bomb-639-v2',attemptId:'attempt-639-20260815-a',submissionId:'submission-639-20260815-v2',room:'639',status:'pending',reportedStage:'청소 중',reportedAt:'2026.08.15 10:31',reportedBy:'이서연',reportedById:'m3',note:'침구와 욕실 오염이 심해 일반 청소보다 시간이 크게 더 걸렸습니다.',baseRateSnapshot:20000,submittedVersion:'v2',decidedAt:null,decidedBy:null,decisionReason:'',photos:[{id:'bomb-639-p1',label:'폭탄방 증빙 1',image:{...demoUploadImageFixture('bed')}},{id:'bomb-639-p2',label:'폭탄방 증빙 2',image:{...demoUploadImageFixture('bath')}}]}
+  2344 |           },
+  2345 |           pinVisibleRoom:null, pinVisibleUntil:0, activeCleaning:'332', activeCleaningByMaid:{m1:'332',m2:null,m3:null,m4:null,m5:null,m6:null,m7:null,m8:null,m9:null},
+  2346 |           availabilityDraft:[0,1,3,4], availabilitySubmitted:true, availabilityEditing:false, availabilityChangeRequested:false,
+  2347 |           weeklyAvailability:{
+  2348 |             m1:{days:[0,1,3,4],status:'submitted',submittedAt:'8/16 21:10'},
+  2349 |             m2:{days:[0,1,2,3,4,5],status:'submitted',submittedAt:'8/16 20:42'},
+  2350 |             m3:{days:[0,2,3,4,5,6],status:'submitted',submittedAt:'8/16 19:58'},
+  2351 |             m4:{days:[0,1,2,3,4],status:'submitted',submittedAt:'8/16 19:42'},
+  2352 |             m5:{days:[0,2,3,5],status:'submitted',submittedAt:'8/16 19:31'},
+  2353 |             m6:{days:[0,1,4,5],status:'submitted',submittedAt:'8/16 19:18'},
+  2354 |             m7:{days:[0,1,2,4],status:'submitted',submittedAt:'8/16 18:56'},
+  2355 |             m8:{days:[0,1,2,3,4,5],status:'submitted',submittedAt:'8/16 18:44'},
+  2356 |             m9:{days:[0,3,4,6],status:'submitted',submittedAt:'8/16 18:29'}
+  2357 |           },
+  2358 |           availabilityHistory:[
+  2359 |             {id:'availability-m1-2026-08-17-v1',maidId:'m1',weekStart:'2026-08-17',days:[0,1,3,4],submittedAt:'8/16 21:10',version:1},
+  2360 |             {id:'availability-m2-2026-08-17-v1',maidId:'m2',weekStart:'2026-08-17',days:[0,1,2,3,4,5],submittedAt:'8/16 20:42',version:1},
+  2361 |             {id:'availability-m3-2026-08-17-v1',maidId:'m3',weekStart:'2026-08-17',days:[0,2,3,4,5,6],submittedAt:'8/16 19:58',version:1},
+  2362 |             {id:'availability-m4-2026-08-17-v1',maidId:'m4',weekStart:'2026-08-17',days:[0,1,2,3,4],submittedAt:'8/16 19:42',version:1},
+  2363 |             {id:'availability-m5-2026-08-17-v1',maidId:'m5',weekStart:'2026-08-17',days:[0,2,3,5],submittedAt:'8/16 19:31',version:1},
+  2364 |             {id:'availability-m6-2026-08-17-v1',maidId:'m6',weekStart:'2026-08-17',days:[0,1,4,5],submittedAt:'8/16 19:18',version:1},
+  2365 |             {id:'availability-m7-2026-08-17-v1',maidId:'m7',weekStart:'2026-08-17',days:[0,1,2,4],submittedAt:'8/16 18:56',version:1},
+  2366 |             {id:'availability-m8-2026-08-17-v1',maidId:'m8',weekStart:'2026-08-17',days:[0,1,2,3,4,5],submittedAt:'8/16 18:44',version:1},
+  2367 |             {id:'availability-m9-2026-08-17-v1',maidId:'m9',weekStart:'2026-08-17',days:[0,3,4,6],submittedAt:'8/16 18:29',version:1}
+  2368 |           ],
+  2369 |           assignmentDate:'2026-08-17', cleaningTargets:{}, rolloverEvents:{}, rolloverHistory:[],
+  2370 |           manualAssignmentTargets:INITIAL_MANUAL_ASSIGNMENT_TARGETS.map(item=>({...item})),
+  2371 |           randomAssignments:{}, randomAssignmentSnapshot:null, randomAssignmentSummary:null,
+  2372 |           assignments:{
+  2373 |             'checkout-117-2026-08-15':{maidId:'m1',order:1,status:'notified',previousMaidId:'m1',previousOrder:1,notifiedAt:'8월 15일 (토) 08:30',notificationRevision:1,committedTarget:{id:'checkout-117-2026-08-15',room:'117',type:'premium',kind:'퇴실 청소',date:'2026-08-15',checkout:'13:00',checkin:'16:00',deadline:'15:30',source:'current',sourceLabel:'오늘 예정',reservationId:'reservation-demo-117',guestCount:2,rateSnapshot:20000,minutesSnapshot:65,elevatorSnapshot:'A'}},
+  2374 |             'checkout-350-2026-08-17':{maidId:'m1',order:1,status:'notified',previousMaidId:'m1',previousOrder:1,notifiedAt:'8월 16일 (일) 21:52',notificationRevision:1,committedTarget:{id:'checkout-350-2026-08-17',room:'350',type:'standard',kind:'퇴실 청소',date:'2026-08-17',checkout:'11:00',checkin:'15:00',deadline:'14:30',source:'checkout',sourceLabel:'예약 체크아웃',reservationId:'reservation-demo-350',guestCount:2,rateSnapshot:16000,minutesSnapshot:55,elevatorSnapshot:'C'}},
+  2375 |             'checkout-332-2026-08-17':{maidId:'m3',order:1,status:'notified',previousMaidId:'m3',previousOrder:1,notifiedAt:'8월 16일 (일) 21:50',notificationRevision:1,committedTarget:{id:'checkout-332-2026-08-17',room:'332',type:'premium',kind:'퇴실 청소',date:'2026-08-17',checkout:'13:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃',reservationId:'reservation-demo-332',guestCount:2,rateSnapshot:20000,minutesSnapshot:65,elevatorSnapshot:'B'}},
+  2376 |             'checkout-639-2026-08-17':{maidId:'m3',order:2,status:'notified',previousMaidId:'m3',previousOrder:2,notifiedAt:'8월 16일 (일) 21:49',notificationRevision:1,committedTarget:{id:'checkout-639-2026-08-17',room:'639',type:'oceanPremium',kind:'퇴실 청소',date:'2026-08-17',checkout:'11:00',checkin:'16:00',deadline:'15:30',source:'checkout',sourceLabel:'예약 체크아웃',reservationId:'reservation-demo-639',guestCount:2,rateSnapshot:20000,minutesSnapshot:70,elevatorSnapshot:'C'}},
+  2377 |             'checkout-211-2026-08-17':{maidId:'',order:null,status:'unassigned',previousMaidId:null,previousOrder:null},
+  2378 |             'stayover-142-2026-08-17':{maidId:'',order:null,status:'unassigned',previousMaidId:null,previousOrder:null},
+  2379 |             'manual-352-checkout-2026-08-17':{maidId:'',order:null,status:'unassigned',previousMaidId:null,previousOrder:null}
+  2380 |           },
+  2381 |           assignmentExceptions:{},
+  2382 |           assignmentHistory:[
+  2383 |             {time:'8월 16일 (일) 21:52',assignmentDate:'2026-08-17',room:'350',beforeMaidId:null,afterMaidId:'m1',before:'미배정',after:'김민지1 · 1번째',reason:'신규 배정 · 청소 순서 지정'},
+  2384 |             {time:'8월 16일 (일) 21:50',assignmentDate:'2026-08-17',room:'332',beforeMaidId:null,afterMaidId:'m3',before:'미배정',after:'이서연 · 1번째',reason:'신규 배정 · 청소 순서 지정'},
+  2385 |             {time:'8월 16일 (일) 21:49',assignmentDate:'2026-08-17',room:'639',beforeMaidId:null,afterMaidId:'m3',before:'미배정',after:'이서연 · 2번째',reason:'신규 배정 · 청소 순서 지정'}
+  2386 |           ],
+  2387 |           taskInputs:{
+  2388 |             '117':{attemptId:'attempt-117-20260815-a',checklist:{bed:false,bath:false,floor:false,lock:false},uploads:[demoUpload('p1','침대·침구',true,'empty','bed'),demoUpload('p2','욕실',true,'empty','bath'),demoUpload('p3','바닥·먼지',false,'empty','floor')],note:'',candle:0},
+  2389 |             '350':{attemptId:'attempt-350-20260815-a',checklist:{bed:true,bath:true,floor:true,lock:true},uploads:[demoUpload('p1','침대·침구',true,'done','bed'),demoUpload('p2','욕실',true,'done','bath'),demoUpload('p3','바닥·먼지',false,'done','floor')],note:'',candle:0},
+  2390 |             '332':{attemptId:'attempt-332-20260815-a',checklist:{bed:false,bath:false,floor:false,lock:false},uploads:[demoUpload('p1','침대·침구',true,'empty','bed'),demoUpload('p2','욕실',true,'empty','bath'),demoUpload('p3','바닥·먼지',false,'empty','floor')],note:'',candle:0},
+  2391 |             '528':{attemptId:'attempt-528-20260815-a',checklist:{bed:true,bath:true,floor:true,lock:true},uploads:[demoUpload('p1','침대·침구',true,'done','bed'),demoUpload('p2','욕실',true,'failed','bath'),demoUpload('p3','바닥·먼지',false,'done','floor')],note:'',candle:0},
+  2392 |             '639':{attemptId:'attempt-639-20260815-a',checklist:{bed:true,bath:true,floor:true,lock:true},uploads:[demoUpload('p1','침대·침구',true,'done','bed'),demoUpload('p2','욕실',true,'done','bath'),demoUpload('p3','바닥·먼지',false,'done','floor'),demoUpload('p4','비품',false,'done','supply')],note:'',candle:0}
+  2393 |           },
+  2394 |           roomIssues:{
+  2395 |             '639':[{id:'ri-639-1',room:'639',type:'시설 고장',blocksCheckin:true,note:'욕실 거울 고정 상태를 추가 확인해 주세요.',createdBy:'이서연',createdById:'m3',createdAt:'2026.08.15 10:46',status:'open',photos:[{id:'ri-639-p1',label:'특이사항 사진 1',image:{...demoUploadImageFixture('bath')}},{id:'ri-639-p2',label:'특이사항 사진 2',image:{...demoUploadImageFixture('supply')}}]}]
+  2396 |           },
+  2397 |           checklist:{bed:false,bath:false,floor:false,lock:false},
+  2398 |           uploads:[{id:'p1',label:'침대·침구',status:'empty'},{id:'p2',label:'욕실',status:'empty'},{id:'p3',label:'바닥·먼지',status:'empty'}],
+  2399 |           conflict:'none', conflictSteps:{coordinate:false,replan:false,pin:false},
+  2400 |           conflictRecord:{beforeCheckout:'11:00',afterCheckout:'13:00',autoCheckoutAt:'11:00',pinViewedAt:'11:06',leaseId:'LEASE-332-A',assignee:'김민지1',stage:'청소 시작됨',resolvedAt:null},
