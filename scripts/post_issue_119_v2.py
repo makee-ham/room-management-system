@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -80,6 +81,14 @@ for old_contract, new_contract, label in replacements:
         raise RuntimeError(f"{label}: expected 1 match, found {check.count(old_contract)}")
     check = check.replace(old_contract, new_contract, 1)
 check_path.write_text(check, encoding="utf-8")
+
+# The canonical manifest intentionally pins the shipped wireframe. Refresh it only
+# after the transformed HTML and validation source have been written successfully.
+manifest_path = ROOT / "manifest.json"
+manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+manifest["version"] = "2026-08-30-issue-119-role-login-cleaning-optional-long-stay"
+manifest.setdefault("sha256", {})["WIREFRAME/index.html"] = hashlib.sha256(html_path.read_bytes()).hexdigest()
+manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 sums_path = ROOT / "SHA256SUMS.txt"
 refreshed = []
