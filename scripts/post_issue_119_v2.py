@@ -42,6 +42,12 @@ for (const contract of [
 if check.count(old_check) != 1:
     raise RuntimeError(f"workspace long-stay policy: expected 1 match, found {check.count(old_check)}")
 check = check.replace(old_check, new_check, 1)
+
+old_room_card_contract = "  \"reservationActionLabel=weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`\","
+new_room_card_contract = "  \"reservationActionLabel=room.longStay?'장기 투숙 관리':weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`\","
+if check.count(old_room_card_contract) != 1:
+    raise RuntimeError(f"room-card long-stay validation: expected 1 match, found {check.count(old_room_card_contract)}")
+check = check.replace(old_room_card_contract, new_room_card_contract, 1)
 check_path.write_text(check, encoding="utf-8")
 
 sums_path = ROOT / "SHA256SUMS.txt"
@@ -56,4 +62,4 @@ for raw in sums_path.read_text(encoding="utf-8").splitlines():
     refreshed.append(f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {rel}")
 sums_path.write_text("\n".join(refreshed) + "\n", encoding="utf-8")
 
-print("Removed stale role-switch markup and updated long-stay workspace validation.")
+print("Removed stale role-switch markup and updated issue #119 workspace validation.")
