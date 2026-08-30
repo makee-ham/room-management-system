@@ -2497,14 +2497,14 @@
       const LIVE_IDEMPOTENCY_KEYS=new Map();
       let volatileAuthSession=null;
 
-      function initialRemoteState(){return {auth:{status:'booting',user:null,session:null,error:null,remember:true,passwordMode:false},accounts:{status:'idle',items:[],error:null,mutationError:null,requestId:null,lastSuccessAt:null},rooms:{status:'idle',items:[],error:null,requestId:null,lastSuccessAt:null,query:'',filter:'all'}};}
+      function initialRemoteState(){return {auth:{status:'booting',user:null,session:null,error:null,remember:true,passwordMode:false},accounts:{status:'idle',items:[],error:null,mutationError:null,requestId:null,lastSuccessAt:null},rooms:{status:'idle',items:[],error:null,requestId:null,lastSuccessAt:null,query:'',filter:'all',typeFilter:'all'}};}
       function liveMode(){return LIVE_RUNTIME.mode==='live';}
       function demoMode(){return LIVE_RUNTIME.mode==='demo';}
       function runtimeProjectRef(){try{return new URL(LIVE_RUNTIME.config?.supabaseUrl||'').hostname.split('.')[0]||'';}catch{return '';}}
       function safeLiveActor(value){if(!value||!['developer','admin','maid'].includes(value.role)||typeof value.profileId!=='string'||typeof value.displayName!=='string')return null;return {authUserId:String(value.authUserId||''),profileId:value.profileId,displayName:value.displayName,role:value.role,mustChangePassword:!!value.mustChangePassword};}
       function sameLiveActorIdentity(left,right){const a=safeLiveActor(left),b=safeLiveActor(right);return !!a&&!!b&&a.profileId===b.profileId&&a.role===b.role&&(!a.authUserId||!b.authUserId||a.authUserId===b.authUserId);}
       function liveActorSession(actor=safeLiveActor(state?.remote?.auth?.user)){return actor?{id:actor.profileId,role:actor.role,name:actor.displayName,maidId:null}:null;}
-      function defaultLiveView(role){return role==='admin'?'rooms':role==='developer'?'accounts':'more';}
+      function defaultLiveView(role){return role==='admin'?'today':role==='developer'?'accounts':'my';}
       function requestedLiveView(role){const requested=new URLSearchParams(location.search).get('view');const allowed=role==='admin'?liveAdminNav:role==='developer'?liveDeveloperNav:liveMaidNav;return allowed.some(item=>item.id===requested)?requested:null;}
       function syncLiveViewUrl(view){try{const url=new URL(location.href);if(url.searchParams.get('view')===view&&!url.hash)return;url.searchParams.set('view',view);url.hash='';history.replaceState(null,'',`${url.pathname}${url.search}`);}catch{}}
       function isBrowserPublishableKey(value){
@@ -2929,9 +2929,9 @@
       const maidNav = [
         {id:'my',label:'내 업무',icon:'briefcase'}, {id:'schedule',label:'근무 일정',icon:'calendar'}, {id:'pay',label:'주급',icon:'wallet'}, {id:'more',label:'더보기',icon:'more'}
       ];
-      const liveAdminNav=[{id:'rooms',label:'객실',icon:'rooms'},{id:'accounts',label:'계정',icon:'users'},{id:'more',label:'더보기',icon:'more'}];
+      const liveAdminNav=adminNav;
       const liveDeveloperNav=[{id:'accounts',label:'계정',icon:'users'},{id:'more',label:'더보기',icon:'more'}];
-      const liveMaidNav=[{id:'more',label:'내 계정',icon:'user'}];
+      const liveMaidNav=maidNav;
 
       function currentNav() { if(liveMode())return state.role==='admin'?liveAdminNav:state.role==='developer'?liveDeveloperNav:liveMaidNav;return state.role === 'admin' ? adminNav : maidNav; }
       function currentView() { if(liveMode()){const fallback=defaultLiveView(state.role);return currentNav().some(item=>item.id===state.liveView)?state.liveView:fallback;}return state.role === 'admin' ? state.adminView : state.maidView; }
@@ -3149,11 +3149,37 @@
         if(slice.status==='error'){const copy=apiErrorCopy(slice.error,`${label}을 불러오지 못했습니다.`);return `<section class="live-list"><div class="live-state"><h3>${esc(copy)}</h3><p>${slice.requestId?`문의 번호 ${esc(slice.requestId)} · `:''}운영 데이터는 데모 값으로 대체하지 않습니다.</p>${button('다시 불러오기',retryAction,'primary')}</div></section>`;}
         return '';
       }
+      function liveTodayParts(){
+        const parts=Object.fromEntries(new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',month:'numeric',day:'numeric',weekday:'short'}).formatToParts(new Date()).map(part=>[part.type,part.value]));
+        return {month:Number(parts.month)||1,day:Number(parts.day)||1,weekday:String(parts.weekday||'').replace('요일','')};
+      }
+      function renderLiveDateTools(){
+        const today=liveTodayParts(),label=`${today.month}월 ${today.day}일 (${today.weekday})`;
+        return `<div class="date-tools calendar-anchor" aria-label="오늘 운영일"><button class="icon-btn" type="button" aria-label="이전 날짜 API 준비 중" disabled>${icon('chevronLeft')}</button><button class="date-current" type="button" disabled>${icon('calendar','icon-sm')}<span>${esc(label)}</span></button><button class="icon-btn" type="button" aria-label="다음 날짜 API 준비 중" disabled>${icon('chevronRight')}</button><button class="btn btn-outline" type="button" disabled>오늘</button></div>`;
+      }
+      function renderLiveAdminToday(){
+        const slice=state.remote.rooms,stateMarkup=renderLiveRemoteState(slice,{label:'객실 현황',retryAction:'refresh-live-rooms'});
+        if(stateMarkup)return `<div class="view-stack">${renderLiveDateTools()}<section aria-labelledby="live-summary-title"><div class="mobile-section-title"><div><h2 id="live-summary-title">오늘 객실 요약</h2></div></div>${stateMarkup}</section></div>`;
+        const items=slice.items||[],counts={occupied:items.filter(room=>room.occupied).length,cleaning:items.filter(room=>room.cleaningRequired).length,ready:items.filter(room=>room.allocationReady).length,blocked:items.filter(room=>room.allocationBlocked).length};
+        const assignmentBody=`<div class="rail-row"><strong>청소 필요 객실 ${counts.cleaning}실</strong><span>담당·순서 API가 추가되면 이 영역에서 오늘 배정을 처리합니다.</span></div><div style="margin-top:10px">${button('청소 관리 열기','nav','outline','data-view="cleaning"')}</div>`;
+        const inspectionBody='<div class="rail-row"><strong>검수 API 연결 대기</strong><span>제출 사진과 검수 결과는 서버 endpoint가 준비된 뒤 표시합니다.</span></div>';
+        const costSection=`<section aria-label="청소비 예상 지출"><button class="card cleaning-cost-shortcut" type="button" disabled aria-label="청소비 예상 지출 API 준비 중"><span class="cleaning-cost-shortcut-main">${icon('wallet')}<span><strong>청소비 예상 지출</strong><small>주급 API 준비 중</small></span></span><span class="cleaning-cost-shortcut-cta">주급 정산${icon('chevronRight','icon-sm')}</span></button></section>`;
+        return `<div class="view-stack">${renderLiveDateTools()}<section aria-labelledby="live-summary-title" data-admin-home-section="room-summary"><div class="mobile-section-title"><div><h2 id="live-summary-title">오늘 객실 요약</h2></div></div><div class="today-summary"><button class="card metric-card neutral" type="button" data-action="filter-rooms" data-filter="occupied" aria-label="투숙 중 객실 ${counts.occupied}개 목록 보기"><span>투숙 중</span><strong>${counts.occupied}</strong></button><button class="card metric-card amber" type="button" data-action="filter-rooms" data-filter="cleaning" aria-label="청소 필요 객실 ${counts.cleaning}개 목록 보기"><span>청소 필요</span><strong>${counts.cleaning}</strong></button><button class="card metric-card green" type="button" data-action="filter-rooms" data-filter="available" aria-label="배정 가능 객실 ${counts.ready}개 목록 보기"><span>배정 가능</span><strong>${counts.ready}</strong></button><button class="card metric-card red" type="button" data-action="filter-rooms" data-filter="blocked" aria-label="배정 불가 객실 ${counts.blocked}개 목록 보기"><span>배정 불가</span><strong>${counts.blocked}</strong></button></div></section><div class="accordion-list" data-admin-home-section="cleaning-actions">${renderAccordion('assignment','오늘 청소 배정','API 연결 대기',assignmentBody,true)}${renderAccordion('inspection','청소 검수','API 연결 대기',inspectionBody)}</div><div data-admin-home-section="cleaning-cost">${costSection}</div></div>`;
+      }
+      function liveRoomVisualTone(primary){return primary.key==='blocked'?'red':primary.key==='cleaning'?'amber':primary.key==='ready'?'green':'neutral';}
+      function liveRoomListRow(room){
+        const primary=liveRoomPrimary(room),tone=liveRoomVisualTone(primary),statusIcon=primary.key==='occupied'?'user':primary.key==='cleaning'?'briefcase':primary.key==='ready'?'check':'alert';
+        const axes=[room.occupied?statusBadge('투숙','blue'):'',room.cleaningRequired?statusBadge('청소 필요','amber'):'',Number(room.candleCount)>0?statusBadge(`촛불 ${room.candleCount}개`,'red'):'',room.pinSyncStatus!=='verified'?statusBadge(room.pinSyncStatus==='mismatch'?'PIN 불일치':'PIN 미설정','red'):'',...(room.reasonCodes||[]).map(code=>statusBadge(LIVE_ROOM_REASON_LABELS[code]||code,'neutral'))].filter(Boolean).join('');
+        return `<article class="room-list-item tone-${tone}" data-live-room="${esc(room.roomNumber)}"><div class="room-list-main"><div class="room-list-cell room-list-identity"><strong>${esc(room.roomNumber)}호</strong></div><div class="room-list-cell room-list-type"><strong>${esc(room.roomTypeName)}</strong><span class="room-location-line">${icon('mapPin','icon-sm')}${esc(room.elevatorZone||'미기재')} 엘리베이터</span></div><div class="room-list-cell room-list-schedule" aria-label="예약 일정 API 준비 중"><span>${icon('clock','icon-sm')}체크인 <strong>API 준비 중</strong></span><span>${icon('clock','icon-sm')}체크아웃 <strong>API 준비 중</strong></span></div><div class="room-list-cell room-list-status"><div class="concept-status-panel ${tone}"><span class="status-symbol">${icon(statusIcon)}</span><div class="concept-status-copy"><strong>${esc(primary.label)}</strong>${axes?`<div class="room-list-badges">${axes}</div>`:''}</div></div></div><div class="room-list-cell room-list-pin"><div class="room-list-pin-manager"><div class="room-list-pin-copy"><span>객실 PIN</span><strong>••••</strong><span>조회 API 준비 중</span></div><div class="room-list-pin-actions"><button class="btn btn-outline" type="button" disabled>보기</button><button class="btn btn-primary" type="button" disabled>수정</button></div></div></div></div><div class="room-list-actions" aria-label="${esc(room.roomNumber)}호 준비 중 작업"><button class="btn btn-ghost" type="button" disabled>${icon('calendar')}예약 관리</button><button class="btn btn-ghost" type="button" disabled>${icon('shield')}운영 상태</button><button class="btn btn-ghost" type="button" disabled>${icon('briefcase')}청소 관리</button><button class="btn btn-ghost" type="button" disabled>${icon('list')}전체 상세</button></div></article>`;
+      }
       function renderLiveRooms(){
-        const slice=state.remote.rooms,stateMarkup=renderLiveRemoteState(slice,{label:'객실 현황',retryAction:'refresh-live-rooms'});if(stateMarkup)return `<div class="live-page"><div class="live-page-head"><div><h2>객실 현황</h2><p>운영 서버의 읽기 전용 객실 상태입니다.</p></div></div>${stateMarkup}</div>`;
-        const items=slice.items||[],query=String(slice.query||'').trim().toLowerCase(),filtered=items.filter(room=>liveRoomMatchesFilter(room,slice.filter)&&(!query||String(room.roomNumber).toLowerCase().includes(query)||String(room.roomTypeName).toLowerCase().includes(query))),counts={ready:items.filter(room=>room.allocationReady).length,occupied:items.filter(room=>room.occupied).length,cleaning:items.filter(room=>room.cleaningRequired).length,blocked:items.filter(room=>room.allocationBlocked).length};
-        const rows=filtered.map(room=>{const primary=liveRoomPrimary(room),reasons=(room.reasonCodes||[]).map(code=>`<span class="badge badge-neutral">${esc(LIVE_ROOM_REASON_LABELS[code]||code)}</span>`).join('')||'<span class="live-cell-note">차단 사유 없음</span>',axes=[room.occupied?statusBadge('투숙','blue'):'',room.cleaningRequired?statusBadge('청소 필요','amber'):'',Number(room.candleCount)>0?statusBadge(`촛불 ${room.candleCount}개`,'red'):'',room.pinSyncStatus!=='verified'?statusBadge(room.pinSyncStatus==='mismatch'?'PIN 불일치':'PIN 미설정','red'):''].filter(Boolean).join('');return `<article class="live-row live-room-grid"><div class="live-row-main"><strong>${esc(room.roomNumber)}호</strong><span>${esc(room.elevatorZone||'—')} 엘리베이터 · v${esc(room.stateVersion)}</span></div><div class="live-row-main"><strong>${esc(room.roomTypeName)}</strong><span>${esc(room.roomTypeCode)} · ${room.dataStatus==='verified'?'정보 확인됨':'정보 확인 필요'}</span></div><div><div class="badge-row">${statusBadge(primary.label,primary.tone)}${axes}</div></div><div class="live-reasons">${reasons}</div></article>`;}).join('');
-        return `<div class="live-page"><div class="live-page-head"><div><h2>객실 현황</h2><p>점유·청소·차단·배정 가능 여부를 서로 덮어쓰지 않고 표시합니다.</p></div>${button('새로고침','refresh-live-rooms','outline')}</div><div class="live-summary"><div><span>전체 객실</span><strong>${items.length}실</strong><small>서버 응답 기준</small></div><div><span>배정 가능</span><strong>${counts.ready}실</strong><small>모든 준비 조건 충족</small></div><div><span>투숙 / 청소</span><strong>${counts.occupied} / ${counts.cleaning}</strong><small>독립 상태 축</small></div><div><span>배정 차단</span><strong>${counts.blocked}실</strong><small>전체 사유 보존</small></div></div><div class="live-toolbar"><div class="field"><label for="live-room-search">객실 검색</label><input id="live-room-search" class="input-control" data-control="live-room-search" value="${esc(slice.query||'')}" inputmode="search" placeholder="호수 또는 객실 타입"></div><div class="field compact"><label for="live-room-filter">상태 필터</label><select id="live-room-filter" class="select-control" data-control="live-room-filter"><option value="all" ${slice.filter==='all'?'selected':''}>전체</option><option value="ready" ${slice.filter==='ready'?'selected':''}>배정 가능</option><option value="occupied" ${slice.filter==='occupied'?'selected':''}>투숙 중</option><option value="cleaning" ${slice.filter==='cleaning'?'selected':''}>청소 필요</option><option value="blocked" ${slice.filter==='blocked'?'selected':''}>배정 차단</option><option value="verification" ${slice.filter==='verification'?'selected':''}>정보 확인 필요</option></select></div></div><div class="live-list" aria-label="운영 객실 목록"><div class="live-list-head live-room-grid"><span>객실</span><span>타입·기준정보</span><span>현재 상태</span><span>배정 불가 사유</span></div>${rows||`<div class="live-state"><h3>조건에 맞는 객실이 없습니다.</h3><p>검색어나 상태 필터를 바꿔 보세요.</p></div>`}</div><p class="audit-note">마지막 동기화 ${esc(liveTimeLabel(slice.lastSuccessAt))} · 객실 수정, 예약, 청소 실행 API는 아직 제공되지 않아 이 화면에서 실행하지 않습니다.</p></div>`;
+        const slice=state.remote.rooms,stateMarkup=renderLiveRemoteState(slice,{label:'객실 현황',retryAction:'refresh-live-rooms'});if(stateMarkup)return `<div class="room-concept-layout">${renderLiveDateTools()}${stateMarkup}</div>`;
+        const items=slice.items||[],query=String(slice.query||'').trim().toLowerCase(),typeFilter=slice.typeFilter||'all',filtered=items.filter(room=>liveRoomMatchesFilter(room,slice.filter)&&(typeFilter==='all'||room.roomTypeCode===typeFilter)&&(!query||String(room.roomNumber).toLowerCase().includes(query)||String(room.roomTypeName).toLowerCase().includes(query))),counts={ready:items.filter(room=>room.allocationReady).length,occupied:items.filter(room=>room.occupied).length,cleaning:items.filter(room=>room.cleaningRequired).length,blocked:items.filter(room=>room.allocationBlocked).length};
+        const typeMap=new Map();for(const room of items){if(!typeMap.has(room.roomTypeCode))typeMap.set(room.roomTypeCode,{id:room.roomTypeCode,name:room.roomTypeName,count:0});typeMap.get(room.roomTypeCode).count+=1;}
+        const liveCatalogSummary=`<section class="catalog-summary" aria-label="현재 객실 상태 요약"><div class="catalog-summary-copy"><strong>총 ${items.length}개 객실</strong><span>투숙 중 ${counts.occupied}개 · 청소 필요 ${counts.cleaning}개 · 배정 가능 ${counts.ready}개 · 배정 불가 ${counts.blocked}개입니다.</span></div>${[{id:'all',name:'전체 객실',count:items.length},...typeMap.values()].map(item=>`<button class="catalog-summary-stat" type="button" data-action="filter-room-type" data-type="${esc(item.id)}" aria-pressed="${typeFilter===item.id}" aria-label="${esc(item.name)} ${item.count}개 보기"><strong>${item.count}</strong><span>${esc(item.name)}</span></button>`).join('')}</section>`;
+        const viewControls=`<div class="room-view-controls"><div class="concept-filter-row"><label class="search-field concept-filter-search"><span class="sr-only">객실번호 검색</span>${icon('search')}<input id="live-room-search" class="input-control concept-search" type="search" data-control="live-room-search" value="${esc(slice.query||'')}" placeholder="객실번호 검색" autocomplete="off"></label><label class="concept-status-filter"><span class="sr-only">객실 상태</span><select id="live-room-filter" class="select-control" data-control="live-room-filter"><option value="all" ${slice.filter==='all'?'selected':''}>상태 전체</option><optgroup label="상태 조건"><option value="occupied" ${slice.filter==='occupied'?'selected':''}>투숙 중</option><option value="cleaning" ${slice.filter==='cleaning'?'selected':''}>청소 필요</option><option value="ready" ${slice.filter==='ready'?'selected':''}>배정 가능</option><option value="blocked" ${slice.filter==='blocked'?'selected':''}>배정 불가</option></optgroup><optgroup label="상세 조건"><option value="verification" ${slice.filter==='verification'?'selected':''}>정보 확인 필요</option></optgroup></select></label><button class="btn btn-outline room-export-trigger" type="button" disabled>${icon('download','icon-sm')}내보내기</button></div></div>`;
+        const roomBody=filtered.length?`<div class="room-list-table"><div class="room-list-header" aria-hidden="true"><span>객실</span><span>객실 유형 · 위치</span><span>체크인 · 체크아웃</span><span>상태</span><span>PIN 관리</span></div>${filtered.map(liveRoomListRow).join('')}</div>`:`<section class="inline-empty"><h3>검색·필터 결과가 없습니다</h3><p>전체 객실은 있지만 선택한 조건과 일치하지 않습니다.</p>${button('검색·필터 초기화','clear-room-filters','outline')}</section>`;
+        return `<div class="room-concept-layout">${renderLiveDateTools()}${liveCatalogSummary}${viewControls}${roomBody}<p class="audit-note">마지막 동기화 ${esc(liveTimeLabel(slice.lastSuccessAt))} · 예약·청소·PIN API가 없는 작업은 비활성으로 표시합니다.</p></div>`;
       }
       function liveAccountStatusTone(status){return status==='active'?'green':status==='inactive'?'neutral':status==='departed'?'red':'amber';}
       function liveAccountActions(account){
@@ -3167,17 +3193,32 @@
         if(account.phoneLastFour)actions.push(button('비밀번호 초기화','live-account-reset-password','outline',`data-id="${esc(account.id)}" ${busy?'disabled':''}`));return actions.join('');
       }
       function renderLiveAccounts(){
-        const slice=state.remote.accounts,stateMarkup=renderLiveRemoteState(slice,{label:'계정 목록',retryAction:'refresh-live-accounts'});if(stateMarkup)return `<div class="live-page"><div class="live-page-head"><div><h2>계정 관리</h2><p>운영 계정의 역할과 상태를 관리합니다.</p></div></div>${stateMarkup}</div>`;
+        const adminSurface=state.role==='admin',heading=adminSurface?'메이드·계정 관리':'계정 관리',description=adminSurface?'메이드와 관리자 계정의 역할·상태를 관리합니다.':'운영 계정의 역할과 상태를 관리합니다.';
+        const slice=state.remote.accounts,stateMarkup=renderLiveRemoteState(slice,{label:'계정 목록',retryAction:'refresh-live-accounts'});if(stateMarkup)return `<div class="live-page"><div class="live-page-head"><div><h2>${heading}</h2><p>${description}</p></div></div>${stateMarkup}</div>`;
         const items=slice.items||[],active=items.filter(account=>account.status==='active').length,admins=items.filter(account=>account.role==='admin'&&account.status==='active').length,maids=items.filter(account=>account.role==='maid').length,locked=items.filter(account=>account.lockedUntil||account.failedLoginCount>0).length;
         const rows=items.map(account=>`<article class="live-row live-account-grid"><div class="live-account-name"><div class="avatar">${esc(account.displayName?.slice(0,1)||'계')}</div><div class="live-row-main"><strong>${esc(account.displayName)}</strong><span>${esc(account.loginId)} · 휴대전화 끝 ${esc(account.phoneLastFour||'미등록')}</span></div></div><div><div class="badge-row">${statusBadge(LIVE_ROLE_LABELS[account.role]||account.role,account.role==='developer'?'blue':'neutral')}${account.mustChangePassword?statusBadge('비밀번호 변경 필요','amber'):''}</div></div><div class="live-row-main"><strong>${esc(LIVE_ACCOUNT_STATUS_LABELS[account.status]||account.status)}</strong><span>실패 ${Number(account.failedLoginCount)||0}회${account.lockedUntil?` · ${esc(liveTimeLabel(account.lockedUntil))}까지 잠금`:''}</span></div><div class="live-actions">${liveAccountActions(account)}</div></article>`).join('');
-        return `<div class="live-page"><div class="live-page-head"><div><h2>계정 관리</h2><p>개발자는 계정 전용, 관리자는 객실 운영 권한을 가집니다.</p></div><div class="actions">${button('새 계정','open-live-account-create','primary')}${button('새로고침','refresh-live-accounts','outline')}</div></div><div class="live-summary"><div><span>전체 계정</span><strong>${items.length}명</strong><small>개발자 포함</small></div><div><span>활성 계정</span><strong>${active}명</strong><small>현재 로그인 가능</small></div><div><span>활성 관리자 / 메이드</span><strong>${admins} / ${maids}</strong><small>역할별 집계</small></div><div><span>잠금 확인</span><strong>${locked}명</strong><small>실패 횟수 포함</small></div></div>${slice.status==='mutating'?'<div class="notice notice-info"><div><strong>계정 변경을 서버에서 확인하고 있습니다.</strong><br>완료될 때까지 같은 버튼을 다시 누르지 마세요.</div></div>':''}${slice.mutationError?`<div class="notice notice-danger" role="alert"><div><strong>${esc(apiErrorCopy(slice.mutationError,'계정 변경을 완료하지 못했습니다.'))}</strong>${slice.mutationError.requestId?`<br><small>문의 번호 ${esc(slice.mutationError.requestId)}</small>`:''}</div></div>`:''}<div class="live-list" aria-label="운영 계정 목록"><div class="live-list-head live-account-grid"><span>계정</span><span>역할</span><span>상태</span><span style="text-align:right">관리</span></div>${rows||'<div class="live-state"><h3>표시할 계정이 없습니다.</h3><p>운영 API 응답을 다시 확인해 주세요.</p></div>'}</div><p class="audit-note">마지막 동기화 ${esc(liveTimeLabel(slice.lastSuccessAt))} · 전체 휴대전화 번호와 내부 Auth 이메일은 표시하지 않습니다.</p></div>`;
+        return `<div class="live-page"><div class="live-page-head"><div><h2>${heading}</h2><p>${description}</p></div><div class="actions">${button('새 계정','open-live-account-create','primary')}${button('새로고침','refresh-live-accounts','outline')}</div></div><div class="live-summary"><div><span>전체 계정</span><strong>${items.length}명</strong><small>개발자 포함</small></div><div><span>활성 계정</span><strong>${active}명</strong><small>현재 로그인 가능</small></div><div><span>활성 관리자 / 메이드</span><strong>${admins} / ${maids}</strong><small>역할별 집계</small></div><div><span>잠금 확인</span><strong>${locked}명</strong><small>실패 횟수 포함</small></div></div>${slice.status==='mutating'?'<div class="notice notice-info"><div><strong>계정 변경을 서버에서 확인하고 있습니다.</strong><br>완료될 때까지 같은 버튼을 다시 누르지 마세요.</div></div>':''}${slice.mutationError?`<div class="notice notice-danger" role="alert"><div><strong>${esc(apiErrorCopy(slice.mutationError,'계정 변경을 완료하지 못했습니다.'))}</strong>${slice.mutationError.requestId?`<br><small>문의 번호 ${esc(slice.mutationError.requestId)}</small>`:''}</div></div>`:''}<div class="live-list" aria-label="운영 계정 목록"><div class="live-list-head live-account-grid"><span>계정</span><span>역할</span><span>상태</span><span style="text-align:right">관리</span></div>${rows||'<div class="live-state"><h3>표시할 계정이 없습니다.</h3><p>운영 API 응답을 다시 확인해 주세요.</p></div>'}</div><p class="audit-note">마지막 동기화 ${esc(liveTimeLabel(slice.lastSuccessAt))} · 전체 휴대전화 번호와 내부 Auth 이메일은 표시하지 않습니다.</p></div>`;
+      }
+      const LIVE_PENDING_VIEW_COPY={
+        quickReservation:{title:'간편 예약',icon:'calendar',summary:'예약 등록과 일정 조회 API가 준비되면 기존 예약표에 실데이터를 표시합니다.'},
+        cleaning:{title:'청소 관리',icon:'briefcase',summary:'오늘·내일 배정, 수행, 사진 제출과 검수 API 연결을 기다리고 있습니다.'},
+        schedule:{title:'근무 일정',icon:'calendar',summary:'다음 주 근무 가능일 제출과 변경 요청 API 연결을 기다리고 있습니다.'},
+        pay:{title:'주급',icon:'wallet',summary:'승인 수익 원장과 지급 기록 API 연결을 기다리고 있습니다.'}
+      };
+      function renderLivePendingView(view){
+        const config=LIVE_PENDING_VIEW_COPY[view]||{title:'운영 기능',icon:'info',summary:'운영 API 연결을 기다리고 있습니다.'};
+        return `<div class="view-stack"><section class="card card-pad"><div class="section-head"><div><h2>${esc(config.title)}</h2><p class="audit-note">기존 프런트 구조를 유지한 운영 화면입니다.</p></div>${statusBadge('API 준비 중','neutral')}</div><div class="notice notice-info" style="margin:14px 0 0"><div><strong>${esc(config.summary)}</strong><br>서버 endpoint가 생기기 전에는 데모 예약·업무·금액을 운영 데이터로 표시하지 않습니다.</div></div></section><section class="inline-empty">${icon(config.icon)}<h3>아직 연결할 운영 데이터가 없습니다</h3><p>화면 위치와 내비게이션은 유지되며, 백엔드가 준비되는 순서대로 이 자리에서 바로 연결합니다.</p></section></div>`;
+      }
+      function renderLiveMaidMy(){
+        const actor=state.remote.auth.user;
+        return `<div class="view-stack"><div class="assignment-notice">${icon('bell')}<div><p><strong>청소 일정 API 연결 대기</strong><br>관리자가 통보한 실제 일정만 이곳에 표시합니다.</p></div></div><section class="card work-hero"><span>${esc(actor?.displayName||'메이드')} 현재 작업 상태</span><strong>업무 API 연결 대기</strong><p>운영 서버에 배정·수행 endpoint가 생기기 전에는 데모 객실을 내 업무로 표시하지 않습니다.</p></section><div class="mobile-section-title"><div><h2>내 업무</h2><p>담당 확정부터 검수 결과까지 기존 흐름을 유지합니다.</p></div></div><section class="inline-empty"><h3>표시할 운영 업무가 없습니다</h3><p>배정 API가 연결되면 관리자에게 통보받은 업무만 여기에 표시됩니다.</p>${button('근무 일정 확인','nav','primary','data-view="schedule"')}</section></div>`;
       }
       function pwaInstallLabel(){if(LIVE_RUNTIME.installed)return '설치됨';if(LIVE_RUNTIME.installPrompt)return '이 기기에 설치 가능';if(/iPad|iPhone|iPod/.test(navigator.userAgent))return 'Safari 공유 메뉴에서 홈 화면에 추가';return '브라우저 설치 메뉴 사용 가능';}
       function browserNotificationLabel(){if(!('Notification' in window))return '이 브라우저는 알림을 지원하지 않음';if(Notification.permission==='granted')return '브라우저 알림 허용됨 · 서버 푸시 API 대기';if(Notification.permission==='denied')return '브라우저 설정에서 알림이 차단됨';return '알림 권한 요청 전';}
       function renderLiveMore(){
         const actor=state.remote.auth.user,sessionLabel=state.remote.auth.remember?'이 기기에서 로그인 유지':'현재 탭 세션만 유지',notificationGranted='Notification' in window&&Notification.permission==='granted',maidNotice=actor?.role==='maid'?'<div class="live-role-note"><strong>현장 업무 API는 아직 준비 중입니다.</strong><br>현재 운영 서버는 메이드의 로그인 상태만 확인합니다. 배정·청소·사진·주급 데이터를 데모로 대신 표시하지 않습니다.</div>':'';
         const installAction=LIVE_RUNTIME.updateWaiting?button('새 버전 적용','apply-app-update','primary'):button(LIVE_RUNTIME.installed?'설치됨':'앱 설치','install-app','outline',LIVE_RUNTIME.installed?'disabled':'');
-        return `<div class="live-page"><div class="live-page-head"><div><h2>내 계정과 앱</h2><p>로그인 보안, 설치, 알림 권한을 관리합니다.</p></div></div>${maidNotice}<div class="settings-grid">${settingCard('user','계정·로그인',`${esc(actor?.displayName||'계정')} · ${esc(LIVE_ROLE_LABELS[actor?.role]||'역할 확인')} · ${sessionLabel}`,`${button('상태 보기','account-status','outline')}${button('비밀번호 변경','open-password-change','soft')}`)}${settingCard('download','앱 설치',LIVE_RUNTIME.updateWaiting?'새 앱 버전 적용 대기':pwaInstallLabel(),installAction)}${settingCard('bell','브라우저 알림',browserNotificationLabel(),button(notificationGranted?'알림 상태':'알림 허용','notification-permission','outline'))}${settingCard('sync','운영 연결',`API ${esc(runtimeProjectRef())} · 마지막 계정 확인 ${esc(liveTimeLabel(state.remote.accounts.lastSuccessAt))}`,button('다시 연결','refresh-live-all','outline'))}</div><div class="notice notice-info"><div><strong>백그라운드 푸시는 다음 백엔드 단계입니다.</strong><br>이 앱은 지금 설치와 브라우저 알림 권한까지 준비합니다. 앱이 닫힌 동안 실제 업무 알림을 보내려면 서버의 구독 저장·알림 이벤트·발송 API가 추가되어야 합니다.</div></div></div>`;
+        return `<div class="view-stack">${maidNotice}<div class="settings-grid">${settingCard('user','계정·로그인',`${esc(actor?.displayName||'계정')} · ${esc(LIVE_ROLE_LABELS[actor?.role]||'역할 확인')} · ${sessionLabel}`,`${button('상태 보기','account-status','outline')}${button('비밀번호 변경','open-password-change','soft')}`)}${settingCard('download','앱 설치',LIVE_RUNTIME.updateWaiting?'새 앱 버전 적용 대기':pwaInstallLabel(),installAction)}${settingCard('bell','브라우저 알림',browserNotificationLabel(),button(notificationGranted?'알림 상태':'알림 허용','notification-permission','outline'))}${settingCard('sync','운영 연결',`마지막 확인 ${esc(liveTimeLabel(state.remote.accounts.lastSuccessAt||state.remote.rooms.lastSuccessAt))}`,button('다시 연결','refresh-live-all','outline'))}</div><div class="notice notice-info"><div><strong>백그라운드 푸시는 다음 백엔드 단계입니다.</strong><br>이 앱은 지금 설치와 브라우저 알림 권한까지 준비합니다. 앱이 닫힌 동안 실제 업무 알림을 보내려면 서버의 구독 저장·알림 이벤트·발송 API가 추가되어야 합니다.</div></div></div>`;
       }
 
       function titleForView() {
@@ -3526,7 +3567,7 @@
 
       function renderLiveStrip(){
         const actor=state.remote.auth.user,roleLabel=actor?.role==='developer'?'개발자':actor?.role==='admin'?'관리자':'메이드';
-        return `<section class="live-strip" aria-label="운영 API 연결 상태"><div class="live-strip-inner"><strong><span class="live-signal"></span>운영 API 연결 · ${esc(roleLabel)}</strong><p>인증·계정·객실만 실데이터 · 미지원 업무는 운영 화면에서 숨김</p></div></section>`;
+        return `<section class="live-strip" aria-label="운영 API 연결 상태"><div class="live-strip-inner"><strong><span class="live-signal"></span>운영 연결 · ${esc(roleLabel)}</strong><p>기존 화면 유지 · 연결된 데이터는 실시간 · 준비 중 기능은 명확히 구분</p></div></section>`;
       }
 
       function renderSidebar(nav) {
@@ -4495,7 +4536,10 @@
 
       function titleForView() {
         if(!state.loggedIn)return liveMode()?'운영 로그인':'로그인';
-        if(liveMode()){const map={rooms:'객실 현황',accounts:'계정 관리',more:state.role==='maid'?'내 계정':'더보기'};return map[currentView()]||'객실관리';}
+        if(liveMode()){
+          const admin={today:'오늘 할 일',rooms:'객실 현황',quickReservation:'간편 예약',cleaning:'청소 관리',maids:'메이드',more:'더보기'},maid={my:'내 업무',schedule:'근무 일정',pay:'주급',more:'더보기'},developer={accounts:'계정 관리',more:'더보기'};
+          return (state.role==='admin'?admin:state.role==='maid'?maid:developer)[currentView()]||'객실관리';
+        }
         if (state.detail) {
           const map={room:`${state.detail.id}호 객실 상세`,cleaning:`${state.detail.id}호 청소 상세`,maid:`${maidById(state.detail.id)?.name||'메이드'} 상세`,complaint:'컴플레인·벌점 상세',pay:'주급 정산 상세',templates:'청소 템플릿 설정',template:'청소 템플릿 상세'};
           return map[state.detail.type]||'상세';
@@ -4507,7 +4551,20 @@
 
       function renderMain() {
         if (!state.loggedIn) return renderLogin();
-        if(liveMode()){const view=currentView();if(view==='accounts'&&['developer','admin'].includes(state.role))return renderLiveAccounts();if(view==='rooms'&&state.role==='admin')return renderLiveRooms();return renderLiveMore();}
+        if(liveMode()){
+          const view=currentView();
+          if(state.role==='developer')return view==='accounts'?renderLiveAccounts():renderLiveMore();
+          if(state.role==='admin'){
+            if(view==='today')return renderLiveAdminToday();
+            if(view==='rooms')return renderLiveRooms();
+            if(view==='maids')return renderLiveAccounts();
+            if(view==='more')return renderLiveMore();
+            return renderLivePendingView(view);
+          }
+          if(view==='my')return renderLiveMaidMy();
+          if(view==='more')return renderLiveMore();
+          return renderLivePendingView(view);
+        }
         if (state.detail) return renderDetail();
         if (state.role==='admin') {
           if (state.adminView==='today') return renderAdminToday();
@@ -4524,7 +4581,10 @@
       }
 
       function renderTopbar() {
-        if(liveMode())return `<header class="topbar"><div class="topbar-title"><h1>${esc(titleForView())}</h1><p>운영 API · ${esc(runtimeProjectRef())} · 캐시하지 않는 최신 조회</p></div><div class="topbar-actions"><button class="icon-btn" type="button" data-action="account-status" aria-label="로그인 상태 보기">${icon('user')}</button><button class="btn btn-outline" type="button" data-action="logout" aria-label="로그아웃">${icon('logout','icon-sm')}<span>로그아웃</span></button></div></header>`;
+        if(liveMode()){
+          const lastChecked=state.role==='maid'?'로그인 상태 확인됨':`마지막 동기화 ${liveTimeLabel(state.remote.rooms.lastSuccessAt||state.remote.accounts.lastSuccessAt)}`;
+          return `<header class="topbar"><div class="topbar-title"><h1>${esc(titleForView())}</h1><p>운영 연결 · ${esc(lastChecked)}</p></div><div class="topbar-actions"><button class="icon-btn" type="button" data-action="nav" data-view="more" aria-label="알림과 앱 설정 열기">${icon('bell')}</button><button class="btn btn-outline" type="button" data-action="logout" aria-label="로그아웃">${icon('logout','icon-sm')}<span>로그아웃</span></button></div></header>`;
+        }
         const alertCount=notificationUnreadCount(notificationAudienceKey()),countMarkup=alertCount?`<span class="count-dot">${alertCount}</span>`:'';
         return `<header class="topbar"><div class="topbar-title"><h1>${esc(titleForView())}</h1><p>한국시간 · 마지막 동기화 ${state.selectedDate.replaceAll('-','.')} ${state.network==='online'?state.time:'09:48'} ${state.network==='online'?'':'· 읽기 전용'}</p></div><div class="topbar-actions"><button class="icon-btn" type="button" data-action="alerts" aria-label="알림함 열기 · 안 읽음 ${alertCount}건">${icon('bell')}${countMarkup}</button><button class="btn btn-outline" type="button" data-action="logout" aria-label="로그아웃">${icon('logout','icon-sm')}<span>로그아웃</span></button></div></header>`;
       }
@@ -7415,13 +7475,22 @@
         }
         if(a==='filter-rooms'){
           const filter=el.dataset.filter;
+          if(liveMode()){
+            if(state.role!=='admin'||!['occupied','cleaning','available','blocked'].includes(filter))return;
+            const liveFilter=filter==='available'?'ready':filter;state.liveView='rooms';state.remote.rooms.query='';state.remote.rooms.typeFilter='all';state.remote.rooms.filter=liveFilter;syncLiveViewUrl('rooms');render();requestAnimationFrame(()=>{window.scrollTo(0,0);document.querySelector('[data-control="live-room-filter"]')?.focus({preventScroll:true});});return;
+          }
           if(state.role!=='admin'||!['occupied','cleaning','available','blocked','checkout-inspection'].includes(filter))return;
           maskPin();pendingPin=null;pendingTemplateChange=null;closeModal();rememberCurrentHistoryRoute();
           state.detail=null;state.adminView='rooms';state.roomSearch='';state.roomTypeFilter='all';state.roomFilter=filter;
           pushHistoryOnNextRender();render();requestAnimationFrame(()=>{window.scrollTo(0,0);document.querySelector('[data-control="room-filter"]')?.focus({preventScroll:true});});return;
         }
         if(a==='filter-room-type'){
-          const typeId=el.dataset.type;if(state.role!=='admin'||state.adminView!=='rooms'||!(typeId==='all'||ROOM_TYPES[typeId]))return;
+          const typeId=el.dataset.type;
+          if(liveMode()){
+            const valid=typeId==='all'||state.remote.rooms.items.some(room=>room.roomTypeCode===typeId);if(state.role!=='admin'||currentView()!=='rooms'||!valid)return;
+            state.remote.rooms.typeFilter=typeId;state.remote.rooms.filter='all';state.remote.rooms.query='';render();requestAnimationFrame(()=>document.querySelector(`[data-action="filter-room-type"][data-type="${typeId}"]`)?.focus({preventScroll:true}));return;
+          }
+          if(state.role!=='admin'||state.adminView!=='rooms'||!(typeId==='all'||ROOM_TYPES[typeId]))return;
           state.roomTypeFilter=typeId;state.roomFilter='all';state.roomSearch='';render();requestAnimationFrame(()=>document.querySelector(`[data-action="filter-room-type"][data-type="${typeId}"]`)?.focus({preventScroll:true}));return;
         }
         if(a==='back'){maskPin();backFromDetail();return;}
@@ -7616,7 +7685,7 @@
         if(a==='date-shift'){const d=dateObject();d.setDate(d.getDate()+Number(el.dataset.offset));applyOperationalDate(state,dateIso(d));render();requestAnimationFrame(()=>document.querySelector(`[data-action="date-shift"][data-offset="${el.dataset.offset}"]`)?.focus());return;}
         if(a==='date-today'){applyOperationalDate(state,'2026-08-15');render();requestAnimationFrame(()=>document.querySelector('[data-action="date-today"]')?.focus());return;}
         if(a==='toggle-section'){const key=el.dataset.key;state.todaySections[key]=!state.todaySections[key];render();requestAnimationFrame(()=>document.querySelector(`[data-action="toggle-section"][data-key="${key}"]`)?.focus());return;}
-        if(a==='clear-room-filters'){state.roomSearch='';state.roomTypeFilter='all';state.roomFilter='all';state.listMode='data';render();focusAfterRender('[data-control="room-filter"]');return;}
+        if(a==='clear-room-filters'){if(liveMode()){state.remote.rooms.query='';state.remote.rooms.typeFilter='all';state.remote.rooms.filter='all';render();focusAfterRender('[data-control="live-room-filter"]');return;}state.roomSearch='';state.roomTypeFilter='all';state.roomFilter='all';state.listMode='data';render();focusAfterRender('[data-control="room-filter"]');return;}
         if(a==='edit-room-info'){openRoomInfoEditor(id,el);return;}
         if(a==='save-room-info'){
           const room=ROOMS.find(item=>item.no===id),expected=el.dataset.fingerprint||'',type=document.getElementById('room-info-type')?.value||'',elevator=document.getElementById('room-info-elevator')?.value??'',wasHeld=roomIsOnHold(id),occupancy=document.getElementById('room-info-occupancy')?.value||'';

@@ -412,7 +412,7 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 - 유효한 설정은 운영 모드로 실행하고, 설정이 없거나 잘못되면 데모로 우회하지 않고 로그인 화면에서 연결 오류를 표시한다.
 - 의도적인 로컬 데모 QA만 `RMS_RUNTIME_MODE=demo python3 scripts/serve.py --port 4174`로 실행한다.
 - 운영 대상은 Supabase project ref `aodikrxcczbogjpsjwjt`이며 다른 project ref와 섞인 URL·키는 거부한다.
-- 운영 모드는 로그인·세션 갱신·역할별 계정/객실 API만 표시한다. 아직 endpoint가 없는 예약·청소·사진·주급·PIN을 데모 값으로 대신하지 않는다.
+- 운영 모드는 기존 관리자·메이드 메인과 전체 역할별 내비게이션을 유지한다. 연결된 객실·계정 응답은 기존 카드와 목록에 표시하고, 아직 endpoint가 없는 예약·청소·사진·주급·PIN은 같은 화면 안에서 `API 연결 대기`로 구분하며 데모 값으로 대신하지 않는다.
 - 전용 origin의 개인 기기에서는 `local`, 공용 기기에서는 `session`을 사용한다. 공유 `makee-ham.github.io` origin에는 운영 로그인을 배포하지 않으며, 브라우저 종료 뒤에도 안전하게 유지하려면 앱 전용 custom domain이 필요하다.
 - PWA 설치와 브라우저 알림 권한은 준비됐다. 앱이 닫힌 동안 실제 알림을 받으려면 서버의 Web Push 구독·이벤트·발송 계층이 더 필요하다.
 - 배포·백엔드 후속 계약은 `DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md`를 따른다.

@@ -2286,6 +2286,21 @@ for(const contract of [
 ]){
   if(!html.includes(contract))throw new Error(`Production auth/PWA contract missing: ${contract}`);
 }
+for(const contract of [
+  "function defaultLiveView(role){return role==='admin'?'today':role==='developer'?'accounts':'my';}",
+  'const liveAdminNav=adminNav;',
+  'const liveMaidNav=maidNav;',
+  'function renderLiveAdminToday(){',
+  'function renderLiveMaidMy(){',
+  'function renderLivePendingView(view){',
+  "if(view==='today')return renderLiveAdminToday();",
+  "if(view==='my')return renderLiveMaidMy();",
+  'data-live-room="${esc(room.roomNumber)}"',
+]){
+  if(!html.includes(contract))throw new Error(`Role-based production UI contract missing: ${contract}`);
+}
+if(html.includes('미지원 업무는 운영 화면에서 숨김'))throw new Error('Production UI still hides unsupported role views instead of preserving the existing navigation.');
+console.log('Role-based production main-screen parity contracts: passed');
 const serveSource=readFileSync(resolve(root,'scripts/serve.py'),'utf8');
 const pagesBuildSource=readFileSync(resolve(root,'scripts/build-pages-artifact.mjs'),'utf8');
 const apiCheckSource=readFileSync(resolve(root,'scripts/check-api-integration.mjs'),'utf8');
