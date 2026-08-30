@@ -1,0 +1,28 @@
+name: Collect main-sync source
+
+on:
+  push:
+    branches:
+      - codex/list-only-badge-main-sync
+    paths:
+      - .github/workflows/collect-main-sync-source.yml
+
+permissions:
+  contents: read
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Collect repository source
+        shell: bash
+        run: |
+          mkdir -p /tmp/main-sync-source
+          rsync -a --exclude=.git ./ /tmp/main-sync-source/
+      - name: Upload source artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: main-sync-source
+          path: /tmp/main-sync-source
+          retention-days: 1
