@@ -1,0 +1,28 @@
+name: Collect verified feature source
+
+on:
+  push:
+    branches:
+      - codex/remove-card-view-fix-cleaning-badge
+    paths:
+      - .github/workflows/collect-feature-product-source.yml
+
+permissions:
+  contents: read
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Collect verified feature source
+        shell: bash
+        run: |
+          mkdir -p /tmp/verified-feature-source
+          rsync -a --exclude=.git ./ /tmp/verified-feature-source/
+      - name: Upload feature source artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-feature-source
+          path: /tmp/verified-feature-source
+          retention-days: 1
