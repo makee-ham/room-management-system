@@ -51,7 +51,7 @@ def horizontal_overflow(page: Page) -> float:
 def wait_for_room_count(page: Page, expected: int) -> None:
     page.wait_for_function(
         "expected => document.querySelectorAll('.room-list-item').length === expected",
-        expected,
+        arg=expected,
     )
 
 
