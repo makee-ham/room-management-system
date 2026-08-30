@@ -4,6 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#17314a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="CASTLE THE ART">
+  <link rel="manifest" href="./app.webmanifest">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2317314a'/%3E%3Ctext x='32' y='40' text-anchor='middle' font-family='Arial' font-size='24' font-weight='700' fill='white'%3ECA%3C/text%3E%3C/svg%3E">
   <title>CASTLE THE ART 객실관리 · 데모 와이어프레임</title>
   <style>
@@ -1757,8 +1763,66 @@
     .reservation-long-stay-toggle strong, .reservation-long-stay-toggle span { display:block; }
     .reservation-long-stay-toggle span span { margin-top:3px; color:var(--muted); font-size:.86rem; line-height:1.45; }
     .long-stay-badge { background:#efe7ff; color:#5941a9; border-color:#d9ccff; }
+
+    /* Production API and installable app surfaces */
+    .live-strip { position:sticky; top:0; z-index:45; border-bottom:1px solid #b9d8ed; background:#edf8ff; color:#174d70; }
+    .live-strip-inner { min-height:42px; max-width:1600px; margin:0 auto; padding:8px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .live-strip strong { display:flex; align-items:center; gap:8px; font-size:.86rem; }
+    .live-strip p { margin:0; color:#35677f; font-size:.8rem; text-align:right; }
+    .live-signal { width:9px; height:9px; border-radius:50%; background:var(--green); box-shadow:0 0 0 3px rgba(22,122,90,.14); flex:0 0 auto; }
+    .live-page { display:grid; gap:18px; }
+    .live-page-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+    .live-page-head h2 { margin:0; font-size:1.4rem; }
+    .live-page-head p { margin:5px 0 0; color:var(--muted); }
+    .live-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border:1px solid var(--line); border-radius:var(--radius); background:var(--surface); overflow:hidden; }
+    .live-summary > div { min-width:0; padding:15px 17px; border-right:1px solid var(--line); }
+    .live-summary > div:last-child { border-right:0; }
+    .live-summary span, .live-summary small { display:block; color:var(--muted); font-size:.8rem; }
+    .live-summary strong { display:block; margin:3px 0; font-size:1.25rem; }
+    .live-toolbar { display:flex; align-items:end; gap:10px; flex-wrap:wrap; }
+    .live-toolbar .field { flex:1 1 210px; margin:0; }
+    .live-toolbar .field.compact { flex:0 1 210px; }
+    .live-list { border:1px solid var(--line); border-radius:var(--radius); background:var(--surface); overflow:hidden; }
+    .live-list-head, .live-row { display:grid; align-items:center; gap:12px; padding:12px 16px; }
+    .live-list-head { color:var(--muted); background:var(--surface-soft); border-bottom:1px solid var(--line); font-size:.78rem; font-weight:700; }
+    .live-row { min-height:68px; border-bottom:1px solid var(--line); }
+    .live-row:last-child { border-bottom:0; }
+    .live-room-grid { grid-template-columns:minmax(86px,.7fr) minmax(140px,1.2fr) minmax(120px,1fr) minmax(190px,1.5fr); }
+    .live-account-grid { grid-template-columns:minmax(160px,1.35fr) minmax(105px,.7fr) minmax(130px,.85fr) minmax(230px,1.5fr); }
+    .live-row-main strong, .live-row-main span { display:block; }
+    .live-row-main span, .live-cell-note { color:var(--muted); font-size:.82rem; }
+    .live-reasons { display:flex; gap:5px; flex-wrap:wrap; }
+    .live-actions { display:flex; align-items:center; justify-content:flex-end; gap:7px; flex-wrap:wrap; }
+    .live-actions .btn { min-height:38px; padding:8px 11px; }
+    .live-state { padding:42px 18px; text-align:center; }
+    .live-state h3 { margin:0 0 6px; }
+    .live-state p { margin:0 auto 16px; max-width:560px; color:var(--muted); }
+    .auth-progress { display:flex; align-items:center; justify-content:center; gap:10px; min-height:160px; color:var(--muted); }
+    .auth-spinner { width:20px; height:20px; border:2px solid var(--line-strong); border-top-color:var(--blue); border-radius:50%; animation:auth-spin .8s linear infinite; }
+    @keyframes auth-spin { to { transform:rotate(360deg); } }
+    .remember-login { display:flex; align-items:flex-start; gap:10px; padding:12px; border:1px solid var(--line); border-radius:8px; background:var(--surface-soft); }
+    .remember-login input { width:20px; height:20px; margin:1px 0 0; accent-color:var(--blue); }
+    .remember-login strong, .remember-login span { display:block; }
+    .remember-login span { margin-top:2px; color:var(--muted); font-size:.8rem; }
+    .live-account-name { display:flex; align-items:center; gap:10px; }
+    .live-account-name .avatar { flex:0 0 auto; }
+    .live-role-note { padding:14px 16px; border:1px solid #b9d8ed; border-radius:8px; background:#edf8ff; color:#174d70; }
+    .pwa-status-line { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .sensitive-value { display:block; margin:12px 0; padding:16px; border:1px dashed var(--red); border-radius:8px; background:var(--red-soft); color:#8e1e28; font:700 1.65rem/1 ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing:0; text-align:center; }
     @media (max-width:720px) {
       .assignment-disclosure-body, .weekly-availability-body { padding:0 14px 14px; }
+      .live-strip-inner { align-items:flex-start; padding:8px 12px; }
+      .live-strip p { display:none; }
+      .live-page-head { align-items:stretch; flex-direction:column; }
+      .live-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .live-summary > div:nth-child(2) { border-right:0; }
+      .live-summary > div:nth-child(-n+2) { border-bottom:1px solid var(--line); }
+      .live-list-head { display:none; }
+      .live-room-grid, .live-account-grid { grid-template-columns:1fr; gap:8px; padding:14px; }
+      .live-actions { justify-content:flex-start; padding-top:4px; }
+      .live-actions .btn { min-height:44px; }
+      .live-toolbar { align-items:stretch; }
+      .live-toolbar .field, .live-toolbar .field.compact, .live-toolbar .btn { flex:1 1 100%; width:100%; }
     }
 
   </style>
@@ -2426,19 +2490,248 @@
       };
 
       const AUTH_SESSION_KEY='roomManagementAuthSessionV1';
+      const LIVE_SESSION_KEY_PREFIX='castleTheArtLiveSessionV1';
+      const RUNTIME_CONFIG_PATH='./runtime-config.json';
+      const LIVE_PROJECT_REF='aodikrxcczbogjpsjwjt';
+      const LIVE_RUNTIME={status:'loading',mode:'pending',config:null,refreshPromise:null,refreshGeneration:null,refreshTimer:null,storageTimer:null,authGeneration:0,serviceWorkerRegistration:null,installPrompt:null,installed:window.matchMedia?.('(display-mode: standalone)')?.matches===true,updateWaiting:false};
+      const LIVE_IDEMPOTENCY_KEYS=new Map();
       let volatileAuthSession=null;
+
+      function initialRemoteState(){return {auth:{status:'booting',user:null,session:null,error:null,remember:true,passwordMode:false},accounts:{status:'idle',items:[],error:null,mutationError:null,requestId:null,lastSuccessAt:null},rooms:{status:'idle',items:[],error:null,requestId:null,lastSuccessAt:null,query:'',filter:'all'}};}
+      function liveMode(){return LIVE_RUNTIME.mode==='live';}
+      function demoMode(){return LIVE_RUNTIME.mode==='demo';}
+      function runtimeProjectRef(){try{return new URL(LIVE_RUNTIME.config?.supabaseUrl||'').hostname.split('.')[0]||'';}catch{return '';}}
+      function safeLiveActor(value){if(!value||!['developer','admin','maid'].includes(value.role)||typeof value.profileId!=='string'||typeof value.displayName!=='string')return null;return {authUserId:String(value.authUserId||''),profileId:value.profileId,displayName:value.displayName,role:value.role,mustChangePassword:!!value.mustChangePassword};}
+      function sameLiveActorIdentity(left,right){const a=safeLiveActor(left),b=safeLiveActor(right);return !!a&&!!b&&a.profileId===b.profileId&&a.role===b.role&&(!a.authUserId||!b.authUserId||a.authUserId===b.authUserId);}
+      function liveActorSession(actor=safeLiveActor(state?.remote?.auth?.user)){return actor?{id:actor.profileId,role:actor.role,name:actor.displayName,maidId:null}:null;}
+      function defaultLiveView(role){return role==='admin'?'rooms':role==='developer'?'accounts':'more';}
+      function requestedLiveView(role){const requested=new URLSearchParams(location.search).get('view');const allowed=role==='admin'?liveAdminNav:role==='developer'?liveDeveloperNav:liveMaidNav;return allowed.some(item=>item.id===requested)?requested:null;}
+      function syncLiveViewUrl(view){try{const url=new URL(location.href);if(url.searchParams.get('view')===view&&!url.hash)return;url.searchParams.set('view',view);url.hash='';history.replaceState(null,'',`${url.pathname}${url.search}`);}catch{}}
+      function isBrowserPublishableKey(value){
+        if(/^sb_publishable_[A-Za-z0-9_-]{20,}$/.test(value))return true;
+        if(!/^eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(value))return false;
+        try{const segment=value.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'),payload=JSON.parse(atob(segment.padEnd(Math.ceil(segment.length/4)*4,'=')));return payload?.role==='anon';}catch{return false;}
+      }
+
+      function normalizeRuntimeConfig(value){
+        if(!value||typeof value!=='object')return null;
+        const apiBaseUrl=String(value.apiBaseUrl||'').replace(/\/+$/,''),supabaseUrl=String(value.supabaseUrl||'').replace(/\/+$/,''),supabasePublishableKey=String(value.supabasePublishableKey||''),sessionPersistence=value.sessionPersistence==='local'?'local':'session';
+        try{
+          const apiUrl=new URL(apiBaseUrl),authUrl=new URL(supabaseUrl),apiHost=/^([a-z0-9]+)\.supabase\.co$/.exec(apiUrl.hostname),authHost=/^([a-z0-9]+)\.supabase\.co$/.exec(authUrl.hostname),keyOk=isBrowserPublishableKey(supabasePublishableKey);
+          if(apiUrl.protocol!=='https:'||authUrl.protocol!=='https:'||apiUrl.username||apiUrl.password||authUrl.username||authUrl.password||apiUrl.port||authUrl.port||!apiHost||!authHost||apiHost[1]!==authHost[1]||apiHost[1]!==LIVE_PROJECT_REF||apiUrl.pathname!=='/functions/v1/api'||apiUrl.search||apiUrl.hash||authUrl.pathname!=='/'||authUrl.search||authUrl.hash||!keyOk)return null;
+        }catch{return null;}
+        return {apiBaseUrl,supabaseUrl,supabasePublishableKey,sessionPersistence};
+      }
+      async function loadRuntimeConfig(){
+        LIVE_RUNTIME.status='loading';
+        try{
+          const response=await fetch(RUNTIME_CONFIG_PATH,{cache:'no-store',headers:{Accept:'application/json'}});
+          if(!response.ok)throw new Error('runtime config unavailable');
+          const payload=await response.json();
+          if(payload?.mode==='demo'){LIVE_RUNTIME.config=null;LIVE_RUNTIME.mode='demo';LIVE_RUNTIME.status='ready';return null;}
+          const config=payload?.mode==='live'?normalizeRuntimeConfig(payload):null;
+          if(!config)throw new Error('runtime config incomplete');
+          LIVE_RUNTIME.config=config;LIVE_RUNTIME.mode='live';LIVE_RUNTIME.status='ready';return config;
+        }catch{
+          LIVE_RUNTIME.config=null;LIVE_RUNTIME.mode=location.protocol==='file:'?'demo':'error';LIVE_RUNTIME.status='ready';return null;
+        }
+      }
+
       function authAccounts(){return [{id:'admin',password:'admin1234',role:'admin',name:'관리자',maidId:null},...MAIDS.map((maid,index)=>({id:`maid${index+1}`,password:'maid1234',role:'maid',name:maid.name,maidId:maid.id}))];}
       function safeAuthSession(value){if(!value||!['admin','maid'].includes(value.role))return null;const account=authAccounts().find(item=>item.id===value.id&&item.role===value.role&&(item.role==='admin'||item.maidId===value.maidId));return account?{id:account.id,role:account.role,name:account.name,maidId:account.maidId}:null;}
-      function readAuthSession(){try{return safeAuthSession(JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY)||'null'))||safeAuthSession(volatileAuthSession);}catch{return safeAuthSession(volatileAuthSession);}}
+      function readAuthSession(){
+        if(liveMode())return liveActorSession();
+        try{return safeAuthSession(JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY)||'null'))||safeAuthSession(volatileAuthSession);}catch{return safeAuthSession(volatileAuthSession);}
+      }
       function writeAuthSession(account){const session=safeAuthSession(account);volatileAuthSession=session;try{if(session)sessionStorage.setItem(AUTH_SESSION_KEY,JSON.stringify(session));}catch{}return session;}
       function clearAuthSession(){volatileAuthSession=null;try{sessionStorage.removeItem(AUTH_SESSION_KEY);}catch{}}
-      function syncAuthState(targetState=state){const session=readAuthSession();targetState.authSession=session;targetState.loggedIn=!!session;if(session){targetState.role=session.role;if(session.role==='maid'&&MAIDS.some(maid=>maid.id===session.maidId))targetState.currentMaidId=session.maidId;}return session;}
+      function syncAuthState(targetState=state){
+        if(['pending','error'].includes(LIVE_RUNTIME.mode)){targetState.authSession=null;targetState.loggedIn=false;return null;}
+        if(liveMode()){
+          const actor=safeLiveActor(targetState.remote?.auth?.user),session=liveActorSession(actor),authenticated=targetState.remote?.auth?.status==='authenticated'&&!!actor;
+          targetState.authSession=session;targetState.loggedIn=authenticated;
+          if(actor)targetState.role=actor.role;
+          return authenticated?session:null;
+        }
+        const session=readAuthSession();targetState.authSession=session;targetState.loggedIn=!!session;if(session){targetState.role=session.role;if(session.role==='maid'&&MAIDS.some(maid=>maid.id===session.maidId))targetState.currentMaidId=session.maidId;}return session;
+      }
+
+      class ApiRequestError extends Error{
+        constructor(message,{status=0,code='NETWORK_ERROR',requestId=null,retryAfter=null,timeout=false}={}){super(message);this.name='ApiRequestError';this.status=status;this.code=code;this.requestId=requestId;this.retryAfter=retryAfter;this.timeout=timeout;}
+      }
+      const API_ERROR_COPY={
+        INVALID_CREDENTIALS:'아이디 또는 비밀번호가 일치하지 않습니다.',ACCOUNT_LOCKED:'로그인이 잠겼습니다. 잠금 종료 뒤 다시 시도하거나 관리자에게 문의하세요.',LOGIN_RATE_LIMITED:'로그인 요청이 많습니다. 잠시 뒤 다시 시도하세요.',ACCOUNT_INACTIVE:'사용할 수 없는 계정입니다. 관리자에게 문의하세요.',SESSION_REVOKED:'로그인 세션이 종료되었습니다. 다시 로그인해 주세요.',INVALID_ACCESS_TOKEN:'로그인 세션이 만료되었습니다. 다시 로그인해 주세요.',MISSING_ACCESS_TOKEN:'로그인이 필요합니다.',PASSWORD_CHANGE_REQUIRED:'계속하려면 먼저 개인 비밀번호를 변경하세요.',INVALID_CURRENT_PASSWORD:'현재 비밀번호가 일치하지 않습니다.',LAST_ACTIVE_ADMIN_REQUIRED:'마지막 활성 관리자는 변경할 수 없습니다.',DEVELOPER_ACCOUNT_PROTECTED:'개발자 계정은 이 화면에서 변경할 수 없습니다.',PHONE_ALREADY_REGISTERED:'이미 등록된 휴대전화 번호입니다.',LOGIN_ID_CONFLICT:'로그인 아이디 생성이 충돌했습니다. 다시 시도하세요.',PHONE_REQUIRED_FOR_RESET:'비밀번호 초기화에 필요한 휴대전화 정보가 없습니다.',IDEMPOTENCY_KEY_REUSED:'같은 요청 키가 다른 내용에 사용됐습니다. 목록을 새로 확인해 주세요.',ACCOUNT_MUST_BE_INACTIVE:'퇴사 처리는 먼저 계정을 비활성으로 바꾼 뒤 진행하세요.',DEPARTED_ACCOUNT_IMMUTABLE:'퇴사 완료 계정은 다시 변경할 수 없습니다.',ADMIN_REQUIRED:'관리자 권한이 필요합니다.',ACCOUNT_MANAGER_REQUIRED:'계정 관리자 권한이 필요합니다.',VALIDATION_ERROR:'입력값을 다시 확인해 주세요.'
+      };
+      function apiErrorCopy(error,fallback='요청을 완료하지 못했습니다.'){
+        if(error?.timeout)return '응답이 늦어 결과를 확인하지 못했습니다. 자동으로 다시 실행하지 않습니다.';
+        if(error?.code&&API_ERROR_COPY[error.code])return API_ERROR_COPY[error.code];
+        if(error?.status===0)return '네트워크 연결을 확인한 뒤 다시 시도하세요.';
+        return fallback;
+      }
+      function liveSessionKey(){return `${LIVE_SESSION_KEY_PREFIX}:${runtimeProjectRef()||'unknown'}`;}
+      function liveAllowsPersistentSession(){return LIVE_RUNTIME.config?.sessionPersistence==='local'&&location.hostname!=='makee-ham.github.io';}
+      function safeStoredLiveSession(value){
+        if(!value||typeof value!=='object'||typeof value.accessToken!=='string'||typeof value.refreshToken!=='string'||!Number.isFinite(Number(value.expiresAt)))return null;
+        return {accessToken:value.accessToken,refreshToken:value.refreshToken,expiresAt:Number(value.expiresAt),user:safeLiveActor(value.user),remember:!!value.remember};
+      }
+      function readStoredLiveSession(){
+        const key=liveSessionKey();
+        if(!liveAllowsPersistentSession()){try{localStorage.removeItem(key);}catch{}}
+        const stores=liveAllowsPersistentSession()?[[localStorage,true],[sessionStorage,false]]:[[sessionStorage,false]];
+        for(const [storage,remember] of stores){try{const session=safeStoredLiveSession(JSON.parse(storage.getItem(key)||'null'));if(session)return {session:{...session,remember},remember};}catch{}}
+        return null;
+      }
+      function clearStoredLiveSession(){const key=liveSessionKey();for(const storage of [localStorage,sessionStorage]){try{storage.removeItem(key);}catch{}}}
+      function persistLiveSession(session,remember=session?.remember){
+        const effectiveRemember=liveAllowsPersistentSession()&&!!remember,normalized=safeStoredLiveSession({...session,remember:effectiveRemember});if(!normalized)return null;
+        const key=liveSessionKey(),target=effectiveRemember?localStorage:sessionStorage,other=effectiveRemember?sessionStorage:localStorage;try{target.setItem(key,JSON.stringify({...normalized,remember:effectiveRemember}));other.removeItem(key);}catch{return null;}
+        return {...normalized,remember:effectiveRemember};
+      }
+      function sessionFromLoginPayload(payload,remember,actorOverride=null){
+        const accessToken=String(payload?.accessToken||payload?.access_token||''),refreshToken=String(payload?.refreshToken||payload?.refresh_token||''),expiresIn=Number(payload?.expiresIn||payload?.expires_in||0),actor=safeLiveActor(actorOverride||payload?.user);
+        if(!accessToken||!refreshToken||!Number.isFinite(expiresIn)||expiresIn<1)return null;
+        return {accessToken,refreshToken,expiresAt:Date.now()+expiresIn*1000,user:actor,remember:!!remember};
+      }
+      function scheduleLiveRefresh(){
+        clearTimeout(LIVE_RUNTIME.refreshTimer);LIVE_RUNTIME.refreshTimer=null;
+        const session=state.remote?.auth?.session;if(!liveMode()||state.remote?.auth?.status!=='authenticated'||!session)return;
+        const delay=Math.max(15000,Math.min(30*60*1000,session.expiresAt-Date.now()-90000));
+        LIVE_RUNTIME.refreshTimer=setTimeout(()=>refreshLiveActor().catch(()=>{}),delay);
+      }
+      async function refreshLiveSession({force=false,rejectedAccessToken=''}={}){
+        const generation=LIVE_RUNTIME.authGeneration;
+        if(LIVE_RUNTIME.refreshPromise&&LIVE_RUNTIME.refreshGeneration===generation)return LIVE_RUNTIME.refreshPromise;
+        const execute=async()=>{
+          if(generation!==LIVE_RUNTIME.authGeneration)throw new ApiRequestError('session changed',{status:401,code:'SESSION_REVOKED'});
+          const latest=readStoredLiveSession()?.session||state.remote?.auth?.session;if(!latest?.refreshToken)throw new ApiRequestError('session missing',{status:401,code:'SESSION_REVOKED'});
+          const expectedStoredRefreshToken=latest.remember?readStoredLiveSession()?.session?.refreshToken||'':'';
+          if(latest.accessToken!==rejectedAccessToken&&latest.expiresAt>Date.now()+90000&&!force){state.remote.auth.session=latest;return latest;}
+          if(rejectedAccessToken&&latest.accessToken!==rejectedAccessToken&&latest.expiresAt>Date.now()+30000){state.remote.auth.session=latest;return latest;}
+          const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);
+          let response;
+          try{
+            response=await fetch(`${LIVE_RUNTIME.config.supabaseUrl}/auth/v1/token?grant_type=refresh_token`,{method:'POST',cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'application/json','Content-Type':'application/json',apikey:LIVE_RUNTIME.config.supabasePublishableKey},body:JSON.stringify({refresh_token:latest.refreshToken})});
+          }catch(error){throw new ApiRequestError('refresh failed',{timeout:error?.name==='AbortError'});}finally{clearTimeout(timer);}
+          let payload=null;try{payload=await response.json();}catch{}
+          if(!response.ok)throw new ApiRequestError('refresh rejected',{status:response.status,code:response.status===400||response.status===401?'SESSION_REVOKED':'AUTH_LOOKUP_FAILED'});
+          if(generation!==LIVE_RUNTIME.authGeneration)throw new ApiRequestError('session changed',{status:401,code:'SESSION_REVOKED'});
+          if(expectedStoredRefreshToken){const currentStored=readStoredLiveSession()?.session;if(currentStored?.refreshToken!==expectedStoredRefreshToken){if(currentStored&&sameLiveActorIdentity(latest.user,currentStored.user)){state.remote.auth.session=currentStored;return currentStored;}throw new ApiRequestError('session changed',{status:409,code:'SESSION_CHANGED'});}}
+          const refreshed=sessionFromLoginPayload(payload,latest.remember,latest.user);if(!refreshed)throw new ApiRequestError('refresh payload invalid',{status:502,code:'AUTH_LOOKUP_FAILED'});
+          const stored=persistLiveSession(refreshed,latest.remember)||refreshed;state.remote.auth.session=stored;return stored;
+        };
+        const refreshPromise=(async()=>{
+          if(navigator.locks?.request)return navigator.locks.request(`castle-auth-refresh:${runtimeProjectRef()}`,execute);
+          return execute();
+        })();
+        LIVE_RUNTIME.refreshPromise=refreshPromise;LIVE_RUNTIME.refreshGeneration=generation;
+        try{return await refreshPromise;}finally{if(LIVE_RUNTIME.refreshPromise===refreshPromise){LIVE_RUNTIME.refreshPromise=null;LIVE_RUNTIME.refreshGeneration=null;}}
+      }
+      async function ensureLiveAccessToken({force=false,rejectedAccessToken=''}={}){
+        const session=state.remote?.auth?.session||readStoredLiveSession()?.session;
+        if(!session)throw new ApiRequestError('session missing',{status:401,code:'SESSION_REVOKED'});
+        state.remote.auth.session=session;
+        if(!force&&session.expiresAt>Date.now()+90000)return session.accessToken;
+        return (await refreshLiveSession({force,rejectedAccessToken})).accessToken;
+      }
+      async function apiRequest(path,{method='GET',body=null,auth=true,idempotencyKey=null,retryAuth=true,timeoutMs=12000}={}){
+        if(!liveMode())throw new ApiRequestError('api disabled',{code:'RUNTIME_NOT_CONFIGURED'});
+        const requestOnce=async token=>{
+          const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeoutMs),headers={Accept:'application/json'};
+          if(body!==null)headers['Content-Type']='application/json';if(token)headers.Authorization=`Bearer ${token}`;if(idempotencyKey)headers['Idempotency-Key']=idempotencyKey;
+          let response;
+          try{response=await fetch(`${LIVE_RUNTIME.config.apiBaseUrl}${path}`,{method,cache:'no-store',credentials:'omit',headers,body:body===null?undefined:JSON.stringify(body),signal:controller.signal});}
+          catch(error){throw new ApiRequestError('network failure',{timeout:error?.name==='AbortError'});}finally{clearTimeout(timer);}
+          const requestId=response.headers.get('x-request-id');if(response.status===204)return {data:null,requestId};
+          let payload=null;try{payload=await response.json();}catch{if(response.ok)throw new ApiRequestError('invalid json',{status:502,code:'INVALID_RESPONSE',requestId});}
+          if(!response.ok){const code=payload?.error?.code||`HTTP_${response.status}`,message=payload?.error?.message||'request failed';throw new ApiRequestError(message,{status:response.status,code,requestId:payload?.requestId||requestId,retryAfter:response.headers.get('retry-after')});}
+          return {data:payload,requestId};
+        };
+        const token=auth?await ensureLiveAccessToken():null;
+        try{return await requestOnce(token);}catch(error){
+          if(auth&&retryAuth&&error?.status===401&&state.remote?.auth?.session?.refreshToken){const refreshed=await ensureLiveAccessToken({force:true,rejectedAccessToken:token});return requestOnce(refreshed);}
+          throw error;
+        }
+      }
+      async function mutationApiRequest(path,{method='POST',body=null,...options}={}){
+        const payload=new TextEncoder().encode(JSON.stringify(body)),digest=await crypto.subtle.digest('SHA-256',payload),hash=[...new Uint8Array(digest)].map(value=>value.toString(16).padStart(2,'0')).join(''),signature=`${method}:${path}:${hash}`;
+        let idempotencyKey=LIVE_IDEMPOTENCY_KEYS.get(signature);if(!idempotencyKey){if(LIVE_IDEMPOTENCY_KEYS.size>=50)LIVE_IDEMPOTENCY_KEYS.delete(LIVE_IDEMPOTENCY_KEYS.keys().next().value);idempotencyKey=crypto.randomUUID();LIVE_IDEMPOTENCY_KEYS.set(signature,idempotencyKey);}
+        try{const result=await apiRequest(path,{...options,method,body,idempotencyKey});LIVE_IDEMPOTENCY_KEYS.delete(signature);return result;}
+        catch(error){const status=Number(error?.status)||0;if(status>=400&&status<500&&![408,425,429].includes(status))LIVE_IDEMPOTENCY_KEYS.delete(signature);throw error;}
+      }
+      async function loadLiveAccounts(){
+        if(!['developer','admin'].includes(state.remote.auth.user?.role))return;
+        const generation=LIVE_RUNTIME.authGeneration;state.remote.accounts.status='loading';state.remote.accounts.error=null;render();
+        try{const {data,requestId}=await apiRequest('/v1/accounts');if(generation!==LIVE_RUNTIME.authGeneration)return;state.remote.accounts={...state.remote.accounts,status:'ready',items:Array.isArray(data?.accounts)?data.accounts:[],error:null,requestId,lastSuccessAt:new Date().toISOString()};}
+        catch(error){if(generation!==LIVE_RUNTIME.authGeneration)return;state.remote.accounts={...state.remote.accounts,status:'error',error,requestId:error?.requestId||null};}
+        render();
+      }
+      async function loadLiveRooms(){
+        if(state.remote.auth.user?.role!=='admin')return;
+        const generation=LIVE_RUNTIME.authGeneration;state.remote.rooms.status='loading';state.remote.rooms.error=null;render();
+        try{const {data,requestId}=await apiRequest('/v1/rooms');if(generation!==LIVE_RUNTIME.authGeneration)return;state.remote.rooms={...state.remote.rooms,status:'ready',items:Array.isArray(data?.rooms)?data.rooms:[],error:null,requestId,lastSuccessAt:new Date().toISOString()};}
+        catch(error){if(generation!==LIVE_RUNTIME.authGeneration)return;state.remote.rooms={...state.remote.rooms,status:'error',error,requestId:error?.requestId||null};}
+        render();
+      }
+      async function loadLiveRoleData(){
+        const jobs=[];if(['developer','admin'].includes(state.remote.auth.user?.role))jobs.push(loadLiveAccounts());if(state.remote.auth.user?.role==='admin')jobs.push(loadLiveRooms());await Promise.allSettled(jobs);
+      }
+      async function refreshAllLiveData(){
+        if(!liveMode()||state.remote.auth.status!=='authenticated')return;
+        await refreshLiveActor();
+        if(state.remote.auth.status==='authenticated')await loadLiveRoleData();
+      }
+      function establishLiveActor(actor,session,remember){
+        const safe=safeLiveActor(actor);if(!safe)throw new ApiRequestError('actor invalid',{status:502,code:'INVALID_RESPONSE'});
+        const next={...session,user:safe,remember:!!remember};state.remote.auth={...state.remote.auth,status:'authenticated',user:safe,session:persistLiveSession(next,remember)||next,error:null,remember:!!remember,passwordMode:false};state.role=safe.role;state.liveView=requestedLiveView(safe.role)||defaultLiveView(safe.role);syncLiveViewUrl(state.liveView);syncAuthState(state);scheduleLiveRefresh();return safe;
+      }
+      function clearLiveAuthSurface(){
+        LIVE_IDEMPOTENCY_KEYS.clear();clearAllPinModalSecrets();maskPin();protectedPinOverrides.clear();pendingPin=null;rawCloseModal();state.detail=null;
+        if(isWireframeHistory(history.state))history.replaceState(null,'',`${location.pathname}${location.search}`);
+      }
+      function clearLivePageSecretsForHide(){
+        if(!liveMode())return;document.querySelectorAll('input[type="password"],#live-account-phone').forEach(input=>{input.value='';});
+        const modalRoot=document.getElementById('modal-root');if(modalRoot?.querySelector('.sensitive-value,#live-account-create-form'))rawCloseModal();
+      }
+      function beginStoredSessionTransition(){
+        LIVE_RUNTIME.authGeneration+=1;clearTimeout(LIVE_RUNTIME.refreshTimer);LIVE_RUNTIME.refreshTimer=null;clearLiveAuthSurface();state.remote=initialRemoteState();state.remote.auth.status='booting';state.remote.auth.remember=liveAllowsPersistentSession();state.loggedIn=false;state.authSession=null;render();
+      }
+      function endLiveSession({error=null}={}){
+        LIVE_RUNTIME.authGeneration+=1;clearTimeout(LIVE_RUNTIME.refreshTimer);LIVE_RUNTIME.refreshTimer=null;clearStoredLiveSession();clearAuthSession();clearLiveAuthSurface();state.remote=initialRemoteState();state.remote.auth.status='unauthenticated';state.remote.auth.error=error;state.remote.auth.remember=liveAllowsPersistentSession();state.loggedIn=false;state.authSession=null;
+      }
+      async function restoreLiveSession(){
+        const generation=++LIVE_RUNTIME.authGeneration,stored=readStoredLiveSession();state.remote.auth={...state.remote.auth,status:'booting',error:null,session:stored?.session||null,remember:stored?.remember??(LIVE_RUNTIME.config.sessionPersistence==='local')};render();
+        if(!stored){state.remote.auth.status='unauthenticated';render();return;}
+        try{
+          state.remote.auth.session=stored.session;await ensureLiveAccessToken();const {data}=await apiRequest('/v1/auth/me');if(generation!==LIVE_RUNTIME.authGeneration)return;const actor=establishLiveActor(data?.user,state.remote.auth.session,stored.remember);render();if(!actor.mustChangePassword)await loadLiveRoleData();
+        }catch(error){if(generation!==LIVE_RUNTIME.authGeneration)return;if([400,401,403].includes(error?.status)||['SESSION_REVOKED','INVALID_ACCESS_TOKEN','ACCOUNT_INACTIVE'].includes(error?.code)){endLiveSession({error});}else state.remote.auth={...state.remote.auth,status:'error',error};render();}
+      }
+      async function loginWithApi(loginId,password,remember){
+        remember=liveAllowsPersistentSession()&&!!remember;
+        const generation=++LIVE_RUNTIME.authGeneration;state.remote.auth={...state.remote.auth,status:'signing-in',error:null,remember:!!remember};render();
+        try{
+          const {data}=await apiRequest('/v1/auth/login',{method:'POST',body:{loginId,password},auth:false,retryAuth:false});if(generation!==LIVE_RUNTIME.authGeneration)return;
+          const session=sessionFromLoginPayload(data,remember,data?.user);if(!session)throw new ApiRequestError('login payload invalid',{status:502,code:'INVALID_RESPONSE'});state.remote.auth.session=persistLiveSession(session,remember)||session;
+          const {data:me}=await apiRequest('/v1/auth/me');if(generation!==LIVE_RUNTIME.authGeneration)return;const actor=establishLiveActor(me?.user,state.remote.auth.session,remember);render();toast(`${actor.displayName} 계정으로 로그인했습니다.`);if(!actor.mustChangePassword)await loadLiveRoleData();
+        }catch(error){if(generation!==LIVE_RUNTIME.authGeneration)return;clearStoredLiveSession();state.remote.auth={...state.remote.auth,status:'unauthenticated',session:null,user:null,error};state.loggedIn=false;render();requestAnimationFrame(()=>document.getElementById('login-id')?.focus());}
+      }
+      async function refreshLiveActor(){
+        if(!liveMode()||state.remote.auth.status!=='authenticated')return;
+        const generation=LIVE_RUNTIME.authGeneration;
+        try{await ensureLiveAccessToken();const {data}=await apiRequest('/v1/auth/me');if(generation!==LIVE_RUNTIME.authGeneration)return;const actor=safeLiveActor(data?.user);if(!actor)throw new ApiRequestError('actor invalid',{status:502,code:'INVALID_RESPONSE'});state.remote.auth.user=actor;state.remote.auth.session={...state.remote.auth.session,user:actor};persistLiveSession(state.remote.auth.session,state.remote.auth.remember);syncAuthState(state);render();scheduleLiveRefresh();}
+        catch(error){if(generation!==LIVE_RUNTIME.authGeneration)return;if([400,401,403].includes(error?.status)||['SESSION_REVOKED','INVALID_ACCESS_TOKEN','ACCOUNT_INACTIVE'].includes(error?.code)){endLiveSession({error});render();}else{state.remote.auth.error=error;scheduleLiveRefresh();}}
+      }
+      async function logoutLiveSession(){
+        const token=state.remote.auth.session?.accessToken,config=LIVE_RUNTIME.config;endLiveSession();render();requestAnimationFrame(()=>document.getElementById('login-id')?.focus());
+        if(!token||!config)return;
+        const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);
+        try{await fetch(`${config.supabaseUrl}/auth/v1/logout?scope=local`,{method:'POST',cache:'no-store',credentials:'omit',signal:controller.signal,headers:{Accept:'application/json',apikey:config.supabasePublishableKey,Authorization:`Bearer ${token}`}});}catch{}finally{clearTimeout(timer);}
+      }
 
       function baseState(scenario = 0) {
         const cfg = SCENARIOS[scenario] || SCENARIOS[0];
         return {
-          scenario:Number(scenario), role:cfg.role, currentMaidId:'m1', adminView:cfg.role === 'admin' ? cfg.view : 'today', maidView:cfg.role === 'maid' ? cfg.view : 'my',
-          detail:null, returnContext:null, demoOpen:false, time:'10:32', network:'online', listMode:'data', loggedIn:false, authSession:null, loginMode:'normal',
+          scenario:Number(scenario), role:cfg.role, currentMaidId:'m1', adminView:cfg.role === 'admin' ? cfg.view : 'today', maidView:cfg.role === 'maid' ? cfg.view : 'my', liveView:'rooms',
+          detail:null, returnContext:null, demoOpen:false, time:'10:32', network:'online', listMode:'data', loggedIn:false, authSession:null, loginMode:'normal', remote:initialRemoteState(),
           selectedDate:'2026-08-15', calendarMonth:'2026-08', calendarContext:null, reservationWeekStart:'2026-08-10', reservationWeekRoom:null, roomFilter:'all', roomTypeFilter:'all', roomSearch:'', selectedDrafts:[], reservationSaved:false,
           quickReservationAnchorDate:'2026-08-15', quickReservationFollowsToday:true, quickReservationType:'all', quickReservationSearch:'', quickGridScrollLeft:null, quickGridScrollTop:0, quickLastCreated:null,
           reservationSequence:INITIAL_RESERVATIONS.length, reservations:initialReservationState(),
@@ -2636,10 +2929,14 @@
       const maidNav = [
         {id:'my',label:'내 업무',icon:'briefcase'}, {id:'schedule',label:'근무 일정',icon:'calendar'}, {id:'pay',label:'주급',icon:'wallet'}, {id:'more',label:'더보기',icon:'more'}
       ];
+      const liveAdminNav=[{id:'rooms',label:'객실',icon:'rooms'},{id:'accounts',label:'계정',icon:'users'},{id:'more',label:'더보기',icon:'more'}];
+      const liveDeveloperNav=[{id:'accounts',label:'계정',icon:'users'},{id:'more',label:'더보기',icon:'more'}];
+      const liveMaidNav=[{id:'more',label:'내 계정',icon:'user'}];
 
-      function currentNav() { return state.role === 'admin' ? adminNav : maidNav; }
-      function currentView() { return state.role === 'admin' ? state.adminView : state.maidView; }
+      function currentNav() { if(liveMode())return state.role==='admin'?liveAdminNav:state.role==='developer'?liveDeveloperNav:liveMaidNav;return state.role === 'admin' ? adminNav : maidNav; }
+      function currentView() { if(liveMode()){const fallback=defaultLiveView(state.role);return currentNav().some(item=>item.id===state.liveView)?state.liveView:fallback;}return state.role === 'admin' ? state.adminView : state.maidView; }
       function detailAllowedForRole(type,role=state.role) {
+        if(liveMode())return false;
         return role==='admin'?['room','cleaning','maid','complaint','pay','templates','template'].includes(type):['cleaning','complaint'].includes(type);
       }
       function isLocked() { return state.network !== 'online' || state.listMode === 'stale'; }
@@ -2841,7 +3138,51 @@
         if(opening){panel.hidden=false;trigger.setAttribute('aria-expanded','true');trigger.setAttribute('aria-describedby',panel.id);}
       }
       function focusAfterRender(selector='') { requestAnimationFrame(()=>{const target=selector?document.querySelector(selector):null;(target||document.getElementById('main-content'))?.focus?.({preventScroll:true});}); }
+      const LIVE_ROOM_REASON_LABELS={OCCUPIED:'투숙 중',CLEANING_REQUIRED:'청소 필요',CANDLE_PRESENT:'촛불 있음',OPERATION_BLOCKED:'운영 중지',ROOM_ISSUE_BLOCKED:'객실 특이사항',PIN_MISMATCH:'PIN 불일치',DATA_UNCONFIRMED:'정보 확인 필요'};
+      const LIVE_ACCOUNT_STATUS_LABELS={active:'활성',deactivation_pending:'비활성 처리 중',upload_only:'업로드 전용',inactive:'비활성',departed:'퇴사 완료'};
+      const LIVE_ROLE_LABELS={developer:'개발자',admin:'관리자',maid:'메이드'};
+      function liveTimeLabel(value){if(!value)return '아직 없음';try{return new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(value));}catch{return '시각 확인 필요';}}
+      function liveRoomPrimary(room){if(room.allocationBlocked)return {label:'배정 불가',tone:'red',key:'blocked'};if(room.cleaningRequired)return {label:'청소 필요',tone:'amber',key:'cleaning'};if(room.occupied)return {label:'투숙 중',tone:'blue',key:'occupied'};if(room.allocationReady)return {label:'배정 가능',tone:'green',key:'ready'};return {label:'상태 확인',tone:'neutral',key:'verification'};}
+      function liveRoomMatchesFilter(room,filter){if(filter==='all')return true;if(filter==='ready')return room.allocationReady===true;if(filter==='occupied')return room.occupied===true;if(filter==='cleaning')return room.cleaningRequired===true;if(filter==='blocked')return room.allocationBlocked===true;if(filter==='verification')return room.dataStatus==='verification_required'||room.pinSyncStatus!=='verified';return true;}
+      function renderLiveRemoteState(slice,{label,retryAction}){
+        if(['idle','loading'].includes(slice.status))return `<section class="live-list"><div class="auth-progress" role="status"><span class="auth-spinner" aria-hidden="true"></span><span>${esc(label)}을 불러오고 있습니다.</span></div></section>`;
+        if(slice.status==='error'){const copy=apiErrorCopy(slice.error,`${label}을 불러오지 못했습니다.`);return `<section class="live-list"><div class="live-state"><h3>${esc(copy)}</h3><p>${slice.requestId?`문의 번호 ${esc(slice.requestId)} · `:''}운영 데이터는 데모 값으로 대체하지 않습니다.</p>${button('다시 불러오기',retryAction,'primary')}</div></section>`;}
+        return '';
+      }
+      function renderLiveRooms(){
+        const slice=state.remote.rooms,stateMarkup=renderLiveRemoteState(slice,{label:'객실 현황',retryAction:'refresh-live-rooms'});if(stateMarkup)return `<div class="live-page"><div class="live-page-head"><div><h2>객실 현황</h2><p>운영 서버의 읽기 전용 객실 상태입니다.</p></div></div>${stateMarkup}</div>`;
+        const items=slice.items||[],query=String(slice.query||'').trim().toLowerCase(),filtered=items.filter(room=>liveRoomMatchesFilter(room,slice.filter)&&(!query||String(room.roomNumber).toLowerCase().includes(query)||String(room.roomTypeName).toLowerCase().includes(query))),counts={ready:items.filter(room=>room.allocationReady).length,occupied:items.filter(room=>room.occupied).length,cleaning:items.filter(room=>room.cleaningRequired).length,blocked:items.filter(room=>room.allocationBlocked).length};
+        const rows=filtered.map(room=>{const primary=liveRoomPrimary(room),reasons=(room.reasonCodes||[]).map(code=>`<span class="badge badge-neutral">${esc(LIVE_ROOM_REASON_LABELS[code]||code)}</span>`).join('')||'<span class="live-cell-note">차단 사유 없음</span>',axes=[room.occupied?statusBadge('투숙','blue'):'',room.cleaningRequired?statusBadge('청소 필요','amber'):'',Number(room.candleCount)>0?statusBadge(`촛불 ${room.candleCount}개`,'red'):'',room.pinSyncStatus!=='verified'?statusBadge(room.pinSyncStatus==='mismatch'?'PIN 불일치':'PIN 미설정','red'):''].filter(Boolean).join('');return `<article class="live-row live-room-grid"><div class="live-row-main"><strong>${esc(room.roomNumber)}호</strong><span>${esc(room.elevatorZone||'—')} 엘리베이터 · v${esc(room.stateVersion)}</span></div><div class="live-row-main"><strong>${esc(room.roomTypeName)}</strong><span>${esc(room.roomTypeCode)} · ${room.dataStatus==='verified'?'정보 확인됨':'정보 확인 필요'}</span></div><div><div class="badge-row">${statusBadge(primary.label,primary.tone)}${axes}</div></div><div class="live-reasons">${reasons}</div></article>`;}).join('');
+        return `<div class="live-page"><div class="live-page-head"><div><h2>객실 현황</h2><p>점유·청소·차단·배정 가능 여부를 서로 덮어쓰지 않고 표시합니다.</p></div>${button('새로고침','refresh-live-rooms','outline')}</div><div class="live-summary"><div><span>전체 객실</span><strong>${items.length}실</strong><small>서버 응답 기준</small></div><div><span>배정 가능</span><strong>${counts.ready}실</strong><small>모든 준비 조건 충족</small></div><div><span>투숙 / 청소</span><strong>${counts.occupied} / ${counts.cleaning}</strong><small>독립 상태 축</small></div><div><span>배정 차단</span><strong>${counts.blocked}실</strong><small>전체 사유 보존</small></div></div><div class="live-toolbar"><div class="field"><label for="live-room-search">객실 검색</label><input id="live-room-search" class="input-control" data-control="live-room-search" value="${esc(slice.query||'')}" inputmode="search" placeholder="호수 또는 객실 타입"></div><div class="field compact"><label for="live-room-filter">상태 필터</label><select id="live-room-filter" class="select-control" data-control="live-room-filter"><option value="all" ${slice.filter==='all'?'selected':''}>전체</option><option value="ready" ${slice.filter==='ready'?'selected':''}>배정 가능</option><option value="occupied" ${slice.filter==='occupied'?'selected':''}>투숙 중</option><option value="cleaning" ${slice.filter==='cleaning'?'selected':''}>청소 필요</option><option value="blocked" ${slice.filter==='blocked'?'selected':''}>배정 차단</option><option value="verification" ${slice.filter==='verification'?'selected':''}>정보 확인 필요</option></select></div></div><div class="live-list" aria-label="운영 객실 목록"><div class="live-list-head live-room-grid"><span>객실</span><span>타입·기준정보</span><span>현재 상태</span><span>배정 불가 사유</span></div>${rows||`<div class="live-state"><h3>조건에 맞는 객실이 없습니다.</h3><p>검색어나 상태 필터를 바꿔 보세요.</p></div>`}</div><p class="audit-note">마지막 동기화 ${esc(liveTimeLabel(slice.lastSuccessAt))} · 객실 수정, 예약, 청소 실행 API는 아직 제공되지 않아 이 화면에서 실행하지 않습니다.</p></div>`;
+      }
+      function liveAccountStatusTone(status){return status==='active'?'green':status==='inactive'?'neutral':status==='departed'?'red':'amber';}
+      function liveAccountActions(account){
+        const actor=state.remote.auth.user,isSelf=actor?.profileId===account.id,isDeveloper=account.role==='developer',busy=state.remote.accounts.status==='mutating';if(isDeveloper)return '<span class="live-cell-note">보호 계정</span>';if(isSelf)return '<span class="live-cell-note">본인 계정 · 내 정보에서 비밀번호 변경</span>';
+        if(account.status==='departed')return '<span class="live-cell-note">퇴사 완료 · 변경 불가</span>';
+        if(['deactivation_pending','upload_only'].includes(account.status))return '<span class="live-cell-note">업무 인계 처리 중</span>';
+        const actions=[];actions.push(button(account.role==='admin'?'메이드로 변경':'관리자로 변경','live-account-role','outline',`data-id="${esc(account.id)}" data-role="${account.role==='admin'?'maid':'admin'}" ${busy?'disabled':''}`));
+        if(account.status==='active')actions.push(button('비활성','live-account-status','outline',`data-id="${esc(account.id)}" data-status="inactive" ${busy?'disabled':''}`));
+        if(account.status==='inactive'){actions.push(button('활성','live-account-status','outline',`data-id="${esc(account.id)}" data-status="active" ${busy?'disabled':''}`));actions.push(button('퇴사','live-account-status','outline',`data-id="${esc(account.id)}" data-status="departed" ${busy?'disabled':''}`));}
+        if(account.failedLoginCount>0||account.lockedUntil)actions.push(button('잠금 해제','live-account-unlock','outline',`data-id="${esc(account.id)}" ${busy?'disabled':''}`));
+        if(account.phoneLastFour)actions.push(button('비밀번호 초기화','live-account-reset-password','outline',`data-id="${esc(account.id)}" ${busy?'disabled':''}`));return actions.join('');
+      }
+      function renderLiveAccounts(){
+        const slice=state.remote.accounts,stateMarkup=renderLiveRemoteState(slice,{label:'계정 목록',retryAction:'refresh-live-accounts'});if(stateMarkup)return `<div class="live-page"><div class="live-page-head"><div><h2>계정 관리</h2><p>운영 계정의 역할과 상태를 관리합니다.</p></div></div>${stateMarkup}</div>`;
+        const items=slice.items||[],active=items.filter(account=>account.status==='active').length,admins=items.filter(account=>account.role==='admin'&&account.status==='active').length,maids=items.filter(account=>account.role==='maid').length,locked=items.filter(account=>account.lockedUntil||account.failedLoginCount>0).length;
+        const rows=items.map(account=>`<article class="live-row live-account-grid"><div class="live-account-name"><div class="avatar">${esc(account.displayName?.slice(0,1)||'계')}</div><div class="live-row-main"><strong>${esc(account.displayName)}</strong><span>${esc(account.loginId)} · 휴대전화 끝 ${esc(account.phoneLastFour||'미등록')}</span></div></div><div><div class="badge-row">${statusBadge(LIVE_ROLE_LABELS[account.role]||account.role,account.role==='developer'?'blue':'neutral')}${account.mustChangePassword?statusBadge('비밀번호 변경 필요','amber'):''}</div></div><div class="live-row-main"><strong>${esc(LIVE_ACCOUNT_STATUS_LABELS[account.status]||account.status)}</strong><span>실패 ${Number(account.failedLoginCount)||0}회${account.lockedUntil?` · ${esc(liveTimeLabel(account.lockedUntil))}까지 잠금`:''}</span></div><div class="live-actions">${liveAccountActions(account)}</div></article>`).join('');
+        return `<div class="live-page"><div class="live-page-head"><div><h2>계정 관리</h2><p>개발자는 계정 전용, 관리자는 객실 운영 권한을 가집니다.</p></div><div class="actions">${button('새 계정','open-live-account-create','primary')}${button('새로고침','refresh-live-accounts','outline')}</div></div><div class="live-summary"><div><span>전체 계정</span><strong>${items.length}명</strong><small>개발자 포함</small></div><div><span>활성 계정</span><strong>${active}명</strong><small>현재 로그인 가능</small></div><div><span>활성 관리자 / 메이드</span><strong>${admins} / ${maids}</strong><small>역할별 집계</small></div><div><span>잠금 확인</span><strong>${locked}명</strong><small>실패 횟수 포함</small></div></div>${slice.status==='mutating'?'<div class="notice notice-info"><div><strong>계정 변경을 서버에서 확인하고 있습니다.</strong><br>완료될 때까지 같은 버튼을 다시 누르지 마세요.</div></div>':''}${slice.mutationError?`<div class="notice notice-danger" role="alert"><div><strong>${esc(apiErrorCopy(slice.mutationError,'계정 변경을 완료하지 못했습니다.'))}</strong>${slice.mutationError.requestId?`<br><small>문의 번호 ${esc(slice.mutationError.requestId)}</small>`:''}</div></div>`:''}<div class="live-list" aria-label="운영 계정 목록"><div class="live-list-head live-account-grid"><span>계정</span><span>역할</span><span>상태</span><span style="text-align:right">관리</span></div>${rows||'<div class="live-state"><h3>표시할 계정이 없습니다.</h3><p>운영 API 응답을 다시 확인해 주세요.</p></div>'}</div><p class="audit-note">마지막 동기화 ${esc(liveTimeLabel(slice.lastSuccessAt))} · 전체 휴대전화 번호와 내부 Auth 이메일은 표시하지 않습니다.</p></div>`;
+      }
+      function pwaInstallLabel(){if(LIVE_RUNTIME.installed)return '설치됨';if(LIVE_RUNTIME.installPrompt)return '이 기기에 설치 가능';if(/iPad|iPhone|iPod/.test(navigator.userAgent))return 'Safari 공유 메뉴에서 홈 화면에 추가';return '브라우저 설치 메뉴 사용 가능';}
+      function browserNotificationLabel(){if(!('Notification' in window))return '이 브라우저는 알림을 지원하지 않음';if(Notification.permission==='granted')return '브라우저 알림 허용됨 · 서버 푸시 API 대기';if(Notification.permission==='denied')return '브라우저 설정에서 알림이 차단됨';return '알림 권한 요청 전';}
+      function renderLiveMore(){
+        const actor=state.remote.auth.user,sessionLabel=state.remote.auth.remember?'이 기기에서 로그인 유지':'현재 탭 세션만 유지',notificationGranted='Notification' in window&&Notification.permission==='granted',maidNotice=actor?.role==='maid'?'<div class="live-role-note"><strong>현장 업무 API는 아직 준비 중입니다.</strong><br>현재 운영 서버는 메이드의 로그인 상태만 확인합니다. 배정·청소·사진·주급 데이터를 데모로 대신 표시하지 않습니다.</div>':'';
+        const installAction=LIVE_RUNTIME.updateWaiting?button('새 버전 적용','apply-app-update','primary'):button(LIVE_RUNTIME.installed?'설치됨':'앱 설치','install-app','outline',LIVE_RUNTIME.installed?'disabled':'');
+        return `<div class="live-page"><div class="live-page-head"><div><h2>내 계정과 앱</h2><p>로그인 보안, 설치, 알림 권한을 관리합니다.</p></div></div>${maidNotice}<div class="settings-grid">${settingCard('user','계정·로그인',`${esc(actor?.displayName||'계정')} · ${esc(LIVE_ROLE_LABELS[actor?.role]||'역할 확인')} · ${sessionLabel}`,`${button('상태 보기','account-status','outline')}${button('비밀번호 변경','open-password-change','soft')}`)}${settingCard('download','앱 설치',LIVE_RUNTIME.updateWaiting?'새 앱 버전 적용 대기':pwaInstallLabel(),installAction)}${settingCard('bell','브라우저 알림',browserNotificationLabel(),button(notificationGranted?'알림 상태':'알림 허용','notification-permission','outline'))}${settingCard('sync','운영 연결',`API ${esc(runtimeProjectRef())} · 마지막 계정 확인 ${esc(liveTimeLabel(state.remote.accounts.lastSuccessAt))}`,button('다시 연결','refresh-live-all','outline'))}</div><div class="notice notice-info"><div><strong>백그라운드 푸시는 다음 백엔드 단계입니다.</strong><br>이 앱은 지금 설치와 브라우저 알림 권한까지 준비합니다. 앱이 닫힌 동안 실제 업무 알림을 보내려면 서버의 구독 저장·알림 이벤트·발송 API가 추가되어야 합니다.</div></div></div>`;
+      }
+
       function titleForView() {
+        if(!state.loggedIn)return liveMode()?'운영 로그인':'로그인';
+        if(liveMode()){const map={rooms:'객실 현황',accounts:'계정 관리',more:state.role==='maid'?'내 계정':'더보기'};return map[currentView()]||'객실관리';}
         if (state.detail) {
           const maps={room:`${state.detail.id}호 객실 상세`,cleaning:`${state.detail.id}호 청소 상세`,maid:`${maidById(state.detail.id)?.name || '메이드'} 상세`,complaint:'컴플레인 상세',pay:'지급 주차 상세'};
           return maps[state.detail.type] || '상세';
@@ -2908,13 +3249,14 @@
       function render() {
         const durableRenderSameState=durableRenderStateRef===state,durableBefore=durableLedgerFingerprint(state);
         syncAuthState(state);
-        projectReservationState(state);
+        if(!liveMode())projectReservationState(state);
         const nav=currentNav();
         const app=document.getElementById('app');
-        app.className=state.role==='admin'?'admin-mode':'';
+        const passwordGate=liveMode()&&state.loggedIn&&(state.remote.auth.user?.mustChangePassword||state.remote.auth.passwordMode);
+        app.className=['admin','developer'].includes(state.role)?'admin-mode':'';
         app.innerHTML=`
-          ${state.loggedIn?renderDemoStrip():''}
-          ${state.loggedIn ? `
+          ${state.loggedIn?(liveMode()?renderLiveStrip():renderDemoStrip()):''}
+          ${passwordGate?renderLivePasswordChange():state.loggedIn ? `
           <div class="app-shell">
             ${renderSidebar(nav)}
             <div class="workspace">
@@ -2924,11 +3266,11 @@
             </div>
           </div>` : renderLogin()}
         `;
-        applyAdminCopyPolicy(app);
+        if(!liveMode())applyAdminCopyPolicy(app);
         document.documentElement.style.setProperty('--nav-count', nav.length);
-        document.title=`${titleForView()} · CASTLE THE ART 데모`;
-        syncUrlState();
-        if(state.loggedIn&&state.role==='admin'&&state.adminView==='quickReservation'&&!state.detail)restoreQuickGridViewport();
+        document.title=`${titleForView()} · CASTLE THE ART${liveMode()?'':' 데모'}`;
+        if(!liveMode())syncUrlState();
+        if(!liveMode()&&state.loggedIn&&state.role==='admin'&&state.adminView==='quickReservation'&&!state.detail)restoreQuickGridViewport();
         const durableAfter=durableLedgerFingerprint(state);if(durableRenderSameState&&durableAfter!==durableBefore)throw new Error('렌더링 중 예약·청소 제출·급여·지급 원장이 변경되었습니다.');durableRenderStateRef=state;assertNoDuplicateDurableRecords(state);
       }
 
@@ -2960,8 +3302,9 @@
       function historyIndex(entry=history.state) { return isWireframeHistory(entry)&&Number.isInteger(entry.index)?entry.index:0; }
       function cloneHistoryPayload(payload) { return payload==null?null:JSON.parse(JSON.stringify(payload)); }
       function isPinHistoryKind(kind) { return kind==='pin-editor'||kind==='pin-review'; }
-      function omitsModalHtml(kind) { return isPinHistoryKind(kind)||kind==='reservation'||kind==='photo-viewer'; }
+      function omitsModalHtml(kind) { return isPinHistoryKind(kind)||kind==='reservation'||kind==='photo-viewer'||kind==='temporary-password'; }
       function safeModalHistoryPayload(kind,payload) {
+        if(kind==='temporary-password')return null;
         if(isPinHistoryKind(kind))return payload?.room?{room:String(payload.room)}:null;
         if(kind==='reservation')return payload?.room?{room:String(payload.room),...(payload.reservationId?{reservationId:String(payload.reservationId)}:{}),...(/^\d{4}-\d{2}-\d{2}$/.test(payload.weekStart||'')?{weekStart:weekStartIso(payload.weekStart)}:{}),...(/^\d{4}-\d{2}-\d{2}$/.test(payload.newDate||'')?{newDate:String(payload.newDate)}:{})}:null;
         if(kind==='photo-viewer'&&payload?.room&&payload?.photoId){const source=['bomb-room','inspection'].includes(payload.source)?payload.source:'room-issue';return {source,room:String(payload.room),recordId:payload.recordId?String(payload.recordId):null,photoId:String(payload.photoId)};}
@@ -3181,11 +3524,16 @@
         return `<section class="demo-strip ${state.demoOpen?'open':''}" aria-label="데모 도구"><div class="demo-strip-inner"><div class="demo-label"><span class="signal"></span>데모 화면 · 실제 운영 데이터 아님</div><button class="icon-btn demo-toggle" type="button" data-action="toggle-demo" aria-expanded="${state.demoOpen}" aria-label="데모 도구 ${state.demoOpen?'접기':'펼치기'}">${icon('settings')}</button><div class="demo-controls"><div class="demo-field demo-auth-role"><span>로그인 역할</span><strong>${esc(roleLabel)}</strong><small>다른 역할은 로그아웃 후 로그인합니다.</small></div><div class="demo-field"><label for="demo-time">시간</label><select id="demo-time" data-control="time"><option ${state.time==='00:00'?'selected':''}>00:00</option><option ${state.time==='10:30'?'selected':''}>10:30</option><option ${state.time==='10:32'?'selected':''}>10:32</option><option ${state.time==='11:05'?'selected':''}>11:05</option><option ${state.time==='11:59'?'selected':''}>11:59</option><option ${state.time==='12:00'?'selected':''}>12:00</option><option ${state.time==='13:05'?'selected':''}>13:05</option><option ${state.time==='16:05'?'selected':''}>16:05</option><option ${state.time==='21:10'?'selected':''}>21:10</option><option ${state.time==='21:55'?'selected':''}>21:55</option><option ${state.time==='22:15'?'selected':''}>22:15</option><option ${state.time==='23:59'?'selected':''}>23:59</option></select></div><div class="demo-field"><label for="demo-network">네트워크</label><select id="demo-network" data-control="network"><option value="online" ${state.network==='online'?'selected':''}>정상</option><option value="offline" ${state.network==='offline'?'selected':''}>오프라인</option><option value="stale" ${state.network==='stale'?'selected':''}>오래된 데이터</option></select></div><div class="demo-field scenario"><label for="demo-scenario">시나리오</label><select id="demo-scenario" data-control="scenario">${Object.entries(SCENARIOS).map(([id,s])=>`<option value="${id}" ${state.scenario===Number(id)?'selected':''}>${id==='0'?'기본':id+'.'} ${esc(s.title)}</option>`).join('')}</select></div><button class="btn btn-ghost demo-reset" type="button" data-action="reset">${icon('refresh','icon-sm')}초기 상태로 재설정</button></div></div></section>`;
       }
 
+      function renderLiveStrip(){
+        const actor=state.remote.auth.user,roleLabel=actor?.role==='developer'?'개발자':actor?.role==='admin'?'관리자':'메이드';
+        return `<section class="live-strip" aria-label="운영 API 연결 상태"><div class="live-strip-inner"><strong><span class="live-signal"></span>운영 API 연결 · ${esc(roleLabel)}</strong><p>인증·계정·객실만 실데이터 · 미지원 업무는 운영 화면에서 숨김</p></div></section>`;
+      }
+
       function renderSidebar(nav) {
-        const maid=signedInMaid();
+        const maid=signedInMaid(),actor=liveMode()?state.remote.auth.user:null,displayName=actor?.displayName||(state.role==='admin'?'관리자':maid.name),roleLabel=actor?.role==='developer'?'계정 개발자':actor?.role==='admin'?'업무 관리자':'메이드';
         return `<aside class="sidebar" aria-label="주요 내비게이션">
           <div class="brand"><div class="brand-mark">CA</div><div><div class="brand-name">CASTLE THE ART</div><div class="brand-sub">객실관리</div></div></div>
-          <div class="identity"><div class="avatar">${state.role==='admin'?'관':esc(maid.name[0])}</div><div><strong>${state.role==='admin'?'관리자':esc(maid.name)}</strong><span>${state.role==='admin'?'최고 관리자':'메이드'}</span></div></div>
+          <div class="identity"><div class="avatar">${esc(displayName.slice(0,1)||'계')}</div><div><strong>${esc(displayName)}</strong><span>${esc(roleLabel)}</span></div></div>
           <nav class="side-nav">${nav.map(n=>`<button class="nav-btn" type="button" data-action="nav" data-view="${n.id}" ${currentView()===n.id&&!state.detail?'aria-current="page"':''}>${icon(n.icon)}<span>${n.label}</span></button>`).join('')}</nav>
           <div class="side-foot">${button('로그아웃','logout','ghost')}</div>
         </aside>`;
@@ -3348,6 +3696,7 @@
 
       function renderMain() {
         if (!state.loggedIn) return renderLogin();
+        if(liveMode()){if(state.liveView==='accounts'&&['developer','admin'].includes(state.role))return renderLiveAccounts();if(state.liveView==='rooms'&&state.role==='admin')return renderLiveRooms();return renderLiveMore();}
         if (state.detail) return renderDetail();
         if (state.role==='admin') {
           if (state.adminView==='today') return renderCheckoutInspectionQueueSummary()+renderAdminToday();
@@ -3478,7 +3827,7 @@
           ${settingCard('list','청소 템플릿',`초안·미리보기·게시 버전 · 현재 ${state.template}`,button('템플릿 관리','template','outline'))}
           ${settingCard('bell','알림 상태',state.notificationsEnabled?'이 기기 알림 허용 데모':'권한 요청 전 · 앱 내부 알림 사용',button(state.notificationsEnabled?'상태 보기':'알림 켜기','notification-permission','outline'))}
           ${settingCard('shield','감사 이력','PIN 조회 사실·검수·단가·지급 수행자 기록',button('최근 이력 보기','audit-log','outline'))}
-          ${settingCard('lock','로그인·보안 상태','최초 변경·5회 실패·15분 잠금 데모',button('로그인 상태 보기','logout','outline'))}
+          ${settingCard('lock','로그인·보안 상태','최초 변경·5회 실패·15분 잠금 데모',button('로그인 상태 보기','account-status','outline'))}
         </div>`;
       }
 
@@ -3755,8 +4104,20 @@
       function renderPayActions(){const paidAmount=maidPayAmount('김민지1','2026-08-03'),paymentStatus=paymentStatusFor('2026-08-03','m1');if(paymentStatus==='OPEN')return `<div style="margin-top:14px">${button('지급 진행 선점','start-payment','primary',isLocked()?'disabled':'')}</div>`;if(paymentStatus==='PAYING')return `<div class="notice notice-warning" style="margin:14px 0 10px">관리자 데모가 ${money(paidAmount)}을 선점했습니다. 외부 송금 뒤 결과를 기록하세요.</div><div class="job-actions">${button('기록 실패 · 확인 필요','payment-check','outline')}${button('외부 송금 완료 기록','finish-payment','success')}</div>`;if(paymentStatus==='CHECK')return `<div class="notice notice-danger" style="margin:14px 0 10px">자동 OPEN 복귀 금지. 송금 여부를 확인해야 합니다.</div><div class="job-actions">${button('송금하지 않음 · OPEN 복귀','payment-open','outline')}${button('송금 완료 재기록','finish-payment','success')}</div>`;return `<div class="notice notice-success" style="margin:14px 0 0">지급 완료 기록은 삭제하지 않으며 이후 차이는 다음 주 정정·상계로 이월합니다.</div>`;}
 
       function renderLogin() {
+        if(LIVE_RUNTIME.status==='loading'||liveMode()&&state.remote.auth.status==='booting')return `<main id="main-content" style="max-width:480px;padding-top:7vh"><section class="card card-pad" style="box-shadow:var(--shadow)"><div class="brand" style="padding:4px 0 16px"><div class="brand-mark">CA</div><div><div class="brand-name">CASTLE THE ART</div><div class="brand-sub">객실관리</div></div></div><div class="auth-progress" role="status"><span class="auth-spinner" aria-hidden="true"></span><span>안전한 로그인 상태를 확인하고 있습니다.</span></div></section></main>`;
+        if(LIVE_RUNTIME.mode==='error')return `<main id="main-content" style="max-width:520px;padding-top:7vh"><section class="card card-pad" style="box-shadow:var(--shadow)"><div class="brand" style="padding:4px 0 18px"><div class="brand-mark">CA</div><div><div class="brand-name">CASTLE THE ART</div><div class="brand-sub">운영 연결 확인 필요</div></div></div><div class="notice notice-danger" role="alert"><div><strong>운영 API 설정을 불러오지 못했습니다.</strong><br>가짜 운영 데이터로 대신 열지 않았습니다. 서버 환경 설정과 네트워크를 확인한 뒤 다시 시도하세요.</div></div><button class="btn btn-primary btn-block" type="button" data-action="retry-runtime-config" style="margin-top:14px">운영 연결 다시 확인</button></section></main>`;
+        if(liveMode()){
+          const status=state.remote.auth.status,error=state.remote.auth.error,errorCopy=error?apiErrorCopy(error,'로그인 요청을 완료하지 못했습니다.'):'';
+          const persistentSession=liveAllowsPersistentSession();
+          return `<main id="main-content" style="max-width:480px;padding-top:7vh"><section class="card card-pad" style="box-shadow:var(--shadow)"><div class="brand" style="padding:4px 0 22px"><div class="brand-mark">CA</div><div><div class="brand-name">CASTLE THE ART</div><div class="brand-sub">운영 객실관리 로그인</div></div></div>${errorCopy?`<div class="notice notice-danger auth-error" role="alert"><div><strong>${esc(errorCopy)}</strong>${error?.requestId?`<br><small>문의 번호 ${esc(error.requestId)}</small>`:''}</div></div>`:''}<form id="login-form" style="display:grid;gap:12px;margin-top:${errorCopy?'16px':'0'}"><div class="field"><label for="login-id">로그인 아이디</label><input id="login-id" class="input-control" autocomplete="username" autocapitalize="none" spellcheck="false" required ${status==='signing-in'?'disabled':''}></div><div class="field"><label for="login-password">로그인 비밀번호</label><input id="login-password" class="input-control" type="password" autocomplete="current-password" required ${status==='signing-in'?'disabled':''}></div><label class="remember-login"><input id="remember-login" type="checkbox" ${persistentSession&&state.remote.auth.remember?'checked':''} ${status==='signing-in'||!persistentSession?'disabled':''}><span><strong>${persistentSession?'이 기기에서 로그인 유지':'현재 앱을 닫을 때까지 로그인'}</strong><span>${persistentSession?'브라우저를 닫아도 유지합니다. 개인 휴대폰이나 개인 PC에서만 켜세요.':'공유 배포 주소에서는 보안을 위해 영구 로그인을 저장하지 않습니다.'}</span></span></label><button class="btn btn-primary btn-block" type="submit" ${status==='signing-in'?'disabled':''}>${status==='signing-in'?'로그인 확인 중':'로그인'}</button></form>${status==='error'?`<button class="btn btn-outline btn-block" type="button" data-action="retry-auth-boot" style="margin-top:10px">기존 로그인 다시 확인</button>`:''}</section></main>`;
+        }
         const error=state.loginMode==='error';
-        return `<main id="main-content" style="max-width:480px;padding-top:7vh"><section class="card card-pad" style="box-shadow:var(--shadow)"><div class="brand" style="padding:4px 0 22px"><div class="brand-mark">CA</div><div><div class="brand-name">CASTLE THE ART</div><div class="brand-sub">객실관리 로그인</div></div></div>${error?'<div class="notice notice-danger auth-error" role="alert">아이디 또는 비밀번호가 일치하지 않습니다.</div>':''}<form id="login-form" style="display:grid;gap:12px;margin-top:${error?'16px':'0'}"><div class="field"><label for="login-id">로그인 아이디</label><input id="login-id" class="input-control" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="admin 또는 maid1" required></div><div class="field"><label for="login-password">로그인 비밀번호</label><input id="login-password" class="input-control" type="password" autocomplete="current-password" required><small>와이어프레임: 관리자 admin / admin1234 · 메이드 maid1~maid9 / maid1234</small></div><button class="btn btn-primary btn-block" type="submit">로그인</button></form></section></main>`;
+        return `<main id="main-content" style="max-width:480px;padding-top:7vh"><section class="card card-pad" style="box-shadow:var(--shadow)"><div class="brand" style="padding:4px 0 22px"><div class="brand-mark">CA</div><div><div class="brand-name">CASTLE THE ART</div><div class="brand-sub">객실관리 로그인 · 데모</div></div></div>${error?'<div class="notice notice-danger auth-error" role="alert">아이디 또는 비밀번호가 일치하지 않습니다.</div>':''}<form id="login-form" style="display:grid;gap:12px;margin-top:${error?'16px':'0'}"><div class="field"><label for="login-id">로그인 아이디</label><input id="login-id" class="input-control" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="admin 또는 maid1" required></div><div class="field"><label for="login-password">로그인 비밀번호</label><input id="login-password" class="input-control" type="password" autocomplete="current-password" required><small>와이어프레임: 관리자 admin / admin1234 · 메이드 maid1~maid9 / maid1234</small></div><button class="btn btn-primary btn-block" type="submit">데모 로그인</button></form></section></main>`;
+      }
+
+      function renderLivePasswordChange(){
+        const forced=!!state.remote.auth.user?.mustChangePassword,error=state.remote.auth.error,status=state.remote.auth.status;
+        return `<main id="main-content" style="max-width:520px;padding-top:7vh"><section class="card card-pad" style="box-shadow:var(--shadow)"><div class="brand" style="padding:4px 0 18px"><div class="brand-mark">CA</div><div><div class="brand-name">CASTLE THE ART</div><div class="brand-sub">${forced?'개인 비밀번호를 먼저 변경해 주세요':'로그인 비밀번호 변경'}</div></div></div>${error?`<div class="notice notice-danger auth-error" role="alert"><div><strong>${esc(apiErrorCopy(error,'비밀번호를 변경하지 못했습니다.'))}</strong>${error?.requestId?`<br><small>문의 번호 ${esc(error.requestId)}</small>`:''}</div></div>`:''}<form id="live-password-form" style="display:grid;gap:12px;margin-top:${error?'16px':'0'}"><div class="field"><label for="current-password">현재 비밀번호</label><input id="current-password" class="input-control" type="password" autocomplete="current-password" required></div><div class="field"><label for="new-password">새 비밀번호</label><input id="new-password" class="input-control" type="password" autocomplete="new-password" required aria-describedby="password-rule"><small id="password-rule">숫자 6자리 이상 또는 영문 대·소문자·숫자·특수문자를 포함한 10자리 이상</small></div><div class="field"><label for="confirm-password">새 비밀번호 확인</label><input id="confirm-password" class="input-control" type="password" autocomplete="new-password" required></div><div class="job-actions">${forced?'':button('취소','cancel-password-change','outline')}<button class="btn btn-primary" type="submit" ${status==='changing-password'?'disabled':''}>${status==='changing-password'?'변경 확인 중':'비밀번호 변경'}</button></div></form></section></main>`;
       }
 
       function openDetail(type,id,trigger=document.activeElement) {
@@ -4133,6 +4494,8 @@
       }
 
       function titleForView() {
+        if(!state.loggedIn)return liveMode()?'운영 로그인':'로그인';
+        if(liveMode()){const map={rooms:'객실 현황',accounts:'계정 관리',more:state.role==='maid'?'내 계정':'더보기'};return map[currentView()]||'객실관리';}
         if (state.detail) {
           const map={room:`${state.detail.id}호 객실 상세`,cleaning:`${state.detail.id}호 청소 상세`,maid:`${maidById(state.detail.id)?.name||'메이드'} 상세`,complaint:'컴플레인·벌점 상세',pay:'주급 정산 상세',templates:'청소 템플릿 설정',template:'청소 템플릿 상세'};
           return map[state.detail.type]||'상세';
@@ -4144,6 +4507,7 @@
 
       function renderMain() {
         if (!state.loggedIn) return renderLogin();
+        if(liveMode()){const view=currentView();if(view==='accounts'&&['developer','admin'].includes(state.role))return renderLiveAccounts();if(view==='rooms'&&state.role==='admin')return renderLiveRooms();return renderLiveMore();}
         if (state.detail) return renderDetail();
         if (state.role==='admin') {
           if (state.adminView==='today') return renderAdminToday();
@@ -4160,6 +4524,7 @@
       }
 
       function renderTopbar() {
+        if(liveMode())return `<header class="topbar"><div class="topbar-title"><h1>${esc(titleForView())}</h1><p>운영 API · ${esc(runtimeProjectRef())} · 캐시하지 않는 최신 조회</p></div><div class="topbar-actions"><button class="icon-btn" type="button" data-action="account-status" aria-label="로그인 상태 보기">${icon('user')}</button><button class="btn btn-outline" type="button" data-action="logout" aria-label="로그아웃">${icon('logout','icon-sm')}<span>로그아웃</span></button></div></header>`;
         const alertCount=notificationUnreadCount(notificationAudienceKey()),countMarkup=alertCount?`<span class="count-dot">${alertCount}</span>`:'';
         return `<header class="topbar"><div class="topbar-title"><h1>${esc(titleForView())}</h1><p>한국시간 · 마지막 동기화 ${state.selectedDate.replaceAll('-','.')} ${state.network==='online'?state.time:'09:48'} ${state.network==='online'?'':'· 읽기 전용'}</p></div><div class="topbar-actions"><button class="icon-btn" type="button" data-action="alerts" aria-label="알림함 열기 · 안 읽음 ${alertCount}건">${icon('bell')}${countMarkup}</button><button class="btn btn-outline" type="button" data-action="logout" aria-label="로그아웃">${icon('logout','icon-sm')}<span>로그아웃</span></button></div></header>`;
       }
@@ -5764,7 +6129,7 @@
       }
 
       function renderAdminMore() {
-        return renderCoach()+renderNetworkNotice()+`<div class="settings-grid">${settingCard('alert','컴플레인·벌점','메이드 지정 · 사유 입력 · 삭제/복구 이력',button('관리','go-complaints','outline'))}${settingCard('list','전체 이력','PIN 원문을 제외한 예약·업무·지급 감사 이력',button('이력 보기','audit-log','outline'))}${settingCard('settings','청소 설정','시트 청소요금·데모 예상시간과 템플릿',`${button('청소요금 보기','rates','outline')}${button('템플릿','template','soft')}`)}${settingCard('shield','계정·로그인','로그인 비밀번호는 객실 PIN과 분리',button('로그인 상태','logout','outline'))}</div>`;
+        return renderCoach()+renderNetworkNotice()+`<div class="settings-grid">${settingCard('alert','컴플레인·벌점','메이드 지정 · 사유 입력 · 삭제/복구 이력',button('관리','go-complaints','outline'))}${settingCard('list','전체 이력','PIN 원문을 제외한 예약·업무·지급 감사 이력',button('이력 보기','audit-log','outline'))}${settingCard('settings','청소 설정','시트 청소요금·데모 예상시간과 템플릿',`${button('청소요금 보기','rates','outline')}${button('템플릿','template','soft')}`)}${settingCard('shield','계정·로그인','로그인 비밀번호는 객실 PIN과 분리',button('로그인 상태','account-status','outline'))}</div>`;
       }
 
       function startTimeFor(no) { const actual=ROOMS.find(room=>room.no===no)?.actualCheckoutAt?.slice(11,16);if(actual)return actual;if(no==='332'&&state.conflict==='resolved')return state.conflictRecord.afterCheckout;return ({'117':'13:00','350':'11:00','332':'11:00','528':'10:00','536':'11:00','639':'11:00','142':'13:00','211':'11:00','352':'10:00'})[no]||'11:00'; }
@@ -6315,7 +6680,7 @@
       }
 
       function renderMaidMore() {
-        return renderCoach()+`<div class="settings-grid">${settingCard('user','내 정보','로그인 비밀번호·연락처·계정 상태',button('계정 상태','logout','outline'))}${settingCard('alert','내 컴플레인','판정 확인·이의 메모만 가능',button('내용 보기','complaint-detail','outline'))}${settingCard('list','업무 이력','담당·시작·완료·제출 이력',button('이력 보기','audit-log','outline'))}${settingCard('bell','알림 설정',state.notificationsEnabled?'앱 내부 알림 확인 가능':'브라우저 알림 권한 전',button('알림 설정','notification-permission','outline'))}</div>`;
+        return renderCoach()+`<div class="settings-grid">${settingCard('user','내 정보','로그인 비밀번호·연락처·계정 상태',button('계정 상태','account-status','outline'))}${settingCard('alert','내 컴플레인','판정 확인·이의 메모만 가능',button('내용 보기','complaint-detail','outline'))}${settingCard('list','업무 이력','담당·시작·완료·제출 이력',button('이력 보기','audit-log','outline'))}${settingCard('bell','알림 설정',state.notificationsEnabled?'앱 내부 알림 확인 가능':'브라우저 알림 권한 전',button('알림 설정','notification-permission','outline'))}</div>`;
       }
 
       function roomPrimaryAction(no,p) {
@@ -6849,7 +7214,70 @@
         showModal({title:'객실 타입 청소요금·예상시간',subtitle:'청소요금은 객실현황(26.08) 8월 시트 정본이며 예상시간만 데모입니다.',large:true,trigger,body:`<div class="rail-list">${Object.entries(ROOM_TYPES).map(([key,type])=>`<div class="rail-row"><strong>${esc(type.name)}</strong><span>${money(type.rate)} · 8월 시트 · 예상 ${type.minutes}분(데모)</span></div>`).join('')}</div><div class="notice notice-info" style="margin:12px 0 0">새 작업은 시트 청소요금을 스냅샷으로 고정합니다. 기존 확정 이력은 당시 기록을 보존합니다.</div>`});
       }
 
+      function liveAccountById(id){return state.remote.accounts.items.find(account=>account.id===id)||null;}
+      function replaceLiveAccount(account){if(!account?.id)return;const index=state.remote.accounts.items.findIndex(item=>item.id===account.id);if(index>=0)state.remote.accounts.items.splice(index,1,account);else state.remote.accounts.items.push(account);state.remote.accounts.items.sort((left,right)=>String(left.displayName).localeCompare(String(right.displayName),'ko'));}
+      function liveAccountMutationButtonDisabled(disabled=true){document.querySelectorAll('#modal-root .modal-foot .btn-primary,#modal-root .modal-foot .btn-danger').forEach(button=>button.disabled=disabled);}
+      async function runLiveAccountMutation({path,method='POST',body=null,successLabel}){
+        const generation=LIVE_RUNTIME.authGeneration;
+        state.remote.accounts.status='mutating';state.remote.accounts.mutationError=null;liveAccountMutationButtonDisabled(true);render();
+        try{const {data,requestId}=await mutationApiRequest(path,{method,body});if(generation!==LIVE_RUNTIME.authGeneration)return null;if(data?.account)replaceLiveAccount(data.account);state.remote.accounts={...state.remote.accounts,status:'ready',mutationError:null,requestId,lastSuccessAt:new Date().toISOString()};closeModal();render();toast(successLabel);return data;}
+        catch(error){if(generation!==LIVE_RUNTIME.authGeneration)return null;state.remote.accounts.status='ready';state.remote.accounts.mutationError=error;liveAccountMutationButtonDisabled(false);render();toast(`${apiErrorCopy(error,'계정 변경을 완료하지 못했습니다.')}${error?.requestId?` · 문의 번호 ${error.requestId}`:''}`,'error');throw error;}
+      }
+      function openLiveAccountCreate(trigger=document.activeElement){showModal({title:'새 운영 계정',subtitle:'관리자 또는 메이드 계정을 만듭니다. 실제 직원 정보가 아닌 승인된 운영 정보만 입력하세요.',trigger,body:`<form id="live-account-create-form" class="form-grid"><div class="field"><label for="live-account-name">표시 이름</label><input id="live-account-name" class="input-control" autocomplete="off" minlength="2" maxlength="40" required></div><div class="field"><label for="live-account-role">역할</label><select id="live-account-role" class="select-control"><option value="maid">메이드</option><option value="admin">관리자</option></select></div><div class="field" style="grid-column:1/-1"><label for="live-account-phone">휴대전화 번호</label><input id="live-account-phone" class="input-control" type="tel" autocomplete="off" inputmode="tel" placeholder="010-0000-0000" required><small>원문은 요청 처리에만 사용되고 응답·이력에 저장되지 않습니다.</small></div></form>`,confirmLabel:'계정 만들기',confirmAction:'submit-live-account-create'});}
+      async function createLiveAccountFromForm(){
+        const form=document.getElementById('live-account-create-form');if(!form?.reportValidity())return;
+        const displayName=document.getElementById('live-account-name')?.value.trim()||'',role=document.getElementById('live-account-role')?.value||'',phone=document.getElementById('live-account-phone')?.value.trim()||'';
+        if(displayName.length<2||!['admin','maid'].includes(role)||!/^010[- 0-9]{7,27}$/.test(phone)){toast('이름, 역할, 010으로 시작하는 휴대전화 번호를 확인하세요.','error');return;}
+        const generation=LIVE_RUNTIME.authGeneration;
+        state.remote.accounts.status='mutating';liveAccountMutationButtonDisabled(true);render();
+        try{
+          const {data,requestId}=await mutationApiRequest('/v1/accounts',{method:'POST',body:{displayName,role,phone}});if(generation!==LIVE_RUNTIME.authGeneration)return;if(data?.account)replaceLiveAccount(data.account);state.remote.accounts={...state.remote.accounts,status:'ready',mutationError:null,requestId,lastSuccessAt:new Date().toISOString()};
+          const temporaryPassword=String(data?.temporaryPassword||'');showModal({title:'계정이 만들어졌습니다',subtitle:`${esc(data?.account?.displayName||displayName)} · ${esc(data?.account?.loginId||'로그인 아이디 확인 필요')}`,historyKind:'temporary-password',body:`<div class="notice notice-warning"><div><strong>임시 비밀번호는 이 화면에서만 한 번 표시합니다.</strong><br>본인에게 안전하게 전달한 뒤 창을 닫으세요. 화면 캡처·메모·로그에 남기지 마세요.</div></div><span class="sensitive-value" aria-label="임시 비밀번호">${esc(temporaryPassword)}</span><div class="info-grid"><div class="info-item"><span>로그인 아이디</span><strong>${esc(data?.account?.loginId||'확인 필요')}</strong></div><div class="info-item"><span>최초 로그인</span><strong>개인 비밀번호 변경 필수</strong></div></div>`,closeLabel:'전달 확인·닫기'});render();
+        }catch(error){if(generation!==LIVE_RUNTIME.authGeneration)return;state.remote.accounts.status='ready';state.remote.accounts.mutationError=error;liveAccountMutationButtonDisabled(false);render();toast(`${apiErrorCopy(error,'계정을 만들지 못했습니다.')}${error?.requestId?` · 문의 번호 ${error.requestId}`:''}`,'error');}
+      }
+      function openLiveAccountRoleReview(account,nextRole,trigger=document.activeElement){showModal({title:'계정 역할을 변경할까요?',subtitle:`${esc(account.displayName)} · ${esc(account.loginId)}`,trigger,body:`<div class="info-grid"><div class="info-item"><span>현재 역할</span><strong>${esc(LIVE_ROLE_LABELS[account.role])}</strong></div><div class="info-item"><span>변경 역할</span><strong>${esc(LIVE_ROLE_LABELS[nextRole])}</strong></div></div><div class="notice notice-warning" style="margin-top:12px">다음 권한 확인부터 변경된 역할이 적용됩니다.</div>`,confirmLabel:'역할 변경',confirmAction:'confirm-live-account-role',confirmVariant:'primary'});const confirm=document.querySelector('[data-action="confirm-live-account-role"]');confirm?.setAttribute('data-id',account.id);confirm?.setAttribute('data-role',nextRole);}
+      function openLiveAccountStatusReview(account,nextStatus,trigger=document.activeElement){const nextLabel=LIVE_ACCOUNT_STATUS_LABELS[nextStatus]||nextStatus,warning=nextStatus==='departed'?'퇴사 완료 뒤에는 이 계정을 다시 변경할 수 없습니다.':nextStatus==='inactive'?'로그인이 중단됩니다. 진행 중 업무 인계는 별도 업무 API가 제공된 뒤 연결됩니다.':'다시 로그인할 수 있는 활성 상태로 전환합니다.';showModal({title:`${nextLabel} 상태로 변경할까요?`,subtitle:`${esc(account.displayName)} · ${esc(account.loginId)}`,trigger,body:`<div class="info-grid"><div class="info-item"><span>현재 상태</span><strong>${esc(LIVE_ACCOUNT_STATUS_LABELS[account.status]||account.status)}</strong></div><div class="info-item"><span>변경 상태</span><strong>${esc(nextLabel)}</strong></div></div><div class="notice notice-warning" style="margin-top:12px">${esc(warning)}</div>`,confirmLabel:`${nextLabel}로 변경`,confirmAction:'confirm-live-account-status',confirmVariant:nextStatus==='departed'?'danger':'primary'});const confirm=document.querySelector('[data-action="confirm-live-account-status"]');confirm?.setAttribute('data-id',account.id);confirm?.setAttribute('data-status',nextStatus);}
+      function openLiveAccountUnlockReview(account,trigger=document.activeElement){showModal({title:'로그인 잠금을 해제할까요?',subtitle:`${esc(account.displayName)} · 실패 ${Number(account.failedLoginCount)||0}회`,trigger,body:'<div class="notice notice-warning">본인 확인과 잠금 사유를 확인한 뒤 해제하세요. 비밀번호는 변경되지 않습니다.</div>',confirmLabel:'잠금 해제',confirmAction:'confirm-live-account-unlock'});document.querySelector('[data-action="confirm-live-account-unlock"]')?.setAttribute('data-id',account.id);}
+      function openLiveAccountResetReview(account,trigger=document.activeElement){showModal({title:'비밀번호를 초기화할까요?',subtitle:`${esc(account.displayName)} · 휴대전화 끝 ${esc(account.phoneLastFour||'미등록')}`,trigger,body:'<div class="notice notice-warning">등록된 휴대전화 마지막 4자리가 임시 비밀번호가 됩니다. 다음 로그인에서 개인 비밀번호를 반드시 변경해야 합니다.</div>',confirmLabel:'비밀번호 초기화',confirmAction:'confirm-live-account-reset-password',confirmVariant:'danger'});document.querySelector('[data-action="confirm-live-account-reset-password"]')?.setAttribute('data-id',account.id);}
+      async function changeLivePassword(currentPassword,newPassword){
+        const generation=LIVE_RUNTIME.authGeneration;let passwordChanged=false;state.remote.auth.status='changing-password';state.remote.auth.error=null;render();
+        try{await mutationApiRequest('/v1/auth/password',{method:'POST',body:{currentPassword,newPassword},retryAuth:false,timeoutMs:15000});passwordChanged=true;if(generation!==LIVE_RUNTIME.authGeneration)return;const {data}=await apiRequest('/v1/auth/me');if(generation!==LIVE_RUNTIME.authGeneration)return;const actor=safeLiveActor(data?.user);if(!actor)throw new ApiRequestError('actor invalid',{status:502,code:'INVALID_RESPONSE'});state.remote.auth={...state.remote.auth,status:'authenticated',user:actor,error:null,passwordMode:false,session:{...state.remote.auth.session,user:actor}};persistLiveSession(state.remote.auth.session,state.remote.auth.remember);syncAuthState(state);render();toast('새 로그인 비밀번호로 변경했습니다.');scheduleLiveRefresh();if(!actor.mustChangePassword)await loadLiveRoleData();}
+        catch(error){if(generation!==LIVE_RUNTIME.authGeneration)return;if(passwordChanged){void logoutLiveSession();toast('비밀번호는 변경됐습니다. 새 비밀번호로 다시 로그인해 주세요.');return;}if([401,403].includes(error?.status)||['SESSION_REVOKED','INVALID_ACCESS_TOKEN','MISSING_ACCESS_TOKEN'].includes(error?.code)){endLiveSession({error});render();requestAnimationFrame(()=>document.getElementById('login-id')?.focus());return;}state.remote.auth={...state.remote.auth,status:'authenticated',error,passwordMode:true};render();}
+      }
+      function validLivePassword(value){return /^\d{6,72}$/.test(value)||value.length>=10&&value.length<=72&&/[a-z]/.test(value)&&/[A-Z]/.test(value)&&/\d/.test(value)&&/[^A-Za-z0-9]/.test(value);}
+
+      async function registerPwaSupport(){
+        if(!('serviceWorker' in navigator)||location.protocol==='file:')return null;
+        try{
+          const registration=await navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'});LIVE_RUNTIME.serviceWorkerRegistration=registration;LIVE_RUNTIME.updateWaiting=!!registration.waiting;
+          registration.addEventListener('updatefound',()=>{const worker=registration.installing;if(!worker)return;worker.addEventListener('statechange',()=>{if(worker.state==='installed'&&navigator.serviceWorker.controller){LIVE_RUNTIME.updateWaiting=true;render();toast('새 앱 버전이 준비됐습니다. 더보기에서 적용할 수 있습니다.');}});});
+          navigator.serviceWorker.addEventListener('message',event=>{if(event.data?.type==='SW_ACTIVATED'){LIVE_RUNTIME.updateWaiting=false;render();}});return registration;
+        }catch{return null;}
+      }
+      async function installPwa(trigger=document.activeElement){
+        if(LIVE_RUNTIME.installed){toast('이미 설치된 앱으로 실행 중입니다.');return;}
+        if(LIVE_RUNTIME.installPrompt){const prompt=LIVE_RUNTIME.installPrompt;LIVE_RUNTIME.installPrompt=null;await prompt.prompt();const choice=await prompt.userChoice;if(choice?.outcome==='accepted'){LIVE_RUNTIME.installed=true;render();toast('앱 설치를 시작했습니다.');}else{render();toast('설치를 취소했습니다.');}return;}
+        if(/iPad|iPhone|iPod/.test(navigator.userAgent)){showModal({title:'iPhone·iPad에 앱 설치',subtitle:'Safari에서 홈 화면에 추가합니다.',trigger,body:'<ol class="timeline"><li><strong>Safari 공유 버튼</strong><span>화면 아래 또는 위의 공유 아이콘을 누릅니다.</span></li><li><strong>홈 화면에 추가</strong><span>메뉴에서 선택한 뒤 오른쪽 위 추가를 누릅니다.</span></li></ol>'});return;}
+        showModal({title:'앱 설치',subtitle:'브라우저 설치 메뉴를 사용합니다.',trigger,body:'<div class="notice notice-info">주소창의 설치 아이콘 또는 브라우저 메뉴에서 앱 설치를 선택하세요. HTTPS 배포 주소에서 설치 기능이 제공됩니다.</div>'});
+      }
+      function applyPwaUpdate(){
+        const waiting=LIVE_RUNTIME.serviceWorkerRegistration?.waiting;
+        if(!waiting){LIVE_RUNTIME.updateWaiting=false;render();toast('적용할 새 앱 버전을 찾지 못했습니다.');return;}
+        pwaUpdateRequested=true;
+        waiting.postMessage({type:'SKIP_WAITING'});
+      }
+      async function requestBrowserNotificationPermission(){
+        if(!('Notification' in window)){toast('이 브라우저는 알림 권한을 지원하지 않습니다.','error');return;}
+        if(Notification.permission==='denied'){showModal({title:'브라우저에서 알림이 차단됐습니다',subtitle:'사이트 설정에서 직접 허용해야 합니다.',body:'<div class="notice notice-warning">주소창의 사이트 설정에서 알림을 허용한 뒤 이 화면으로 돌아오세요.</div>'});return;}
+        let permission=Notification.permission;if(permission==='default')permission=await Notification.requestPermission();
+        if(permission!=='granted'){render();toast('알림 권한을 허용하지 않았습니다.');return;}
+        state.notificationsEnabled=true;setNotificationPushEnabled(true);const registration=LIVE_RUNTIME.serviceWorkerRegistration||await registerPwaSupport();
+        try{await registration?.showNotification('CASTLE THE ART 알림 준비 완료',{body:'이 기기에서 브라우저 알림을 표시할 수 있습니다.',tag:'notification-ready',icon:'./icons/icon-192.png',badge:'./icons/icon-192.png'});}catch{}
+        render();toast('브라우저 알림을 허용했습니다.');
+      }
+
       function openAccountStatus(trigger=document.activeElement) {
+        if(liveMode()){const actor=state.remote.auth.user,storage=state.remote.auth.remember?'개인 기기 · 브라우저 재시작 뒤 유지':'현재 탭 세션';showModal({title:'계정·로그인 상태',subtitle:'운영 서버에서 확인한 현재 계정입니다.',trigger,body:`<div class="info-grid"><div class="info-item"><span>현재 계정</span><strong>${esc(actor?.displayName||'확인 필요')}</strong></div><div class="info-item"><span>역할</span><strong>${esc(LIVE_ROLE_LABELS[actor?.role]||'확인 필요')}</strong></div><div class="info-item"><span>로그인 유지</span><strong>${esc(storage)}</strong></div><div class="info-item"><span>계정 식별자</span><strong>${esc(actor?.profileId?.slice(0,8)||'확인 필요')}…</strong></div></div><div class="notice notice-info" style="margin-top:12px">계정 비밀번호와 객실 PIN은 서로 다르며 토큰·PIN 원문은 화면 이력이나 로그에 남기지 않습니다.</div>`});return;}
         const account=state.role==='admin'?'관리자':signedInMaidName();
         showModal({title:'계정·로그인 상태',subtitle:'로그인 비밀번호와 객실 4자리 PIN은 서로 다릅니다.',trigger,body:`<div class="info-grid"><div class="info-item"><span>현재 계정</span><strong>${esc(account)}</strong></div><div class="info-item"><span>로그인 상태</span><strong>${state.loggedIn?'로그인됨':'로그아웃됨'}</strong></div><div class="info-item"><span>로그인 비밀번호</span><strong>개인 숫자 6자리 이상</strong></div><div class="info-item"><span>객실 PIN</span><strong>객실별 숫자 4자리 · 별도 관리</strong></div></div>`});
       }
@@ -6860,6 +7288,11 @@
       }
 
       function openNotificationStatus(trigger=document.activeElement) {
+        if(liveMode()){
+          if(!('Notification' in window)){showModal({title:'브라우저 알림을 사용할 수 없습니다',subtitle:'현재 브라우저의 지원 상태입니다.',trigger,body:'<div class="notice notice-warning">다른 최신 브라우저 또는 설치된 PWA에서 다시 확인하세요.</div>'});return;}
+          if(Notification.permission==='granted'){showModal({title:'브라우저 알림 허용됨',subtitle:'이 기기에서 알림을 표시할 수 있습니다.',trigger,body:'<div class="notice notice-success">설치와 알림 권한은 준비됐습니다.</div><div class="notice notice-info" style="margin-top:12px">앱을 닫은 동안 실제 업무 푸시를 받으려면 백엔드의 구독 저장·이벤트 발송 API가 추가되어야 합니다.</div>'});return;}
+          showModal({title:'브라우저 알림을 허용할까요?',subtitle:'권한 요청은 확인 버튼을 누른 직후 한 번만 표시됩니다.',trigger,body:'<div class="notice notice-info">업무 내용이 아닌 안전한 알림 준비 메시지로 권한 동작을 확인합니다. 현재 백그라운드 업무 푸시는 서버 API 준비 전입니다.</div>',confirmLabel:'브라우저 알림 허용',confirmAction:'confirm-notification-permission'});return;
+        }
         if(state.notificationsEnabled){
           showModal({title:'알림 상태 · 데모',subtitle:'이 브라우저의 화면 상태만 허용으로 표시합니다.',trigger,body:`<div class="notice notice-success">알림 허용 상태입니다. 푸시를 놓쳐도 미해결 사건은 앱 내부 알림 현황에 남습니다.</div>`});
           return;
@@ -6905,6 +7338,8 @@
       const deprecatedStateActions=new Set(['retry-photo','field-complete','submit-cleaning','approve-inspection','reject-inspection','confirm-approve','confirm-reject','recover-candle','confirm-candle','save-reservation','show-pin','hide-pin','resolve-conflict','confirm-conflict','deactivate-maid','confirm-deactivate','start-payment','confirm-payment','finish-payment','payment-check','payment-open','rule-complaint','confirm-ruling','close-complaint','correct-complaint','publish-template','change-availability','confirm-off-active']);
       deprecatedStateActions.forEach(action=>rebuiltActions.add(action));
       ['notification-filter','notification-mark-all-read','notification-toggle-push','notification-open'].forEach(action=>rebuiltActions.add(action));
+      ['account-status','retry-runtime-config','retry-auth-boot','open-password-change','cancel-password-change','refresh-live-rooms','refresh-live-accounts','refresh-live-all','open-live-account-create','submit-live-account-create','live-account-role','confirm-live-account-role','live-account-status','confirm-live-account-status','live-account-unlock','confirm-live-account-unlock','live-account-reset-password','confirm-live-account-reset-password','install-app','apply-app-update'].forEach(action=>rebuiltActions.add(action));
+      ['submit-live-account-create','confirm-live-account-role','confirm-live-account-status','confirm-live-account-unlock','confirm-live-account-reset-password'].forEach(action=>mutationActions.add(action));
 
       document.addEventListener('click', e => {
         const el=e.target.closest('[data-action]');if(!el||!rebuiltActions.has(el.dataset.action))return;
@@ -6917,9 +7352,29 @@
         if(a==='toggle-demo'){state.demoOpen=!state.demoOpen;render();requestAnimationFrame(()=>document.querySelector('[data-action="toggle-demo"]')?.focus());return;}
         if(a==='reset'){maskPin();releaseRoomIssuePhotoUrls();protectedPinOverrides.clear();pendingPin=null;pendingTemplateChange=null;pendingDraftPublish=null;state=makeScenario(state.scenario);hydrateTemplateSnapshotsForState();closeModal();render();requestAnimationFrame(()=>document.querySelector('[data-action="reset"]')?.focus());toast('시나리오를 초기 상태로 재설정했습니다.');return;}
         if(a==='switch-role'){syncAuthState(state);render();toast('역할은 로그인 계정으로 고정됩니다. 다른 역할은 로그아웃 후 로그인하세요.','error');return;}
-        if(a==='logout'){maskPin();pendingPin=null;pendingTemplateChange=null;pendingDraftPublish=null;clearAuthSession();closeModal();state.loggedIn=false;state.authSession=null;state.detail=null;render();requestAnimationFrame(()=>document.getElementById('login-id')?.focus());return;}
+        if(a==='account-status'){openAccountStatus(el);return;}
+        if(a==='retry-runtime-config'){if(LIVE_RUNTIME.mode==='error')void bootApplication();return;}
+        if(a==='retry-auth-boot'){if(liveMode())void restoreLiveSession();return;}
+        if(a==='open-password-change'){if(!liveMode()||!state.remote.auth.user)return;state.remote.auth.passwordMode=true;state.remote.auth.error=null;render();requestAnimationFrame(()=>document.getElementById('current-password')?.focus());return;}
+        if(a==='cancel-password-change'){if(!liveMode()||state.remote.auth.user?.mustChangePassword)return;state.remote.auth.passwordMode=false;state.remote.auth.error=null;render();return;}
+        if(a==='logout'){maskPin();pendingPin=null;pendingTemplateChange=null;pendingDraftPublish=null;closeModal();if(liveMode()){void logoutLiveSession();return;}clearAuthSession();state.loggedIn=false;state.authSession=null;state.detail=null;render();requestAnimationFrame(()=>document.getElementById('login-id')?.focus());return;}
+        if(a==='refresh-live-rooms'){if(liveMode()&&state.remote.auth.user?.role==='admin')void loadLiveRooms();return;}
+        if(a==='refresh-live-accounts'){if(liveMode()&&['developer','admin'].includes(state.remote.auth.user?.role))void loadLiveAccounts();return;}
+        if(a==='refresh-live-all'){if(liveMode())void refreshAllLiveData();return;}
+        if(a==='open-live-account-create'){if(liveMode()&&['developer','admin'].includes(state.remote.auth.user?.role))openLiveAccountCreate(el);return;}
+        if(a==='submit-live-account-create'){if(liveMode()&&['developer','admin'].includes(state.remote.auth.user?.role))void createLiveAccountFromForm();return;}
+        if(a==='live-account-role'){const account=liveAccountById(id),role=el.dataset.role;if(liveMode()&&account&&account.role!=='developer'&&['admin','maid'].includes(role))openLiveAccountRoleReview(account,role,el);return;}
+        if(a==='confirm-live-account-role'){const account=liveAccountById(id),role=el.dataset.role;if(liveMode()&&account&&account.role!=='developer'&&['admin','maid'].includes(role))void runLiveAccountMutation({path:`/v1/accounts/${encodeURIComponent(id)}/role`,method:'PATCH',body:{role},successLabel:'계정 역할을 변경했습니다.'}).catch(()=>{});return;}
+        if(a==='live-account-status'){const account=liveAccountById(id),status=el.dataset.status;if(liveMode()&&account&&account.role!=='developer'&&['active','inactive','departed'].includes(status))openLiveAccountStatusReview(account,status,el);return;}
+        if(a==='confirm-live-account-status'){const account=liveAccountById(id),status=el.dataset.status,reasonCode={active:'MANAGER_SET_ACTIVE',inactive:'MANAGER_SET_INACTIVE',departed:'MANAGER_SET_DEPARTED'}[status];if(liveMode()&&account&&account.role!=='developer'&&reasonCode)void runLiveAccountMutation({path:`/v1/accounts/${encodeURIComponent(id)}/status`,method:'PATCH',body:{status,reasonCode},successLabel:'계정 상태를 변경했습니다.'}).catch(()=>{});return;}
+        if(a==='live-account-unlock'){const account=liveAccountById(id);if(liveMode()&&account&&account.role!=='developer')openLiveAccountUnlockReview(account,el);return;}
+        if(a==='confirm-live-account-unlock'){const account=liveAccountById(id);if(liveMode()&&account&&account.role!=='developer')void runLiveAccountMutation({path:`/v1/accounts/${encodeURIComponent(id)}/unlock`,successLabel:'로그인 잠금을 해제했습니다.'}).catch(()=>{});return;}
+        if(a==='live-account-reset-password'){const account=liveAccountById(id);if(liveMode()&&account&&account.role!=='developer')openLiveAccountResetReview(account,el);return;}
+        if(a==='confirm-live-account-reset-password'){const account=liveAccountById(id);if(liveMode()&&account&&account.role!=='developer')void runLiveAccountMutation({path:`/v1/accounts/${encodeURIComponent(id)}/password-reset`,successLabel:'임시 비밀번호로 초기화했습니다.'}).catch(()=>{});return;}
+        if(a==='install-app'){if(liveMode())void installPwa(el);return;}
+        if(a==='apply-app-update'){if(liveMode())applyPwaUpdate();return;}
         if(a==='focus-assignment-room'){const roomNo=String(el.dataset.room||'');state.assignmentTypeFilter='all';render();requestAnimationFrame(()=>{const row=document.getElementById(`assignment-room-${roomNo}`);if(!row){toast(`${roomNo}호 담당 수정 행을 찾지 못했습니다.`,'error');return;}row.classList.add('is-focus-target');row.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});row.querySelector('[data-control="assignment-maid"]')?.focus({preventScroll:true});setTimeout(()=>row.classList.remove('is-focus-target'),2000);});return;}
-        if(a==='nav'){maskPin();pendingPin=null;pendingTemplateChange=null;closeModal();rememberCurrentHistoryRoute();state.detail=null;if(state.role==='admin')state.adminView=el.dataset.view;else state.maidView=el.dataset.view;pushHistoryOnNextRender();render();requestAnimationFrame(()=>{window.scrollTo(0,0);document.getElementById('main-content')?.focus({preventScroll:true});});return;}
+        if(a==='nav'){maskPin();pendingPin=null;pendingTemplateChange=null;closeModal();state.detail=null;if(liveMode()){const allowed=currentNav().some(item=>item.id===el.dataset.view);if(allowed){state.liveView=el.dataset.view;syncLiveViewUrl(state.liveView);}render();requestAnimationFrame(()=>{window.scrollTo(0,0);document.getElementById('main-content')?.focus({preventScroll:true});});return;}rememberCurrentHistoryRoute();if(state.role==='admin')state.adminView=el.dataset.view;else state.maidView=el.dataset.view;pushHistoryOnNextRender();render();requestAnimationFrame(()=>{window.scrollTo(0,0);document.getElementById('main-content')?.focus({preventScroll:true});});return;}
         if(a==='quick-month-shift'){
           if(state.role!=='admin')return;rememberQuickGridViewport();state.quickReservationFollowsToday=false;state.quickReservationAnchorDate=shiftIsoDate(state.quickReservationAnchorDate,Number(el.dataset.offset)||0);state.quickGridScrollLeft=null;state.quickGridScrollTop=0;render();requestAnimationFrame(()=>document.querySelector(`[data-action="quick-month-shift"][data-offset="${el.dataset.offset}"]`)?.focus());return;
         }
@@ -7028,13 +7483,14 @@
         if(a==='alerts'){openActionAlerts(el);return;}
         if(a==='audit-log'){openActionAuditLog(el);return;}
         if(a==='rates'){openActionRates(el);return;}
-        if(a==='logout'){openAccountStatus(el);return;}
+        if(a==='account-status'){openAccountStatus(el);return;}
         if(a==='demo-info'){openDemoInformation(el);return;}
         if(a==='notification-permission'){
-          if(!state.notificationsEnabled&&isLocked()){toast('최신 상태를 확인하기 전에는 알림 허용 상태를 바꿀 수 없습니다.','error');return;}
+          if(!liveMode()&&!state.notificationsEnabled&&isLocked()){toast('최신 상태를 확인하기 전에는 알림 허용 상태를 바꿀 수 없습니다.','error');return;}
           openNotificationStatus(el);return;
         }
         if(a==='confirm-notification-permission'){
+          if(liveMode()){closeModal();void requestBrowserNotificationPermission();return;}
           if(isLocked()){closeModal();render();toast('동기화 상태가 바뀌어 알림 허용 상태를 저장하지 않았습니다.','error');return;}
           setNotificationPushEnabled(true);appendEvent('기기 알림 허용 상태 변경','정적 데모 · 앱 내부 알림은 항상 유지',{notification:false});closeModal();render();toast('알림 허용 상태로 표시했습니다.');return;
         }
@@ -7671,8 +8127,9 @@
       });
 
       document.addEventListener('change',e=>{
-        const c=e.target.dataset.control;if(!c||!['role','maid-account','scenario','room-filter','quick-reservation-type','reservation-room','maid-pay-filter','work-history-maid','task-photo-file','task-candle','room-issue-type','room-issue-files','bomb-room-files','complaint-type','conflict-step-v2','maid-deactivation-gate','assignment-maid','reservation-cancel-reason','reservation-long-stay'].includes(c))return;
+        const c=e.target.dataset.control;if(!c||!['role','maid-account','scenario','room-filter','live-room-filter','quick-reservation-type','reservation-room','maid-pay-filter','work-history-maid','task-photo-file','task-candle','room-issue-type','room-issue-files','bomb-room-files','complaint-type','conflict-step-v2','maid-deactivation-gate','assignment-maid','reservation-cancel-reason','reservation-long-stay'].includes(c))return;
         e.stopImmediatePropagation();
+        if(c==='live-room-filter'){if(!liveMode())return;state.remote.rooms.filter=e.target.value;render();requestAnimationFrame(()=>document.querySelector('[data-control="live-room-filter"]')?.focus());return;}
         if(c==='reservation-cancel-reason'){
           const confirm=document.querySelector('[data-action="confirm-reservation-cancel"]');
           if(confirm)confirm.disabled=!!reservationCancelReasonError(e.target.value);
@@ -7755,7 +8212,7 @@
       });
 
       document.addEventListener('input',e=>{
-        const c=e.target.dataset.control;if(c==='room-search'){state.roomSearch=e.target.value;const pos=e.target.selectionStart;render();requestAnimationFrame(()=>{const input=document.getElementById('room-search');if(input){input.focus();input.setSelectionRange(pos,pos);}});}else if(c==='quick-reservation-search'){const value=e.target.value.replace(/\D/g,'').slice(0,6),pos=Math.min(value.length,e.target.selectionStart||value.length);if(e.target.value!==value)e.target.value=value;clearTimeout(quickSearchTimer);quickSearchTimer=setTimeout(()=>{rememberQuickGridViewport();state.quickReservationSearch=value;state.quickGridScrollTop=0;render();restoreQuickGridViewport('[data-control="quick-reservation-search"]');requestAnimationFrame(()=>{const input=document.querySelector('[data-control="quick-reservation-search"]');input?.setSelectionRange?.(pos,pos);});},140);}else if(c==='task-note'){const no=e.target.dataset.room;if(maidCanEditCleaning(no))taskState(no).note=e.target.value;}else if(c==='room-issue-note'){const no=e.target.dataset.room;if(!maidCanEditRoomIssue(no))return;const draft=roomIssueDraft(no);draft.note=e.target.value;const action=document.querySelector(`[data-action="save-room-issue"][data-room="${no}"]`);if(action)action.disabled=!draft.note.trim()&&!draft.photos.length;}else if(c==='bomb-room-note'){const no=e.target.dataset.room;if(maidCanCreateBombRoomReport(no))bombRoomDraft(no).note=e.target.value;}else if(c==='assignment-exception'){if(state.role!=='admin'||isLocked())return;const room=e.target.dataset.room;state.assignmentExceptions[room]=e.target.value;const action=document.querySelector('[data-action="save-assignments"]');if(action)action.disabled=!assignmentCanSave();}
+        const c=e.target.dataset.control;if(c==='live-room-search'){if(!liveMode())return;const value=e.target.value,pos=e.target.selectionStart;state.remote.rooms.query=value;render();requestAnimationFrame(()=>{const input=document.querySelector('[data-control="live-room-search"]');if(input){input.focus();input.setSelectionRange(pos,pos);}});}else if(c==='room-search'){state.roomSearch=e.target.value;const pos=e.target.selectionStart;render();requestAnimationFrame(()=>{const input=document.getElementById('room-search');if(input){input.focus();input.setSelectionRange(pos,pos);}});}else if(c==='quick-reservation-search'){const value=e.target.value.replace(/\D/g,'').slice(0,6),pos=Math.min(value.length,e.target.selectionStart||value.length);if(e.target.value!==value)e.target.value=value;clearTimeout(quickSearchTimer);quickSearchTimer=setTimeout(()=>{rememberQuickGridViewport();state.quickReservationSearch=value;state.quickGridScrollTop=0;render();restoreQuickGridViewport('[data-control="quick-reservation-search"]');requestAnimationFrame(()=>{const input=document.querySelector('[data-control="quick-reservation-search"]');input?.setSelectionRange?.(pos,pos);});},140);}else if(c==='task-note'){const no=e.target.dataset.room;if(maidCanEditCleaning(no))taskState(no).note=e.target.value;}else if(c==='room-issue-note'){const no=e.target.dataset.room;if(!maidCanEditRoomIssue(no))return;const draft=roomIssueDraft(no);draft.note=e.target.value;const action=document.querySelector(`[data-action="save-room-issue"][data-room="${no}"]`);if(action)action.disabled=!draft.note.trim()&&!draft.photos.length;}else if(c==='bomb-room-note'){const no=e.target.dataset.room;if(maidCanCreateBombRoomReport(no))bombRoomDraft(no).note=e.target.value;}else if(c==='assignment-exception'){if(state.role!=='admin'||isLocked())return;const room=e.target.dataset.room;state.assignmentExceptions[room]=e.target.value;const action=document.querySelector('[data-action="save-assignments"]');if(action)action.disabled=!assignmentCanSave();}
       });
 
       document.addEventListener('submit',e=>{
@@ -7899,7 +8356,22 @@
       });
 
       document.addEventListener('submit', e => {
-        if(e.target.id==='login-form'){e.preventDefault();const loginId=document.getElementById('login-id')?.value.trim().toLowerCase()||'',password=document.getElementById('login-password')?.value||'',account=authAccounts().find(item=>item.id===loginId&&item.password===password);if(!account){state.loginMode='error';render();requestAnimationFrame(()=>document.getElementById('login-id')?.focus());return;}writeAuthSession(account);state.loginMode='normal';state.detail=null;state.adminView='today';state.maidView='my';syncAuthState(state);syncSignedInMaidAvailability();render();toast(`${account.role==='admin'?'관리자':account.name} 계정으로 로그인했습니다.`);}
+        if(e.target.id==='login-form'){
+          e.preventDefault();e.stopImmediatePropagation();const loginId=document.getElementById('login-id')?.value.trim()||'',password=document.getElementById('login-password')?.value||'';
+          if(liveMode()){if(state.remote.auth.status==='signing-in')return;void loginWithApi(loginId,password,!!document.getElementById('remember-login')?.checked);return;}
+          const account=authAccounts().find(item=>item.id===loginId.toLowerCase()&&item.password===password);if(!account){state.loginMode='error';render();requestAnimationFrame(()=>document.getElementById('login-id')?.focus());return;}writeAuthSession(account);state.loginMode='normal';state.detail=null;state.adminView='today';state.maidView='my';syncAuthState(state);syncSignedInMaidAvailability();render();toast(`${account.role==='admin'?'관리자':account.name} 계정으로 로그인했습니다.`);return;
+        }
+        if(e.target.id==='live-password-form'){
+          e.preventDefault();e.stopImmediatePropagation();if(!liveMode()||state.remote.auth.status==='changing-password')return;
+          const currentPassword=document.getElementById('current-password')?.value||'',newPassword=document.getElementById('new-password')?.value||'',confirmation=document.getElementById('confirm-password')?.value||'';
+          if(newPassword!==confirmation){toast('새 비밀번호 확인이 일치하지 않습니다.','error');document.getElementById('confirm-password')?.focus();return;}
+          if(!validLivePassword(newPassword)){toast('새 비밀번호 규칙을 확인해 주세요.','error');document.getElementById('new-password')?.focus();return;}
+          if(currentPassword===newPassword){toast('현재 비밀번호와 다른 비밀번호를 입력해 주세요.','error');document.getElementById('new-password')?.focus();return;}
+          void changeLivePassword(currentPassword,newPassword);return;
+        }
+        if(e.target.id==='live-account-create-form'){
+          e.preventDefault();e.stopImmediatePropagation();if(liveMode())void createLiveAccountFromForm();
+        }
       });
 
       document.addEventListener('keydown', e => {
@@ -7982,22 +8454,49 @@
           counts:()=>({reservations:(state.reservations||[]).length,drafts:(state.drafts||[]).length,submissions:Object.keys(state.cleaningSubmissions||{}).length,earnings:Object.keys(state.earningRecords||{}).length,earningTotal:Object.values(state.earningRecords||{}).reduce((total,item)=>total+Number(item.total||0),0),payments:Object.keys(state.paymentRecords||{}).length,events:(state.events||[]).length}),
         });
       }
-      installCastleTestApi();
       hydrateTemplateSnapshotsForState();
       const initialParams=new URLSearchParams(location.hash.slice(1));applyHashParameters(initialParams);
       const initialHistoryEntry=isWireframeHistory(history.state)?history.state:null;
       if(initialHistoryEntry)applyHistoryRoute(initialHistoryEntry.route);
       if(Array.isArray(history.state?.completedModalSessions))completedModalSessions.push(...history.state.completedModalSessions.filter(session=>typeof session?.modalSessionId==='string'&&session.route));
-      window.addEventListener('pagehide',()=>clearAllPinModalSecrets());
-      document.addEventListener('visibilitychange',()=>{if(document.hidden)maskPin();});
+      window.addEventListener('pagehide',()=>{clearAllPinModalSecrets();clearLivePageSecretsForHide();});
+      window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();LIVE_RUNTIME.installPrompt=event;render();});
+      window.addEventListener('appinstalled',()=>{LIVE_RUNTIME.installed=true;LIVE_RUNTIME.installPrompt=null;render();});
+      let pwaReloading=false,pwaUpdateRequested=false;
+      navigator.serviceWorker?.addEventListener('controllerchange',()=>{if(!pwaUpdateRequested||pwaReloading)return;pwaReloading=true;location.reload();});
+      window.addEventListener('storage',event=>{
+        if(!liveMode()||event.key!==liveSessionKey())return;
+        let incoming=null;try{incoming=safeStoredLiveSession(JSON.parse(event.newValue||'null'));}catch{}
+        if(liveAllowsPersistentSession()&&incoming&&sameLiveActorIdentity(state.remote.auth.user,incoming.user)){
+          const actor=safeLiveActor(incoming.user),mustChangeChanged=!!state.remote.auth.user?.mustChangePassword!==actor.mustChangePassword,settled=['authenticated','changing-password'].includes(state.remote.auth.status);
+          if(mustChangeChanged){LIVE_RUNTIME.authGeneration+=1;clearLiveAuthSurface();if(actor.mustChangePassword){const empty=initialRemoteState();state.remote.accounts=empty.accounts;state.remote.rooms=empty.rooms;}}
+          const nextStatus=!mustChangeChanged&&state.remote.auth.status==='changing-password'?'changing-password':'authenticated',passwordMode=mustChangeChanged?actor.mustChangePassword:state.remote.auth.passwordMode;
+          state.remote.auth={...state.remote.auth,status:nextStatus,user:actor,session:{...incoming,remember:true},remember:true,error:null,passwordMode};state.role=actor.role;syncAuthState(state);scheduleLiveRefresh();
+          if(mustChangeChanged||!settled){render();if(mustChangeChanged&&!actor.mustChangePassword)void loadLiveRoleData();}
+          return;
+        }
+        beginStoredSessionTransition();
+        clearTimeout(LIVE_RUNTIME.storageTimer);LIVE_RUNTIME.storageTimer=setTimeout(()=>{const stored=readStoredLiveSession();if(stored){void restoreLiveSession();return;}endLiveSession();render();},50);
+      });
+      document.addEventListener('visibilitychange',()=>{if(document.hidden){maskPin();return;}if(liveMode()&&state.remote.auth.status==='authenticated')void refreshLiveActor();});
       window.addEventListener('popstate',handleHistoryNavigation);
       window.addEventListener('hashchange',()=>{
+        if(liveMode())return;
         if(isWireframeHistory(history.state))return;
         const params=new URLSearchParams(location.hash.slice(1));if(!applyHashParameters(params))return;
         rawCloseModal();restoringHistory=true;render();restoringHistory=false;writePageHistory(historyRouteSnapshot(),'replace');
       });
-      if(initialHistoryEntry){restoringHistory=true;render();restoringHistory=false;if(initialHistoryEntry.layer==='modal')restoreModalHistory(initialHistoryEntry);}
-      else render();
+      async function bootApplication(){
+        if(initialHistoryEntry){restoringHistory=true;render();restoringHistory=false;if(initialHistoryEntry.layer==='modal')restoreModalHistory(initialHistoryEntry);}
+        else render();
+        void registerPwaSupport();
+        const config=await loadRuntimeConfig();
+        if(config){clearAuthSession();rawCloseModal();state.detail=null;state.remote.auth.remember=config.sessionPersistence==='local';if(location.hash||isWireframeHistory(history.state))history.replaceState(null,'',`${location.pathname}${location.search}`);await restoreLiveSession();return;}
+        clearAuthSession();state.loggedIn=false;state.authSession=null;state.detail=null;
+        if(demoMode()){ensureNotificationState();state.remote.auth.status='demo';installCastleTestApi();syncAuthState(state);}else state.remote.auth.status='error';
+        render();
+      }
+      void bootApplication();
     })();
   </script>
 </body>

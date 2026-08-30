@@ -1213,3 +1213,28 @@
 - [ ] 예약 정보가 없던 투숙 중 객실은 과거 실제 체크인과 미래 체크아웃 또는 종료일 미정 장기 투숙으로 저장할 수 있다.
 - [ ] 종료·취소된 과거 예약과 임의의 과거 신규 예약은 계속 읽기 전용 또는 저장 차단된다.
 - [ ] 연장 일정이 다음 예약 또는 공개된 퇴실 청소와 충돌하면 기존 충돌 보호가 유지된다.
+
+## 2026-08-31 · 운영 API 로그인·PWA 연결
+
+### 확인한 범위
+
+- 운영 project ref `aodikrxcczbogjpsjwjt`의 `/health`, OpenAPI 0.2.0 필수 path, localhost CORS preflight를 실제 요청으로 확인했다.
+- 첫 번째 Supabase project와 API·Auth URL·공개키가 같은 project ref인지 확인했다. 두 번째 project는 문서의 Edge Function API가 없어 연결 대상에서 제외했다.
+- 운영 공개키로 Supabase `/auth/v1/settings`를 실제 호출해 200과 `sb-project-ref=aodikrxcczbogjpsjwjt`를 확인했다. publishable 형식의 임의 키는 같은 검사에서 거부됨을 확인했다.
+- 런타임 설정은 HTTPS, 정확한 Supabase host/path, 같은 project ref, opaque publishable key 또는 `role=anon` legacy JWT만 허용한다. `service_role` JWT와 잘못된 HTTP URL은 `mode=error`로 닫힌다.
+- 운영 로그인 화면은 360·390·768·1440px에서 문서 가로 넘침 0px, 입력·로그인 버튼 높이 44px, 로그인 유지 라벨 터치 영역 68px 이상을 확인했다.
+- 로컬 전용 origin의 운영 로그인 화면에서 제목, 아이디·비밀번호 접근성 이름, 기본 체크된 개인 기기 로그인 유지 안내, console error 0건을 확인했다. 실제 운영 계정이 제공되지 않아 로그인 성공과 역할별 API 변경은 실행하지 않았다.
+- 공유-origin 대응 세션 모드를 390px에서 확인했다. 장기 로그인 체크는 비활성·해제되고 `현재 앱을 닫을 때까지 로그인`으로 표시됐으며, 문서 가로 넘침 0px, 입력·버튼 44px, console error 0건이었다. 첫 서비스 워커 설치가 앱을 다시 부팅하지 않는 것도 요청 기록으로 확인했다.
+- 데모 관리자 로그인 뒤 `더보기 > 로그인 상태`를 눌러 `계정·로그인 상태` 모달과 `로그인됨`을 확인했다. 로그아웃 화면으로 바뀌지 않았고 새 console error가 없었다.
+- 데모 로그인 첫 렌더에서 알림 fixture 정규화가 원장 불변식 오류를 만들던 경로를 초기화 단계로 옮긴 뒤 재현되지 않음을 확인했다.
+- manifest·192/512/maskable 아이콘의 실제 PNG 규격, 서비스 워커 install/activate/fetch/push/click/subscriptionchange, 네트워크 우선 navigation과 성공 응답의 shell cache 갱신, 민감 URL·API·Auth·사진 cache bypass를 자동 검사했다.
+- 운영 로그인 대표 화면을 `QA/screenshots/live-api-login-1440.png`와 `QA/screenshots/live-api-login-390.png`에 실제 PNG로 기록했다.
+
+### 배포·알림 한계
+
+- GitHub repository variable `RMS_API_BASE_URL`, `SUPABASE_URL`과 secret `SUPABASE_PUBLISHABLE_KEY`를 등록했다. Pages 산출물의 공개 runtime config에만 주입하며 키는 추적 파일에 저장하지 않는다.
+- 공유 Pages origin `https://makee-ham.github.io`의 운영 Edge Function preflight는 현재 `403 ORIGIN_NOT_ALLOWED`이며 계속 허용하지 않는다.
+- `makee-ham.github.io`의 browser storage와 service worker 권한은 다른 project Pages와 같은 origin을 공유하므로 workflow가 운영 로그인 배포를 거부한다. 앱 전용 custom domain을 연결하고 `RMS_APP_ORIGIN`을 등록한 뒤, 해당 origin의 CORS 204와 장기 로그인 저장을 다시 검증해야 한다.
+- 현재 백엔드에는 Web Push 구독·알림 이벤트·발송 endpoint가 없다. PWA 설치와 브라우저 권한 요청까지만 동작하며 앱이 닫힌 동안의 실제 푸시는 백엔드 추가 전에는 통과로 기록하지 않는다.
+- 현재 알림 payload에는 record 식별자를 허용하지 않고, 클릭 시 실제로 존재하는 `더보기` 화면만 연다. 상세 알림 endpoint와 권한 검사가 생기기 전에는 record deep link를 통과로 기록하지 않는다.
+- 실제 iPhone·Android 설치, 홈 화면 실행, OS 알림 전달, 장시간 백그라운드 세션은 실기기와 운영 계정으로 후속 확인이 필요하다.
