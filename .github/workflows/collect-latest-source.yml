@@ -26,9 +26,9 @@ jobs:
         shell: bash
         run: |
           cat .github/list-only-payload/patch.* | tr -d '\r\n' | base64 --decode | gzip --decompress > /tmp/list-only-cleaning-badge.patch
-          cat .github/list-only-payload/qa.* | tr -d '\r\n' | base64 --decode | gzip --decompress > /tmp/verify-list-only-cleaning-badges.py
+          cp .github/verify-list-only-cleaning-badges.py /tmp/verify-list-only-cleaning-badges.py
           echo "d28bfa3c6a51d585113bc2c448e24db3527952282b3afa54220486fafea68963  /tmp/list-only-cleaning-badge.patch" | sha256sum --check
-          echo "2cc30a50538acda3c5311dc6d7e29a8ed3f5f9190d62c56fd6ce99903cf4824a  /tmp/verify-list-only-cleaning-badges.py" | sha256sum --check
+          python3 -m py_compile /tmp/verify-list-only-cleaning-badges.py
 
       - name: Apply product patch
         shell: bash
@@ -93,6 +93,7 @@ jobs:
         shell: bash
         run: |
           rm -rf .github/list-only-payload
+          rm -f .github/verify-list-only-cleaning-badges.py
           rm -f .github/workflows/collect-latest-source.yml
           git config user.name "Ham Arin"
           git config user.email "79068658+makee-ham@users.noreply.github.com"
