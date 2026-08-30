@@ -1,0 +1,28 @@
+name: Collect latest source for room-list cleanup
+
+on:
+  push:
+    branches:
+      - codex/remove-card-view-fix-cleaning-badge
+    paths:
+      - .github/workflows/collect-latest-source.yml
+
+permissions:
+  contents: read
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Collect repository source
+        shell: bash
+        run: |
+          mkdir -p /tmp/latest-source
+          rsync -a --exclude=.git ./ /tmp/latest-source/
+      - name: Upload source artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: latest-source
+          path: /tmp/latest-source
+          retention-days: 1
