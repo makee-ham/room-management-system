@@ -614,45 +614,51 @@ for (const contract of [
 for (const forbidden of ['ON으로 변경', 'OFF로 변경', '청소 필요 ON', '청소 필요 OFF']) {
   if (html.includes(forbidden)) throw new Error(`Legacy cleaning switch copy remains: ${forbidden}`);
 }
-const roomCardStart = html.indexOf('function roomCard(no)');
-const roomCardEnd = html.indexOf('function cleaningLabel', roomCardStart);
-if (roomCardStart < 0 || roomCardEnd <= roomCardStart) throw new Error('Room card source block not found.');
-const roomCardSource = html.slice(roomCardStart, roomCardEnd);
-for (const removed of ['room-work-line', 'concept-cleaning-row', '가장 가까운 일정', '예약 없음 · 바로 등록']) {
-  if (roomCardSource.includes(removed)) throw new Error(`Redundant room-card reservation summary returned: ${removed}`);
-}
-for (const contract of [
-  'class="room-quick-actions"',
-  'data-action="${closestReservation?\'quick-reservation-edit\':\'reservation-edit\'}"',
-  "reservationActionLabel=room.longStay?'장기 투숙 관리':weekReservations.length?`${room.occupancy==='occupied'?'예약 관리':'예약 수정'} · ${weekReservations.length}건`",
-  ":pastReservationCount?`예약 기록 ${pastReservationCount}건`:room.occupancy==='occupied'&&!occupiedReservationEnd(room)?'투숙 정보 입력':'예약 등록'",
-]) {
-  if (!roomCardSource.includes(contract)) throw new Error(`Compact room-card reservation action missing: ${contract}`);
-}
-
 const roomListRowStart = html.indexOf('function roomListRow(no)');
 const roomListRowEnd = html.indexOf('function cleaningLabel', roomListRowStart);
 if (roomListRowStart < 0 || roomListRowEnd <= roomListRowStart) throw new Error('Room list row source block not found.');
 const roomListRowSource = html.slice(roomListRowStart, roomListRowEnd);
+const renderRoomsStart = html.lastIndexOf('function renderRooms()');
+const renderRoomsEnd = html.indexOf('const QUICK_RESERVATION_PAST_DAYS', renderRoomsStart);
+if (renderRoomsStart < 0 || renderRoomsEnd <= renderRoomsStart) throw new Error('Room list rendering block not found.');
+const renderRoomsSource = html.slice(renderRoomsStart, renderRoomsEnd);
 for (const contract of [
-  "roomViewMode:'list'",
   'function renderRoomListPinManager(no)',
   'class="room-list-item',
   'class="room-list-actions"',
-  'data-action="set-room-view"',
-  'data-view="card"',
-  'data-view="list"',
   '<span>PIN 관리</span>',
   '.room-list-actions { display:grid; grid-template-columns:repeat(4,minmax(0,1fr));',
   '.room-list-actions { grid-template-columns:repeat(2,minmax(0,1fr));',
+  "roomViewState:()=>({view:'list',cardCount:0",
 ]) {
-  if (!html.includes(contract)) throw new Error(`Room card/list view contract missing: ${contract}`);
+  if (!html.includes(contract)) throw new Error(`List-only room view contract missing: ${contract}`);
+}
+for (const forbidden of [
+  'roomViewMode',
+  'data-action="set-room-view"',
+  'room-view-switcher',
+  '카드 보기',
+  '리스트 보기',
+]) {
+  if (html.includes(forbidden)) throw new Error(`Removed room-view toggle returned: ${forbidden}`);
+}
+if (!renderRoomsSource.includes('class="room-list-table"') || renderRoomsSource.includes('roomCard(') || renderRoomsSource.includes('room-list-v2')) {
+  throw new Error('Room screen must render the list-only layout.');
 }
 if (roomListRowSource.includes('<span>관리</span>')) throw new Error('Ambiguous room-list 관리 header returned; use PIN 관리.');
 for (const action of ['quick-reservation-edit','reservation-edit','operation-status','room-detail']) {
   if (!roomListRowSource.includes(action)) throw new Error(`Room list action contract missing: ${action}`);
 }
-console.log('Room card/list view toggle and equal-action contracts: passed');
+for (const contract of [
+  '.assignment-table td { min-width:0; overflow:hidden; }',
+  '.assignment-source { display:inline-flex; align-items:flex-start; flex-wrap:wrap;',
+  'white-space:normal; overflow-wrap:anywhere; word-break:keep-all;',
+  '.assignment-schedule-badges { display:flex; flex-wrap:wrap; gap:5px; min-width:0; max-width:100%; overflow:hidden; }',
+  '.assignment-table .schedule-priority-badge { max-width:100%; min-width:0;',
+]) {
+  if (!html.includes(contract)) throw new Error(`Cleaning assignment badge containment contract missing: ${contract}`);
+}
+console.log('List-only room view and cleaning assignment badge containment contracts: passed');
 
 for (const contract of [
   "if(a==='edit-room-info')",
@@ -1414,11 +1420,11 @@ if (!directAssignSource.includes('if(roomTarget){pushPageTransition') || !direct
 const qa = readFileSync(resolve(root, 'WIREFRAME/QA.md'), 'utf8');
 const wireframeReadme = readFileSync(resolve(root, 'WIREFRAME/README.md'), 'utf8');
 const taskPrompt = readFileSync(resolve(root, 'DOCS/WIREFRAME_TASK_PROMPT.md'), 'utf8');
-if (!wireframeReadme.includes('기본은 여러 객실을 빠르게 비교하는 `리스트 보기`')) {
-  throw new Error('Room card/list view README policy is missing.');
+if (!wireframeReadme.includes('객실 목록은 빠른 비교를 위한 리스트형만 사용한다.')) {
+  throw new Error('List-only room view README policy is missing.');
 }
-for (const qaContract of ['객실 카드형·리스트형 전환','PIN 관리','계산 너비 차이가 1px 이하']) {
-  if (!qa.includes(qaContract)) throw new Error(`Room card/list view QA record missing: ${qaContract}`);
+for (const qaContract of ['객실 목록 리스트형 단일화와 청소 배지 넘침 방지','PIN 관리','계산 너비 차이가 1px 이하','인접 열을 침범하지 않게 한다']) {
+  if (!qa.includes(qaContract)) throw new Error(`List-only room view QA record missing: ${qaContract}`);
 }
 for (const contract of [
   '추가 검증 · 오늘·내일 배정과 당일 추가·취소·변경 알림',
