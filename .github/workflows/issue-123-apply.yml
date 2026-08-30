@@ -6,6 +6,7 @@ on:
       - fix/issue-123-login-reservation-extension
     paths:
       - scripts/patch_issue_123.py
+      - scripts/patch_issue_123_workspace.py
       - .github/workflows/issue-123-apply.yml
   workflow_dispatch:
 
@@ -29,7 +30,9 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Apply login and reservation policy changes
-        run: python3 scripts/patch_issue_123.py
+        run: |
+          python3 scripts/patch_issue_123.py
+          python3 scripts/patch_issue_123_workspace.py
 
       - name: Verify issue contracts and JavaScript syntax
         run: |
@@ -67,7 +70,7 @@ jobs:
           fi
 
       - name: Remove temporary patch tooling
-        run: rm -f scripts/patch_issue_123.py .github/workflows/issue-123-apply.yml
+        run: rm -f scripts/patch_issue_123.py scripts/patch_issue_123_workspace.py .github/workflows/issue-123-apply.yml
 
       - name: Commit verified implementation
         shell: bash
