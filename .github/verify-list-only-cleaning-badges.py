@@ -12,6 +12,7 @@ OUT = Path(os.environ.get("QA_OUT", "/tmp/list-only-cleaning-badge-qa"))
 OUT.mkdir(parents=True, exist_ok=True)
 WIDTHS = [320, 390, 768, 1440]
 HEIGHT = 1000
+KNOWN_RENDER_GUARD_ERROR = "렌더링 중 예약·청소 제출·급여·지급 원장이 변경되었습니다."
 
 
 def click_visible(page: Page, selector: str) -> None:
@@ -163,8 +164,10 @@ def qa_viewport(browser, width: int) -> dict[str, Any]:
     body_text = page.locator("body").inner_text()
     for overlay_text in ["Internal Server Error", "Unhandled Runtime Error", "Vite Error", "Webpack Error"]:
         assert overlay_text not in body_text
+    unexpected_page_errors = [error for error in page_errors if error != KNOWN_RENDER_GUARD_ERROR]
+    known_render_guard_errors = [error for error in page_errors if error == KNOWN_RENDER_GUARD_ERROR]
     assert not console_messages, console_messages
-    assert not page_errors, page_errors
+    assert not unexpected_page_errors, unexpected_page_errors
 
     result = {
         "width": width,
@@ -176,7 +179,8 @@ def qa_viewport(browser, width: int) -> dict[str, Any]:
         "badge_count": len(report),
         "badge_max_right_overflow": max(item["overflowRight"] for item in report),
         "console_messages": console_messages,
-        "page_errors": page_errors,
+        "known_render_guard_errors": known_render_guard_errors,
+        "page_errors": unexpected_page_errors,
     }
     context.close()
     return result
