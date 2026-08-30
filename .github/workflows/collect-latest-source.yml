@@ -6,6 +6,7 @@ on:
       - codex/remove-card-view-fix-cleaning-badge
     paths:
       - .github/workflows/collect-latest-source.yml
+      - .github/verify-list-only-cleaning-badges.py
 
 permissions:
   contents: write
