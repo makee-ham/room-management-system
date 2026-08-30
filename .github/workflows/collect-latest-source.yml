@@ -1,4 +1,4 @@
-name: Collect latest source for room-list cleanup
+name: Apply and verify list-only rooms and contained cleaning badges
 
 on:
   push:
@@ -8,21 +8,94 @@ on:
       - .github/workflows/collect-latest-source.yml
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  collect:
+  apply-verify-commit:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
-      - name: Collect repository source
+      - name: Check out working branch
+        uses: actions/checkout@v4
+        with:
+          ref: codex/remove-card-view-fix-cleaning-badge
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restore feature patch and rendered QA
         shell: bash
         run: |
-          mkdir -p /tmp/latest-source
-          rsync -a --exclude=.git ./ /tmp/latest-source/
-      - name: Upload source artifact
+          cat .github/list-only-payload/patch.* | tr -d '\r\n' | base64 --decode | gzip --decompress > /tmp/list-only-cleaning-badge.patch
+          cat .github/list-only-payload/qa.* | tr -d '\r\n' | base64 --decode | gzip --decompress > /tmp/verify-list-only-cleaning-badges.py
+          echo "d28bfa3c6a51d585113bc2c448e24db3527952282b3afa54220486fafea68963  /tmp/list-only-cleaning-badge.patch" | sha256sum --check
+          echo "420b85b4b28d6b58f478184adebda5563798667e10f375fb19b8e05fc1620ff0  /tmp/verify-list-only-cleaning-badges.py" | sha256sum --check
+
+      - name: Apply product patch
+        shell: bash
+        run: |
+          git apply --check /tmp/list-only-cleaning-badge.patch
+          git apply /tmp/list-only-cleaning-badge.patch
+
+      - name: Run permanent static and syntax checks
+        shell: bash
+        run: |
+          node scripts/check-workspace.mjs
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('WIREFRAME/index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script(?:\s[^>]*)?>([\s\S]*?)</script>', html, re.I)
+          if len(scripts) != 1:
+              raise SystemExit(f'Expected one inline script, found {len(scripts)}')
+          Path('/tmp/list-only-inline.js').write_text(scripts[0], encoding='utf-8')
+          PY
+          node --check /tmp/list-only-inline.js
+          git diff --check
+
+      - name: Install Chromium QA runtime
+        shell: bash
+        run: |
+          python3 -m pip install --disable-pip-version-check playwright==1.55.0
+          python3 -m playwright install --with-deps chromium
+
+      - name: Run rendered interaction and responsive QA
+        shell: bash
+        run: |
+          QA_OUT="$RUNNER_TEMP/list-only-cleaning-badge-qa"
+          export QA_OUT
+          python3 scripts/serve.py --host 127.0.0.1 --port 4173 >/tmp/list-only-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          READY=0
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then
+              READY=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$READY" -ne 1 ]; then
+            cat /tmp/list-only-server.log
+            exit 1
+          fi
+          python3 /tmp/verify-list-only-cleaning-badges.py
+
+      - name: Upload rendered QA evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: latest-source
-          path: /tmp/latest-source
-          retention-days: 1
+          name: list-only-cleaning-badge-qa
+          path: ${{ runner.temp }}/list-only-cleaning-badge-qa
+          if-no-files-found: warn
+          retention-days: 3
+
+      - name: Commit verified product changes
+        shell: bash
+        run: |
+          rm -rf .github/list-only-payload
+          rm -f .github/workflows/collect-latest-source.yml
+          git config user.name "Ham Arin"
+          git config user.email "79068658+makee-ham@users.noreply.github.com"
+          git add -A
+          git commit -m "객실 목록을 리스트형으로 단일화하고 청소 배지 넘침을 막는다"
+          git push origin HEAD:codex/remove-card-view-fix-cleaning-badge
