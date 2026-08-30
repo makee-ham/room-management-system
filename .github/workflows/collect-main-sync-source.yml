@@ -1,4 +1,4 @@
-name: Collect main-sync source
+name: Apply and verify current-main list-only room integration
 
 on:
   push:
@@ -8,21 +8,95 @@ on:
       - .github/workflows/collect-main-sync-source.yml
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  collect:
+  apply-verify-commit:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
-      - name: Collect repository source
+      - name: Check out current-main integration branch
+        uses: actions/checkout@v4
+        with:
+          ref: codex/list-only-badge-main-sync
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restore integration patch and rendered QA
         shell: bash
         run: |
-          mkdir -p /tmp/main-sync-source
-          rsync -a --exclude=.git ./ /tmp/main-sync-source/
-      - name: Upload source artifact
+          cat .github/main-sync-payload/patch.* | tr -d '\r\n' | base64 --decode | gzip --decompress > /tmp/list-only-main-sync.patch
+          cat .github/main-sync-payload/qa.* | tr -d '\r\n' | base64 --decode | gzip --decompress > /tmp/verify-list-only-main-sync.py
+          echo "1d97f828d28be4604ca27fdf592b8b40793390b3cec8f773a8916182dc778711  /tmp/list-only-main-sync.patch" | sha256sum --check
+          echo "89a2495aa475cdb3bd58031ae742991241ac346220467d1c25c7675011887035  /tmp/verify-list-only-main-sync.py" | sha256sum --check
+          python3 -m py_compile /tmp/verify-list-only-main-sync.py
+
+      - name: Apply conflict-resolved product patch
+        shell: bash
+        run: |
+          git apply --check /tmp/list-only-main-sync.patch
+          git apply /tmp/list-only-main-sync.patch
+
+      - name: Run permanent static and syntax checks
+        shell: bash
+        run: |
+          node scripts/check-workspace.mjs
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('WIREFRAME/index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script(?:\s[^>]*)?>([\s\S]*?)</script>', html, re.I)
+          if len(scripts) != 1:
+              raise SystemExit(f'Expected one inline script, found {len(scripts)}')
+          Path('/tmp/list-only-main-sync-inline.js').write_text(scripts[0], encoding='utf-8')
+          PY
+          node --check /tmp/list-only-main-sync-inline.js
+          git diff --check
+
+      - name: Install Chromium QA runtime
+        shell: bash
+        run: |
+          python3 -m pip install --disable-pip-version-check playwright==1.55.0
+          python3 -m playwright install --with-deps chromium
+
+      - name: Run rendered interaction and responsive QA
+        shell: bash
+        run: |
+          QA_OUT="$RUNNER_TEMP/list-only-main-sync-qa"
+          export QA_OUT
+          python3 scripts/serve.py --host 127.0.0.1 --port 4173 >/tmp/list-only-main-sync-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          READY=0
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then
+              READY=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$READY" -ne 1 ]; then
+            cat /tmp/list-only-main-sync-server.log
+            exit 1
+          fi
+          python3 /tmp/verify-list-only-main-sync.py
+
+      - name: Upload current-main rendered QA evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: main-sync-source
-          path: /tmp/main-sync-source
-          retention-days: 1
+          name: list-only-main-sync-qa
+          path: ${{ runner.temp }}/list-only-main-sync-qa
+          if-no-files-found: warn
+          retention-days: 3
+
+      - name: Commit verified integration
+        shell: bash
+        run: |
+          rm -rf .github/main-sync-payload
+          rm -f .github/workflows/collect-main-sync-source.yml
+          git config user.name "Ham Arin"
+          git config user.email "79068658+makee-ham@users.noreply.github.com"
+          git add -A
+          git commit -m "객실 목록을 리스트형으로 단일화하고 청소 배지 넘침을 막는다"
+          git push origin HEAD:codex/list-only-badge-main-sync
