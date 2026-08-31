@@ -1229,12 +1229,16 @@
 - 데모 로그인 첫 렌더에서 알림 fixture 정규화가 원장 불변식 오류를 만들던 경로를 초기화 단계로 옮긴 뒤 재현되지 않음을 확인했다.
 - manifest·192/512/maskable 아이콘의 실제 PNG 규격, 서비스 워커 install/activate/fetch/push/click/subscriptionchange, 네트워크 우선 navigation과 성공 응답의 shell cache 갱신, 민감 URL·API·Auth·사진 cache bypass를 자동 검사했다.
 - 운영 로그인 대표 화면을 `QA/screenshots/live-api-login-1440.png`와 `QA/screenshots/live-api-login-390.png`에 실제 PNG로 기록했다.
+- 전용 Vercel origin `https://room-management-system-prod.vercel.app`에 운영 산출물을 배포했다. 배포된 `runtime-config.json`의 운영 API·Supabase project ref·`local` 세션 정책을 확인하고, 해당 origin의 CORS preflight 204, health, OpenAPI 0.2.0 필수 path를 실제 요청으로 확인했다.
+- 운영 Edge Function의 `CORS_ORIGINS`는 `http://127.0.0.1:4173`, `http://localhost:4173`, 전용 Vercel origin만 허용한다. 세 origin 모두 같은 CORS·health·OpenAPI 검사를 통과했다.
+- 캐슬디아트 Chrome 프로필에서 Vercel 운영 로그인 화면을 열어 제목, 아이디·비밀번호 접근성 이름, 기본 체크된 로그인 유지와 console warning/error 0건을 확인했다.
 
 ### 배포·알림 한계
 
 - GitHub repository variable `RMS_API_BASE_URL`, `SUPABASE_URL`과 secret `SUPABASE_PUBLISHABLE_KEY`를 등록했다. Pages 산출물의 공개 runtime config에만 주입하며 키는 추적 파일에 저장하지 않는다.
 - 공유 Pages origin `https://makee-ham.github.io`의 운영 Edge Function preflight는 현재 `403 ORIGIN_NOT_ALLOWED`이며 계속 허용하지 않는다.
-- `makee-ham.github.io`의 browser storage와 service worker 권한은 다른 project Pages와 같은 origin을 공유하므로 workflow가 운영 로그인 배포를 거부한다. 앱 전용 custom domain을 연결하고 `RMS_APP_ORIGIN`을 등록한 뒤, 해당 origin의 CORS 204와 장기 로그인 저장을 다시 검증해야 한다.
+- `makee-ham.github.io`의 browser storage와 service worker 권한은 다른 project Pages와 같은 origin을 공유하므로 workflow가 운영 로그인 배포를 거부한다. 운영 확인은 전용 Vercel origin에서 진행한다. Pages를 추가로 사용하려면 앱 전용 custom domain을 연결하고 `RMS_APP_ORIGIN`을 등록해야 한다.
+- Vercel 배포는 현재 로컬 정적 산출물을 수동 배포한 상태다. Git push 자동 배포는 Vercel project와 GitHub repository를 별도로 연결해야 한다.
 - 현재 백엔드에는 Web Push 구독·알림 이벤트·발송 endpoint가 없다. PWA 설치와 브라우저 권한 요청까지만 동작하며 앱이 닫힌 동안의 실제 푸시는 백엔드 추가 전에는 통과로 기록하지 않는다.
 - 현재 알림 payload에는 record 식별자를 허용하지 않고, 클릭 시 실제로 존재하는 `더보기` 화면만 연다. 상세 알림 endpoint와 권한 검사가 생기기 전에는 record deep link를 통과로 기록하지 않는다.
 - 실제 iPhone·Android 설치, 홈 화면 실행, OS 알림 전달, 장시간 백그라운드 세션은 실기기와 운영 계정으로 후속 확인이 필요하다.

@@ -53,7 +53,9 @@ GitHub Pages 배포는 다음 repository variable·secret을 사용해 `_site/ru
 
 Pages workflow는 정적 작업공간 검사, PWA 검사, 실제 운영 health·OpenAPI·CORS 검사를 모두 통과한 뒤에만 배포한다.
 
-2026-08-31 기준 repository variable `RMS_API_BASE_URL`, `SUPABASE_URL`과 secret `SUPABASE_PUBLISHABLE_KEY`는 등록했다. 공개키 값은 추적 파일이나 문서에 기록하지 않는다. `RMS_APP_ORIGIN`은 전용 도메인이 정해진 뒤 등록한다.
+2026-08-31 기준 repository variable `RMS_API_BASE_URL`, `SUPABASE_URL`과 secret `SUPABASE_PUBLISHABLE_KEY`는 등록했다. 공개키 값은 추적 파일이나 문서에 기록하지 않는다. Pages용 `RMS_APP_ORIGIN`은 전용 도메인이 정해진 뒤 등록한다.
+
+같은 날 전용 Vercel project `room-management-system-prod`에 운영 산출물을 배포했다. 고정 origin은 `https://room-management-system-prod.vercel.app`이며 런타임 설정은 운영 API·Supabase project와 `local` 세션 정책을 사용한다. 현재 배포는 로컬에서 만든 정적 산출물을 올린 것이므로 Git 저장소 자동 배포 연결은 별도 작업이다.
 
 `makee-ham.github.io`는 저장소 경로가 달라도 browser storage와 service worker 권한의 origin을 공유한다. 다른 Pages 앱이 운영 token에 접근할 가능성을 없애기 위해 workflow는 이 공유 origin을 운영 로그인 배포 대상으로 거부한다. 브라우저를 닫아도 로그인을 안전하게 유지하려면 이 앱만 사용하는 custom domain 또는 전용 origin이 필요하며, 도메인을 연결할 때 `RMS_APP_ORIGIN`, CORS allowlist와 Pages 설정을 함께 바꾼다.
 
@@ -64,7 +66,7 @@ Pages workflow는 정적 작업공간 검사, PWA 검사, 실제 운영 health·
 - CORS에는 정확한 origin만 넣고 `*`와 credentials 조합은 사용하지 않는다.
 - 배포 뒤 전용 origin에서 `/v1/auth/login` OPTIONS 요청이 204, 요청 origin echo, credentials 허용, 필수 header 허용인지 다시 확인한다.
 
-2026-08-31 확인 시 공유 Pages origin `https://makee-ham.github.io`의 preflight는 `403 ORIGIN_NOT_ALLOWED`다. 이 origin은 계속 허용하지 않는다. 전용 origin이 정해지고 해당 origin의 preflight가 통과하기 전에는 Pages workflow와 운영 배포를 완료하지 않는다.
+2026-08-31 확인 시 공유 Pages origin `https://makee-ham.github.io`의 preflight는 `403 ORIGIN_NOT_ALLOWED`다. 이 origin은 계속 허용하지 않는다. 운영 Edge Function의 `CORS_ORIGINS`에는 기존 로컬 origin 두 개와 `https://room-management-system-prod.vercel.app`만 등록했으며, Vercel origin의 preflight 204와 운영 health·OpenAPI 계약을 실제 요청으로 확인했다. Pages 배포는 별도의 전용 origin을 연결하기 전까지 완료하지 않는다.
 
 ## 운영 시작에 필요한 계정 정보
 
