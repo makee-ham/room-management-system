@@ -13,7 +13,7 @@
   "production_integration": "DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md",
   "sha256": {
     "DOCS/FINAL_UX_AUDIT.md": "e479e468c32c27ef606a311fd090ed7a4a8718590d363c9634da014960956c78",
-    "WIREFRAME/index.html": "fa765fb72560719658e0943c3ea8c3f9a4d4b66b2ce790af024029371f28f3a7"
+    "WIREFRAME/index.html": "1077cd74539c1dd5012d506fa9cf5fc85275a15575aaacf60c56b6ac146831bb"
   },
   "runtime": {
     "build_required": false,

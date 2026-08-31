@@ -2291,6 +2291,16 @@ for(const contract of [
   'const liveAdminNav=adminNav;',
   'const liveMaidNav=maidNav;',
   'function renderLiveAdminToday(){',
+  "const LIVE_ROOM_TYPE_ORDER=Object.freeze(['standard','premium','oceanPremium','oceanFamily']);",
+  "const LIVE_ROOM_TYPE_LABELS=Object.freeze({standard:'스탠다드',premium:'프리미어',oceanPremium:'파셜 오션뷰 프리미어',oceanFamily:'파셜 오션뷰 패밀리 투룸'});",
+  'catalogOrder=new Map(ROOM_CATALOG.map(([roomNo],index)=>[roomNo,index]))',
+  'const typeTabs=LIVE_ROOM_TYPE_ORDER.map(',
+  'function renderLiveMaids(){',
+  "if(view==='maids')return renderLiveMaids();",
+  '주간 근무표</button>',
+  '근무 기록</button>',
+  '주급 정산</button>',
+  '컴플레인·벌점</button>',
   'function renderLiveMaidMy(){',
   'function renderLivePendingView(view){',
   "if(view==='today')return renderLiveAdminToday();",
@@ -2299,6 +2309,8 @@ for(const contract of [
 ]){
   if(!html.includes(contract))throw new Error(`Role-based production UI contract missing: ${contract}`);
 }
+const liveRoomRowSource=html.slice(html.indexOf('function liveRoomListRow'),html.indexOf('function renderLiveRooms'));
+if(liveRoomRowSource.includes('room-list-badges'))throw new Error('Production room rows expose secondary reason badges that the canonical room list hides.');
 if(html.includes('미지원 업무는 운영 화면에서 숨김'))throw new Error('Production UI still hides unsupported role views instead of preserving the existing navigation.');
 console.log('Role-based production main-screen parity contracts: passed');
 const serveSource=readFileSync(resolve(root,'scripts/serve.py'),'utf8');
