@@ -16,10 +16,21 @@ const required = [
   'DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md',
   'DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md',
   'DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md',
+  'DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md',
   'DOCS/WIREFRAME_TASK_PROMPT.md',
   'WIREFRAME/index.html',
+  'WIREFRAME/app.webmanifest',
+  'WIREFRAME/sw.js',
+  'WIREFRAME/icons/icon-192.png',
+  'WIREFRAME/icons/icon-512.png',
+  'WIREFRAME/icons/icon-maskable-512.png',
   'WIREFRAME/README.md',
   'WIREFRAME/QA.md',
+  'WIREFRAME/QA/screenshots/live-api-login-1440.png',
+  'WIREFRAME/QA/screenshots/live-api-login-390.png',
+  'scripts/build-pages-artifact.mjs',
+  'scripts/check-api-integration.mjs',
+  'scripts/check-pwa.mjs',
   'WIREFRAME/screenshots/admin-desktop-1440.png',
   'WIREFRAME/screenshots/admin-mobile-390.png',
   'WIREFRAME/screenshots/maid-mobile-390.png',
@@ -110,6 +121,8 @@ if (missing.length) {
 }
 
 const requiredPngEvidence = [
+  'WIREFRAME/QA/screenshots/live-api-login-1440.png',
+  'WIREFRAME/QA/screenshots/live-api-login-390.png',
   'WIREFRAME/QA/screenshots/admin-reservation-cancel-1440.png',
   'WIREFRAME/QA/screenshots/admin-reservation-cancel-390.png',
   'WIREFRAME/QA/screenshots/admin-room-card-guest-count-1440.png',
@@ -141,6 +154,7 @@ const portableDocs = [
   'DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md',
   'DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md',
   'DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md',
+  'DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md',
   'DOCS/WIREFRAME_TASK_PROMPT.md',
   'WIREFRAME/README.md',
   'WIREFRAME/QA.md',
@@ -2250,3 +2264,68 @@ for(const expected of ['concept-filter-search','data-control="room-search"','opt
 }
 if(roomConceptSource.includes('상태 조건 · 중복 가능'))throw new Error('Room status group still contains the redundant 중복 가능 copy.');
 console.log('Reservation list and room-toolbar simplification static contracts: passed');
+
+for(const contract of [
+  "const LIVE_PROJECT_REF='aodikrxcczbogjpsjwjt'",
+  'apiHost[1]!==LIVE_PROJECT_REF',
+  "function liveAllowsPersistentSession(){return LIVE_RUNTIME.config?.sessionPersistence==='local'&&location.hostname!=='makee-ham.github.io';}",
+  'if(!liveAllowsPersistentSession()){try{localStorage.removeItem(key);}',
+  "if(generation!==LIVE_RUNTIME.authGeneration)throw new ApiRequestError('session changed'",
+  'expectedStoredRefreshToken){const currentStored=readStoredLiveSession()?.session;',
+  "code:'SESSION_CHANGED'",
+  'if(generation!==LIVE_RUNTIME.authGeneration)return null',
+  'function clearLiveAuthSurface(){',
+  'LIVE_IDEMPOTENCY_KEYS.clear();clearAllPinModalSecrets();',
+  'function beginStoredSessionTransition(){',
+  'beginStoredSessionTransition();',
+  'mustChangeChanged=!!state.remote.auth.user?.mustChangePassword!==actor.mustChangePassword',
+  "window.addEventListener('pagehide',()=>{clearAllPinModalSecrets();clearLivePageSecretsForHide();});",
+  "if(passwordChanged){void logoutLiveSession();toast('비밀번호는 변경됐습니다. 새 비밀번호로 다시 로그인해 주세요.');return;}",
+  'if(!pwaUpdateRequested||pwaReloading)return',
+  'syncLiveViewUrl(state.liveView)',
+]){
+  if(!html.includes(contract))throw new Error(`Production auth/PWA contract missing: ${contract}`);
+}
+for(const contract of [
+  "function defaultLiveView(role){return role==='admin'?'today':role==='developer'?'accounts':'my';}",
+  'const liveAdminNav=adminNav;',
+  'const liveMaidNav=maidNav;',
+  'function renderLiveAdminToday(){',
+  "const LIVE_ROOM_TYPE_ORDER=Object.freeze(['standard','premium','oceanPremium','oceanFamily']);",
+  "const LIVE_ROOM_TYPE_LABELS=Object.freeze({standard:'스탠다드',premium:'프리미어',oceanPremium:'파셜 오션뷰 프리미어',oceanFamily:'파셜 오션뷰 패밀리 투룸'});",
+  'catalogOrder=new Map(ROOM_CATALOG.map(([roomNo],index)=>[roomNo,index]))',
+  'const typeTabs=LIVE_ROOM_TYPE_ORDER.map(',
+  'function renderLiveMaids(){',
+  "if(view==='maids')return renderLiveMaids();",
+  '주간 근무표</button>',
+  '근무 기록</button>',
+  '주급 정산</button>',
+  '컴플레인·벌점</button>',
+  'function renderLiveMaidMy(){',
+  'function renderLivePendingView(view){',
+  "if(view==='today')return renderLiveAdminToday();",
+  "if(view==='my')return renderLiveMaidMy();",
+  'data-live-room="${esc(room.roomNumber)}"',
+]){
+  if(!html.includes(contract))throw new Error(`Role-based production UI contract missing: ${contract}`);
+}
+const liveRoomRowSource=html.slice(html.indexOf('function liveRoomListRow'),html.indexOf('function renderLiveRooms'));
+if(liveRoomRowSource.includes('room-list-badges'))throw new Error('Production room rows expose secondary reason badges that the canonical room list hides.');
+if(html.includes('미지원 업무는 운영 화면에서 숨김'))throw new Error('Production UI still hides unsupported role views instead of preserving the existing navigation.');
+console.log('Role-based production main-screen parity contracts: passed');
+const serveSource=readFileSync(resolve(root,'scripts/serve.py'),'utf8');
+const pagesBuildSource=readFileSync(resolve(root,'scripts/build-pages-artifact.mjs'),'utf8');
+const apiCheckSource=readFileSync(resolve(root,'scripts/check-api-integration.mjs'),'utf8');
+const pagesWorkflowSource=readFileSync(resolve(root,'.github/workflows/pages.yml'),'utf8');
+for(const [label,source] of [['local runtime server',serveSource],['Pages artifact builder',pagesBuildSource],['API checker',apiCheckSource]]){
+  if(!source.includes('aodikrxcczbogjpsjwjt'))throw new Error(`${label} does not pin the production project ref.`);
+}
+for(const contract of ['/auth/v1/settings','sb-project-ref','RMS_REQUIRE_DEDICATED_ORIGIN','RMS_ACTUAL_APP_ORIGIN']){
+  if(!apiCheckSource.includes(contract))throw new Error(`API checker contract missing: ${contract}`);
+}
+for(const contract of ['id: pages','RMS_APP_ORIGIN','steps.pages.outputs.origin','RMS_REQUIRE_DEDICATED_ORIGIN: "true"','RMS_SESSION_PERSISTENCE: local']){
+  if(!pagesWorkflowSource.includes(contract))throw new Error(`Pages deployment contract missing: ${contract}`);
+}
+console.log('Production project, session isolation, auth-race, and deployment-origin contracts: passed');
+
+await import('./check-pwa.mjs');

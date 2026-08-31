@@ -26,3 +26,5 @@ node_modules/
 coverage/
 playwright-report/
 test-results/
+_site/
+supabase/.temp/

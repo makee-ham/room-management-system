@@ -1213,3 +1213,77 @@
 - [ ] 예약 정보가 없던 투숙 중 객실은 과거 실제 체크인과 미래 체크아웃 또는 종료일 미정 장기 투숙으로 저장할 수 있다.
 - [ ] 종료·취소된 과거 예약과 임의의 과거 신규 예약은 계속 읽기 전용 또는 저장 차단된다.
 - [ ] 연장 일정이 다음 예약 또는 공개된 퇴실 청소와 충돌하면 기존 충돌 보호가 유지된다.
+
+## 2026-08-31 · 운영 API 로그인·PWA 연결
+
+### 확인한 범위
+
+- 운영 project ref `aodikrxcczbogjpsjwjt`의 `/health`, OpenAPI 0.2.0 필수 path, localhost CORS preflight를 실제 요청으로 확인했다.
+- 첫 번째 Supabase project와 API·Auth URL·공개키가 같은 project ref인지 확인했다. 두 번째 project는 문서의 Edge Function API가 없어 연결 대상에서 제외했다.
+- 운영 공개키로 Supabase `/auth/v1/settings`를 실제 호출해 200과 `sb-project-ref=aodikrxcczbogjpsjwjt`를 확인했다. publishable 형식의 임의 키는 같은 검사에서 거부됨을 확인했다.
+- 런타임 설정은 HTTPS, 정확한 Supabase host/path, 같은 project ref, opaque publishable key 또는 `role=anon` legacy JWT만 허용한다. `service_role` JWT와 잘못된 HTTP URL은 `mode=error`로 닫힌다.
+- 운영 로그인 화면은 360·390·768·1440px에서 문서 가로 넘침 0px, 입력·로그인 버튼 높이 44px, 로그인 유지 라벨 터치 영역 68px 이상을 확인했다.
+- 로컬 전용 origin의 운영 로그인 화면에서 제목, 아이디·비밀번호 접근성 이름, 기본 체크된 개인 기기 로그인 유지 안내, console error 0건을 확인했다. 실제 운영 계정이 제공되지 않아 로그인 성공과 역할별 API 변경은 실행하지 않았다.
+- 공유-origin 대응 세션 모드를 390px에서 확인했다. 장기 로그인 체크는 비활성·해제되고 `현재 앱을 닫을 때까지 로그인`으로 표시됐으며, 문서 가로 넘침 0px, 입력·버튼 44px, console error 0건이었다. 첫 서비스 워커 설치가 앱을 다시 부팅하지 않는 것도 요청 기록으로 확인했다.
+- 데모 관리자 로그인 뒤 `더보기 > 로그인 상태`를 눌러 `계정·로그인 상태` 모달과 `로그인됨`을 확인했다. 로그아웃 화면으로 바뀌지 않았고 새 console error가 없었다.
+- 데모 로그인 첫 렌더에서 알림 fixture 정규화가 원장 불변식 오류를 만들던 경로를 초기화 단계로 옮긴 뒤 재현되지 않음을 확인했다.
+- manifest·192/512/maskable 아이콘의 실제 PNG 규격, 서비스 워커 install/activate/fetch/push/click/subscriptionchange, 네트워크 우선 navigation과 성공 응답의 shell cache 갱신, 민감 URL·API·Auth·사진 cache bypass를 자동 검사했다.
+- 운영 로그인 대표 화면을 `QA/screenshots/live-api-login-1440.png`와 `QA/screenshots/live-api-login-390.png`에 실제 PNG로 기록했다.
+- 전용 Vercel origin `https://room-management-system-prod.vercel.app`에 운영 산출물을 배포했다. 배포된 `runtime-config.json`의 운영 API·Supabase project ref·`local` 세션 정책을 확인하고, 해당 origin의 CORS preflight 204, health, OpenAPI 0.2.0 필수 path를 실제 요청으로 확인했다.
+- 운영 Edge Function의 `CORS_ORIGINS`는 `http://127.0.0.1:4173`, `http://localhost:4173`, 전용 Vercel origin만 허용한다. 세 origin 모두 같은 CORS·health·OpenAPI 검사를 통과했다.
+- 캐슬디아트 Chrome 프로필에서 Vercel 운영 로그인 화면을 열어 제목, 아이디·비밀번호 접근성 이름, 기본 체크된 로그인 유지와 console warning/error 0건을 확인했다.
+
+### 배포·알림 한계
+
+- GitHub repository variable `RMS_API_BASE_URL`, `SUPABASE_URL`과 secret `SUPABASE_PUBLISHABLE_KEY`를 등록했다. Pages 산출물의 공개 runtime config에만 주입하며 키는 추적 파일에 저장하지 않는다.
+- 공유 Pages origin `https://makee-ham.github.io`의 운영 Edge Function preflight는 현재 `403 ORIGIN_NOT_ALLOWED`이며 계속 허용하지 않는다.
+- `makee-ham.github.io`의 browser storage와 service worker 권한은 다른 project Pages와 같은 origin을 공유하므로 workflow가 운영 로그인 배포를 거부한다. 운영 확인은 전용 Vercel origin에서 진행한다. Pages를 추가로 사용하려면 앱 전용 custom domain을 연결하고 `RMS_APP_ORIGIN`을 등록해야 한다.
+- Vercel 배포는 현재 로컬 정적 산출물을 수동 배포한 상태다. Git push 자동 배포는 Vercel project와 GitHub repository를 별도로 연결해야 한다.
+- 현재 백엔드에는 Web Push 구독·알림 이벤트·발송 endpoint가 없다. PWA 설치와 브라우저 권한 요청까지만 동작하며 앱이 닫힌 동안의 실제 푸시는 백엔드 추가 전에는 통과로 기록하지 않는다.
+- 현재 알림 payload에는 record 식별자를 허용하지 않고, 클릭 시 실제로 존재하는 `더보기` 화면만 연다. 상세 알림 endpoint와 권한 검사가 생기기 전에는 record deep link를 통과로 기록하지 않는다.
+- 실제 iPhone·Android 설치, 홈 화면 실행, OS 알림 전달, 장시간 백그라운드 세션은 실기기와 운영 계정으로 후속 확인이 필요하다.
+
+## 2026-08-31 · 운영 역할별 메인 화면 정합
+
+### 변경·확인
+
+- 운영 관리자의 기본 진입을 기존 `오늘 할 일`로 맞추고 `오늘·객실·간편 예약·청소·메이드·더보기` 전체 내비게이션을 복원했다.
+- 실제 관리자 세션에서 운영 객실 121실을 기존 객실 리스트에 렌더링하고, 오늘 요약 카드의 실제 상태 합계가 전체 객실 수와 일치하는지 확인했다.
+- 관리자 `오늘·객실·간편 예약·청소·메이드·더보기`를 모두 이동해 제목, 활성 내비게이션, 가로 넘침 0px, console warning/error 0건을 확인했다. 백엔드에 없는 작업 버튼은 비활성 또는 `API 연결 대기`로 표시했다.
+- 메이드 운영 화면은 기존 `내 업무·근무 일정·주급·더보기`, 업무 알림 영역, 어두운 현재 업무 영역, 하단 내비게이션을 유지한다. 운영 메이드 계정이 없어 서버 요청을 발생시키지 않는 로컬 임시 역할 미리보기로 렌더링만 확인했고, 미리보기 분기는 확인 뒤 소스에서 제거했다.
+- 360·390·768·1440px에서 역할별 메인과 객실 목록의 문서 가로 넘침 0px를 확인했다. 390px에서는 하단 내비게이션, 1440px에서는 좌측 내비게이션이 기존 구조와 일치했다.
+- 실제 운영 계정의 비밀번호·역할·객실 상태를 변경하지 않았고 로그아웃도 실행하지 않았다.
+
+### 대표 PNG
+
+- `QA/screenshots/live-admin-main-1440.png`
+- `QA/screenshots/live-admin-main-390.png`
+- `QA/screenshots/live-maid-main-1440.png`
+- `QA/screenshots/live-maid-main-390.png`
+
+### 한계
+
+- 예약·청소 배정·검수·사진·주급·객실 PIN·Web Push endpoint는 아직 백엔드에 없으므로 해당 화면의 실제 업무 처리와 모바일 푸시는 통과로 기록하지 않는다.
+- 메이드 실제 로그인과 장시간 세션·실기기 PWA 알림은 운영 메이드 계정과 백엔드 endpoint가 준비된 뒤 별도로 확인해야 한다.
+
+## 2026-08-31 · 운영 객실·메이드 화면 정본 재정합
+
+### 변경·확인
+
+- 운영 객실 타입 탭을 `전체 객실 → 스탠다드 → 프리미어 → 파셜 오션뷰 프리미어 → 파셜 오션뷰 패밀리 투룸`으로 고정했다. 실제 API 집계는 `121 → 22 → 51 → 13 → 35`로 일치했다.
+- 객실 목록도 기존 `ROOM_CATALOG` 순서를 사용해 첫 타입이 스탠다드, 첫 객실이 `350·352·516·552` 순서인지 확인했다. 파셜 오션뷰 프리미어 필터는 13실과 첫 객실 `536·639·640·641·701`을 표시했다.
+- 객실 행은 기존 5열 목록과 하단 4개 작업 구성을 유지하고, 정본에서 숨긴 차단 사유·보조 상태 배지를 운영 목록에서도 제거했다. 예약·PIN·청소 endpoint가 없는 값과 작업은 `API 연결 대기` 또는 비활성으로 유지했다.
+- 관리자 `메이드`를 계정 관리 표에서 기존 `메이드 운영` 화면으로 되돌렸다. `주간 근무표·근무 기록·주급 정산·컴플레인·벌점` 네 탭, 근무 가능일 표, 메이드 카드를 유지하고 실제 계정 API의 메이드 1명만 표시했다.
+- 근무 가능일·배정·기록·주급·컴플레인 endpoint가 없는 값은 데모 fixture로 채우지 않고 기존 구성 안에서 `API 연결 대기`로 표시했다.
+- 360·390·768·1440px 객실·메이드 화면에서 가로 넘침 0px, 타입 필터와 네 탭 이동, console warning/error 0건을 확인했다. 실제 계정·객실 변경과 로그아웃은 실행하지 않았다.
+
+### 대표 PNG
+
+- `QA/screenshots/live-admin-rooms-1440.png`
+- `QA/screenshots/live-admin-rooms-390.png`
+- `QA/screenshots/live-admin-maids-1440.png`
+- `QA/screenshots/live-admin-maids-390.png`
+
+### 한계
+
+- 관리자 세션에서 메이드 계정이 운영 카드에 표시되는 것만 확인했다. 해당 메이드 계정으로 로그인하거나 근무 데이터를 생성·변경하지 않았다.
