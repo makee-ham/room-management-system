@@ -1266,9 +1266,13 @@
     .assignment-panel-head { display:flex; align-items:flex-start; gap:10px; padding:14px 16px; border-bottom:1px solid var(--line); }
     .assignment-panel-head > div { min-width:0; flex:1; }
     .assignment-step-label { display:none; }
-    .cleaning-toc { position:sticky; top:calc(50px + var(--topbar) + 8px); z-index:55; display:flex; align-items:center; gap:5px; min-width:0; padding:7px; overflow-x:auto; overscroll-behavior-x:contain; border:1px solid var(--line); border-radius:12px; background:rgba(255,255,255,.96); box-shadow:0 6px 18px rgba(24,49,76,.08); scrollbar-width:thin; }
-    .cleaning-toc strong { flex:0 0 auto; padding:0 7px; color:var(--muted); font-size:11px; }
+    .cleaning-toc { position:sticky; top:calc(50px + var(--topbar) + 8px); z-index:55; min-width:0; padding:7px; border:1px solid var(--line); border-radius:12px; background:rgba(255,255,255,.96); box-shadow:0 6px 18px rgba(24,49,76,.08); }
+    .cleaning-toc-disclosure { display:contents; }
+    .cleaning-toc-disclosure > summary { display:none; }
+    .cleaning-toc-links { display:flex; align-items:center; gap:5px; min-width:0; overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:thin; }
+    .cleaning-toc-links::before { content:"이 페이지"; flex:0 0 auto; padding:0 7px; color:var(--muted); font-size:11px; font-weight:850; }
     .cleaning-toc a { display:inline-flex; align-items:center; flex:0 0 auto; min-height:44px; padding:8px 11px; border-radius:8px; color:#315d83; font-size:12px; font-weight:820; text-decoration:none; white-space:nowrap; }
+    .cleaning-toc a[aria-current="location"] { color:var(--navy); background:var(--blue-soft); }
     .cleaning-toc a:hover { color:var(--navy); background:var(--blue-soft); }
     .cleaning-toc a:focus-visible { outline:3px solid rgba(31,111,155,.24); outline-offset:-2px; }
     .assignment-page [id^="cleaning-section-"] { scroll-margin-top:calc(50px + var(--topbar) + 72px); }
@@ -1473,7 +1477,6 @@
     }
     @media (max-width:720px) {
       .cleaning-toc { top:calc(var(--topbar) + 4px); margin-inline:-2px; }
-      .cleaning-toc strong { position:sticky; left:0; z-index:1; align-self:stretch; display:flex; align-items:center; background:#fff; }
       .assignment-intro { align-items:flex-start; flex-direction:column; }
       .assignment-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
       .assignment-summary > div:nth-child(2) { border-right:0; }
@@ -1858,6 +1861,86 @@
       .live-actions .btn { min-height:44px; }
       .live-toolbar { align-items:stretch; }
       .live-toolbar .field, .live-toolbar .field.compact, .live-toolbar .btn { flex:1 1 100%; width:100%; }
+    }
+
+    /* 2026-09 mobile UX: compact navigation and a flat maid photo workflow */
+    @media (max-width:800px) {
+      .tabs[aria-label="청소 상태"] { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:4px; overflow:visible; }
+      .tabs[aria-label="청소 상태"] button:nth-child(-n+3) { grid-column:span 2; }
+      .tabs[aria-label="청소 상태"] button:nth-child(n+4) { grid-column:span 3; }
+      .tabs[aria-label="청소 상태"] button { min-width:0; padding-inline:6px; white-space:normal; }
+      .tabs[aria-label="메이드 관리"] { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); overflow:visible; }
+      .view-stack:has(> .tabs[aria-label="청소 상태"]) > .tab-header, .view-stack:has(> .tabs[aria-label="메이드 관리"]) > .tab-header { display:none; }
+
+      .cleaning-toc { top:calc(var(--topbar) + 4px); padding:0; overflow:visible; }
+      .cleaning-toc-disclosure { display:block; width:100%; }
+      .cleaning-toc-disclosure > summary { display:flex; align-items:center; gap:8px; min-height:50px; padding:7px 10px 7px 13px; cursor:pointer; list-style:none; }
+      .cleaning-toc-disclosure > summary::-webkit-details-marker { display:none; }
+      .cleaning-toc-label { color:var(--muted); font-size:11px; font-weight:800; }
+      .cleaning-toc-current { min-width:0; flex:1; overflow:hidden; color:var(--navy); font-size:13px; font-weight:900; text-overflow:ellipsis; white-space:nowrap; }
+      .cleaning-toc-chevron { display:grid; place-items:center; width:44px; min-width:44px; height:44px; color:var(--muted); transition:transform .16s ease; }
+      .cleaning-toc-disclosure[open] .cleaning-toc-chevron { transform:rotate(180deg); }
+      .cleaning-toc-links { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; padding:5px 8px 8px; overflow:visible; border-top:1px solid var(--line); }
+      .cleaning-toc-disclosure:not([open]) > .cleaning-toc-links { display:none; }
+      .cleaning-toc-links::before { display:none; }
+      .cleaning-toc a { justify-content:flex-start; width:100%; min-width:0; min-height:44px; padding:8px 10px; white-space:normal; }
+      .assignment-page [id^="cleaning-section-"] { scroll-margin-top:calc(var(--topbar) + 68px); }
+      .assignment-table-wrap { overflow:visible; padding:10px; }
+      .assignment-table, .assignment-table tbody, .assignment-table tr, .assignment-table td { display:block; width:100%; min-width:0; }
+      .assignment-table thead { display:none; }
+      .assignment-table tr { margin-bottom:10px; padding:12px; border:1px solid var(--line); border-radius:12px; background:#fff; }
+      .assignment-table td { display:grid; grid-template-columns:92px minmax(0,1fr); gap:8px; align-items:center; min-height:40px; padding:5px 0; border:0; }
+      .assignment-table td::before { content:attr(data-label); color:var(--muted); font-size:12px; font-weight:750; }
+      .assignment-table .assignment-room-type-link { display:inline-flex; align-items:center; width:max-content; min-height:44px; padding:7px 0; }
+
+      .maid-cleaning-detail .detail-head { align-items:flex-start; margin-bottom:10px; }
+      .maid-cleaning-detail .detail-head > .btn-ghost { width:44px; min-width:44px; padding:0; overflow:hidden; font-size:0; }
+      .maid-cleaning-detail .detail-head > .btn-ghost .icon { width:20px; height:20px; }
+      .maid-cleaning-detail .detail-title h2 { margin-bottom:2px; font-size:1.18rem; }
+      .maid-cleaning-detail .detail-title p { font-size:12px; line-height:1.4; }
+      .maid-cleaning-detail .detail-grid, .maid-cleaning-detail .detail-stack { gap:10px; }
+      .maid-cleaning-detail .detail-stack > .card { box-shadow:none; }
+      .maid-cleaning-detail .detail-grid .info-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .maid-cleaning-detail .detail-grid .info-item:nth-child(2), .maid-cleaning-detail .detail-grid .info-item:last-child { grid-column:1/-1; }
+      .maid-cleaning-detail .detail-grid > .detail-stack > .card.card-pad:has(.cleaning-sections) { padding:0; border:0; border-radius:0; background:transparent; }
+      .maid-cleaning-detail .cleaning-sections { gap:0; }
+      .maid-cleaning-detail .cleaning-sections .cleaning-section { overflow:visible; border-width:1px 0 0; border-radius:0; background:transparent; }
+      .maid-cleaning-detail .cleaning-sections .cleaning-section:first-child { border-top:0; }
+      .maid-cleaning-detail .cleaning-section-head { min-height:50px; padding:7px 2px; }
+      .maid-cleaning-detail .cleaning-section-head .help-title { gap:2px; }
+      .maid-cleaning-detail .cleaning-section-head .info-tip-trigger { width:44px; height:44px; }
+      .maid-cleaning-detail .cleaning-section-head [data-cleaning-section-meta] { font-size:12px; }
+      .maid-cleaning-detail .cleaning-section-body { padding:0 2px 14px; border-top:0; }
+      .maid-cleaning-detail .photo-template-banner, .maid-cleaning-detail .task-zone-progress { display:none; }
+      .maid-cleaning-detail .task-zone-safety { margin:0 0 2px; padding:9px 10px; border-radius:10px; font-size:11px; }
+      .maid-cleaning-detail .task-zone-grid { grid-template-columns:minmax(0,1fr); gap:0; }
+      .maid-cleaning-detail .task-zone-card { padding:14px 2px; border:0; border-bottom:1px solid var(--line); border-radius:0; background:transparent; box-shadow:none; }
+      .maid-cleaning-detail .task-zone-card.complete, .maid-cleaning-detail .task-zone-card.failed { background:transparent; }
+      .maid-cleaning-detail .task-zone-card:last-child { border-bottom:0; }
+      .maid-cleaning-detail .task-zone-head { align-items:center; margin-bottom:8px; }
+      .maid-cleaning-detail .task-zone-head > div { display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%; }
+      .maid-cleaning-detail .task-zone-head h4 { font-size:17px; }
+      .maid-cleaning-detail .task-zone-head p { margin:0; font-size:12px; font-variant-numeric:tabular-nums; }
+      .maid-cleaning-detail .task-zone-head > .badge { display:none; }
+      .maid-cleaning-detail .task-zone-photos { gap:0; }
+      .maid-cleaning-detail .task-zone-photo { padding:0; border:0; border-radius:0; background:transparent; }
+      .maid-cleaning-detail .task-zone-photo + .task-zone-photo { margin-top:12px; padding-top:12px; border-top:1px solid var(--line); }
+      .maid-cleaning-detail .task-zone-photo-main { grid-template-columns:minmax(0,1fr); gap:0; min-height:44px; }
+      .maid-cleaning-detail .task-zone-photo-multi .task-zone-photo-visual { display:none; }
+      .maid-cleaning-detail .task-zone-photo-copy strong { font-size:14px; }
+      .maid-cleaning-detail .task-zone-photo-copy span { font-size:12px; }
+      .maid-cleaning-detail .task-zone-photo-copy .photo-state { color:var(--amber); }
+      .maid-cleaning-detail .task-multi-photo-empty { display:none; }
+      .maid-cleaning-detail .task-multi-photo-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; margin-top:8px; }
+      .maid-cleaning-detail .task-multi-photo-actions { gap:8px; margin-top:8px; }
+      .maid-cleaning-detail .task-multi-photo-actions .btn { min-height:48px; padding:8px 10px; white-space:nowrap; }
+      .maid-cleaning-detail .task-zone-photo-actions { grid-template-columns:minmax(0,1fr) minmax(0,1fr) 48px; }
+      .maid-cleaning-detail .task-zone-photo-actions .btn { min-height:48px; }
+      .maid-cleaning-detail .bomb-room-panel, .maid-cleaning-detail .room-issue-form { padding:10px 0 0; border:0; border-radius:0; background:transparent; }
+      .maid-cleaning-detail > .sticky-command { bottom:calc(var(--bottom-nav) + 8px + env(safe-area-inset-bottom)); margin-top:10px; padding:0; border:0; border-radius:12px; background:transparent; box-shadow:none; }
+      .maid-cleaning-detail > .sticky-command .btn { min-height:52px; border-radius:12px; box-shadow:0 10px 24px rgba(20,36,55,.2); }
+      .maid-cleaning-detail > .sticky-command:has(.btn[disabled]) { display:none; }
+      body:has(.maid-cleaning-detail) .scroll-top-button { display:none !important; }
     }
 
   </style>
@@ -3696,7 +3779,7 @@
         root.querySelectorAll('.mobile-section-title h2').forEach((heading,index)=>{if(heading.textContent.trim().startsWith('내 업무 '))addAdminHelpToElement(heading,`maid-my-${index}`,'내 업무','관리자가 통보한 업무만 표시하며 청소는 한 번에 한 객실씩 진행합니다.');});
         addAdminHelp(root,'지금까지 주급 내역','maid-pay','주급 내역','앱은 직접 송금하지 않고 관리자가 외부 송금 뒤 지급 여부만 기록합니다. 월요일부터 일요일까지 승인된 청소비를 합산하고, 검수 대기는 예상 금액에만 표시합니다. 폭탄방 승인 시 해당 객실 기본요금과 같은 추가요금이 반영되며 컴플레인·벌점은 자동 차감되지 않습니다.');
         const cameraBanner=root.querySelector('.cleaning-sections .photo-template-banner');
-        if(cameraBanner&&!cameraBanner.previousElementSibling?.classList.contains('task-photo-help')){
+        if(cameraBanner&&!root.querySelector('.task-photo-help')){
           const help=document.createElement('div');help.className='help-title task-photo-help';help.innerHTML=`<h3>촬영 방법</h3>${infoTip(`maid-camera-${state.detail?.id||'task'}`,'촬영 방법',`구역별 인증 사진을 촬영하세요. 바로 촬영은 후면 카메라를 열고 갤러리는 저장된 사진을 선택합니다. 항목별로 사진을 추가·삭제할 수 있고 구역 전체는 최대 ${MAID_ZONE_PHOTO_LIMIT}장입니다.`)}`;cameraBanner.before(help);
         }
         const notificationCard=[...root.querySelectorAll('.setting-card')].find(card=>card.querySelector('h3')?.textContent.trim()==='알림 설정');
@@ -6003,7 +6086,7 @@
       }
       function cleaningTableOfContentsMarkup() {
         const items=[['overview','배정 현황'],['availability','주간 근무표'],['random','랜덤 배정'],['assignees','객실별 담당'],['summary','배정 요약·저장'],['history','변경 이력']];
-        return `<nav class="cleaning-toc" aria-label="청소 배정 목차"><strong>이 페이지</strong>${items.map(([id,label])=>`<a href="#cleaning-section-${id}" data-cleaning-toc="cleaning-section-${id}">${label}</a>`).join('')}</nav>`;
+        return `<nav class="cleaning-toc" aria-label="청소 배정 목차"><details class="cleaning-toc-disclosure"><summary><span class="cleaning-toc-label">이 페이지</span><span class="cleaning-toc-current" data-cleaning-toc-current>${items[0][1]}</span><span class="cleaning-toc-chevron" aria-hidden="true">${icon('arrowDown','icon-sm')}</span></summary><div class="cleaning-toc-links">${items.map(([id,label],index)=>`<a href="#cleaning-section-${id}" data-cleaning-toc="cleaning-section-${id}" ${index===0?'aria-current="location"':''}>${label}</a>`).join('')}</div></details></nav>`;
       }
       function renderAssignmentDashboard() {
         const counts=assignmentCounts(),targets=assignmentTargets(),visibleTargets=filteredAssignmentTargets(),activeType=state.assignmentTypeFilter==='all'?null:ROOM_TYPES[state.assignmentTypeFilter];
@@ -6944,12 +7027,12 @@
           const count=uploadPhotoCount(upload);
           if(upload.status==='uploading')return `${count}장 · 사진 확인 중`;
           if(upload.status==='failed')return `${count}장 · 전송 실패 포함`;
-          return count?`${count}장 등록`:'사진 없음';
+          return count?`${count}장 등록`:upload.required?'사진 필요':'선택 촬영';
         }
         if(upload.status==='uploading')return '사진 확인 중';
         if(upload.status==='failed')return '전송 실패 · 다시 촬영';
         if(upload.status==='done')return upload.image?.objectUrl?'현장 촬영 완료':'사진 완료';
-        return upload.required?'사진 없음':'사진 없음';
+        return upload.required?'사진 필요':'선택 촬영';
       }
       function taskPhotoVisual(upload) {
         if(upload.image?.objectUrl)return `<img src="${esc(upload.image.src)}" alt="${esc(upload.label)} 현장 촬영 미리보기">`;
@@ -6965,7 +7048,7 @@
         const cameraId=taskPhotoInputId(no,upload.id,'camera'),galleryId=taskPhotoInputId(no,upload.id,'gallery'),items=uploadPhotoCollection(upload),remaining=taskUploadRemainingCapacity(task,upload),busy=items.some(item=>item.status==='uploading'),full=remaining<=0;
         const gallery=items.length?`<div class="task-multi-photo-grid" aria-label="${esc(upload.label)} 사진 ${items.length}장">${items.map((item,index)=>`<article class="task-multi-photo-item ${esc(item.status||'done')}" data-photo-item="${esc(item.id)}"><span class="task-multi-photo-visual">${taskCollectionPhotoVisual(upload,item,index)}</span><span class="task-multi-photo-copy"><strong>${index+1}번째 사진</strong>${item.status==='uploading'?'확인 중':item.status==='failed'?'전송 실패':'등록 완료'}</span>${editable?`<button class="task-multi-photo-remove" type="button" data-action="remove-task-photo-item" data-room="${no}" data-photo="${esc(upload.id)}" data-photo-item="${esc(item.id)}" data-attempt="${esc(attemptId)}" aria-label="${no}호 ${esc(group.zone)} ${esc(upload.label)} ${index+1}번째 사진 삭제" ${item.status==='uploading'?'disabled':''}>${icon('x','icon-sm')}</button>`:''}</article>`).join('')}</div>`:`<div class="task-multi-photo-empty">${upload.required?'이 항목에 사진을 한 장 이상 등록하세요.':'필요한 경우 사진을 추가하세요.'}<br>${esc(group.zone)} 구역 전체 최대 ${MAID_ZONE_PHOTO_LIMIT}장</div>`;
         const controls=editable?`<div class="task-multi-photo-actions"><button class="btn btn-primary" type="button" data-action="capture-task-photo" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}" aria-label="${no}호 ${esc(group.zone)} ${esc(upload.label)} 촬영 추가" ${busy||full?'disabled':''}>${icon('camera','icon-sm')}촬영</button><button class="btn btn-outline" type="button" data-action="choose-task-photo" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}" aria-label="${no}호 ${esc(group.zone)} ${esc(upload.label)} 갤러리 선택" ${busy||full?'disabled':''}>갤러리</button></div><input id="${cameraId}" hidden type="file" accept="image/*" capture="environment" data-control="task-photo-file" data-source="camera" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}"><input id="${galleryId}" hidden type="file" accept="image/*" multiple data-control="task-photo-file" data-source="gallery" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}">`:'';
-        return `<article class="task-zone-photo task-zone-photo-multi ${esc(upload.status||'empty')}" data-photo-slot="${esc(upload.id)}" data-max-photos="${photoUploadLimit(upload)}" data-zone-remaining="${remaining}"><div class="task-zone-photo-main"><span class="task-zone-photo-visual">${icon(items.length?'check':'camera')}</span><div class="task-zone-photo-copy"><strong>${esc(upload.label)}</strong><span class="photo-state" aria-live="polite">${esc(taskUploadStatusText(upload))}</span></div></div>${gallery}${controls}</article>`;
+        return `<article class="task-zone-photo task-zone-photo-multi ${items.length?'has-photo':'is-empty'} ${esc(upload.status||'empty')}" data-photo-slot="${esc(upload.id)}" data-max-photos="${photoUploadLimit(upload)}" data-zone-remaining="${remaining}"><div class="task-zone-photo-main"><span class="task-zone-photo-visual">${icon(items.length?'check':'camera')}</span><div class="task-zone-photo-copy"><strong>${esc(upload.label)}</strong><span class="photo-state" aria-live="polite">${esc(taskUploadStatusText(upload))}</span></div></div>${gallery}${controls}</article>`;
       }
       function taskZoneCardMarkup(no,group,task,editable) {
         const attemptId=task.attemptId||'',requiredUploads=group.uploads.filter(item=>item.required),photosDone=requiredUploads.every(upload=>upload.status==='done'),failed=group.uploads.some(upload=>uploadHasBlockingStatus(upload)),hasRequired=requiredUploads.length>0,complete=hasRequired&&photosDone&&!failed,zonePhotoCount=taskZonePhotoCount(task,group.zone);
@@ -6974,7 +7057,7 @@
           const cameraId=taskPhotoInputId(no,upload.id,'camera'),galleryId=taskPhotoInputId(no,upload.id,'gallery'),busy=upload.status==='uploading',captured=upload.status==='done'||upload.status==='failed'||!!upload.image?.objectUrl;
           return `<article class="task-zone-photo ${upload.status}" data-photo-slot="${esc(upload.id)}"><div class="task-zone-photo-main"><span class="task-zone-photo-visual">${taskPhotoVisual(upload)}</span><div class="task-zone-photo-copy"><strong>${esc(upload.label)}</strong><span class="photo-state" aria-live="polite">${esc(taskUploadStatusText(upload))}${upload.instanceCount>1?` · ${upload.instance}/${upload.instanceCount}`:''}</span></div></div>${editable?`<div class="task-zone-photo-actions"><button class="btn btn-primary" type="button" data-action="capture-task-photo" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}" aria-label="${no}호 ${esc(group.zone)} ${esc(upload.label)} ${captured?'다시 촬영':'바로 촬영'}" ${busy?'disabled':''}>${icon('camera','icon-sm')}${captured?'다시 촬영':'바로 촬영'}</button><button class="btn btn-outline" type="button" data-action="choose-task-photo" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}" aria-label="${no}호 ${esc(group.zone)} ${esc(upload.label)} 갤러리에서 선택" ${busy?'disabled':''}>갤러리</button>${captured?`<button class="btn btn-outline icon-only" type="button" data-action="remove-task-photo" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}" aria-label="${no}호 ${esc(group.zone)} ${esc(upload.label)} 사진 삭제" ${busy?'disabled':''}>${icon('x','icon-sm')}</button>`:'<span aria-hidden="true"></span>'}</div><input id="${cameraId}" hidden type="file" accept="image/*" capture="environment" data-control="task-photo-file" data-source="camera" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}"><input id="${galleryId}" hidden type="file" accept="image/*" data-control="task-photo-file" data-source="gallery" data-room="${no}" data-photo="${esc(upload.id)}" data-attempt="${esc(attemptId)}">`:''}</article>`;
         }).join('')}</div>`;
-        const summary=`${group.uploads.length}개 항목 · ${zonePhotoCount}/${MAID_ZONE_PHOTO_LIMIT}장 · 구역별 최대 ${MAID_ZONE_PHOTO_LIMIT}장`;
+        const summary=`${zonePhotoCount}/${MAID_ZONE_PHOTO_LIMIT}장`;
         return `<section class="task-zone-card ${complete?'complete':''} ${failed?'failed':''}" data-zone-photo-count="${zonePhotoCount}" data-zone-photo-limit="${MAID_ZONE_PHOTO_LIMIT}" aria-labelledby="task-zone-${no}-${groupsafe(group.zone)}"><div class="task-zone-head"><div><h4 id="task-zone-${no}-${groupsafe(group.zone)}">${esc(group.zone)}</h4><p>${summary}</p></div>${statusBadge(complete?'구역 완료':failed?'사진 확인 필요':hasRequired?'촬영 필요':'기타',complete?'green':failed?'red':hasRequired?'amber':'neutral')}</div>${photos}</section>`;
       }
       function groupsafe(value) { return String(value||'zone').replace(/[^a-zA-Z0-9가-힣_-]/g,'-'); }
@@ -6987,7 +7070,8 @@
       function renderCleaningInputSection(no,key,title,meta,body) {
         const titleId=`cleaning-section-${groupsafe(no)}-${groupsafe(key)}`;
         const displayTitle=title==='구역별 사진 촬영'?'구역별 촬영':title;
-        return `<section class="cleaning-section" data-cleaning-section="${esc(key)}" aria-labelledby="${titleId}"><div class="cleaning-section-head"><h3 id="${titleId}">${esc(displayTitle)}</h3><span data-cleaning-section-meta>${esc(meta)}</span></div><div class="cleaning-section-body">${body}</div></section>`;
+        const heading=key==='photos'?`<div class="help-title task-photo-help"><h3 id="${titleId}">${esc(displayTitle)}</h3>${infoTip(`maid-camera-${no}`,'촬영 방법',`구역별 인증 사진을 촬영하세요. 촬영은 후면 카메라를 열고 갤러리는 저장된 사진을 선택합니다. 항목별로 사진을 추가·삭제할 수 있고 구역 전체는 최대 ${MAID_ZONE_PHOTO_LIMIT}장입니다.`)}</div>`:`<h3 id="${titleId}">${esc(displayTitle)}</h3>`;
+        return `<section class="cleaning-section" data-cleaning-section="${esc(key)}" aria-labelledby="${titleId}"><div class="cleaning-section-head">${heading}<span data-cleaning-section-meta>${esc(meta)}</span></div><div class="cleaning-section-body">${body}</div></section>`;
       }
       function renderTaskInputSections(no,job) {
         const {task,snapshot,requiredUploads}=taskRequirements(no), occupied=ROOMS.find(r=>r.no===no)?.occupancy==='occupied';
@@ -6997,7 +7081,7 @@
         const tvSafety=snapshot?.photos?.some(item=>item.id==='tv-on'||String(item.id).startsWith('tv-on-'))?' TV는 켜고 계정·QR·알림 없는 기본 화면으로 촬영하세요.':'';
         const photoBody=`<div class="photo-template-banner"><div><strong>${esc(type.name)} · ${esc(snapshot?.name||'퇴실 청소')}</strong><span>인증 항목 ${requiredUploads.length}개 · 각 구역 전체 최대 ${MAID_ZONE_PHOTO_LIMIT}장</span></div><div class="badge-row">${statusBadge(`${completedGroups}/${requiredGroups.length} 구역 완료`,completedGroups===requiredGroups.length?'green':'amber')}</div></div><div class="task-zone-progress"><div><span>완료 구역</span><strong>${completedGroups}/${requiredGroups.length}</strong></div><div><span>등록 사진</span><strong>${photoCount}장</strong></div></div><div class="task-zone-safety">${icon('shield','icon-sm')}<span><strong>촬영 전 개인정보를 확인하세요.</strong><br>연락처·얼굴·고객 물품·거울 속 사람은 제외하세요.${tvSafety}</span></div><div class="task-zone-grid">${groups.map(group=>taskZoneCardMarkup(no,group,task,editable)).join('')}</div>`;
         const candleBody=`<p class="audit-note" style="margin:12px 0 0">청소 결과를 입력하는 동안만 객실의 최종 촛불 수량을 조정할 수 있습니다.</p><div class="candle-stepper" role="group" aria-label="${no}호 청소 결과 촛불 수량"><button class="btn btn-outline" type="button" data-action="task-candle-change" data-room="${no}" data-delta="-1" aria-label="촛불 1개 줄이기" ${!editable||task.candle<1?'disabled':''}>−</button><div class="candle-stepper-value" aria-live="polite"><strong>${task.candle||0}개</strong><span>청소 완료 후 객실 수량</span></div><button class="btn btn-outline" type="button" data-action="task-candle-change" data-room="${no}" data-delta="1" aria-label="촛불 1개 늘리기" ${!editable||task.candle>=9?'disabled':''}>+</button></div>`;
-        return `<div class="cleaning-sections">${renderCleaningInputSection(no,'photos','구역별 사진 촬영',`${completedGroups}/${requiredGroups.length} 구역`,photoBody)}${renderCleaningInputSection(no,'bomb-room','폭탄방 신고',bombMeta.label,renderBombRoomPanel(no,job))}${renderCleaningInputSection(no,'room-issues','객실 특이사항',`${visibleRoomIssueRecords(no).length}건 · 선택 ${task.issueDraft.photos.length}장`,renderRoomIssueInput(no,editable))}${occupied?'':renderCleaningInputSection(no,'candles','촛불',`${task.candle||0}개`,candleBody)}</div>`;
+        return `<div class="cleaning-sections">${renderCleaningInputSection(no,'photos','구역별 사진 촬영',`${completedGroups}/${requiredGroups.length} 완료 · ${photoCount}장`,photoBody)}${renderCleaningInputSection(no,'bomb-room','폭탄방 신고',bombMeta.label,renderBombRoomPanel(no,job))}${renderCleaningInputSection(no,'room-issues','객실 특이사항',`${visibleRoomIssueRecords(no).length}건 · 선택 ${task.issueDraft.photos.length}장`,renderRoomIssueInput(no,editable))}${occupied?'':renderCleaningInputSection(no,'candles','촛불',`${task.candle||0}개`,candleBody)}</div>`;
       }
       function cleaningPrimary(no,job) {
         const req=taskRequirements(no),access=attemptAccessStatus(no);
@@ -7033,6 +7117,7 @@
 
       function renderCleaningDetail(no) {
         let html=renderCleaningDetailActiveCore(no);
+        if(state.role==='maid')html=`<div class="maid-cleaning-detail">${html}</div>`;
         if(state.role!=='admin'||state.jobs[no]==='upload')return html;
         if(state.jobs[no]==='inspection')html=html.replace('<strong>특이사항</strong>','<strong>기본 제출 메모</strong>');
         const stackEnd='</div><aside class="detail-stack">',insertAt=html.indexOf(stackEnd);
@@ -7493,6 +7578,8 @@
         const target=document.getElementById(link.dataset.cleaningToc);if(!target)return;
         event.preventDefault();if(target.tagName==='DETAILS')target.open=true;
         document.querySelectorAll('a[data-cleaning-toc]').forEach(item=>item.removeAttribute('aria-current'));link.setAttribute('aria-current','location');
+        const current=link.closest('.cleaning-toc')?.querySelector('[data-cleaning-toc-current]');if(current)current.textContent=link.textContent.trim();
+        const disclosure=link.closest('.cleaning-toc-disclosure');if(disclosure&&window.matchMedia('(max-width: 800px)').matches)disclosure.open=false;
         target.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});target.focus({preventScroll:true});
       },true);
       document.addEventListener('focusin',event=>{if(!event.target.closest?.('.info-tip'))closeInfoTips();},true);
