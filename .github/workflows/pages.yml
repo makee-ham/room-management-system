@@ -44,6 +44,7 @@ jobs:
         run: node scripts/check-workspace.mjs
 
       - name: Verify production API contract
+        if: ${{ vars.RMS_APP_ORIGIN != '' }}
         env:
           RMS_API_BASE_URL: ${{ vars.RMS_API_BASE_URL }}
           SUPABASE_URL: ${{ vars.SUPABASE_URL }}
@@ -55,10 +56,11 @@ jobs:
 
       - name: Build browser-safe Pages artifact
         env:
+          RMS_RUNTIME_MODE: ${{ vars.RMS_APP_ORIGIN != '' && 'live' || 'demo' }}
           RMS_API_BASE_URL: ${{ vars.RMS_API_BASE_URL }}
           SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
-          RMS_SESSION_PERSISTENCE: local
+          RMS_SESSION_PERSISTENCE: ${{ vars.RMS_APP_ORIGIN != '' && 'local' || 'session' }}
         run: node scripts/build-pages-artifact.mjs
 
       - name: Upload WIREFRAME as Pages artifact

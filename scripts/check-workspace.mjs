@@ -2337,8 +2337,14 @@ for(const [label,source] of [['local runtime server',serveSource],['Pages artifa
 for(const contract of ['/auth/v1/settings','sb-project-ref','RMS_REQUIRE_DEDICATED_ORIGIN','RMS_ACTUAL_APP_ORIGIN']){
   if(!apiCheckSource.includes(contract))throw new Error(`API checker contract missing: ${contract}`);
 }
-for(const contract of ['id: pages','RMS_APP_ORIGIN','steps.pages.outputs.origin','RMS_REQUIRE_DEDICATED_ORIGIN: "true"','RMS_SESSION_PERSISTENCE: local']){
+for(const contract of ['id: pages','RMS_APP_ORIGIN','steps.pages.outputs.origin','RMS_REQUIRE_DEDICATED_ORIGIN: "true"']){
   if(!pagesWorkflowSource.includes(contract))throw new Error(`Pages deployment contract missing: ${contract}`);
+}
+for(const contract of ['RMS_RUNTIME_MODE','runtimeMode === "demo"','config = { mode: "demo" }','without production credentials']){
+  if(!pagesBuildSource.includes(contract))throw new Error(`Pages demo artifact contract missing: ${contract}`);
+}
+for(const contract of ["if: ${{ vars.RMS_APP_ORIGIN != '' }}","RMS_RUNTIME_MODE: ${{ vars.RMS_APP_ORIGIN != '' && 'live' || 'demo' }}","RMS_SESSION_PERSISTENCE: ${{ vars.RMS_APP_ORIGIN != '' && 'local' || 'session' }}"]){
+  if(!pagesWorkflowSource.includes(contract))throw new Error(`Pages safe fallback contract missing: ${contract}`);
 }
 console.log('Production project, session isolation, auth-race, and deployment-origin contracts: passed');
 
