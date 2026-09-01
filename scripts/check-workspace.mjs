@@ -264,7 +264,7 @@ for (const removed of ['메이드별 작업량·동선 비교', 'renderAssignmen
 }
 for (const contract of [
   "requirementsMode:'photo-only-v1'",
-  '구역별 사진 촬영',
+  '구역별 촬영',
   '인증 항목 ${requiredUploads.length}개 · 각 구역 전체 최대 ${MAID_ZONE_PHOTO_LIMIT}장',
   'const MAID_ZONE_PHOTO_LIMIT=10',
   'function taskUploadRemainingCapacity(task,upload)',
@@ -284,6 +284,15 @@ for (const contract of [
   'urls.forEach(url=>URL.revokeObjectURL(url))',
 ]) {
   if (!html.includes(contract)) throw new Error(`Maid photo-only workflow contract missing: ${contract}`);
+}
+if (html.includes("${icon('camera','icon-sm')}사진 촬영</button>")) {
+  throw new Error('Maid camera control still uses the long visible label.');
+}
+for (const contract of ['.assignment-step-label { display:none; }', '<span class="random-kicker">저장 전 랜덤 초안</span>']) {
+  if (!html.includes(contract)) throw new Error(`Cleaning assignment compact-label contract missing: ${contract}`);
+}
+if (html.includes('<span class="random-kicker">2단계')) {
+  throw new Error('Cleaning assignment still exposes the second-step label.');
 }
 const taskRequirementsStart = html.indexOf('function taskRequirements');
 const taskRequirementsSource = html.slice(taskRequirementsStart, html.indexOf('function taskUploadByIdentity', taskRequirementsStart));
@@ -1546,6 +1555,9 @@ for (const contract of ['객실·간편 예약·청소 사용성 보완', '청�
 }
 for (const contract of ['admin-room-list-aligned-1440.png', 'admin-quick-booking-fullscreen-390.png', 'maid-zone-photo-limit-390.png', 'admin-pay-help-tooltip-1440.png', '실제 11장 선택·10장 절단']) {
   if (!qa.includes(contract)) throw new Error(`2026-09-01 usability QA contract missing: ${contract}`);
+}
+for (const contract of ['청소 단계·모바일 촬영 문구 정리', '숫자 단계 표기가 0개', '각각 128×48px', 'admin-cleaning-no-step-labels-1440.png', 'maid-compact-capture-390.png']) {
+  if (!qa.includes(contract)) throw new Error(`Cleaning compact-copy QA contract missing: ${contract}`);
 }
 for (const contract of ['객실·예약·청소 사용성 보완 (2026-09-01)', '이 페이지` 목차', '우선순위를 위·아래로 조정하는 컨트롤은 제공하지 않습니다', '한 구역에 속한 전체 항목의 사진 합계는 최대 10장', '원형 `ⓘ`']) {
   if (!wireframeReadme.includes(contract)) throw new Error(`2026-09-01 usability README contract missing: ${contract}`);
