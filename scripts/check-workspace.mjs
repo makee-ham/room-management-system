@@ -186,7 +186,7 @@ for (const contract of [
   "if(state.role==='maid'){applyMaidCopyPolicy(root);return;}",
   "'maid-schedule','근무 가능일'",
   "'maid-pay','주급 내역'",
-  "'촬영 방법','구역별 인증 사진을 촬영하세요.",
+  "'촬영 방법',`구역별 인증 사진을 촬영하세요.",
   '.help-title { display:flex; align-items:center; gap:7px;',
   '.info-tip-trigger { display:grid; place-items:center; width:44px; height:44px',
   '.info-tip-mark { display:grid; place-items:center; width:22px; height:22px; border:0; font-size:19px;',
@@ -232,8 +232,8 @@ for (const contract of [
   'random-assignments',
   'undo-random-assignment',
   '총 청소요금 균형 우선',
-  '같은 엘리베이터·가까운 호수',
-  '메이드별 청소 순서 수정',
+  '같은 엘리베이터와 가까운 호수',
+  '메이드별 배정 요약',
   'maxAssigned=Math.max(...results.map(result=>result.assigned))',
   'results.filter(result=>result.assigned===maxAssigned).sort((left,right)=>left.payGap-right.payGap||left.payDeviation-right.payDeviation||left.zoneRankTotal-right.zoneRankTotal||left.roomDistanceTotal-right.roomDistanceTotal',
   'assignmentTargetRate(item)',
@@ -242,7 +242,6 @@ for (const contract of [
   'minutesSnapshot:snapshot.minutes',
   'elevatorSnapshot:snapshot.elevator',
   'randomAssignmentStateMatches',
-  'data-location="board"',
   'maid-order-schedule-badges',
   'scheduleBadges=assignmentSchedulePriorityBadges(item)',
   'class="maid-order-lane-total"',
@@ -252,24 +251,23 @@ for (const contract of [
   "isEditingBalance=targets.some(item=>assignmentFor(item).status==='draft')",
   "eligibleAssignmentMaids().map(maid=>maid.id)",
   '배정된 객실이 없습니다.',
-  '얼리 체크인·레이트 체크아웃의 조정된 예정 시각을 먼저 확인하고',
-  '랜덤 배정 기준 설명',
-  'assignment-rule-tooltip',
-  'aria-describedby="assignment-random-tooltip"',
-  'id="assignment-random-tooltip" role="tooltip"',
-  'assignment-rule-help.is-dismissed',
-  "e.target.closest?.('.assignment-rule-help')",
-  "document.addEventListener('pointerover'",
+  '배정 객실',
+  'cleaningTableOfContentsMarkup',
+  'data-cleaning-toc="cleaning-section-${id}"',
+  "infoTip('random-assignment-rule','랜덤 배정 기준'",
+  'data-info-tip',
 ]) {
   if (!html.includes(contract)) throw new Error(`Random assignment contract missing: ${contract}`);
 }
-for (const removed of ['메이드별 작업량·동선 비교', 'renderAssignmentWorkloadOverview', 'toggle-assignment-route', 'class="random-rule"']) {
+for (const removed of ['메이드별 작업량·동선 비교', 'renderAssignmentWorkloadOverview', 'toggle-assignment-route', 'class="random-rule"', 'move-assignment-order', 'assignment-rule-help', 'assignment-rule-tooltip', "document.addEventListener('pointerover'"]) {
   if (html.includes(removed)) throw new Error(`Removed assignment comparison contract remains: ${removed}`);
 }
 for (const contract of [
   "requirementsMode:'photo-only-v1'",
   '구역별 사진 촬영',
-  '인증 사진 ${requiredUploads.length}장 · 각 항목에 사진을 한 장 이상 등록하세요.',
+  '인증 항목 ${requiredUploads.length}개 · 각 구역 전체 최대 ${MAID_ZONE_PHOTO_LIMIT}장',
+  'const MAID_ZONE_PHOTO_LIMIT=10',
+  'function taskUploadRemainingCapacity(task,upload)',
   '남은 인증 사진 ${photosLeft}장',
   'taskZoneGroups',
   'capture-task-photo',
@@ -641,7 +639,8 @@ for (const contract of [
   'class="room-list-item',
   'class="room-list-actions"',
   '<span>PIN 관리</span>',
-  '.room-list-actions { display:grid; grid-template-columns:repeat(4,minmax(0,1fr));',
+  '.room-list-actions { display:grid; grid-template-columns:100px minmax(150px,.78fr) minmax(220px,1.12fr) minmax(220px,1fr) minmax(230px,.9fr);',
+  '.room-list-actions .btn:first-child { grid-column:1 / 3;',
   '.room-list-actions { grid-template-columns:repeat(2,minmax(0,1fr));',
   "roomViewState:()=>({view:'list',cardCount:0",
 ]) {
@@ -732,6 +731,12 @@ for (const contract of [
   '검색어 또는 객실 유형 필터를 바꿔 주세요.',
   'rowIndex===0&&iso===focusDate',
   "['ArrowUp','ArrowDown','Home','End'].includes(event.key)",
+  "fullscreenAction=fullscreen?'quick-reservation-exit-fullscreen':'quick-reservation-enter-fullscreen'",
+  "if(a==='quick-reservation-enter-fullscreen'||a==='quick-reservation-exit-fullscreen')",
+  'body.quick-booking-fullscreen',
+  '.quick-grid-shell.is-fullscreen',
+  "document.querySelector('.quick-grid-shell.is-fullscreen')",
+  "if(event.key==='Escape')",
 ]) {
   if (!html.includes(contract)) throw new Error(`Quick reservation contract missing: ${contract}`);
 }
@@ -1140,15 +1145,18 @@ for (const contract of assignmentFlowContracts) {
   assignmentFlowIndex = nextIndex;
 }
 if (assignmentDashboardSource.includes('assignment-grid')) {
-  throw new Error('Cleaning assignment flow must stay one-column: worktable, random draft, assignee edit, then order edit.');
+  throw new Error('Cleaning assignment flow must stay one-column: worktable, random draft, assignee edit, then read-only summary.');
 }
 const maidOrderItemStart = html.indexOf('function maidOrderItemMarkup');
 const maidOrderItemSource = html.slice(maidOrderItemStart, html.indexOf('function renderRandomAssignmentCard', maidOrderItemStart));
 if (!maidOrderItemSource.includes('assignmentSchedulePriorityBadges(item)') || !maidOrderItemSource.includes('maid-order-schedule-badges')) {
   throw new Error('Maid order items must repeat early/late schedule priority badges with their adjusted times.');
 }
-for (const contract of ['previous=ordered[index-1]', 'next=ordered[index+1]', '!cleaningTargetCanAdjust(previous)', '!cleaningTargetCanAdjust(next)']) {
-  if (!maidOrderItemSource.includes(contract)) throw new Error(`Maid order controls must not cross a locked adjacent target: ${contract}`);
+for (const removed of ['previous=ordered[index-1]', 'next=ordered[index+1]', 'data-action="move-assignment-order"', 'data-control="assignment-maid"']) {
+  if (maidOrderItemSource.includes(removed)) throw new Error(`Removed manual maid priority control remains: ${removed}`);
+}
+for (const contract of ['assignment.order', 'maid-order-number', 'maid-order-copy']) {
+  if (!maidOrderItemSource.includes(contract)) throw new Error(`Read-only maid assignment summary contract missing: ${contract}`);
 }
 
 const cleaningHubStart = html.indexOf('function renderCleaningHub');
@@ -1397,16 +1405,14 @@ if (!sameDayCancelSource.includes('reason=cleaningCancelReasonLabel(reasonCode)'
 
 const assignmentSaveStart = html.indexOf("if(a==='save-assignments')");
 const assignmentSaveSource = html.slice(assignmentSaveStart, html.indexOf("if(a==='set-availability')", assignmentSaveStart));
-const assignmentOrderMoveStart = html.indexOf("if(a==='move-assignment-order')");
-const assignmentOrderMoveSource = html.slice(assignmentOrderMoveStart, assignmentSaveStart);
 for (const contract of ['needsAttemptBridge', 'beginCleaningAttempt(item.room', 'sameDay&&existingAttempt&&!existingAttempt.startedAt', 'assignment.notifiedAt=', 'assignment.notificationRevision=']) {
   if (!assignmentSaveSource.includes(contract)) throw new Error(`Same-day assignment execution bridge contract missing: ${contract}`);
 }
 for (const contract of ['affectedMaidIds.forEach', 'if(assignment.maidId!==maidId)return', '{maidIds:[maidId]}', '미배정 객실 정보 제외']) {
   if (!assignmentSaveSource.includes(contract)) throw new Error(`Old/new maid notification audience contract missing: ${contract}`);
 }
-if (!assignmentOrderMoveSource.includes('if(!cleaningTargetCanAdjust(other))')) {
-  throw new Error('Maid order swaps must recheck the adjacent target before changing either order.');
+if (html.includes("if(a==='move-assignment-order')") || html.includes('data-action="move-assignment-order"')) {
+  throw new Error('Removed manual maid cleaning-priority controls returned.');
 }
 
 const notifiedEntriesStart = html.indexOf('function notifiedAssignmentEntriesForMaid');
@@ -1437,7 +1443,7 @@ const taskPrompt = readFileSync(resolve(root, 'DOCS/WIREFRAME_TASK_PROMPT.md'), 
 if (!wireframeReadme.includes('객실 목록은 빠른 비교를 위한 리스트형만 사용한다.')) {
   throw new Error('List-only room view README policy is missing.');
 }
-for (const qaContract of ['객실 목록 리스트형 단일화와 청소 배지 넘침 방지','PIN 관리','계산 너비 차이가 1px 이하','인접 열을 침범하지 않게 한다']) {
+for (const qaContract of ['객실 목록 리스트형 단일화와 청소 배지 넘침 방지','PIN 관리','상단 `객실+유형·위치 / 일정 / 상태 / PIN` 경계와 일치','인접 열을 침범하지 않게 한다']) {
   if (!qa.includes(qaContract)) throw new Error(`List-only room view QA record missing: ${qaContract}`);
 }
 for (const contract of [
@@ -1535,8 +1541,14 @@ for (const contract of ['객실 카드 4개 주 상태·일정 우선 배지', '
 for (const contract of ['객실 카드 예약 요약 행 제거', '중복 행 제거', '별도 예약 버튼 유지', '일정 우선 정보 유지', 'admin-room-card-priority-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Compact room-card reservation QA contract missing: ${contract}`);
 }
-for (const contract of ['근무표 다음 동선 고려 랜덤 배정 흐름', '객실별 담당 수정', '메이드별 청소 순서 수정', '순서 보드 일정 강조', '메이드 카드 총 청소요금', 'admin-maid-order-board-390.png', 'admin-maid-order-total-1440.png']) {
+for (const contract of ['객실·간편 예약·청소 사용성 보완', '청소 목차', '메이드별 배정 요약', '순서 이동 버튼과 보드 내 담당 셀렉트가 0개', 'admin-cleaning-toc-readonly-1440.png', 'admin-cleaning-toc-readonly-768.png']) {
   if (!qa.includes(contract)) throw new Error(`Cleaning assignment flow QA contract missing: ${contract}`);
+}
+for (const contract of ['admin-room-list-aligned-1440.png', 'admin-quick-booking-fullscreen-390.png', 'maid-zone-photo-limit-390.png', 'admin-pay-help-tooltip-1440.png', '실제 11장 선택·10장 절단']) {
+  if (!qa.includes(contract)) throw new Error(`2026-09-01 usability QA contract missing: ${contract}`);
+}
+for (const contract of ['객실·예약·청소 사용성 보완 (2026-09-01)', '이 페이지` 목차', '우선순위를 위·아래로 조정하는 컨트롤은 제공하지 않습니다', '한 구역에 속한 전체 항목의 사진 합계는 최대 10장', '원형 `ⓘ`']) {
+  if (!wireframeReadme.includes(contract)) throw new Error(`2026-09-01 usability README contract missing: ${contract}`);
 }
 if (html.includes('내일 청소·일정 주의 한눈에') || html.includes('assignmentAttentionItems()')) {
   throw new Error('Redundant assignment attention panel must stay removed.');
@@ -1631,7 +1643,7 @@ for (const contract of [
   'function historyRouteSnapshot(scrollY=modalPageScrollY??window.scrollY)',
   'rawCloseModal({restoreFocus=false,restoreScroll=true}={})',
   "trigger?.focus?.({preventScroll:true})",
-  "function quickGridUsesInternalVerticalScroll() { return !window.matchMedia('(max-width: 720px)').matches; }",
+  "function quickGridUsesInternalVerticalScroll() { return !!state.quickReservationFullscreen||!window.matchMedia('(max-width: 720px)').matches; }",
   'overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:contain; overscroll-behavior-y:auto;',
   'data-action="filter-room-type"',
   "if(a==='filter-room-type')",
@@ -1911,7 +1923,9 @@ for(const contract of [
   'function photoUploadLimit(upload)',
   'function uploadPhotoCollection(upload)',
   'function cloneUploadEvidence(upload)',
-  'data-max-photos="${limit}"',
+  'data-max-photos="${photoUploadLimit(upload)}"',
+  'data-zone-remaining="${remaining}"',
+  'data-zone-photo-limit="${MAID_ZONE_PHOTO_LIMIT}"',
   'data-template-max-photos="${photoUploadLimit(upload)}"',
   'otherPhotoCount:other?uploadPhotoCount(other):0',
   'otherMaxPhotos:other?photoUploadLimit(other):0',
