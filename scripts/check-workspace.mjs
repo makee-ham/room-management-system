@@ -79,6 +79,9 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-assignment-elevator-1440.png',
   'WIREFRAME/QA/screenshots/admin-random-assignment-1440.png',
   'WIREFRAME/QA/screenshots/admin-random-assignment-390.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-room-link-1440.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-summary-edit-1440.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-summary-edit-390.png',
   'WIREFRAME/QA/screenshots/maid-bomb-room-report-390.png',
   'WIREFRAME/QA/screenshots/admin-bomb-room-inspection-390.png',
   'WIREFRAME/QA/screenshots/admin-bomb-room-payroll-1440.png',
@@ -123,6 +126,9 @@ if (missing.length) {
 const requiredPngEvidence = [
   'WIREFRAME/QA/screenshots/live-api-login-1440.png',
   'WIREFRAME/QA/screenshots/live-api-login-390.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-room-link-1440.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-summary-edit-1440.png',
+  'WIREFRAME/QA/screenshots/admin-assignment-summary-edit-390.png',
   'WIREFRAME/QA/screenshots/admin-reservation-cancel-1440.png',
   'WIREFRAME/QA/screenshots/admin-reservation-cancel-390.png',
   'WIREFRAME/QA/screenshots/admin-room-card-guest-count-1440.png',
@@ -302,7 +308,7 @@ for (const contract of [
   'class="cleaning-toc-disclosure"',
   'data-cleaning-toc-current',
   '.tabs[aria-label="청소 상태"] { display:grid;',
-  '.assignment-table .assignment-room-type-link { display:inline-flex;',
+  '.assignment-table .assignment-room-number-link { display:inline-flex;',
 ]) {
   if (!html.includes(contract)) throw new Error(`Mobile cleaning UX contract missing: ${contract}`);
 }
@@ -1172,18 +1178,29 @@ for (const contract of assignmentFlowContracts) {
   assignmentFlowIndex = nextIndex;
 }
 if (assignmentDashboardSource.includes('assignment-grid')) {
-  throw new Error('Cleaning assignment flow must stay one-column: worktable, random draft, assignee edit, then read-only summary.');
+  throw new Error('Cleaning assignment flow must stay one-column: worktable, random draft, assignee edit, then editable summary.');
 }
 const maidOrderItemStart = html.indexOf('function maidOrderItemMarkup');
 const maidOrderItemSource = html.slice(maidOrderItemStart, html.indexOf('function renderRandomAssignmentCard', maidOrderItemStart));
 if (!maidOrderItemSource.includes('assignmentSchedulePriorityBadges(item)') || !maidOrderItemSource.includes('maid-order-schedule-badges')) {
   throw new Error('Maid order items must repeat early/late schedule priority badges with their adjusted times.');
 }
-for (const removed of ['previous=ordered[index-1]', 'next=ordered[index+1]', 'data-action="move-assignment-order"', 'data-control="assignment-maid"']) {
+for (const removed of ['previous=ordered[index-1]', 'next=ordered[index+1]', 'data-action="move-assignment-order"']) {
   if (maidOrderItemSource.includes(removed)) throw new Error(`Removed manual maid priority control remains: ${removed}`);
 }
-for (const contract of ['assignment.order', 'maid-order-number', 'maid-order-copy']) {
-  if (!maidOrderItemSource.includes(contract)) throw new Error(`Read-only maid assignment summary contract missing: ${contract}`);
+for (const contract of ['assignment.order', 'maid-order-number', 'maid-order-copy', 'data-control="assignment-maid"', 'data-location="summary"', '${item.room}호</strong>']) {
+  if (!maidOrderItemSource.includes(contract)) throw new Error(`Editable maid assignment summary contract missing: ${contract}`);
+}
+if (maidOrderItemSource.includes('${assignment.order}번째 · ${item.room}호')) {
+  throw new Error('Maid assignment summary repeats the visible order ordinal before the room number.');
+}
+const assignmentRowsStart = html.indexOf('const rows=visibleTargets.map', assignmentDashboardStart);
+const assignmentRowsSource = html.slice(assignmentRowsStart, html.indexOf('const emptyRows=', assignmentRowsStart));
+for (const contract of ['class="assignment-room-number-link"', '>${item.room}호</button>', '<span class="assignment-room-type">${esc(context.type.name)}</span>']) {
+  if (!assignmentRowsSource.includes(contract)) throw new Error(`Assignment room-link contract missing: ${contract}`);
+}
+if (assignmentRowsSource.includes('assignment-room-type-link')) {
+  throw new Error('Assignment room type must not remain the room-detail link.');
 }
 
 const cleaningHubStart = html.indexOf('function renderCleaningHub');
@@ -1579,6 +1596,9 @@ for (const contract of ['청소 단계·모바일 촬영 문구 정리', '숫자
 }
 for (const contract of ['관리자·메이드 모바일 UX 단순화', '접이식 바로가기', '카드 안의 카드', '가로 넘침 0px', 'admin-cleaning-mobile-menu-390.png', 'maid-cleaning-mobile-flat-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Mobile cleaning UX QA contract missing: ${contract}`);
+}
+for (const contract of ['객실 호수 링크·배정 요약 담당 변경', '객실 타입 링크는 0개', '배정된 변경 1건 저장·통보', 'admin-assignment-room-link-1440.png', 'admin-assignment-summary-edit-1440.png', 'admin-assignment-summary-edit-390.png']) {
+  if (!qa.includes(contract)) throw new Error(`Editable assignment summary QA contract missing: ${contract}`);
 }
 for (const contract of ['객실·예약·청소 사용성 보완 (2026-09-01)', '이 페이지` 목차', '우선순위를 위·아래로 조정하는 컨트롤은 제공하지 않습니다', '한 구역에 속한 전체 항목의 사진 합계는 최대 10장', '원형 `ⓘ`']) {
   if (!wireframeReadme.includes(contract)) throw new Error(`2026-09-01 usability README contract missing: ${contract}`);
