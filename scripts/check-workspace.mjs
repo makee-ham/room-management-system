@@ -294,6 +294,18 @@ if (html.includes('>갤러리 추가</button>')) {
 if (!html.includes('aria-label="${no}호 ${esc(group.zone)} ${esc(upload.label)} 갤러리 선택"')) {
   throw new Error('Maid gallery control accessible label is missing.');
 }
+for (const contract of [
+  'class="maid-cleaning-detail"',
+  ".task-multi-photo-empty { display:none; }",
+  '.maid-cleaning-detail > .sticky-command:has(.btn[disabled]) { display:none; }',
+  '.maid-cleaning-detail .task-zone-grid { grid-template-columns:minmax(0,1fr); gap:0; }',
+  'class="cleaning-toc-disclosure"',
+  'data-cleaning-toc-current',
+  '.tabs[aria-label="청소 상태"] { display:grid;',
+  '.assignment-table .assignment-room-type-link { display:inline-flex;',
+]) {
+  if (!html.includes(contract)) throw new Error(`Mobile cleaning UX contract missing: ${contract}`);
+}
 for (const contract of ['.assignment-step-label { display:none; }', '<span class="random-kicker">저장 전 랜덤 초안</span>']) {
   if (!html.includes(contract)) throw new Error(`Cleaning assignment compact-label contract missing: ${contract}`);
 }
@@ -1564,6 +1576,9 @@ for (const contract of ['admin-room-list-aligned-1440.png', 'admin-quick-booking
 }
 for (const contract of ['청소 단계·모바일 촬영 문구 정리', '숫자 단계 표기가 0개', '각각 128×48px', 'admin-cleaning-no-step-labels-1440.png', 'maid-compact-capture-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Cleaning compact-copy QA contract missing: ${contract}`);
+}
+for (const contract of ['관리자·메이드 모바일 UX 단순화', '접이식 바로가기', '카드 안의 카드', '가로 넘침 0px', 'admin-cleaning-mobile-menu-390.png', 'maid-cleaning-mobile-flat-390.png']) {
+  if (!qa.includes(contract)) throw new Error(`Mobile cleaning UX QA contract missing: ${contract}`);
 }
 for (const contract of ['객실·예약·청소 사용성 보완 (2026-09-01)', '이 페이지` 목차', '우선순위를 위·아래로 조정하는 컨트롤은 제공하지 않습니다', '한 구역에 속한 전체 항목의 사진 합계는 최대 10장', '원형 `ⓘ`']) {
   if (!wireframeReadme.includes(contract)) throw new Error(`2026-09-01 usability README contract missing: ${contract}`);
