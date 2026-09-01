@@ -288,6 +288,12 @@ for (const contract of [
 if (html.includes("${icon('camera','icon-sm')}사진 촬영</button>")) {
   throw new Error('Maid camera control still uses the long visible label.');
 }
+if (html.includes('>갤러리 추가</button>')) {
+  throw new Error('Maid gallery control still uses the long visible label.');
+}
+if (!html.includes('aria-label="${no}호 ${esc(group.zone)} ${esc(upload.label)} 갤러리 선택"')) {
+  throw new Error('Maid gallery control accessible label is missing.');
+}
 for (const contract of ['.assignment-step-label { display:none; }', '<span class="random-kicker">저장 전 랜덤 초안</span>']) {
   if (!html.includes(contract)) throw new Error(`Cleaning assignment compact-label contract missing: ${contract}`);
 }
