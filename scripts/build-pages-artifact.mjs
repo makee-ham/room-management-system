@@ -66,23 +66,35 @@ function isBrowserPublishableKey(value) {
 
 const fileValues = await localEnvironment();
 const value = (name, fallback = "") => String(process.env[name] ?? fileValues[name] ?? fallback).trim();
-const config = {
-  mode: "live",
-  apiBaseUrl: value("RMS_API_BASE_URL").replace(/\/+$/u, ""),
-  supabaseUrl: value("SUPABASE_URL").replace(/\/+$/u, ""),
-  supabasePublishableKey: value("SUPABASE_PUBLISHABLE_KEY"),
-  sessionPersistence: value("RMS_SESSION_PERSISTENCE", "session").toLowerCase(),
-};
-const refs = [
-  projectRef(config.apiBaseUrl, "/functions/v1/api"),
-  projectRef(config.supabaseUrl, ""),
-];
-if (
-  !refs.every(Boolean) || new Set(refs).size !== 1 || refs[0] !== DOCUMENTED_PROJECT_REF ||
-  !isBrowserPublishableKey(config.supabasePublishableKey) ||
-  !["local", "session"].includes(config.sessionPersistence)
-) {
-  throw new Error("Pages runtime configuration is missing or not browser-safe.");
+const runtimeMode = value("RMS_RUNTIME_MODE", "live").toLowerCase();
+if (!["demo", "live"].includes(runtimeMode)) {
+  throw new Error("Pages runtime mode must be demo or live.");
+}
+
+let config;
+let projectReference = null;
+if (runtimeMode === "demo") {
+  config = { mode: "demo" };
+} else {
+  config = {
+    mode: "live",
+    apiBaseUrl: value("RMS_API_BASE_URL").replace(/\/+$/u, ""),
+    supabaseUrl: value("SUPABASE_URL").replace(/\/+$/u, ""),
+    supabasePublishableKey: value("SUPABASE_PUBLISHABLE_KEY"),
+    sessionPersistence: value("RMS_SESSION_PERSISTENCE", "session").toLowerCase(),
+  };
+  const refs = [
+    projectRef(config.apiBaseUrl, "/functions/v1/api"),
+    projectRef(config.supabaseUrl, ""),
+  ];
+  if (
+    !refs.every(Boolean) || new Set(refs).size !== 1 || refs[0] !== DOCUMENTED_PROJECT_REF ||
+    !isBrowserPublishableKey(config.supabasePublishableKey) ||
+    !["local", "session"].includes(config.sessionPersistence)
+  ) {
+    throw new Error("Pages runtime configuration is missing or not browser-safe.");
+  }
+  projectReference = refs[0];
 }
 
 await rm(OUTPUT, { recursive: true, force: true });
@@ -93,4 +105,8 @@ await writeFile(
   `${JSON.stringify(config)}\n`,
   { encoding: "utf8", mode: 0o600 },
 );
-console.log(`Pages artifact prepared for Supabase project ${refs[0]}.`);
+console.log(
+  runtimeMode === "demo"
+    ? "Pages artifact prepared in demo mode without production credentials."
+    : `Pages artifact prepared for Supabase project ${projectReference}.`,
+);
