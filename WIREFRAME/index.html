@@ -947,6 +947,20 @@
     .cleaning-history-meta span,.cleaning-history-meta strong { display:block; }
     .cleaning-history-meta span { color:var(--muted); font-size:11px; }
     .cleaning-history-meta strong { margin-top:3px; font-size:12px; overflow-wrap:anywhere; }
+    .admin-cleaning-history-toolbar { display:grid; grid-template-columns:minmax(0,1fr) minmax(280px,420px); gap:18px; align-items:end; padding:18px; }
+    .admin-cleaning-history-toolbar h3 { margin:0 0 4px; }
+    .admin-cleaning-history-toolbar p { margin:0; color:var(--muted); font-size:13px; }
+    .admin-cleaning-history-search { display:grid; gap:6px; min-width:0; color:var(--muted); font-size:12px; font-weight:800; }
+    .admin-cleaning-history-search-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; }
+    .admin-cleaning-history-search-input { position:relative; min-width:0; }
+    .admin-cleaning-history-search-input .icon { position:absolute; top:50%; left:13px; width:18px; height:18px; color:var(--muted); transform:translateY(-50%); pointer-events:none; }
+    .admin-cleaning-history-search-input input { width:100%; min-height:46px; padding-left:40px; }
+    .admin-cleaning-history-result { display:flex; flex-wrap:wrap; gap:7px; align-items:center; margin-top:12px; color:var(--muted); font-size:12px; }
+    .cleaning-history-date-groups { display:grid; gap:18px; }
+    .cleaning-history-date-group { display:grid; gap:10px; }
+    .cleaning-history-date-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0 2px; }
+    .cleaning-history-date-head h3 { margin:0; font-size:1rem; }
+    .cleaning-history-group-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
     .history-photo-expired { display:grid; place-items:center; min-height:170px; padding:22px; border:1px dashed var(--line-strong); border-radius:12px; color:var(--muted); background:var(--surface-soft); text-align:center; }
     .history-photo-expired strong,.history-photo-expired span { display:block; }
     .history-photo-expired span { margin-top:4px; font-size:12px; }
@@ -1199,6 +1213,10 @@
       .bomb-room-ledger-amount { text-align:left; }
       .room-export-options { grid-template-columns:1fr; }
       .cleaning-history-meta { grid-template-columns:1fr; }
+      .admin-cleaning-history-toolbar { grid-template-columns:1fr; gap:13px; padding:15px; }
+      .admin-cleaning-history-search-row { grid-template-columns:1fr; }
+      .admin-cleaning-history-search-row .btn { width:100%; }
+      .cleaning-history-group-grid { grid-template-columns:1fr; }
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
@@ -2878,7 +2896,7 @@
           reservationSequence:INITIAL_RESERVATIONS.length, reservations:initialReservationState(),
           manualCleaningSequence:0, manualCleaningRequests:{}, checkoutInspections:{},
           publications:{}, cancelRequests:{},
-          todaySections:{schedule:true,assignment:true,drafts:false,inspection:false,pay:false}, cleaningTab:'assignment-today', assignmentTypeFilter:'all', adminMaidTab:'workforce', adminPayWeek:'2026-08-03', workHistoryWeek:'2026-08-10', workHistoryMaid:'all',
+          todaySections:{schedule:true,assignment:true,drafts:false,inspection:false,pay:false}, cleaningTab:'assignment-today', cleaningHistorySearch:'', assignmentTypeFilter:'all', adminMaidTab:'workforce', adminPayWeek:'2026-08-03', workHistoryWeek:'2026-08-10', workHistoryMaid:'all',
           drafts:[{id:'d536-next',room:'536',kind:'퇴실 청소',created:'09:55',date:'8월 16일'},...initialReservationDrafts()],
           jobs:{'117':'scheduled','350':'inspection','332':'cleaning','528':'upload','536':'approved','639':'inspection','142':'stayover-requested','211':'draft','352':'approved'},
           candles:{'117':0,'350':0,'332':0,'528':0,'536':0,'639':0,'142':0,'211':1,'352':0},
@@ -6192,8 +6210,26 @@
           return !rollover||rollover.carryReason==='started-unfinished'||!!activeUnfinishedAttempt(no);
         });
       }
+      function adminCleaningHistoryRange() {
+        const to=state.selectedDate,from=addIsoDays(to,-6),records=CLEANING_HISTORY_FIXTURES.filter(record=>{
+          const completedDate=timestampIsoDate(record.completedAt,'');
+          return completedDate&&completedDate>=from&&completedDate<=to;
+        }).sort((left,right)=>right.completedAt.localeCompare(left.completedAt));
+        return {from,to,records};
+      }
+      function adminCleaningHistoryCard(record) {
+        const photoState=cleaningHistoryPhotoState(record),tone=record.inspectionStatus==='approved'?'green':'red';
+        return `<article class="card cleaning-history-card" data-cleaning-history-room="${record.room}" data-cleaning-history-performer="${esc(record.maidName)}"><div class="cleaning-history-card-head"><div><h3>${record.room}호 · ${esc(record.kind)}</h3><p>${esc(record.typeName)} · 실제 수행 ${esc(record.maidName)}</p></div>${statusBadge(record.inspectionLabel,tone)}</div><div class="cleaning-history-meta"><div><span>현장 완료</span><strong>${esc(record.completedAt)}</strong></div><div><span>제출 → 검수</span><strong>${esc(record.submittedAt)} → ${esc(record.inspectedAt)}</strong></div><div><span>사진</span><strong>${photoState.available?`${record.photos.length}장 · ${photoState.untilLabel}까지`:'7일 보관 만료 · 원본 삭제'}</strong></div></div><div class="notice ${photoState.available?'notice-info':'notice-warning'}" style="margin:0 0 12px"><div><strong>제출 내용</strong><br>${esc(record.submissionNote)}</div></div><button class="btn btn-primary btn-block" type="button" data-action="cleaning-history-detail" data-id="${record.id}">사진·제출·검수 전체 보기</button></article>`;
+      }
+      function renderAdminCleaningHistory() {
+        const range=adminCleaningHistoryRange(),query=String(state.cleaningHistorySearch||'').trim().toLocaleLowerCase('ko-KR'),records=query?range.records.filter(record=>record.room.toLocaleLowerCase('ko-KR').includes(query)||record.maidName.toLocaleLowerCase('ko-KR').includes(query)):range.records,groups=new Map();
+        records.forEach(record=>{const date=timestampIsoDate(record.completedAt,'');if(!groups.has(date))groups.set(date,[]);groups.get(date).push(record);});
+        const groupMarkup=[...groups.entries()].map(([date,items])=>`<section class="cleaning-history-date-group" data-cleaning-history-date="${date}" aria-labelledby="cleaning-history-date-${date}"><div class="cleaning-history-date-head"><h3 id="cleaning-history-date-${date}">${dateLabel(date)}</h3>${statusBadge(`${items.length}건`,'neutral')}</div><div class="cleaning-history-group-grid">${items.map(adminCleaningHistoryCard).join('')}</div></section>`).join('');
+        const empty=query?`<section class="inline-empty"><h3>검색 결과가 없습니다</h3><p>객실번호 또는 실제 수행자 이름을 다시 확인해 주세요.</p>${button('검색어 지우기','clear-cleaning-history-search','outline')}</section>`:`<section class="inline-empty"><h3>최근 7일 완료 기록이 없습니다</h3><p>${dateLabel(range.from)}부터 ${dateLabel(range.to)}까지 검수가 끝난 청소가 없습니다.</p></section>`;
+        return `<div class="tab-panel view-stack" data-admin-cleaning-history><section class="card admin-cleaning-history-toolbar" aria-labelledby="admin-cleaning-history-title"><div><h3 id="admin-cleaning-history-title">최근 7일 완료 청소</h3><p>${dateLabel(range.from)} – ${dateLabel(range.to)} · 현장 완료일 기준 · 최신 날짜순</p><div class="admin-cleaning-history-result" role="status" aria-live="polite"><strong>${records.length}건 표시</strong><span>전체 ${range.records.length}건 · 날짜 ${groups.size}개</span></div></div><label class="admin-cleaning-history-search" for="admin-cleaning-history-search">객실번호 또는 수행자 검색<div class="admin-cleaning-history-search-row"><span class="admin-cleaning-history-search-input">${icon('search')}<input id="admin-cleaning-history-search" class="input-control" type="search" data-control="cleaning-history-search" value="${esc(state.cleaningHistorySearch||'')}" placeholder="예: 536 또는 김민지1" autocomplete="off"></span>${query?button('검색어 지우기','clear-cleaning-history-search','outline'):''}</div></label></section><div class="notice notice-info"><div><strong>날짜별로 사진·제출·검수 결과를 함께 확인합니다.</strong><br>사진은 검수 결정부터 7일 동안만 조회되며, 만료 뒤에도 제출 내용과 검수 결과는 남습니다.</div></div>${groupMarkup?`<div class="cleaning-history-date-groups">${groupMarkup}</div>`:empty}<p class="audit-note">인명·객실·사진은 기능 확인용 데모 데이터입니다. 실제 7일 조회와 사진 보관·권한은 백엔드 연결이 필요합니다.</p></div>`;
+      }
       function renderCleaningHub() {
-        const todayDate=state.selectedDate,tomorrowDate=addIsoDays(state.selectedDate,1),tabCounts={today:assignmentCountsForDate(todayDate).total,tomorrow:assignmentCountsForDate(tomorrowDate).total,progress:cleaningProgressEntries().length,inspection:Object.values(state.jobs).filter(v=>v==='inspection').length,done:Object.values(state.jobs).filter(v=>v==='approved').length};
+        const todayDate=state.selectedDate,tomorrowDate=addIsoDays(state.selectedDate,1),tabCounts={today:assignmentCountsForDate(todayDate).total,tomorrow:assignmentCountsForDate(tomorrowDate).total,progress:cleaningProgressEntries().length,inspection:Object.values(state.jobs).filter(v=>v==='inspection').length,done:adminCleaningHistoryRange().records.length};
         return renderCoach()+renderNetworkNotice()+`<div class="view-stack"><div class="tab-header"><div><h2>청소 관리</h2><p>오늘 운영 조정과 내일 사전 배정을 분리하고, 변경 내용은 해당 메이드에게 다시 알립니다.</p></div></div><div class="tabs" role="tablist" aria-label="청소 상태">${cleaningTabButton('assignment-today','오늘 배정',tabCounts.today)}${cleaningTabButton('assignment-tomorrow','내일 배정',tabCounts.tomorrow)}${cleaningTabButton('progress','진행 중',tabCounts.progress)}${cleaningTabButton('inspection','검수 대상 목록',tabCounts.inspection)}${cleaningTabButton('done','완료',tabCounts.done)}</div>${renderListState(renderCleaningTab())}</div>`;
       }
       function taskRow(no,job,extra='') {
@@ -6204,6 +6240,7 @@
       }
       function renderCleaningTab() {
         if(isCleaningAssignmentTab(state.cleaningTab))return renderAssignmentDashboard();
+        if(state.cleaningTab==='done')return renderAdminCleaningHistory();
         const allowed=state.cleaningTab==='progress'?['scheduled','claimed','cleaning','upload','reclean','hold']:state.cleaningTab==='inspection'?['inspection']:['approved'];
         const entries=state.cleaningTab==='progress'?cleaningProgressEntries():Object.entries(state.jobs).filter(([,v])=>allowed.includes(v)),rows=entries.map(([no,v])=>taskRow(no,v)).join('');
         return `<div class="tab-panel">${rows||`<section class="inline-empty"><h3>이 상태의 작업이 없습니다</h3><p>다른 탭에서 진행 상태를 확인하세요.</p></section>`}</div>`;
@@ -7677,7 +7714,7 @@
       document.addEventListener('keydown',event=>{if(event.key!=='Escape'||document.querySelector('#modal-root .modal, .calendar-dialog'))return;if(closeInfoTips({restoreFocus:true})){event.preventDefault();event.stopImmediatePropagation();}},true);
 
       const rebuiltActions=new Set(['toggle-demo','reset','switch-role','nav','filter-rooms','filter-room-type','back','close-modal','backdrop-close','room-detail','cleaning-detail','maid-detail','complaint-detail','pay-detail','admin-pay-detail','template','template-detail','template-back-list','template-edit','template-cancel-edit','template-review','template-save','inspection-photo','open-room-export','export-rooms-csv','export-rooms-xls','open-calendar','open-pay-calendar','open-work-history-calendar','calendar-backdrop','calendar-close','calendar-month','calendar-select','calendar-today','date-shift','date-today','toggle-section','clear-room-filters','edit-room-info','save-room-info','pin-show','pin-hide','pin-edit','pin-clear','pin-random','pin-review','pin-back','pin-save','reservation-edit','new-reservation','save-reservation-v2','create-stayover','confirm-stayover','toggle-room-cleaning','confirm-room-cleaning-on','confirm-room-cleaning-off','complete-checkout-inspection','confirm-checkout-inspection','operation-status','confirm-operation-stop','resume-operation','candle-change','task-candle-change','direct-assign','confirm-direct-assign','cleaning-tab','assignment-type-filter','admin-maid-tab','go-today','go-workforce','go-work-history','go-payroll','go-complaints','go-cleaning-drafts','go-cleaning-assignment','go-inspection','go-open','go-schedule','go-my','go-maid-pay','toggle-maid-pay-week','clear-maid-pay-week','new-cleaning','confirm-new-cleaning','toggle-week-day','submit-week-availability','edit-week-availability','request-availability-change','save-assignments','set-availability','change-availability','confirm-off-active','claim-job','confirm-claim','start-cleaning','confirm-start','capture-task-photo','choose-task-photo','remove-task-photo','remove-task-photo-item','retry-task-photo','retry-all-task-photos','field-complete-v2','submit-cleaning-v2','approve-inspection-v2','reject-inspection-v2','confirm-approve-v2','confirm-reject-v2','toggle-payment','confirm-toggle-payment','confirm-finish-payment','mark-payment-check','confirm-payment-open-v2','confirm-reverse-payment','delete-complaint','undo-complaint','publish-selected','confirm-publish','retry-network','alerts','audit-log','rates','logout','request-cancel','confirm-request-cancel','cancel-review','confirm-cancel','rule-complaint-v2','ack-complaint','object-complaint','confirm-objection','close-complaint-v2','correct-complaint-v2','confirm-correct-complaint-v2','reclean-existing','demo-info','notification-permission','confirm-notification-permission']);
-      ['cleaning-history-detail','cleaning-history-photo','open-room-pin-sheet-sync','confirm-room-pin-sheet-sync'].forEach(action=>rebuiltActions.add(action));
+      ['cleaning-history-detail','cleaning-history-photo','clear-cleaning-history-search','open-room-pin-sheet-sync','confirm-room-pin-sheet-sync'].forEach(action=>rebuiltActions.add(action));
       ['focus-assignment-room','quick-reservation-edit','quick-month-shift','quick-month-today','quick-reservation-enter-fullscreen','quick-reservation-exit-fullscreen','quick-reservation-undo','reservation-week-shift','open-reservation-week-calendar','reservation-add','reservation-guest-change','cancel-cleaning-target','confirm-cancel-cleaning-target','reservation-cancel-review','confirm-reservation-cancel'].forEach(action=>rebuiltActions.add(action));
       ['random-assignments','undo-random-assignment'].forEach(action=>rebuiltActions.add(action));
       ['resolve-conflict-v2','confirm-conflict-v2','deactivate-maid-v2','confirm-start-deactivation-v2','complete-deactivation-v2','admin-pay-week','export-rooms-xlsx','room-issue-photo','choose-room-issue-files','remove-room-issue-photo','save-room-issue','bomb-room-photo','choose-bomb-room-files','remove-bomb-room-photo','add-demo-bomb-room-photos','save-bomb-room-report','approve-bomb-room','reject-bomb-room','confirm-approve-bomb-room','confirm-reject-bomb-room'].forEach(action=>rebuiltActions.add(action));
@@ -7789,6 +7826,7 @@
         if(a==='room-detail'){maskPin();if(state.adminView==='quickReservation'&&!state.detail)rememberQuickGridViewport();openDetail('room',id||'350',el);return;}
         if(a==='cleaning-detail'){maskPin();openDetail('cleaning',id||'639',el);return;}
         if(a==='cleaning-history-detail'){maskPin();openDetail('cleaningHistory',id,el);return;}
+        if(a==='clear-cleaning-history-search'){state.cleaningHistorySearch='';render();focusAfterRender('[data-control="cleaning-history-search"]');return;}
         if(a==='maid-detail'){maskPin();openDetail('maid',id||'m1',el);return;}
         if(a==='resolve-conflict-v2'){if(!adminCanMutate()){toast('관리자 최신 상태에서만 충돌을 해결할 수 있습니다.','error');return;}if(activeRecleanAttempt('332')){toast('332호 본인 무급 재청소가 끝난 뒤 충돌 재계획을 진행할 수 있습니다.','error');return;}openConflictResolutionV2(el);return;}
         if(a==='confirm-conflict-v2'){
@@ -8566,7 +8604,7 @@
       });
 
       document.addEventListener('input',e=>{
-        const c=e.target.dataset.control;if(c==='live-room-search'){if(!liveMode())return;const value=e.target.value,pos=e.target.selectionStart;state.remote.rooms.query=value;render();requestAnimationFrame(()=>{const input=document.querySelector('[data-control="live-room-search"]');if(input){input.focus();input.setSelectionRange(pos,pos);}});}else if(c==='room-search'){state.roomSearch=e.target.value;const pos=e.target.selectionStart;render();requestAnimationFrame(()=>{const input=document.getElementById('room-search');if(input){input.focus();input.setSelectionRange(pos,pos);}});}else if(c==='quick-reservation-search'){const value=e.target.value.replace(/\D/g,'').slice(0,6),pos=Math.min(value.length,e.target.selectionStart||value.length);if(e.target.value!==value)e.target.value=value;clearTimeout(quickSearchTimer);quickSearchTimer=setTimeout(()=>{rememberQuickGridViewport();state.quickReservationSearch=value;state.quickGridScrollTop=0;render();restoreQuickGridViewport('[data-control="quick-reservation-search"]');requestAnimationFrame(()=>{const input=document.querySelector('[data-control="quick-reservation-search"]');input?.setSelectionRange?.(pos,pos);});},140);}else if(c==='task-note'){const no=e.target.dataset.room;if(maidCanEditCleaning(no))taskState(no).note=e.target.value;}else if(c==='room-issue-note'){const no=e.target.dataset.room;if(!maidCanEditRoomIssue(no))return;const draft=roomIssueDraft(no);draft.note=e.target.value;const action=document.querySelector(`[data-action="save-room-issue"][data-room="${no}"]`);if(action)action.disabled=!draft.note.trim()&&!draft.photos.length;}else if(c==='bomb-room-note'){const no=e.target.dataset.room;if(maidCanCreateBombRoomReport(no))bombRoomDraft(no).note=e.target.value;}else if(c==='assignment-exception'){if(state.role!=='admin'||isLocked())return;const room=e.target.dataset.room;state.assignmentExceptions[room]=e.target.value;const action=document.querySelector('[data-action="save-assignments"]');if(action)action.disabled=!assignmentCanSave();}
+        const c=e.target.dataset.control;if(c==='live-room-search'){if(!liveMode())return;const value=e.target.value,pos=e.target.selectionStart;state.remote.rooms.query=value;render();requestAnimationFrame(()=>{const input=document.querySelector('[data-control="live-room-search"]');if(input){input.focus();input.setSelectionRange(pos,pos);}});}else if(c==='room-search'){state.roomSearch=e.target.value;const pos=e.target.selectionStart;render();requestAnimationFrame(()=>{const input=document.getElementById('room-search');if(input){input.focus();input.setSelectionRange(pos,pos);}});}else if(c==='cleaning-history-search'){const value=e.target.value,pos=e.target.selectionStart;state.cleaningHistorySearch=value;render();requestAnimationFrame(()=>{const input=document.querySelector('[data-control="cleaning-history-search"]');if(input){input.focus();input.setSelectionRange(pos,pos);}});}else if(c==='quick-reservation-search'){const value=e.target.value.replace(/\D/g,'').slice(0,6),pos=Math.min(value.length,e.target.selectionStart||value.length);if(e.target.value!==value)e.target.value=value;clearTimeout(quickSearchTimer);quickSearchTimer=setTimeout(()=>{rememberQuickGridViewport();state.quickReservationSearch=value;state.quickGridScrollTop=0;render();restoreQuickGridViewport('[data-control="quick-reservation-search"]');requestAnimationFrame(()=>{const input=document.querySelector('[data-control="quick-reservation-search"]');input?.setSelectionRange?.(pos,pos);});},140);}else if(c==='task-note'){const no=e.target.dataset.room;if(maidCanEditCleaning(no))taskState(no).note=e.target.value;}else if(c==='room-issue-note'){const no=e.target.dataset.room;if(!maidCanEditRoomIssue(no))return;const draft=roomIssueDraft(no);draft.note=e.target.value;const action=document.querySelector(`[data-action="save-room-issue"][data-room="${no}"]`);if(action)action.disabled=!draft.note.trim()&&!draft.photos.length;}else if(c==='bomb-room-note'){const no=e.target.dataset.room;if(maidCanCreateBombRoomReport(no))bombRoomDraft(no).note=e.target.value;}else if(c==='assignment-exception'){if(state.role!=='admin'||isLocked())return;const room=e.target.dataset.room;state.assignmentExceptions[room]=e.target.value;const action=document.querySelector('[data-action="save-assignments"]');if(action)action.disabled=!assignmentCanSave();}
       });
 
       document.addEventListener('submit',e=>{

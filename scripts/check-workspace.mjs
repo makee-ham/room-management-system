@@ -116,6 +116,8 @@ const required = [
   'WIREFRAME/QA/screenshots/maid-assigned-pin-390.png',
   'WIREFRAME/QA/screenshots/maid-cleaning-history-detail-390.png',
   'WIREFRAME/QA/screenshots/maid-cleaning-history-expired-390.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-completed-history-1440.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-completed-search-390.png',
   'WIREFRAME/reference/redesign-concepts/admin-inspection.png',
   'WIREFRAME/reference/redesign-concepts/admin-next-day-assignment.png',
   'WIREFRAME/reference/redesign-concepts/maid-weekly-availability.png',
@@ -150,6 +152,8 @@ const requiredPngEvidence = [
   'WIREFRAME/QA/screenshots/maid-assigned-pin-390.png',
   'WIREFRAME/QA/screenshots/maid-cleaning-history-detail-390.png',
   'WIREFRAME/QA/screenshots/maid-cleaning-history-expired-390.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-completed-history-1440.png',
+  'WIREFRAME/QA/screenshots/admin-cleaning-completed-search-390.png',
 ];
 const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 const invalidPngEvidence = requiredPngEvidence.filter((file) => {
@@ -1651,6 +1655,11 @@ for (const contract of [
   'function openCleaningHistoryPhoto(',
   '7일 보관 만료 · 원본 삭제',
   "openDetail('cleaningHistory'",
+  'function adminCleaningHistoryRange()',
+  'data-control="cleaning-history-search"',
+  'data-cleaning-history-date=',
+  "'clear-cleaning-history-search'",
+  'addIsoDays(to,-6)',
 ]) {
   if (!html.includes(contract)) throw new Error(`Room PIN sheet and cleaning-history UI contract missing: ${contract}`);
 }
@@ -1672,6 +1681,19 @@ for (const contract of [
   'maid-cleaning-history-expired-390.png',
 ]) {
   if (!qa.includes(contract)) throw new Error(`Room PIN sheet and cleaning-history QA documentation missing: ${contract}`);
+}
+for (const contract of [
+  '추가 검증 · 관리자 완료 청소 최근 7일 검색',
+  '8월 9일–15일',
+  '`536` 입력 시',
+  '`김민지1` 입력 시',
+  'admin-cleaning-completed-history-1440.png',
+  'admin-cleaning-completed-search-390.png',
+]) {
+  if (!qa.includes(contract)) throw new Error(`Admin seven-day cleaning-history QA documentation missing: ${contract}`);
+}
+for (const contract of ['최근 7일 검수 완료 기록', '현장 완료 날짜별 최신순', '객실번호 또는 실제 수행자']) {
+  if (!wireframeReadme.includes(contract)) throw new Error(`Admin seven-day cleaning-history README contract missing: ${contract}`);
 }
 
 const audit = readFileSync(resolve(root, 'DOCS/FINAL_UX_AUDIT.md'));
