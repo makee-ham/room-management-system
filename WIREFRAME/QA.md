@@ -1,7 +1,7 @@
 # 클릭형 와이어프레임 QA
 
 - 검증일: 2026-09-04
-- 문서 갱신일: 2026-09-04 · Google Drive 객실 비밀번호 시트 업데이트, 청소 사진 7일 보관 이력, 배정 통보부터 최종 검수 전까지 담당 메이드 PIN 접근 반영
+- 문서 갱신일: 2026-09-04 · 관리자 완료 청소 최근 7일·날짜별 그룹·객실번호/수행자 검색 추가
 - 대상: `WIREFRAME/index.html`
 - 정책: `DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md`, `DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md`, `DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md`
 - 객실·단가 정본: `DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md`
@@ -36,6 +36,23 @@
 | 콘솔·정적 구문 | 통과 | 관리자·메이드 로그인, 시트 갱신, PIN 변경·조회, 알림, 청소 이력·사진 모달, 뒤로·앞으로, 반응형 확인 뒤 console warning/error 0건이었다. 단일 인라인 JavaScript 구문 분석과 `git diff --check`는 저장소 검증 명령으로 재확인했다. |
 
 대표 증거는 `QA/screenshots/admin-room-pin-sheet-sync-1440.png`, `QA/screenshots/maid-assigned-pin-390.png`, `QA/screenshots/maid-cleaning-history-detail-390.png`, `QA/screenshots/maid-cleaning-history-expired-390.png`에 저장했다. 사진 보관기간은 검수 결정 시점부터 7일이며, 운영 백엔드는 만료 시 원본·미리보기·캐시를 삭제해야 한다.
+
+## 추가 검증 · 관리자 완료 청소 최근 7일 검색
+
+> 2026-09-04 최신 `origin/main`에서 새 작업 브랜치를 만들고 `RMS_RUNTIME_MODE=demo python3 scripts/serve.py --port 4174`로 실행했다. Codex 인앱 브라우저에서 관리자 로그인 후 `청소 → 완료`를 실제 조작했다.
+
+| 항목 | 결과 | 실제 확인 내용 |
+|---|---|---|
+| 최근 7일 범위 | 통과 | 기준일 8월 15일을 포함한 8월 9일–15일을 표시했다. 범위 안 4건만 노출하고 8월 6일 기록은 제외했으며 완료 탭 숫자도 4로 일치했다. |
+| 날짜별 구분 | 통과 | 현장 완료일 최신순으로 8월 14일 2건, 8월 13일 1건, 8월 12일 1건의 세 그룹을 표시했다. 각 그룹에 날짜·요일·건수를 함께 표시했다. |
+| 객실번호 검색 | 통과 | `536` 입력 시 536호 1건과 날짜 그룹 1개만 남고 결과 요약이 `1건 표시 / 전체 4건`으로 갱신됐다. |
+| 실제 수행자 검색 | 통과 | `김민지1` 입력 시 536호·332호 2건과 날짜 그룹 2개만 남았다. 현재 객실 담당이 아니라 과거 제출의 실제 수행자 스냅샷을 기준으로 검색했다. |
+| 결과 없음·초점 | 통과 | `999` 입력 시 결과 없음 안내와 `검색어 지우기` 행동을 표시했다. 지우기 뒤 4건이 복원되고 초점은 같은 검색 입력에 유지됐다. |
+| 상세·복귀 | 통과 | 수행자 검색 상태에서 536호 `사진·제출·검수 전체 보기`로 진입해 제출 확인 내용을 확인했다. 목록 버튼으로 복귀해도 `김민지1` 검색어와 2건 결과가 유지됐다. |
+| 반응형·접근성 | 통과 | 360×800, 390×844, 768×900, 1440×900에서 가로 넘침 0px, 관련 입력·버튼 높이 44px 이상, 접근성 이름 없는 보이는 입력·버튼 0개였다. |
+| 콘솔·정적 구문 | 통과 | 검색·상세·복귀·네 너비 확인 뒤 console warning/error 0건이었다. 단일 인라인 JavaScript 구문 분석과 저장소 정적 계약은 자동 검사로 재확인했다. |
+
+대표 증거는 `QA/screenshots/admin-cleaning-completed-history-1440.png`와 `QA/screenshots/admin-cleaning-completed-search-390.png`에 저장했다. 객실·인명·사진은 데모 fixture이며 실제 최근 7일 조회, 사진 보관·권한과 동시 갱신은 운영 백엔드가 제공해야 한다.
 
 ## 추가 검증 · 관리자 설명 간소화와 도움말
 
