@@ -1,19 +1,21 @@
 {
   "package": "CASTLE THE ART room management wireframe",
-  "version": "2026-09-02-assignment-summary-editor",
-  "generated_at_kst": "2026-09-02T00:43:53+09:00",
+  "version": "2026-09-04-room-pin-sheet-cleaning-history",
+  "generated_at_kst": "2026-09-04T22:10:32+09:00",
   "repository": "https://github.com/makee-ham/room-management-system",
   "entrypoint": "WIREFRAME/index.html",
   "policy_source": "DOCS/FINAL_UX_AUDIT.md",
   "cleaning_policy_source": "DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md",
   "room_status_policy_source": "DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md",
+  "pin_sheet_cleaning_history_policy_source": "DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md",
   "implementation_handoff": "DOCS/14_CLICKABLE_WIREFRAME_HANDOFF.md",
   "codex_instructions": "AGENTS.md",
   "qa_record": "WIREFRAME/QA.md",
   "production_integration": "DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md",
   "sha256": {
     "DOCS/FINAL_UX_AUDIT.md": "e479e468c32c27ef606a311fd090ed7a4a8718590d363c9634da014960956c78",
-    "WIREFRAME/index.html": "50e7c77281d2af7f66cb869a5d78fadcbf72f0e83c1a8542fa6c39e05d278617"
+    "WIREFRAME/index.html": "c5bd5a414a815961dd6c86ed7957cb3cda71efc33dda95858993c414870d2635",
+    "DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md": "88f53e7ca7794392308c13d5db015de35eaf9b62a34aa11d81a217aa28a0c2ee"
   },
   "runtime": {
     "build_required": false,

@@ -16,6 +16,7 @@ const required = [
   'DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md',
   'DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md',
   'DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md',
+  'DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md',
   'DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md',
   'DOCS/WIREFRAME_TASK_PROMPT.md',
   'WIREFRAME/index.html',
@@ -111,6 +112,10 @@ const required = [
   'WIREFRAME/QA/screenshots/maid-other-up-to-10-320.png',
   'WIREFRAME/QA/screenshots/admin-inspection-other-up-to-10-390.png',
   'WIREFRAME/QA/screenshots/quick-reservation-today-row-320.png',
+  'WIREFRAME/QA/screenshots/admin-room-pin-sheet-sync-1440.png',
+  'WIREFRAME/QA/screenshots/maid-assigned-pin-390.png',
+  'WIREFRAME/QA/screenshots/maid-cleaning-history-detail-390.png',
+  'WIREFRAME/QA/screenshots/maid-cleaning-history-expired-390.png',
   'WIREFRAME/reference/redesign-concepts/admin-inspection.png',
   'WIREFRAME/reference/redesign-concepts/admin-next-day-assignment.png',
   'WIREFRAME/reference/redesign-concepts/maid-weekly-availability.png',
@@ -141,6 +146,10 @@ const requiredPngEvidence = [
   'WIREFRAME/QA/screenshots/maid-other-up-to-10-320.png',
   'WIREFRAME/QA/screenshots/admin-inspection-other-up-to-10-390.png',
   'WIREFRAME/QA/screenshots/quick-reservation-today-row-320.png',
+  'WIREFRAME/QA/screenshots/admin-room-pin-sheet-sync-1440.png',
+  'WIREFRAME/QA/screenshots/maid-assigned-pin-390.png',
+  'WIREFRAME/QA/screenshots/maid-cleaning-history-detail-390.png',
+  'WIREFRAME/QA/screenshots/maid-cleaning-history-expired-390.png',
 ];
 const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 const invalidPngEvidence = requiredPngEvidence.filter((file) => {
@@ -160,6 +169,7 @@ const portableDocs = [
   'DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md',
   'DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md',
   'DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md',
+  'DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md',
   'DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md',
   'DOCS/WIREFRAME_TASK_PROMPT.md',
   'WIREFRAME/README.md',
@@ -1626,6 +1636,42 @@ for (const contract of ['메이드 입력 영역 상시 펼침·제출 자료 �
 }
 for (const contract of ['메이드 청소 입력 상시 표시와 제출 자료 묶음', '작업 진입 즉시 모든 입력 본문', '일반적인 이미지 종류가 비슷하다는 이유로 다른 슬롯에 사진을 자동 배정하지 않는다', '하나의 제출 자료 묶음', '받은 자료를 숨기지 않고 읽기 전용', '해당 수행 회차에 묶인 특이사항 스냅샷만 표시']) {
   if (!wireframeReadme.includes(contract)) throw new Error(`Always-open cleaning submission README contract missing: ${contract}`);
+}
+
+for (const contract of [
+  'Google Drive 스프레드시트 비밀번호 업데이트',
+  'function openRoomPinSheetSync(',
+  'function confirmRoomPinSheetSync(',
+  '객실번호 · 비밀번호',
+  'pinCatalogRevision',
+  "['claimed','scheduled','reclean','cleaning','upload','inspection']",
+  'function pinAudienceMaidIds(',
+  "{id:'done',label:'청소 내역'",
+  'function renderCleaningHistoryDetail(',
+  'function openCleaningHistoryPhoto(',
+  '7일 보관 만료 · 원본 삭제',
+  "openDetail('cleaningHistory'",
+]) {
+  if (!html.includes(contract)) throw new Error(`Room PIN sheet and cleaning-history UI contract missing: ${contract}`);
+}
+for (const contract of [
+  '객실 PIN 시트·청소 사진 이력 결정사항',
+  '메이드 내비게이션은 `내 업무 / 근무 일정 / 청소 내역 / 주급 / 더보기`',
+  '배정 통보 순간부터 최종 검수 결정 전까지',
+  'Google Drive 시트 쓰기',
+]) {
+  if (!wireframeReadme.includes(contract)) throw new Error(`Room PIN sheet and cleaning-history README contract missing: ${contract}`);
+}
+for (const contract of [
+  '추가 검증 · Google Drive 객실 PIN 시트·청소 사진 이력',
+  '검수 결정 시점부터 7일',
+  '배정 통보 순간부터 최종 검수 전까지',
+  'admin-room-pin-sheet-sync-1440.png',
+  'maid-assigned-pin-390.png',
+  'maid-cleaning-history-detail-390.png',
+  'maid-cleaning-history-expired-390.png',
+]) {
+  if (!qa.includes(contract)) throw new Error(`Room PIN sheet and cleaning-history QA documentation missing: ${contract}`);
 }
 
 const audit = readFileSync(resolve(root, 'DOCS/FINAL_UX_AUDIT.md'));
