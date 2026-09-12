@@ -1,7 +1,7 @@
 {
   "package": "CASTLE THE ART room management wireframe",
-  "version": "2026-09-04-admin-cleaning-history-search",
-  "generated_at_kst": "2026-09-04T23:12:00+09:00",
+  "version": "2026-09-13-backend-v0.2.0-integration",
+  "generated_at_kst": "2026-09-13T01:15:00+09:00",
   "repository": "https://github.com/makee-ham/room-management-system",
   "entrypoint": "WIREFRAME/index.html",
   "policy_source": "DOCS/FINAL_UX_AUDIT.md",
@@ -14,7 +14,7 @@
   "production_integration": "DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md",
   "sha256": {
     "DOCS/FINAL_UX_AUDIT.md": "e479e468c32c27ef606a311fd090ed7a4a8718590d363c9634da014960956c78",
-    "WIREFRAME/index.html": "d87c0866dd1c102d05f43f85fd4208420304b9d82d00f613be8bbff9c0e52e4b",
+    "WIREFRAME/index.html": "b3000146b0e16fc0ec172373134b9fab7b378240cbf287db4cd021846c374b91",
     "DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md": "eec820aabd2551083d782dc19531bd1c785c46d2cc85668a230fbf7e243cf97f"
   },
   "runtime": {

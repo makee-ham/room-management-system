@@ -2422,7 +2422,7 @@ for(const contract of [
   if(!html.includes(contract))throw new Error(`Production auth/PWA contract missing: ${contract}`);
 }
 for(const contract of [
-  "function defaultLiveView(role){return role==='admin'?'today':role==='developer'?'accounts':'my';}",
+  "function defaultLiveView(role){return role==='admin'?'today':role==='developer'?'overview':'my';}",
   'const liveAdminNav=adminNav;',
   'const liveMaidNav=maidNav;',
   'function renderLiveAdminToday(){',
@@ -2437,9 +2437,20 @@ for(const contract of [
   '주급 정산</button>',
   '컴플레인·벌점</button>',
   'function renderLiveMaidMy(){',
+  'function renderLiveMaidSchedule(){',
+  'function renderLiveReservations(){',
+  'function renderLiveDeveloperOverview(){',
+  'function loadLiveReservations(){',
+  'function loadLiveAvailability(){',
+  'function loadLiveDeveloperStatus(){',
+  "mutationApiRequest('/v1/reservations/cleaning-requests'",
+  'pin-sync-events`',
+  "path=changeRequest?'/v1/availability/change-requests'",
   'function renderLivePendingView(view){',
   "if(view==='today')return renderLiveAdminToday();",
+  "if(view==='quickReservation')return renderLiveReservations();",
   "if(view==='my')return renderLiveMaidMy();",
+  "if(view==='schedule')return renderLiveMaidSchedule();",
   'data-live-room="${esc(room.roomNumber)}"',
 ]){
   if(!html.includes(contract))throw new Error(`Role-based production UI contract missing: ${contract}`);
