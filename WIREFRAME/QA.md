@@ -1441,3 +1441,29 @@
 ### 한계
 
 - 담당 변경은 저장 전 데모 원장에서 검증했다. 실제 서버 저장·메이드 알림·동시 관리자 충돌을 구현한 것으로 간주하지 않는다.
+
+## 2026-09-13 · 백엔드 v0.2.0 운영 연동
+
+### 변경·확인
+
+- 운영 OpenAPI `0.2.0`의 39개 path·43개 operation을 기준으로 예약, 다음 주 근무 가능일, 객실 운영 상태, 개발자 상태 로더와 mutation 계약을 연결했다.
+- 관리자 예약 화면에서 실제 목록 projection을 렌더링하고 예약 등록·단건 고객명 조회/변경·soft cancel·수동 체크아웃을 연결했다. 예약 등록 요청에 현재 객실 `stateVersion`과 `Idempotency-Key`, 변경·취소·체크아웃 요청에 예약 `version`을 보내는지 확인했다.
+- 객실 화면에서 예약 일정을 표시하고 단건 projection, 촛불 수량, 운영 차단, 객실 이슈, PIN 동기화 상태 기록을 연결했다. PIN 숫자 원문은 입력·응답·DOM·URL·로그·웹 저장소에 사용하지 않는다.
+- 메이드의 다음 주 가능일 최초/재제출과 마감 후 변경 요청, 관리자의 메이드별 주간 표와 변경 요청 승인·반려를 연결했다. 승인 전에는 현재 제출 version을 유지한다.
+- 개발자 운영 상태에 Edge runtime, migration·RLS, scheduler, 계정·객실 요약을 표시했다. 설정은 `configured` 여부만 사용한다.
+- Browser 플러그인이 설치되어 있지 않아 로컬 Chrome을 Playwright로 제어했다. 운영 API 요청은 계약과 같은 모의 응답으로 가로채 운영 데이터를 변경하지 않고 관리자·메이드·개발자 역할을 확인했다.
+- 360·390·768·1440px 관리자 예약 화면과 390px 메이드 가능일 화면에서 문서 가로 넘침 0px, console error 0건, 접근성 이름이 있는 역할별 내비게이션, 키보드 Enter 모달 열기, Escape 닫기·원래 버튼 초점 복귀를 확인했다.
+- 운영 API의 `/health` 200, 로컬 origin CORS preflight 204와 `authorization, apikey, content-type, idempotency-key, x-request-id`, 실제 `/openapi.json`의 `0.2.0`·39 path·43 operation을 읽기 전용 요청으로 확인했다.
+
+### 대표 PNG
+
+- `QA/screenshots/backend-v020-admin-reservations-1440.png`
+- `QA/screenshots/backend-v020-admin-reservations-390.png`
+- `QA/screenshots/backend-v020-maid-availability-390.png`
+
+### 한계
+
+- 운영 계정 자격 증명이 제공되지 않아 실제 로그인과 운영 mutation 성공은 실행하지 않았다. 역할별 mutation은 `v0.2.0` OpenAPI와 같은 mock 응답으로 검증했으며 production 데이터 변경을 통과로 기록하지 않는다.
+- 청소 담당 배정·현장 수행·사진·검수·주급·PIN 원문·Web Push는 `v0.2.0` 이후 범위다. 수동 청소 요청 생성·취소까지만 연결했다.
+- 객실 기준정보 변경은 요청에 필요한 `roomTypeId` 카탈로그 endpoint가 없어 안전하게 노출하지 않았다. 운영 차단·객실 이슈 해제는 목록 endpoint가 없으므로 현재 세션에서 생성 응답의 `entityId`를 받은 건만 바로 해제할 수 있다.
+- 실기기 PWA, 장시간 refresh token 갱신, 다중 관리자 CAS 충돌과 실제 운영 고객명 복호화는 승인된 운영 계정으로 후속 확인해야 한다.
