@@ -30,6 +30,14 @@
 - 더보기의 `로그인 상태`는 상태 모달만 열고, 별도의 `로그아웃` 버튼만 세션을 종료한다.
 - PWA manifest, 아이콘, 서비스 워커, 설치 안내, 브라우저 알림 권한 요청을 추가했다.
 
+## 예약 배정 차단 계약
+
+- 예약 등록 UI는 `GET /v1/rooms`의 `allocationReady`, `allocationBlocked`, `reasonCodes`, `pinSyncStatus`, `dataStatus`, `stateVersion`을 함께 사용한다. `allocationReady === true`인 객실만 등록 버튼과 option을 활성화한다.
+- `DATA_UNCONFIRMED`는 `pinSyncStatus`와 `dataStatus`를 함께 확인해 `PIN 동기화 미설정`, `PIN 불일치`, `객실 기준정보 미확인`을 중복 없이 모두 표시한다.
+- 모달 진입, 객실 선택 변경, 제출 직전에 객실 목록을 다시 읽으며, 최신 `stateVersion`을 `expectedRoomVersion`으로 보낸다. 선택 객실 누락·배정 불가·버전 불일치면 POST를 보내지 않는다.
+- 서버의 `ROOM_ALLOCATION_BLOCKED` 409와 `STALE_VERSION`은 정상적인 경쟁 상태로 처리한다. 객실 목록을 다시 읽고 `error.code`에 해당하는 사용자 안내, 최신 차단 사유, `requestId`만 표시하며 서버 내부 message는 화면 문구로 사용하지 않는다.
+- 서비스 워커는 API, Authorization, 민감 URL, cross-origin, 모든 non-GET 요청을 브라우저 네트워크에 직접 맡긴다. 예약 POST는 서비스 워커가 캐시하거나 자동 재시도하지 않는다. navigation 실패는 캐시된 앱 문서가 없더라도 503 HTML fallback을 반환한다.
+
 ## 아직 운영 API가 없는 범위
 
 현재 OpenAPI 0.2.0에는 청소 담당 배정·현장 수행·사진 업로드·검수, 주급, 객실 PIN 원문 조회·변경, 알림함, Web Push 구독 endpoint가 없다. 이 기능은 데모 화면을 운영 데이터처럼 보여 주지 않고 기존 역할별 화면 안에서 준비 중으로 명확히 표시한다.

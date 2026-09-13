@@ -1,6 +1,6 @@
 "use strict";
 
-const SW_VERSION = "2026-09-13-1";
+const SW_VERSION = "2026-09-13-2";
 const CACHE_PREFIX = "castle-the-art-shell-";
 const CACHE_NAME = `${CACHE_PREFIX}${SW_VERSION}`;
 const APP_DOCUMENT_URL = new URL("./index.html", self.location.href);
@@ -115,11 +115,20 @@ async function networkFirstNavigation(request) {
   let response;
   try {
     response = await fetch(request);
-  } catch (error) {
-    if (!isAppDocument) throw error;
-    const cached = await caches.match(APP_DOCUMENT, { cacheName: CACHE_NAME });
-    if (cached) return cached;
-    throw error;
+  } catch {
+    if (isAppDocument) {
+      try {
+        const cached = await caches.match(APP_DOCUMENT, { cacheName: CACHE_NAME });
+        if (cached) return cached;
+      } catch {
+        // Fall through to a complete offline response when cache storage is unavailable.
+      }
+    }
+    return new Response("<!doctype html><html lang=\"ko\"><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>오프라인 · CASTLE THE ART</title><body><main><h1>네트워크 연결을 확인해 주세요.</h1><p>연결이 복구되면 이 페이지를 다시 열어 주세요. 예약 요청은 저장하거나 자동 재시도하지 않습니다.</p></main></body></html>", {
+      status: 503,
+      statusText: "Service Unavailable",
+      headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }
+    });
   }
   if (isAppDocument && response.ok && response.headers.get("content-type")?.toLowerCase().includes("text/html")) {
     try {
@@ -193,7 +202,6 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
 
   if (mustBypassCache(request, url)) {
-    event.respondWith(fetch(request));
     return;
   }
 

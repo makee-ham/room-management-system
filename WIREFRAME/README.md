@@ -424,6 +424,14 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 - PWA 설치와 브라우저 알림 권한은 준비됐다. 앱이 닫힌 동안 실제 알림을 받으려면 서버의 Web Push 구독·이벤트·발송 계층이 더 필요하다.
 - 배포·백엔드 후속 계약은 `DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md`를 따른다. `node scripts/check-api-integration.mjs`는 운영 OpenAPI가 `0.2.0`, 39개 path, 43개 operation인지 확인한다.
 
+### 예약 배정 가능 상태 방어
+
+- 예약 등록 가능 여부는 `GET /v1/rooms`의 `allocationReady`를 정본으로 판단한다. `false`인 객실은 카드 버튼과 등록 모달 option을 비활성화하고 `reasonCodes`, `pinSyncStatus`, `dataStatus`를 한국어 차단 사유로 모두 표시한다.
+- 배정 가능한 객실이 0실이면 입력 폼 대신 차단 사유와 객실 운영 상태에서 해결해야 한다는 안내를 표시한다.
+- 등록 모달의 객실 선택 변경과 제출 직전에 객실 목록을 다시 읽는다. 선택 객실이 존재하고 `allocationReady === true`이며 화면의 버전이 최신 `stateVersion`과 일치할 때만 `expectedRoomVersion`으로 POST한다.
+- 서버가 `ROOM_ALLOCATION_BLOCKED` 또는 `STALE_VERSION`을 반환하면 경쟁 상태로 보고 객실 목록을 다시 읽는다. 서버 내부 message가 아니라 `error.code`에 대응하는 안내와 최신 차단 사유, 문의용 `requestId`를 표시한다.
+- 서비스 워커는 API와 모든 비 GET 요청에 응답하지 않는다. 특히 예약 생성 POST를 캐시·변형·재전송하지 않으며, navigation 네트워크 실패는 캐시된 앱 문서 또는 503 오프라인 안내로 완료한다.
+
 ## 객실·예약·청소 사용성 보완 (2026-09-01)
 
 - 객실 목록 데스크톱 행의 하단 작업 경계는 상단 `객실 / 유형·위치 / 일정 / 상태 / PIN` 열 경계에 맞춘다. 모바일은 2×2 작업 배치를 유지한다.

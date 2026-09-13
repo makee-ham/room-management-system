@@ -1467,3 +1467,27 @@
 - 청소 담당 배정·현장 수행·사진·검수·주급·PIN 원문·Web Push는 `v0.2.0` 이후 범위다. 수동 청소 요청 생성·취소까지만 연결했다.
 - 객실 기준정보 변경은 요청에 필요한 `roomTypeId` 카탈로그 endpoint가 없어 안전하게 노출하지 않았다. 운영 차단·객실 이슈 해제는 목록 endpoint가 없으므로 현재 세션에서 생성 응답의 `entityId`를 받은 건만 바로 해제할 수 있다.
 - 실기기 PWA, 장시간 refresh token 갱신, 다중 관리자 CAS 충돌과 실제 운영 고객명 복호화는 승인된 운영 계정으로 후속 확인해야 한다.
+
+## 2026-09-13 · Issue #137 예약 배정 불가 방어
+
+### 변경·확인
+
+- 운영 배포의 `WIREFRAME/index.html` SHA-256이 작업 시작 시 `origin/main` commit `8c1c14da93294a36ce5fc842143bf668ad9cf373`과 일치하는지 먼저 확인했다.
+- `allocationReady === false`인 객실 카드에서 예약 등록 버튼이 disabled이고, `현재 예약 없음 · 차단 사유를 해소한 뒤 등록 가능`과 모든 한국어 차단 사유가 표시되는지 확인했다. disabled 버튼의 programmatic click 뒤 예약 POST는 0건이었다.
+- 배정 가능한 객실이 0실이면 `새 예약 등록` 폼 대신 `예약 등록 불가` 안내와 사유별 객실 수를 표시했다. Escape로 닫으면 동등한 `새 예약` 버튼으로 초점이 복귀했다.
+- 등록 모달에서 배정 불가 option은 disabled와 `배정 불가` 문구를 함께 가졌다. 배정 가능 객실 선택 뒤 `stateVersion`이 8 → 9로 바뀐 모의 응답을 다시 읽고, 제출 직전 10으로 바뀐 최신 값을 `expectedRoomVersion: 10`으로 한 번만 POST했다.
+- `ROOM_ALLOCATION_BLOCKED` 409 뒤 객실 목록을 재조회해 `PIN 불일치`와 `객실 기준정보 미확인`을 함께 표시했다. 안내는 서버 내부 message가 아닌 코드 매핑 문구였고 문의 번호 `b557bdd4-571a-4b67-b3f8-b77d3959d16a`을 유지했다.
+- `STALE_VERSION`은 객실 재조회와 최신 상태 안내를, `RESERVATION_OVERLAP`은 기존 겹침 안내를 유지했다. 기존 인증 세션 복원, 예약 목록·상세, 변경 PATCH, soft cancel, 수동 체크아웃 요청도 전부 모의 API에서 회귀 확인했다.
+- `node scripts/check-pwa.mjs`의 VM Service Worker 검사에서 실패한 navigation이 rejected promise 대신 캐시 또는 503 fallback으로 완료되고, `/v1/reservations` POST에는 `respondWith`, cache read, Service Worker fetch·재시도가 모두 0건인지 확인했다.
+- Browser 플러그인이 제공되지 않아 로컬 Chrome을 Playwright로 제어했다. 360·390·768·1440px에서 가로 넘침 0px, 모달 키보드 닫기·초점 복귀, 예상한 모의 409 네트워크 로그 외 앱 console warning/error 0건을 확인했다.
+
+### 대표 PNG
+
+- `QA/screenshots/issue-137-blocked-rooms-390.png`
+- `QA/screenshots/issue-137-blocked-rooms-1440.png`
+- `QA/screenshots/issue-137-allocation-race-409-390.png`
+
+### 한계
+
+- 운영 사이트에서는 실제 예약을 생성·변경·취소·체크아웃하지 않는다. production smoke test는 공개 런타임 설정·정적 자산·health·OpenAPI 읽기까지만 수행했고, 배정 불가 UI와 mutation 경쟁 상태는 `v0.2.0` 계약과 같은 모의 응답으로 검증했다.
+- 청소 담당 배정은 Issue #137과 이 변경의 범위에 포함하지 않는다.
