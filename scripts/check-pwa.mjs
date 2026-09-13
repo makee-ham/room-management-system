@@ -66,6 +66,8 @@ async function verifyServiceWorker() {
   assert.match(source, /\[APP_DOCUMENT_PATH, APP_ROOT_PATH\]\.includes\(requestUrl\.pathname\)/);
   assert.match(source, /content-type.*includes\("text\/html"\)/);
   assert.match(source, /cacheFirstAppShell/);
+  assert.match(source, /status:\s*503/);
+  assert.match(source, /예약 요청은 저장하거나 자동 재시도하지 않습니다/);
   assert.match(source, /url\.origin !== self\.location\.origin/);
   assert.match(source, /SENSITIVE_PATH_SEGMENT/);
   assert.match(source, /authorization/);
@@ -76,7 +78,12 @@ async function verifyServiceWorker() {
   assert.ok(!installBlock.includes("SW_UPDATE_WAITING"), "First install must not be announced as a waiting update");
 
   const pageSource = await readFile(path.join(wireframeDir, "index.html"), "utf8");
+  assert.match(pageSource, /<meta name="apple-mobile-web-app-capable" content="yes">/);
+  assert.match(pageSource, /<meta name="mobile-web-app-capable" content="yes">/);
   assert.match(pageSource, /registration\.addEventListener\('updatefound'/);
+  assert.match(pageSource, /beforeinstallprompt',event=>\{event\.preventDefault\(\);LIVE_RUNTIME\.installPrompt=event;render\(\);\}/);
+  assert.match(pageSource, /if\(LIVE_RUNTIME\.installPrompt\).*await prompt\.prompt\(\)/);
+  assert.match(pageSource, /button\([^\n]*'install-app'/);
   assert.match(pageSource, /requestedLiveView/);
   assert.match(pageSource, /if\(!pwaUpdateRequested\|\|pwaReloading\)return/);
   assert.match(pageSource, /syncLiveViewUrl\(state\.liveView\)/);
@@ -186,25 +193,29 @@ async function verifyServiceWorkerBehavior(source) {
       respondWith(value) { responsePromise = Promise.resolve(value); }
     };
     listeners.get("fetch")(event);
-    assert.ok(responsePromise, `Fetch handler did not respond for ${url}`);
+    if (options.serviceWorkerResponds !== false) {
+      assert.ok(responsePromise, `Fetch handler did not respond for ${url}`);
+    }
     return responsePromise;
   }
 
-  async function expectNetworkOnly(url, options = {}) {
+  async function expectNetworkBypass(url, options = {}) {
     const cacheCount = cacheReads.length;
     const fetchCount = fetches.length;
-    await dispatchFetch(url, options);
+    const result = await dispatchFetch(url, { ...options, serviceWorkerResponds: false });
+    assert.equal(result, undefined, `${url} must bypass Service Worker response handling`);
     assert.equal(cacheReads.length, cacheCount, `${url} must not read cache`);
-    assert.equal(fetches.length, fetchCount + 1, `${url} must use the network`);
+    assert.equal(fetches.length, fetchCount, `${url} must not be fetched or retried by the Service Worker`);
   }
 
-  await expectNetworkOnly("https://example.test/app/api/rooms");
-  await expectNetworkOnly("https://example.test/app/index.html?pin=1234");
-  await expectNetworkOnly("https://example.test/app/index.html", {
+  await expectNetworkBypass("https://example.test/app/api/rooms");
+  await expectNetworkBypass("https://example.test/app/index.html?pin=1234");
+  await expectNetworkBypass("https://example.test/app/index.html", {
     headers: { authorization: "Bearer test-only" }
   });
-  await expectNetworkOnly("https://example.test/app/runtime-config.json", { mode: "navigate" });
-  await expectNetworkOnly("https://images.example.test/photo.png");
+  await expectNetworkBypass("https://example.test/app/runtime-config.json", { mode: "navigate" });
+  await expectNetworkBypass("https://images.example.test/photo.png");
+  await expectNetworkBypass("https://example.test/v1/reservations", { method: "POST" });
 
   const iconFetchCount = fetches.length;
   const iconCacheCount = cacheReads.length;
@@ -231,6 +242,14 @@ async function verifyServiceWorkerBehavior(source) {
   const offlineRootNavigation = await dispatchFetch("https://example.test/app/", { mode: "navigate" });
   assert.equal(await offlineRootNavigation.text(), "network", "Scope-root navigation must use the offline app shell");
 
+  cachedResponses.delete("https://example.test/app/index.html");
+  const uncachedOfflineNavigation = await dispatchFetch(
+    "https://example.test/app/index.html?view=more",
+    { mode: "navigate" }
+  );
+  assert.equal(uncachedOfflineNavigation.status, 503, "Uncached offline navigation must receive a fallback response");
+  assert.match(await uncachedOfflineNavigation.text(), /네트워크 연결을 확인해 주세요/);
+
   failNetwork = false;
   const manifestNavigation = await dispatchFetch(
     "https://example.test/app/app.webmanifest",
@@ -238,11 +257,11 @@ async function verifyServiceWorkerBehavior(source) {
   );
   assert.equal(await manifestNavigation.text(), "network");
   failNetwork = true;
-  await assert.rejects(
-    dispatchFetch("https://example.test/app/app.webmanifest", { mode: "navigate" }),
-    /offline/,
-    "Non-document navigation must not fall back to the cached HTML shell"
+  const offlineManifestNavigation = await dispatchFetch(
+    "https://example.test/app/app.webmanifest",
+    { mode: "navigate" }
   );
+  assert.equal(offlineManifestNavigation.status, 503, "Every failed navigation must resolve with an offline fallback");
   failNetwork = false;
 
   let pushPromise;

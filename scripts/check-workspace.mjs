@@ -29,6 +29,9 @@ const required = [
   'WIREFRAME/QA.md',
   'WIREFRAME/QA/screenshots/live-api-login-1440.png',
   'WIREFRAME/QA/screenshots/live-api-login-390.png',
+  'WIREFRAME/QA/screenshots/issue-137-blocked-rooms-1440.png',
+  'WIREFRAME/QA/screenshots/issue-137-blocked-rooms-390.png',
+  'WIREFRAME/QA/screenshots/issue-137-allocation-race-409-390.png',
   'scripts/build-pages-artifact.mjs',
   'scripts/check-api-integration.mjs',
   'scripts/check-pwa.mjs',
@@ -2457,8 +2460,55 @@ for(const contract of [
 }
 const liveRoomRowSource=html.slice(html.indexOf('function liveRoomListRow'),html.indexOf('function renderLiveRooms'));
 if(liveRoomRowSource.includes('room-list-badges'))throw new Error('Production room rows expose secondary reason badges that the canonical room list hides.');
+for(const contract of [
+  'allocationReady=room.allocationReady===true',
+  'disabled aria-describedby=',
+  '현재 예약 없음',
+  '차단 사유를 해소한 뒤 등록 가능',
+  '예약 등록 불가 · ${esc(reasonText)}',
+]){
+  if(!liveRoomRowSource.includes(contract))throw new Error(`Reservation allocation card guard missing: ${contract}`);
+}
+const liveReservationGuardSource=html.slice(html.indexOf('function liveReservationAvailableRooms'),html.indexOf('function openLiveCleaningRequest'));
+for(const contract of [
+  'function liveReservationAvailableRooms(){return (state.remote.rooms.items||[]).filter(room=>room.allocationReady===true);}',
+  "status=room.allocationReady===true?'배정 가능':`배정 불가 · ${liveRoomBlockReasonText(room)}`",
+  "${selectable?'':'disabled'}",
+  '현재 예약을 배정할 수 있는 객실이 없습니다.',
+  'refreshLiveReservationRoomSelection(roomId)',
+  'Number(roomSelect?.dataset.stateVersion)!==Number(room.stateVersion)',
+  'expectedRoomVersion:Number(room.stateVersion)',
+  "['ROOM_ALLOCATION_BLOCKED','STALE_VERSION'].includes(error?.code)",
+  "apiErrorCopy(error,'예약 변경을 완료하지 못했습니다.')",
+  '문의 번호 ${esc(error.requestId)}',
+]){
+  if(!liveReservationGuardSource.includes(contract))throw new Error(`Reservation allocation submit/modal guard missing: ${contract}`);
+}
+const liveReservationCreateSource=liveReservationGuardSource.slice(liveReservationGuardSource.indexOf('async function submitLiveReservationCreate'),liveReservationGuardSource.indexOf('async function submitLiveReservationUpdate'));
+if(liveReservationCreateSource.indexOf('refreshLiveReservationRoomSelection(roomId)')<0||liveReservationCreateSource.indexOf('refreshLiveReservationRoomSelection(roomId)')>liveReservationCreateSource.indexOf('runLiveReservationMutation'))throw new Error('Reservation create must refresh and validate the room before POST.');
+for(const [code,copy] of [
+  ['ROOM_ALLOCATION_BLOCKED','현재 객실은 예약 배정이 불가능합니다. 차단 사유를 확인해 주세요.'],
+  ['STALE_VERSION','다른 변경이 먼저 반영됐습니다. 최신 객실 정보를 확인한 뒤 다시 시도하세요.'],
+  ['RESERVATION_OVERLAP','같은 객실의 기존 예약과 시간이 겹칩니다.'],
+]){
+  if(!html.includes(`${code}:'${copy}'`))throw new Error(`Reservation API error copy missing: ${code}`);
+}
+for(const [code,copy] of [
+  ['OCCUPIED','투숙 중'],
+  ['CLEANING_REQUIRED','청소 또는 검수 미완료'],
+  ['CANDLE_PRESENT','객실 내 촛불 미회수'],
+  ['OPERATION_BLOCKED','객실 운영 중지'],
+  ['ROOM_ISSUE_BLOCKED','입실 차단 객실 이슈 존재'],
+  ['PIN_MISMATCH','PIN 불일치'],
+  ['DATA_UNCONFIRMED','객실 기준정보 또는 PIN 동기화 미확인'],
+]){
+  if(!html.includes(`${code}:'${copy}'`))throw new Error(`Room allocation reason copy missing: ${code}`);
+}
+for(const detail of ["room.pinSyncStatus==='unconfigured'", "room.pinSyncStatus==='mismatch'", "room.dataStatus!=='verified'", 'PIN 동기화 미설정', '객실 기준정보 미확인']){
+  if(!html.includes(detail))throw new Error(`Detailed room allocation reason guard missing: ${detail}`);
+}
 if(html.includes('미지원 업무는 운영 화면에서 숨김'))throw new Error('Production UI still hides unsupported role views instead of preserving the existing navigation.');
-console.log('Role-based production main-screen parity contracts: passed');
+console.log('Role-based production main-screen and reservation-allocation guard contracts: passed');
 const serveSource=readFileSync(resolve(root,'scripts/serve.py'),'utf8');
 const pagesBuildSource=readFileSync(resolve(root,'scripts/build-pages-artifact.mjs'),'utf8');
 const apiCheckSource=readFileSync(resolve(root,'scripts/check-api-integration.mjs'),'utf8');
