@@ -1,7 +1,7 @@
 # 클릭형 와이어프레임 QA
 
 - 검증일: 2026-09-04
-- 문서 갱신일: 2026-09-04 · 관리자 완료 청소 최근 7일·날짜별 그룹·객실번호/수행자 검색 추가
+- 문서 갱신일: 2026-09-16 · 사진 보관 기준을 서버 수락 업로드 시각 + 7일로 정합화
 - 대상: `WIREFRAME/index.html`
 - 정책: `DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md`, `DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md`, `DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md`
 - 객실·단가 정본: `DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md`
@@ -35,7 +35,7 @@
 | 360·390·768·1440px | 통과 | Google 시트 확인 모달과 과거 청소 상세를 네 너비에서 확인했다. 모두 페이지 가로 넘침 0px, 보이는 버튼 44px 미만 0개, 접근성 이름 없는 버튼 0개였다. |
 | 콘솔·정적 구문 | 통과 | 관리자·메이드 로그인, 시트 갱신, PIN 변경·조회, 알림, 청소 이력·사진 모달, 뒤로·앞으로, 반응형 확인 뒤 console warning/error 0건이었다. 단일 인라인 JavaScript 구문 분석과 `git diff --check`는 저장소 검증 명령으로 재확인했다. |
 
-대표 증거는 `QA/screenshots/admin-room-pin-sheet-sync-1440.png`, `QA/screenshots/maid-assigned-pin-390.png`, `QA/screenshots/maid-cleaning-history-detail-390.png`, `QA/screenshots/maid-cleaning-history-expired-390.png`에 저장했다. 사진 보관기간은 검수 결정 시점부터 7일이며, 운영 백엔드는 만료 시 원본·미리보기·캐시를 삭제해야 한다.
+대표 증거는 `QA/screenshots/admin-room-pin-sheet-sync-1440.png`, `QA/screenshots/maid-assigned-pin-390.png`, `QA/screenshots/maid-cleaning-history-detail-390.png`, `QA/screenshots/maid-cleaning-history-expired-390.png`에 저장했다. 당시 fixture는 검수 결정 시점을 기준으로 만들었으나 2026-09-16 현재 정책은 서버 수락 업로드 시각부터 7일이다. 기존 PNG는 과거 UI 증거로만 보존하며 운영 백엔드는 각 사진의 만료 시 원본·미리보기·캐시를 삭제해야 한다.
 
 ## 추가 검증 · 관리자 완료 청소 최근 7일 검색
 

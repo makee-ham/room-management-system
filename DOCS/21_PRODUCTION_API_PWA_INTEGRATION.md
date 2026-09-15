@@ -2,7 +2,38 @@
 
 작성일: 2026-08-31
 
-최종 갱신: 2026-09-13 · 백엔드 `v0.2.0`
+최종 갱신: 2026-09-16 · 프런트 `main`/`dev`와 백엔드 source 재대조
+
+## 계약 snapshot과 문서 성격
+
+| 구분 | exact commit | 의미 |
+|---|---|---|
+| 프런트 `main` | `8c1c14da93294a36ce5fc842143bf668ad9cf373` | 현재 배포 정본. 운영 `v0.2.0`의 39 paths / 43 operations subset을 실제 소비한다. |
+| 프런트 `dev` | `a0d6c07f5bd6cc86e02b2644abc4addc414adfc5` | `main`보다 2 commit 앞선 차기 후보. 선택형 청소시간·미퇴실 사건 UI는 기능 플래그 OFF다. |
+| 백엔드 `dev` | `c32aa9eec3945334ddda956afc62cc92d801c410` | source OpenAPI `0.2.0`, 109 paths / 117 operations. source 제공을 production 활성화로 해석하지 않는다. |
+| 백엔드 `main` | `6604b2215e06b9e9ebf0b3138e3716a000c57ddb` | 예상 청소시간 선택화를 포함한 GitHub release source 정본이다. |
+
+이 문서는 시점이 붙은 운영 연동 기록이다. 제품 정책 정본이나 생성 client 자체가 아니며, runtime OpenAPI와 exact source commit이 다르면 runtime을 우선하고 차이를 Issue로 기록한다. generated client와 breaking diff CI는 백엔드 [#173](https://github.com/wrongstory/room-management-system-backend/issues/173), 전체 adapter 전환과 권한별 browser E2E는 [#13](https://github.com/wrongstory/room-management-system-backend/issues/13)에서 진행한다.
+
+## 실제 소비와 source 제공 구분
+
+| 영역 | `main` 실제 소비 | `dev` 차기 후보 | 백엔드 source | 상태 |
+|---|---|---|---|
+| 인증·계정·개발자 상태 | 소비 | 동일 | 제공 | 호환 |
+| 가능일·예약·객실 | 소비 | 동일 | 제공 | 호환. CAS·멱등 키·409 재조회 유지 |
+| 청소 템플릿·수행·미퇴실 사건 | 미소비 | 기능 플래그 OFF, intercepted fixture 검증 | 제공 | production 활성화 아님 |
+| 배정·사진·제출·검수 | 데모 | 일부 후보 외 미소비 | 제공 | generated client/adapter 연동 대기 |
+| 알림·Web Push | PWA shell/권한만 | 동일 | source 제공 | hosted provider와 실제 소비 별도 |
+| 주급·컴플레인 | 데모 | 동일 | 제공 | 연동 대기 |
+| PIN·Google Sheets | legacy 상태 기록만 | 신규 API 미소비 | source 제공 | 민감정보 경계 유지, hosted 활성화 별도 |
+| 검수 대기열 cursor | 미소비 | 미소비 | 백엔드 PR #176 후보 | 병합 뒤 generated client 갱신 대상 |
+
+공통 계약은 다음과 같다.
+
+- 역할과 권한은 access token actor 및 서버의 최신 role/status/capability를 정본으로 사용한다. 401/403에서 다른 계정이나 역할로 자동 재실행하지 않는다.
+- 오류는 HTTP status, 안정된 `error.code`, `requestId`로 분기한다. 서버 message와 request body를 화면 문구·로그 정본으로 사용하지 않는다.
+- 모든 mutation은 `Idempotency-Key`를 사용한다. 응답 유실 때 같은 actor·path·정규화 body에만 같은 키를 재사용하고 Service Worker는 mutation을 캐시하거나 반복하지 않는다.
+- 서버 응답의 `version`, `stateVersion`, assignment revision, execution version, impact fingerprint를 CAS 입력으로 사용한다. 409 뒤 관련 projection을 다시 읽고 사용자에게 재확인받는다.
 
 ## 연결 대상으로 확정한 프로젝트
 
@@ -38,9 +69,9 @@
 - 서버의 `ROOM_ALLOCATION_BLOCKED` 409와 `STALE_VERSION`은 정상적인 경쟁 상태로 처리한다. 객실 목록을 다시 읽고 `error.code`에 해당하는 사용자 안내, 최신 차단 사유, `requestId`만 표시하며 서버 내부 message는 화면 문구로 사용하지 않는다.
 - 서비스 워커는 API, Authorization, 민감 URL, cross-origin, 모든 non-GET 요청을 브라우저 네트워크에 직접 맡긴다. 예약 POST는 서비스 워커가 캐시하거나 자동 재시도하지 않는다. navigation 실패는 캐시된 앱 문서가 없더라도 503 HTML fallback을 반환한다.
 
-## 아직 운영 API가 없는 범위
+## 백엔드 source에는 있으나 현재 `main`이 소비하지 않는 범위
 
-현재 OpenAPI 0.2.0에는 청소 담당 배정·현장 수행·사진 업로드·검수, 주급, 객실 PIN 원문 조회·변경, 알림함, Web Push 구독 endpoint가 없다. 이 기능은 데모 화면을 운영 데이터처럼 보여 주지 않고 기존 역할별 화면 안에서 준비 중으로 명확히 표시한다.
+현재 백엔드 source OpenAPI에는 청소 담당 배정·현장 수행·사진 업로드·검수, 주급, PIN 변경·단기 reveal, 알림함, Web Push 구독 endpoint가 있다. 그러나 프런트 `main`의 운영 adapter는 이를 소비하지 않으며, source 제공·production 배포·hosted provider 활성화도 서로 다른 단계다. 이 기능은 데모 화면을 운영 데이터처럼 보여 주지 않고 기존 역할별 화면 안에서 `API 연결 대기` 또는 기능 플래그 OFF 상태로 유지한다.
 
 객실 기준정보 변경은 `roomTypeId`가 필요하지만 `v0.2.0`에는 프런트가 안전하게 선택할 객실 유형 ID 카탈로그 endpoint가 없다. 객실 유형 ID를 추측하지 않으며 카탈로그 계약이 추가될 때까지 운영 화면에서 기준정보 mutation을 노출하지 않는다. 운영 차단·객실 이슈 해제도 목록 endpoint가 없으므로 현재 브라우저 세션에서 생성 응답의 `entityId`를 받은 건만 바로 해제할 수 있다.
 

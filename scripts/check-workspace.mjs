@@ -1684,7 +1684,7 @@ for (const contract of [
 }
 for (const contract of [
   '추가 검증 · Google Drive 객실 PIN 시트·청소 사진 이력',
-  '검수 결정 시점부터 7일',
+  '서버 수락 업로드 시각부터 7일',
   '배정 통보 순간부터 최종 검수 전까지',
   'admin-room-pin-sheet-sync-1440.png',
   'maid-assigned-pin-390.png',
@@ -1692,6 +1692,13 @@ for (const contract of [
   'maid-cleaning-history-expired-390.png',
 ]) {
   if (!qa.includes(contract)) throw new Error(`Room PIN sheet and cleaning-history QA documentation missing: ${contract}`);
+}
+for (const contract of [
+  'photoUploadedAt:',
+  '서버가 수락한 업로드 시각부터 7일간 보관',
+  '제출·승인·반려로 기한을 연장하지 않',
+]) {
+  if (!html.includes(contract)) throw new Error(`Upload-based photo retention UI contract missing: ${contract}`);
 }
 for (const contract of [
   '추가 검증 · 관리자 완료 청소 최근 7일 검색',
