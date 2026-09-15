@@ -19,6 +19,14 @@ const required = [
   'DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md',
   'DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md',
   'DOCS/WIREFRAME_TASK_PROMPT.md',
+  'DOCS/22_OPTIONAL_CLEANING_DURATION_FRONTEND_RELEASE.md',
+  'WIREFRAME/cleaning-api.d.ts',
+  'scripts/generate-cleaning-client.mjs',
+  'scripts/check-cleaning-workflow.mjs',
+  'WIREFRAME/QA/screenshots/optional-duration-template-390.png',
+  'WIREFRAME/QA/screenshots/optional-duration-template-1440.png',
+  'WIREFRAME/QA/screenshots/optional-duration-maid-blocked-390.png',
+  'WIREFRAME/QA/screenshots/optional-duration-incident-conflict-390.png',
   'WIREFRAME/index.html',
   'WIREFRAME/app.webmanifest',
   'WIREFRAME/sw.js',
@@ -2531,3 +2539,9 @@ for(const contract of ["if: ${{ vars.RMS_APP_ORIGIN != '' }}","RMS_RUNTIME_MODE:
 console.log('Production project, session isolation, auth-race, and deployment-origin contracts: passed');
 
 await import('./check-pwa.mjs');
+
+const cleaningTypes=readFileSync(resolve(root,'WIREFRAME/cleaning-api.d.ts'),'utf8');
+if(!cleaningTypes.includes('durationMinutes?: number | null | undefined;')||!cleaningTypes.includes('durationMinutes: number | null;'))throw new Error('Optional nullable cleaning duration client contract missing.');
+if(!serveSource.includes('"optionalCleaningWorkflow": False')||!pagesBuildSource.includes('optionalCleaningWorkflow: false'))throw new Error('Optional cleaning workflow production gate must remain OFF.');
+if(!html.includes("value.featureFlags?.optionalCleaningWorkflow===true"))throw new Error('Cleaning release gate must require an explicit boolean.');
+console.log('Optional cleaning client types and OFF release gate static contracts: passed');

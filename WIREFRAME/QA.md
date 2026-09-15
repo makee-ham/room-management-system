@@ -1491,3 +1491,41 @@
 
 - 운영 사이트에서는 실제 예약을 생성·변경·취소·체크아웃하지 않는다. production smoke test는 공개 런타임 설정·정적 자산·health·OpenAPI 읽기까지만 수행했고, 배정 불가 UI와 mutation 경쟁 상태는 `v0.2.0` 계약과 같은 모의 응답으로 검증했다.
 - 청소 담당 배정은 Issue #137과 이 변경의 범위에 포함하지 않는다.
+
+## 2026-09-15 예상 청소시간 nullable · 미퇴실 수행 · 운영 OFF
+
+Chrome 152.0.7977.83 / Playwright 1.62.1, `http://127.0.0.1:4175/index.html`에서 확인했다. `Browser plugin not available`이므로 설치된 Chrome을 Playwright로 제어했다. 테스트는 문서 응답에만 QA 진입점을 주입하고 모든 Edge 업무 요청을 데모 fixture로 가로챈다. 실제 로그인 bootstrap·운영 mutation·DB 동시성 결과로 취급하지 않는다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 백엔드 PR #166 exact source OpenAPI 109 paths / 117 operations, 요청 duration 필수 제거·요청/응답 nullable·1~10080 범위, 소스 타입 생성 | 통과 |
+| 로컬/Pages live 설정 생성기의 플래그 OFF, OFF 화면의 새 템플릿 API 미호출 | 통과 |
+| null 조회 `미설정(선택사항)`, 빈 예상시간 폼, 필수 표시 없음, null 게시 | 통과 |
+| 0 / 10081 입력 거부, 1 / 10080 게시 허용, 필수 사진 이름 누락 시 게시 차단 | 통과 |
+| 생략/null 정규화, 응답 유실 뒤 동일 payload/key, 서버에서 이미 처리된 결과의 멱등 replay | 통과 · 데모 API |
+| 템플릿 CAS 409 후 재조회/재편집, 게시 템플릿 없음 안내 | 통과 |
+| 예상시간 없는 템플릿으로 예약 POST, 예약 응답 유실 시 같은 요청 결과 확인 | 통과 · 데모 API |
+| 열린 checkout 배정이 있어도 수동 추가 계획 POST, dueAt 빈 값 null, 임의 예상 종료 없음 | 통과 |
+| 최신 assignment/current attempt 조회 후 execution version·assignment ID/revision 전달 | 통과 |
+| PREVIOUS_ROOM_WORKFLOW_ACTIVE / CHECKOUT_INCIDENT_OPEN / MAID_ALREADY_IN_PROGRESS / ATTEMPT_VERSION_CONFLICT의 안내·재조회, 409에서 로컬 성공 없음 | 통과 |
+| 동시에 보낸 두 client 요청 중 데모 API가 한 건 수용/다른 건 room 409 반환 | 통과 · 실제 서버 동시성 미검증 |
+| 이번 attempt의 startedAt→fieldCompletedAt 37분, 중단/재시작 합산 없음 | 통과 |
+| 미퇴실 신고 후 시작·완료·PIN·사진 제출 버튼 차단, 같은 탭 재로드 후 사건 GET으로 차단 유지 | 통과 |
+| 관리자 version/fingerprint 충돌 후 변경된 예약·배정·수행 영향 재확인, 입력/확인 체크 초기화, 최신 CAS로 결정, 새 assignment 갱신 | 통과 |
+| EXTEND_CHECKOUT / CONFIRM_DEPARTED / FALSE_REPORT별 reasonCode·newCheckoutAt·reassignment·키 | 통과 |
+| 360 / 390 / 768 / 1440px 본문/템플릿 모달 가로 넘침 없음, 주요 버튼 최소 44×44px | 통과 |
+| 템플릿 모달 Tab 포커스 내부 유지, Escape 닫기, 브라우저 뒤로가기 닫기, 이후 배경 포커스 복구, dialog 접근성 이름 | 통과 · 스크린리더 실기기 미검증 |
+| 앱 JavaScript error / console warning·error 없음 | 통과 · 의도한 데모 401/409/응답 유실 network 진단은 구분 |
+| 계정 전환 중 도착한 401에서 이전 payload를 새 계정으로 재실행하지 않음 | 통과 |
+| `node scripts/check-workspace.mjs`, PIN/PWA/권한/예약 배정 가능 guard·자체 포함 JS·이식성·감사 해시 유지 | 통과 |
+
+대표 PNG를 `view_image`로 확인했다. 기존 내 업무와 모달의 폰트·네이비 버튼·카드·여백을 재사용했고, 모바일 긴 폼은 본문 스크롤과 하단 확인 버튼을 유지한다.
+
+- `QA/screenshots/optional-duration-template-360.png`
+- `QA/screenshots/optional-duration-template-390.png`
+- `QA/screenshots/optional-duration-template-768.png`
+- `QA/screenshots/optional-duration-template-1440.png`
+- `QA/screenshots/optional-duration-maid-blocked-390.png`
+- `QA/screenshots/optional-duration-incident-conflict-390.png`
+
+미검증/활성화 보류: 운영 56번째 migration·main exact source API 배포·운영 nullable OpenAPI/Swagger·운영 타입 재생성·예약/템플릿 smoke·실제 서버 두 메이드 동시 시작. 사건 알림에 incident ID가 없어 자동 관리자 사건 큐 연결과 다른 기기의 사전 차단은 현재 단건 계약만으로 완료할 수 없다. 기존 PIN 공개·사진 업로드/제출 연동도 대기 상태를 유지한다. 이 조건을 확인/보완하기 전 플래그 ON 금지. 상세 인계는 `DOCS/22_OPTIONAL_CLEANING_DURATION_FRONTEND_RELEASE.md`를 따른다.

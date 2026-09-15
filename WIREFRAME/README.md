@@ -442,3 +442,11 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 - 지급 방식·자동 차감·사진 규칙처럼 설명만 제공하는 큰 안내 박스는 제거하고 제목 옆 원형 `ⓘ`를 눌러 같은 내용을 확인한다. 처리 차단·오류·개인정보·결정 대기처럼 즉시 주의가 필요한 상태 안내는 박스로 유지한다.
 - 청소 배정 카드의 `1단계`·`2단계` 같은 숫자 단계 표기는 노출하지 않고 각 기능 제목만 유지한다.
 - 메이드 청소 상세는 `구역별 촬영`과 `촬영` 버튼처럼 모바일에서 짧은 문구를 사용한다. 420px 이하에서는 사진 카드 안쪽 여백과 미리보기 크기를 줄이고 `촬영 / 갤러리` 두 버튼을 48px 높이 한 줄로 유지한다.
+
+## 2026-09-15 예상 청소시간 선택사항 구현 · 운영 OFF
+
+예상시간 nullable 템플릿 게시, 배정/수행 조회, 최신 version으로 시작·현장 완료·미퇴실 신고, 관리자 사건 조회/결정, 409 재조회와 같은 요청 결과 확인을 구현했다. 관리자 `청소 관리`와 메이드 `내 업무`에 기존 카드·폼·모달 디자인을 재사용한다.
+
+로컬 서버와 Pages 산출물의 `featureFlags.optionalCleaningWorkflow`는 false 고정이다. 운영 배포 전에는 켜지 않는다. 기존 데모 fixture와 OFF 상태 화면을 유지한다. 생성 타입은 백엔드 PR #166 exact source 기반이며 운영 OpenAPI 재생성은 보류한다. 적용 순서·현재 사건 ID/PIN/사진 연동 한계는 `DOCS/22_OPTIONAL_CLEANING_DURATION_FRONTEND_RELEASE.md`에 기록했다.
+
+검증은 `node scripts/check-workspace.mjs`, Playwright가 설치된 Node 환경에서 `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-cleaning-workflow.mjs`를 사용한다. 브라우저 회귀 전에 `RMS_RUNTIME_MODE=demo python3 scripts/serve.py --port 4175`를 실행한다. 회귀의 API 쓰기는 데모 fixture로 가로채며 운영을 활성화하지 않는다.
