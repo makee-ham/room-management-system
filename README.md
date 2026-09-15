@@ -46,11 +46,22 @@ python scripts/serve.py
 
 ## 검증
 
-의존성 없는 정적 점검은 Node.js 18 이상에서 실행합니다.
+화면 정적 점검은 Node.js 18 이상에서 실행합니다.
 
 ```bash
 node scripts/check-workspace.mjs
 ```
+
+백엔드 OpenAPI snapshot과 생성 TypeScript, 호환성 검사 기반은 Node.js 22에서 검증합니다.
+
+```bash
+npm ci
+npm run contract:check
+npm run contract:test-diff
+npm run contract:diff -- --base-ref origin/dev
+```
+
+입력 commit과 갱신 절차는 [`DOCS/23_BACKEND_OPENAPI_GENERATED_CLIENT.md`](DOCS/23_BACKEND_OPENAPI_GENERATED_CLIENT.md)에 기록합니다. 기존 화면 adapter의 전환은 별도 Issue 범위입니다.
 
 화면 QA는 360, 390, 768, 1440px에서 수행하고 결과를 [`WIREFRAME/QA.md`](WIREFRAME/QA.md)에 기록합니다. 대표 증거는 [`WIREFRAME/QA/screenshots/`](WIREFRAME/QA/screenshots/)에 보관합니다.
 

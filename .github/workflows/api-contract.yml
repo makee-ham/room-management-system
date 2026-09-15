@@ -1,0 +1,53 @@
+name: API contract
+
+on:
+  pull_request:
+    paths:
+      - "contracts/**"
+      - "WIREFRAME/generated/**"
+      - "scripts/*backend-contract*.mjs"
+      - "scripts/*breaking-diff*.mjs"
+      - "scripts/check-backend-breaking-diff.mjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/api-contract.yml"
+  push:
+    branches: [dev, main]
+    paths:
+      - "contracts/**"
+      - "WIREFRAME/generated/**"
+      - "scripts/*backend-contract*.mjs"
+      - "scripts/*breaking-diff*.mjs"
+      - "scripts/check-backend-breaking-diff.mjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/api-contract.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: api-contract-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run contract:check
+      - run: npm run contract:test-diff
+      - name: Compare the pull request contract with its base
+        if: github.event_name == 'pull_request'
+        run: npm run contract:diff -- --base-ref "origin/${{ github.base_ref }}"
+      - name: Compare a pushed contract with the previous revision
+        if: github.event_name == 'push'
+        run: npm run contract:diff -- --base-ref "${{ github.event.before }}"

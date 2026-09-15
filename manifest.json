@@ -12,6 +12,12 @@
   "codex_instructions": "AGENTS.md",
   "qa_record": "WIREFRAME/QA.md",
   "production_integration": "DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md",
+  "api_contract": {
+    "guide": "DOCS/23_BACKEND_OPENAPI_GENERATED_CLIENT.md",
+    "snapshot": "contracts/backend-openapi.json",
+    "identity": "contracts/backend-openapi.manifest.json",
+    "generated_types": "WIREFRAME/generated/backend-api.d.ts"
+  },
   "sha256": {
     "DOCS/FINAL_UX_AUDIT.md": "e479e468c32c27ef606a311fd090ed7a4a8718590d363c9634da014960956c78",
     "WIREFRAME/index.html": "e9286ca34c2906a33796cf287c165e225d52f2279197e78be169dd8ab66868b1",
