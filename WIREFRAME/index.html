@@ -1998,7 +1998,15 @@
       body:has(.maid-cleaning-detail) .scroll-top-button { display:none !important; }
     }
 
-  </style>
+
+      .cleaning-workflow-row{padding:20px;}
+      .cleaning-workflow-row .field{margin:12px 0;}
+      .cleaning-workflow-row .btn{min-height:44px;}
+      .cleaning-workflow-row .rail-row{flex-wrap:wrap;gap:12px;}
+      .cleaning-reference{overflow-wrap:anywhere;}
+      #cleaning-decision-form{margin-top:20px;}
+      #cleaning-template-form .rail-list{margin-top:20px;}
+</style>
 </head>
 <body>
   <a class="skip-link" href="#main-content">본문으로 건너뛰기</a>
@@ -2670,6 +2678,7 @@
       const LIVE_PROJECT_REF='aodikrxcczbogjpsjwjt';
       const LIVE_RUNTIME={status:'loading',mode:'pending',config:null,refreshPromise:null,refreshGeneration:null,refreshTimer:null,storageTimer:null,authGeneration:0,serviceWorkerRegistration:null,installPrompt:null,installed:window.matchMedia?.('(display-mode: standalone)')?.matches===true,updateWaiting:false};
       const LIVE_IDEMPOTENCY_KEYS=new Map();
+      let uncertainLiveMutation=null;
       let volatileAuthSession=null;
 
       function initialRemoteState(){return {
@@ -2679,6 +2688,7 @@
         reservations:{status:'idle',items:[],error:null,mutationError:null,requestId:null,lastSuccessAt:null},
         availability:{status:'idle',items:[],changeRequests:[],error:null,mutationError:null,requestId:null,lastSuccessAt:null,weekStart:null,draftDates:[],draftDirty:false},
         developer:{status:'idle',overview:null,runtime:null,database:null,scheduler:null,error:null,requestId:null,lastSuccessAt:null},
+        cleaning:initialCleaningState(),
         roomOperations:new Map()
       };}
       function liveMode(){return LIVE_RUNTIME.mode==='live';}
@@ -2703,7 +2713,7 @@
           const apiUrl=new URL(apiBaseUrl),authUrl=new URL(supabaseUrl),apiHost=/^([a-z0-9]+)\.supabase\.co$/.exec(apiUrl.hostname),authHost=/^([a-z0-9]+)\.supabase\.co$/.exec(authUrl.hostname),keyOk=isBrowserPublishableKey(supabasePublishableKey);
           if(apiUrl.protocol!=='https:'||authUrl.protocol!=='https:'||apiUrl.username||apiUrl.password||authUrl.username||authUrl.password||apiUrl.port||authUrl.port||!apiHost||!authHost||apiHost[1]!==authHost[1]||apiHost[1]!==LIVE_PROJECT_REF||apiUrl.pathname!=='/functions/v1/api'||apiUrl.search||apiUrl.hash||authUrl.pathname!=='/'||authUrl.search||authUrl.hash||!keyOk)return null;
         }catch{return null;}
-        return {apiBaseUrl,supabaseUrl,supabasePublishableKey,sessionPersistence};
+        return {apiBaseUrl,supabaseUrl,supabasePublishableKey,sessionPersistence,featureFlags:{optionalCleaningWorkflow:value.featureFlags?.optionalCleaningWorkflow===true}};
       }
       async function loadRuntimeConfig(){
         LIVE_RUNTIME.status='loading';
@@ -2827,20 +2837,28 @@
           catch(error){throw new ApiRequestError('network failure',{timeout:error?.name==='AbortError'});}finally{clearTimeout(timer);}
           const requestId=response.headers.get('x-request-id');if(response.status===204)return {data:null,requestId};
           let payload=null;try{payload=await response.json();}catch{if(response.ok)throw new ApiRequestError('invalid json',{status:502,code:'INVALID_RESPONSE',requestId});}
-          if(!response.ok){const code=payload?.error?.code||`HTTP_${response.status}`,message=payload?.error?.message||'request failed';throw new ApiRequestError(message,{status:response.status,code,requestId:payload?.requestId||requestId,retryAfter:response.headers.get('retry-after')});}
+          if(!response.ok){const code=payload?.error?.code||`HTTP_${response.status}`,message='request failed';throw new ApiRequestError(message,{status:response.status,code,requestId:payload?.requestId||requestId,retryAfter:response.headers.get('retry-after')});}
           return {data:payload,requestId};
         };
-        const token=auth?await ensureLiveAccessToken():null;
-        try{return await requestOnce(token);}catch(error){
-          if(auth&&retryAuth&&error?.status===401&&state.remote?.auth?.session?.refreshToken){const refreshed=await ensureLiveAccessToken({force:true,rejectedAccessToken:token});return requestOnce(refreshed);}
+        const generation=LIVE_RUNTIME.authGeneration,token=auth?await ensureLiveAccessToken():null;
+        if(auth&&generation!==LIVE_RUNTIME.authGeneration)throw new ApiRequestError('session changed',{status:409,code:'SESSION_CHANGED'});
+        try{const result=await requestOnce(token);if(auth&&generation!==LIVE_RUNTIME.authGeneration)throw new ApiRequestError('session changed',{status:409,code:'SESSION_CHANGED'});return result;}catch(error){
+          if(auth&&generation!==LIVE_RUNTIME.authGeneration)throw new ApiRequestError('session changed',{status:409,code:'SESSION_CHANGED'});
+          if(auth&&retryAuth&&error?.status===401&&state.remote?.auth?.session?.refreshToken){const refreshed=await ensureLiveAccessToken({force:true,rejectedAccessToken:token});if(generation!==LIVE_RUNTIME.authGeneration)throw new ApiRequestError('session changed',{status:409,code:'SESSION_CHANGED'});return requestOnce(refreshed);}
           throw error;
         }
       }
       async function mutationApiRequest(path,{method='POST',body=null,...options}={}){
-        const payload=new TextEncoder().encode(JSON.stringify(body)),digest=await crypto.subtle.digest('SHA-256',payload),hash=[...new Uint8Array(digest)].map(value=>value.toString(16).padStart(2,'0')).join(''),signature=`${method}:${path}:${hash}`;
+        const generation=LIVE_RUNTIME.authGeneration,profileId=state.remote.auth.user?.profileId;
+        if(cleaningWorkflowEnabled()&&cleaningState().pending)throw new ApiRequestError('previous request unconfirmed',{status:409,code:'PREVIOUS_REQUEST_UNCONFIRMED'});
+        if(path==='/v1/cleaning-templates')body=normalizeCleaningTemplateRequest(body);
+        const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value;
+        const payload=new TextEncoder().encode(JSON.stringify(canonical(body))),digest=await crypto.subtle.digest('SHA-256',payload),hash=[...new Uint8Array(digest)].map(value=>value.toString(16).padStart(2,'0')).join(''),signature=`${method}:${path}:${hash}`;
+        if(generation!==LIVE_RUNTIME.authGeneration)throw new ApiRequestError('session changed',{status:409,code:'SESSION_CHANGED'});
+        if(uncertainLiveMutation&&uncertainLiveMutation.signature!==signature)throw new ApiRequestError('previous request unconfirmed',{status:409,code:'PREVIOUS_REQUEST_UNCONFIRMED'});
         let idempotencyKey=LIVE_IDEMPOTENCY_KEYS.get(signature);if(!idempotencyKey){if(LIVE_IDEMPOTENCY_KEYS.size>=50)LIVE_IDEMPOTENCY_KEYS.delete(LIVE_IDEMPOTENCY_KEYS.keys().next().value);idempotencyKey=crypto.randomUUID();LIVE_IDEMPOTENCY_KEYS.set(signature,idempotencyKey);}
-        try{const result=await apiRequest(path,{...options,method,body,idempotencyKey});LIVE_IDEMPOTENCY_KEYS.delete(signature);return result;}
-        catch(error){const status=Number(error?.status)||0;if(status>=400&&status<500&&![408,425,429].includes(status))LIVE_IDEMPOTENCY_KEYS.delete(signature);throw error;}
+        try{const result=await apiRequest(path,{...options,method,body,idempotencyKey});if(generation!==LIVE_RUNTIME.authGeneration)throw new ApiRequestError('session changed',{status:409,code:'SESSION_CHANGED'});LIVE_IDEMPOTENCY_KEYS.delete(signature);if(uncertainLiveMutation?.signature===signature)uncertainLiveMutation=null;return result;}
+        catch(error){if(generation!==LIVE_RUNTIME.authGeneration)throw error;const status=Number(error?.status)||0;if(status>=400&&status<500&&![408,425,429].includes(status)){LIVE_IDEMPOTENCY_KEYS.delete(signature);if(uncertainLiveMutation?.signature===signature)uncertainLiveMutation=null;}else{uncertainLiveMutation={path,method,body:JSON.parse(JSON.stringify(body)),signature,generation,profileId};closeModal();queueMicrotask(()=>render());}throw error;}
       }
       async function loadLiveAccounts(){
         if(!['developer','admin'].includes(state.remote.auth.user?.role))return;
@@ -2901,8 +2919,8 @@
       async function loadLiveRoleData(){
         const role=state.remote.auth.user?.role;
         if(role==='developer'){await Promise.allSettled([loadLiveAccounts(),loadLiveDeveloperStatus()]);return;}
-        if(role==='admin'){await Promise.allSettled([loadLiveAccounts(),loadLiveRooms(),loadLiveReservations()]);await loadLiveAvailability();return;}
-        if(role==='maid')await loadLiveAvailability();
+        if(role==='admin'){await Promise.allSettled([loadLiveAccounts(),loadLiveRooms(),loadLiveReservations()]);await loadLiveAvailability();if(cleaningWorkflowEnabled())await loadLiveCleaning();return;}
+        if(role==='maid'){await loadLiveAvailability();if(cleaningWorkflowEnabled())await loadLiveCleaning();}
       }
       async function refreshAllLiveData(){
         if(!liveMode()||state.remote.auth.status!=='authenticated')return;
@@ -2914,7 +2932,7 @@
         const next={...session,user:safe,remember:!!remember};state.remote.auth={...state.remote.auth,status:'authenticated',user:safe,session:persistLiveSession(next,remember)||next,error:null,remember:!!remember,passwordMode:false};state.role=safe.role;state.liveView=requestedLiveView(safe.role)||defaultLiveView(safe.role);syncLiveViewUrl(state.liveView);syncAuthState(state);scheduleLiveRefresh();return safe;
       }
       function clearLiveAuthSurface(){
-        LIVE_IDEMPOTENCY_KEYS.clear();clearAllPinModalSecrets();maskPin();protectedPinOverrides.clear();pendingPin=null;rawCloseModal();state.detail=null;
+        LIVE_IDEMPOTENCY_KEYS.clear();clearAllPinModalSecrets();uncertainLiveMutation=null;try{sessionStorage.removeItem(cleaningIncidentStorageKey());}catch{}state.remote.cleaning=initialCleaningState();maskPin();protectedPinOverrides.clear();pendingPin=null;rawCloseModal();state.detail=null;
         if(isWireframeHistory(history.state))history.replaceState(null,'',`${location.pathname}${location.search}`);
       }
       function clearLivePageSecretsForHide(){
@@ -3514,13 +3532,14 @@
         return `<div class="view-stack"><section class="card card-pad"><div class="section-head"><div><h2>${esc(config.title)}</h2><p class="audit-note">기존 프런트 구조를 유지한 운영 화면입니다.</p></div>${statusBadge('API 준비 중','neutral')}</div><div class="notice notice-info" style="margin:14px 0 0"><div><strong>${esc(config.summary)}</strong><br>서버 endpoint가 생기기 전에는 데모 예약·업무·금액을 운영 데이터로 표시하지 않습니다.</div></div></section><section class="inline-empty">${icon(config.icon)}<h3>아직 연결할 운영 데이터가 없습니다</h3><p>화면 위치와 내비게이션은 유지되며, 백엔드가 준비되는 순서대로 이 자리에서 바로 연결합니다.</p></section></div>`;
       }
       function renderLiveMaidMy(){
+        if(cleaningActor('maid'))return renderLiveCleaningWorkflow();
         const actor=state.remote.auth.user;
         return `<div class="view-stack"><div class="assignment-notice">${icon('bell')}<div><p><strong>청소 일정 API 연결 대기</strong><br>관리자가 통보한 실제 일정만 이곳에 표시합니다.</p></div></div><section class="card work-hero"><span>${esc(actor?.displayName||'메이드')} 현재 작업 상태</span><strong>업무 API 연결 대기</strong><p>운영 서버에 배정·수행 endpoint가 생기기 전에는 데모 객실을 내 업무로 표시하지 않습니다.</p></section><div class="mobile-section-title"><div><h2>내 업무</h2><p>담당 확정부터 검수 결과까지 기존 흐름을 유지합니다.</p></div></div><section class="inline-empty"><h3>표시할 운영 업무가 없습니다</h3><p>배정 API가 연결되면 관리자에게 통보받은 업무만 여기에 표시됩니다.</p>${button('근무 일정 확인','nav','primary','data-view="schedule"')}</section></div>`;
       }
       function pwaInstallLabel(){if(LIVE_RUNTIME.installed)return '설치됨';if(LIVE_RUNTIME.installPrompt)return '이 기기에 설치 가능';if(/iPad|iPhone|iPod/.test(navigator.userAgent))return 'Safari 공유 메뉴에서 홈 화면에 추가';return '브라우저 설치 메뉴 사용 가능';}
       function browserNotificationLabel(){if(!('Notification' in window))return '이 브라우저는 알림을 지원하지 않음';if(Notification.permission==='granted')return '브라우저 알림 허용됨 · 서버 푸시 API 대기';if(Notification.permission==='denied')return '브라우저 설정에서 알림이 차단됨';return '알림 권한 요청 전';}
       function renderLiveMore(){
-        const actor=state.remote.auth.user,sessionLabel=state.remote.auth.remember?'이 기기에서 로그인 유지':'현재 탭 세션만 유지',notificationGranted='Notification' in window&&Notification.permission==='granted',maidNotice=actor?.role==='maid'?'<div class="live-role-note"><strong>현장 업무 API는 아직 준비 중입니다.</strong><br>현재 운영 서버는 메이드의 로그인 상태만 확인합니다. 배정·청소·사진·주급 데이터를 데모로 대신 표시하지 않습니다.</div>':'';
+        const actor=state.remote.auth.user,sessionLabel=state.remote.auth.remember?'이 기기에서 로그인 유지':'현재 탭 세션만 유지',notificationGranted='Notification' in window&&Notification.permission==='granted',maidNotice=actor?.role==='maid'&&!cleaningWorkflowEnabled()?'<div class="live-role-note"><strong>현장 업무 API는 아직 준비 중입니다.</strong><br>현재 운영 서버는 메이드의 로그인 상태만 확인합니다. 배정·청소·사진·주급 데이터를 데모로 대신 표시하지 않습니다.</div>':'';
         const installAction=LIVE_RUNTIME.updateWaiting?button('새 버전 적용','apply-app-update','primary'):button(LIVE_RUNTIME.installed?'설치됨':'앱 설치','install-app','outline',LIVE_RUNTIME.installed?'disabled':'');
         return `<div class="view-stack">${maidNotice}<div class="settings-grid">${settingCard('user','계정·로그인',`${esc(actor?.displayName||'계정')} · ${esc(LIVE_ROLE_LABELS[actor?.role]||'역할 확인')} · ${sessionLabel}`,`${button('상태 보기','account-status','outline')}${button('비밀번호 변경','open-password-change','soft')}`)}${settingCard('download','앱 설치',LIVE_RUNTIME.updateWaiting?'새 앱 버전 적용 대기':pwaInstallLabel(),installAction)}${settingCard('bell','브라우저 알림',browserNotificationLabel(),button(notificationGranted?'알림 상태':'알림 허용','notification-permission','outline'))}${settingCard('sync','운영 연결',`마지막 확인 ${esc(liveTimeLabel(state.remote.accounts.lastSuccessAt||state.remote.rooms.lastSuccessAt))}`,button('다시 연결','refresh-live-all','outline'))}</div><div class="notice notice-info"><div><strong>백그라운드 푸시는 다음 백엔드 단계입니다.</strong><br>이 앱은 지금 설치와 브라우저 알림 권한까지 준비합니다. 앱이 닫힌 동안 실제 업무 알림을 보내려면 서버의 구독 저장·알림 이벤트·발송 API가 추가되어야 합니다.</div></div></div>`;
       }
@@ -3648,9 +3667,9 @@
       function historyIndex(entry=history.state) { return isWireframeHistory(entry)&&Number.isInteger(entry.index)?entry.index:0; }
       function cloneHistoryPayload(payload) { return payload==null?null:JSON.parse(JSON.stringify(payload)); }
       function isPinHistoryKind(kind) { return kind==='pin-editor'||kind==='pin-review'; }
-      function omitsModalHtml(kind) { return isPinHistoryKind(kind)||kind==='reservation'||kind==='photo-viewer'||kind==='temporary-password'; }
+      function omitsModalHtml(kind) { return String(kind||'').startsWith('cleaning-')||isPinHistoryKind(kind)||kind==='reservation'||kind==='photo-viewer'||kind==='temporary-password'; }
       function safeModalHistoryPayload(kind,payload) {
-        if(kind==='temporary-password')return null;
+        if(kind==='temporary-password'||String(kind||'').startsWith('cleaning-'))return null;
         if(isPinHistoryKind(kind))return payload?.room?{room:String(payload.room)}:null;
         if(kind==='reservation')return payload?.room?{room:String(payload.room),...(payload.reservationId?{reservationId:String(payload.reservationId)}:{}),...(/^\d{4}-\d{2}-\d{2}$/.test(payload.weekStart||'')?{weekStart:weekStartIso(payload.weekStart)}:{}),...(/^\d{4}-\d{2}-\d{2}$/.test(payload.newDate||'')?{newDate:String(payload.newDate)}:{})}:null;
         if(kind==='photo-viewer'&&payload?.room&&payload?.photoId){const source=['bomb-room','inspection'].includes(payload.source)?payload.source:'room-issue';return {source,room:String(payload.room),recordId:payload.recordId?String(payload.recordId):null,photoId:String(payload.photoId)};}
@@ -4045,7 +4064,12 @@
         return `<nav class="bottom-nav" aria-label="모바일 주요 내비게이션">${nav.map(n=>`<button type="button" data-action="nav" data-view="${n.id}" ${currentView()===n.id&&!state.detail?'aria-current="page"':''}>${icon(n.icon)}<span>${n.mobileLabel||n.label}</span></button>`).join('')}</nav>`;
       }
 
-      function renderMain() {
+      async function confirmUncertainLiveMutation(){
+        const command=uncertainLiveMutation;if(!command||command.busy||command.generation!==LIVE_RUNTIME.authGeneration||command.profileId!==state.remote.auth.user?.profileId)return;
+        command.busy=true;render();try{await mutationApiRequest(command.path,{method:command.method,body:command.body});if(command.generation!==LIVE_RUNTIME.authGeneration)return;await loadLiveRoleData();toast('서버 요청 결과를 확인했습니다. 최신 상태를 확인하세요.');}catch(error){if(command.generation!==LIVE_RUNTIME.authGeneration)return;if(error.status===409)await loadLiveRoleData();toast(`${apiErrorCopy(error)}${error.requestId?` · 문의 번호 ${error.requestId}`:''}`,'error');}finally{command.busy=false;render();}
+      }
+      function renderMain(){return `${liveMode()&&uncertainLiveMutation?`<div class="notice notice-warning"><div><strong>앞선 요청 결과 확인이 필요합니다.</strong><br>내용을 변경하기 전에 같은 요청으로 서버 결과를 확인하세요.${button('같은 요청 결과 확인','confirm-uncertain-live-mutation','outline',uncertainLiveMutation.busy?'disabled':'')}</div></div>`:''}${renderMainContent()}`;}
+      function renderMainContent() {
         if (!state.loggedIn) return renderLogin();
         if(liveMode()){if(state.liveView==='accounts'&&['developer','admin'].includes(state.role))return renderLiveAccounts();if(state.liveView==='rooms'&&state.role==='admin')return renderLiveRooms();return renderLiveMore();}
         if (state.detail) return renderDetail();
@@ -4539,9 +4563,9 @@
         fallback();render();requestAnimationFrame(()=>document.getElementById('main-content')?.focus({preventScroll:true}));
       }
 
-      function standardModalMarkup({title,subtitle='',body,confirmLabel='',confirmAction='',confirmVariant='primary',closeLabel='취소',secondaryLabel='',secondaryAction='',secondaryVariant='outline',secondaryExtra='',auxiliaryLabel='',auxiliaryAction='',auxiliaryVariant='outline',auxiliaryExtra='',large=false}) {
+      function standardModalMarkup({title,subtitle='',body,confirmLabel='',confirmAction='',confirmVariant='primary',confirmExtra='',closeLabel='취소',secondaryLabel='',secondaryAction='',secondaryVariant='outline',secondaryExtra='',auxiliaryLabel='',auxiliaryAction='',auxiliaryVariant='outline',auxiliaryExtra='',large=false}) {
         const secondary=secondaryAction?`<button class="btn btn-${secondaryVariant} modal-secondary" type="button" data-action="${secondaryAction}" ${secondaryExtra}>${esc(secondaryLabel)}</button>`:'',auxiliary=auxiliaryAction?`<button class="btn btn-${auxiliaryVariant} modal-auxiliary" type="button" data-action="${auxiliaryAction}" ${auxiliaryExtra}>${esc(auxiliaryLabel)}</button>`:'',leading=secondary||auxiliary?`<div class="modal-leading-actions">${secondary}${auxiliary}</div>`:'';
-        return `<div class="modal-backdrop" data-action="backdrop-close"><section class="modal ${large?'modal-lg':''}" role="dialog" aria-modal="true" aria-labelledby="modal-title"${subtitle?' aria-describedby="modal-desc"':''}><header class="modal-head"><div><h2 id="modal-title">${title}</h2>${subtitle?`<p id="modal-desc">${subtitle}</p>`:''}</div><button class="icon-btn" type="button" data-action="close-modal" aria-label="닫기">${icon('x')}</button></header><div class="modal-body">${body}</div><footer class="modal-foot ${leading?'has-leading':''}">${leading}${button(closeLabel,'close-modal','outline')}${confirmAction?button(confirmLabel,confirmAction,confirmVariant):''}</footer></section></div>`;
+        return `<div class="modal-backdrop" data-action="backdrop-close"><section class="modal ${large?'modal-lg':''}" role="dialog" aria-modal="true" aria-labelledby="modal-title"${subtitle?' aria-describedby="modal-desc"':''}><header class="modal-head"><div><h2 id="modal-title">${title}</h2>${subtitle?`<p id="modal-desc">${subtitle}</p>`:''}</div><button class="icon-btn" type="button" data-action="close-modal" aria-label="닫기">${icon('x')}</button></header><div class="modal-body">${body}</div><footer class="modal-foot ${leading?'has-leading':''}">${leading}${button(closeLabel,'close-modal','outline')}${confirmAction?button(confirmLabel,confirmAction,confirmVariant,confirmExtra):''}</footer></section></div>`;
       }
       function showModal(options) {
         closeInfoTips();
@@ -4908,7 +4932,7 @@
         return (state.role==='admin'?admin:maid)[currentView()]||'객실관리';
       }
 
-      function renderMain() {
+      function renderMainContent() {
         if (!state.loggedIn) return renderLogin();
         if(liveMode()){
           const view=currentView();
@@ -4919,6 +4943,7 @@
             if(view==='quickReservation')return renderLiveReservations();
             if(view==='maids')return renderLiveMaids();
             if(view==='more')return renderLiveMore();
+            if(view==='cleaning'&&cleaningActor('admin'))return renderLiveCleaningWorkflow();
             return renderLivePendingView(view);
           }
           if(view==='my')return renderLiveMaidMy();
@@ -7740,7 +7765,7 @@
       function upsertLiveReservation(reservation){if(!reservation?.id)return;const items=state.remote.reservations.items,index=items.findIndex(item=>item.id===reservation.id);if(index>=0)items.splice(index,1,reservation);else items.push(reservation);}
       function liveReservationForm({reservation=null,roomId=''}={}){
         const nextDate=addIsoDays(liveKstIsoDate(),1),checkIn=reservation?liveIsoToInput(reservation.checkInAt):`${nextDate}T16:00`,checkOut=reservation?liveIsoToInput(reservation.checkOutAt):`${addIsoDays(nextDate,1)}T11:00`,available=liveReservationAvailableRooms(),requestedRoom=roomId&&liveRoomById(roomId)?.allocationReady===true?roomId:'',selectedRoom=reservation?.roomId||requestedRoom||available[0]?.id||'',room=liveRoomById(selectedRoom),mode=reservation?'edit':'create';
-        return `<form id="live-reservation-form" class="form-grid"><div class="field"><label for="live-reservation-room">객실</label><select id="live-reservation-room" class="select-control" data-control="live-reservation-room" data-mode="${mode}" data-state-version="${Number(room?.stateVersion)||''}" ${mode==='create'?'aria-describedby="live-reservation-room-state"':''} required>${liveRoomSelectOptions(selectedRoom,reservation?.roomId||'')}</select></div><div class="field"><label for="live-reservation-guests">숙박 인원</label><input id="live-reservation-guests" class="input-control" type="number" min="1" max="20" value="${Number(reservation?.guestCount)||1}" required></div>${mode==='create'?`<div id="live-reservation-room-state" class="live-reservation-room-state">${liveReservationRoomStateMarkup(room)}</div>`:''}<div class="field"><label for="live-reservation-checkin">체크인 일시</label><input id="live-reservation-checkin" class="input-control" type="datetime-local" value="${esc(checkIn)}" required></div><div class="field"><label for="live-reservation-checkout">체크아웃 일시</label><input id="live-reservation-checkout" class="input-control" type="datetime-local" value="${esc(checkOut)}" required></div><div class="field" style="grid-column:1/-1"><label for="live-reservation-guest-name">고객 이름 · 선택</label><input id="live-reservation-guest-name" class="input-control" autocomplete="off" maxlength="80" value="${esc(reservation?.guestName||'')}"><small>관리자 단건 조회와 이 요청에서만 다룹니다. 목록·URL·로그·웹 저장소에는 남기지 않습니다.</small></div><div id="live-reservation-submit-error" class="live-reservation-room-state" aria-live="assertive"></div></form>`;
+        return `<form id="live-reservation-form" class="form-grid"><div class="field"><label for="live-reservation-room">객실</label><select id="live-reservation-room" class="select-control" data-control="live-reservation-room" data-mode="${mode}" data-state-version="${Number(room?.stateVersion)||''}" ${mode==='create'?'aria-describedby="live-reservation-room-state"':''} required>${liveRoomSelectOptions(selectedRoom,reservation?.roomId||'')}</select></div><div class="field"><label for="live-reservation-guests">숙박 인원</label><input id="live-reservation-guests" class="input-control" type="number" min="1" max="20" value="${Number(reservation?.guestCount)||1}" required></div>${mode==='create'?`<div id="live-reservation-room-state" class="live-reservation-room-state">${liveReservationRoomStateMarkup(room)}</div>`:''}<div class="field"><label for="live-reservation-checkin">체크인 일시</label><input id="live-reservation-checkin" class="input-control" type="datetime-local" value="${esc(checkIn)}" required></div><div class="field"><label for="live-reservation-checkout">체크아웃 일시</label><input id="live-reservation-checkout" class="input-control" type="datetime-local" value="${esc(checkOut)}" required></div><div class="field" style="grid-column:1/-1"><label for="live-reservation-guest-name">고객 이름 · 선택</label><input id="live-reservation-guest-name" class="input-control" autocomplete="off" maxlength="80" value="${esc(reservation?.guestName||'')}"><small>관리자 단건 조회와 이 요청에서만 다룹니다. 목록·URL·로그·웹 저장소에는 남기지 않습니다.</small></div>${cleaningWorkflowEnabled()?'<p class="audit-note" style="grid-column:1/-1">체크아웃은 청소 시작 가능 시각입니다. 게시된 퇴실 청소 템플릿과 사진 슬롯이 있으면 예상시간 없이 요청할 수 있습니다. 예정 퇴실 청소대상 생성은 정상입니다. 업무 마감은 서버 조회값으로 표시합니다.</p>':''}<div id="live-reservation-submit-error" class="live-reservation-room-state" aria-live="assertive"></div></form>`;
       }
       async function openLiveReservationCreate(roomId='',trigger=document.activeElement){
         try{await refreshLiveReservationRooms();}catch(error){showModal({title:'예약 등록 준비 실패',subtitle:'최신 객실 정보를 확인하지 못했습니다.',trigger,body:liveReservationRoomStateMarkup(null,{error})});return;}
@@ -7767,7 +7792,7 @@
       async function runLiveReservationMutation({path,method='POST',body,successLabel,allocationRoomId=''}){
         const generation=LIVE_RUNTIME.authGeneration,slice=state.remote.reservations;slice.status='mutating';slice.mutationError=null;liveAccountMutationButtonDisabled(true);render();
         try{const {data,requestId}=await mutationApiRequest(path,{method,body});if(generation!==LIVE_RUNTIME.authGeneration)return null;if(data?.reservation)upsertLiveReservation(data.reservation);slice.status='ready';slice.mutationError=null;slice.requestId=requestId;slice.lastSuccessAt=new Date().toISOString();closeModal();render();toast(successLabel);await Promise.allSettled([loadLiveReservations(),loadLiveRooms()]);return data;}
-        catch(error){if(generation!==LIVE_RUNTIME.authGeneration)return null;slice.status='ready';slice.mutationError=error;let latestRoom=allocationRoomId?liveRoomById(allocationRoomId):null;if(allocationRoomId&&['ROOM_ALLOCATION_BLOCKED','STALE_VERSION'].includes(error?.code)){try{await refreshLiveReservationRooms();latestRoom=liveRoomById(allocationRoomId);}catch{}if(generation!==LIVE_RUNTIME.authGeneration)return null;}liveAccountMutationButtonDisabled(false);render();if(allocationRoomId){syncLiveReservationRoomUi(allocationRoomId);showLiveReservationMutationError(error,latestRoom);}toast(`${apiErrorCopy(error,'예약 변경을 완료하지 못했습니다.')}${error?.requestId?` · 문의 번호 ${error.requestId}`:''}`,'error');return null;}
+        catch(error){if(generation!==LIVE_RUNTIME.authGeneration)return null;slice.status='ready';slice.mutationError=error;if(error.status===409&&cleaningWorkflowEnabled())await refreshCleaningConflict();if(generation!==LIVE_RUNTIME.authGeneration)return null;let latestRoom=allocationRoomId?liveRoomById(allocationRoomId):null;if(allocationRoomId&&['ROOM_ALLOCATION_BLOCKED','STALE_VERSION'].includes(error?.code)){try{await refreshLiveReservationRooms();latestRoom=liveRoomById(allocationRoomId);}catch{}if(generation!==LIVE_RUNTIME.authGeneration)return null;}liveAccountMutationButtonDisabled(false);render();if(allocationRoomId){syncLiveReservationRoomUi(allocationRoomId);showLiveReservationMutationError(error,latestRoom);}toast(`${apiErrorCopy(error,'예약 변경을 완료하지 못했습니다.')}${error?.requestId?` · 문의 번호 ${error.requestId}`:''}`,'error');return null;}
       }
       async function submitLiveReservationCreate(){const roomId=document.getElementById('live-reservation-room')?.value||'';if(!roomId){toast('예약할 객실을 선택해 주세요.','error');return;}const latestRoom=await refreshLiveReservationRoomSelection(roomId);if(!latestRoom||latestRoom.allocationReady!==true){if(latestRoom)toast(`예약 등록 불가 · ${liveRoomBlockReasonText(latestRoom)}`,'error');return;}const payload=liveReservationPayload();if(!payload)return;await runLiveReservationMutation({path:'/v1/reservations',body:payload.body,successLabel:`${payload.room.roomNumber}호 예약을 등록했습니다.`,allocationRoomId:payload.room.id});}
       async function submitLiveReservationUpdate(id,expectedVersion){const payload=liveReservationPayload({editing:true});if(!payload)return;await runLiveReservationMutation({path:`/v1/reservations/${encodeURIComponent(id)}`,method:'PATCH',body:{...payload.body,expectedVersion:Number(expectedVersion),reasonCode:'ADMIN_RESERVATION_UPDATED'},successLabel:`${payload.room.roomNumber}호 예약을 변경했습니다.`});}
@@ -7776,14 +7801,14 @@
       function openLiveCleaningRequest(roomId,trigger=document.activeElement){
         const room=liveRoomById(roomId),active=room?liveReservationsForRoom(room.id,{activeOnly:true}).filter(item=>!item.actualCheckoutAt):[];if(!room){toast('객실을 찾지 못했습니다.','error');return;}
         const date=liveKstIsoDate(),reservationOptions=active.map(item=>`<option value="${esc(item.id)}">${esc(liveKstDateTimeLabel(item.checkInAt))}–${esc(liveKstDateTimeLabel(item.checkOutAt))}</option>`).join('');
-        showModal({title:`${esc(room.roomNumber)}호 청소 요청`,subtitle:'연박 또는 추가 청소 · 배정/수행은 다음 백엔드 단계',large:true,trigger,body:`<form id="live-cleaning-request-form" class="form-grid"><div class="field"><label for="live-cleaning-kind">청소 종류</label><select id="live-cleaning-kind" class="select-control"><option value="stayover">연박 청소</option><option value="additional">추가 청소</option></select></div><div class="field"><label for="live-cleaning-reservation">연결 예약</label><select id="live-cleaning-reservation" class="select-control"><option value="">예약 없음 · 추가 청소</option>${reservationOptions}</select></div><div class="field"><label for="live-cleaning-date">서비스일</label><input id="live-cleaning-date" class="input-control" type="date" value="${date}" required></div><div class="field"><label for="live-cleaning-from">시작 가능</label><input id="live-cleaning-from" class="input-control" type="datetime-local" value="${date}T11:00" required></div><div class="field"><label for="live-cleaning-due">완료 기한 · 선택</label><input id="live-cleaning-due" class="input-control" type="datetime-local" value="${date}T15:30"></div></form><div class="notice notice-info" style="margin-top:12px">이 릴리즈는 청소 요청 생성·취소까지만 제공합니다. 담당 배정, 현장 수행, 사진, 검수, 지급은 운영 데이터로 만들지 않습니다.</div>`,confirmLabel:'청소 요청 생성',confirmAction:'submit-live-cleaning-request'});const confirm=document.querySelector('[data-action="submit-live-cleaning-request"]');confirm?.setAttribute('data-room',room.id);if(active[0])document.getElementById('live-cleaning-reservation').value=active[0].id;
+        showModal({title:`${esc(room.roomNumber)}호 청소 요청`,subtitle:cleaningWorkflowEnabled()?'연박 또는 추가 청소 · 저장 가능 여부는 서버 판정':'연박 또는 추가 청소 · 배정/수행은 다음 백엔드 단계',large:true,trigger,body:`<form id="live-cleaning-request-form" class="form-grid"><div class="field"><label for="live-cleaning-kind">청소 종류</label><select id="live-cleaning-kind" class="select-control"><option value="stayover">연박 청소</option><option value="additional">추가 청소</option></select></div><div class="field"><label for="live-cleaning-reservation">연결 예약</label><select id="live-cleaning-reservation" class="select-control"><option value="">예약 없음 · 추가 청소</option>${reservationOptions}</select></div><div class="field"><label for="live-cleaning-date">서비스일</label><input id="live-cleaning-date" class="input-control" type="date" value="${date}" required></div><div class="field"><label for="live-cleaning-from">시작 가능</label><input id="live-cleaning-from" class="input-control" type="datetime-local" value="${date}T11:00" required></div><div class="field"><label for="live-cleaning-due">완료 기한 · 선택</label><input id="live-cleaning-due" class="input-control" type="datetime-local" value="${cleaningWorkflowEnabled()?'':`${date}T15:30`}"></div></form><div class="notice notice-info" style="margin-top:12px">${cleaningWorkflowEnabled()?'청소 계획은 함께 존재할 수 있습니다. 같은 객실의 실제 동시 수행과 최종 저장 가능 여부는 서버가 판정합니다.':'이 릴리즈는 청소 요청 생성·취소까지만 제공합니다. 담당 배정, 현장 수행, 사진, 검수, 지급은 운영 데이터로 만들지 않습니다.'}</div>`,confirmLabel:'청소 요청 생성',confirmAction:'submit-live-cleaning-request'});const confirm=document.querySelector('[data-action="submit-live-cleaning-request"]');confirm?.setAttribute('data-room',room.id);if(active[0])document.getElementById('live-cleaning-reservation').value=active[0].id;
       }
       async function submitLiveCleaningRequest(roomId){
         const form=document.getElementById('live-cleaning-request-form');if(!form?.reportValidity())return;const room=liveRoomById(roomId),cleaningKind=document.getElementById('live-cleaning-kind')?.value,reservationId=document.getElementById('live-cleaning-reservation')?.value||null,serviceDate=document.getElementById('live-cleaning-date')?.value||'',availableFrom=liveKstInputToIso(document.getElementById('live-cleaning-from')?.value||''),dueValue=document.getElementById('live-cleaning-due')?.value||'',dueAt=dueValue?liveKstInputToIso(dueValue):null;
         if(!room||!['stayover','additional'].includes(cleaningKind)||cleaningKind==='stayover'&&!reservationId||!/^\d{4}-\d{2}-\d{2}$/.test(serviceDate)||!availableFrom){toast('청소 종류, 연결 예약, 서비스 일정을 확인하세요.','error');return;}
         const generation=LIVE_RUNTIME.authGeneration;liveAccountMutationButtonDisabled(true);
-        try{const {data}=await mutationApiRequest('/v1/reservations/cleaning-requests',{body:{roomId,reservationId:cleaningKind==='stayover'?reservationId:null,cleaningKind,serviceDate,availableFrom,dueAt,expectedRoomVersion:Number(room.stateVersion),reasonCode:'ADMIN_MANUAL_CLEANING_REQUESTED'}});if(generation!==LIVE_RUNTIME.authGeneration)return;const request=data?.cleaningRequest;if(request)state.remote.roomOperations.set(request.id,{kind:'cleaning',...request});showModal({title:'청소 요청을 생성했습니다',subtitle:`${esc(room.roomNumber)}호 · ${cleaningKind==='stayover'?'연박':'추가'} 청소`,body:`<div class="info-grid"><div class="info-item"><span>서비스일</span><strong>${esc(serviceDate)}</strong></div><div class="info-item"><span>상태</span><strong>${esc(request?.status||'생성 완료')}</strong></div></div><div class="notice notice-info" style="margin-top:12px">배정·수행 API가 추가되기 전까지 요청 상태만 서버에 보존됩니다.</div>`,secondaryLabel:request?'요청 취소':'',secondaryAction:request?'confirm-live-cleaning-cancel':'',secondaryVariant:'danger',secondaryExtra:request?`data-id="${esc(request.id)}" data-version="${Number(request.version)}"`:''});await loadLiveRooms();}
-        catch(error){liveAccountMutationButtonDisabled(false);toast(`${apiErrorCopy(error,'청소 요청을 만들지 못했습니다.')}${error?.requestId?` · 문의 번호 ${error.requestId}`:''}`,'error');}
+        try{const {data}=await mutationApiRequest('/v1/reservations/cleaning-requests',{body:{roomId,reservationId:cleaningKind==='stayover'?reservationId:null,cleaningKind,serviceDate,availableFrom,dueAt,expectedRoomVersion:Number(room.stateVersion),reasonCode:'ADMIN_MANUAL_CLEANING_REQUESTED'}});if(generation!==LIVE_RUNTIME.authGeneration)return;const request=data?.cleaningRequest;if(request)state.remote.roomOperations.set(request.id,{kind:'cleaning',...request});showModal({title:'청소 요청을 생성했습니다',subtitle:`${esc(room.roomNumber)}호 · ${cleaningKind==='stayover'?'연박':'추가'} 청소`,body:`<div class="info-grid"><div class="info-item"><span>서비스일</span><strong>${esc(serviceDate)}</strong></div><div class="info-item"><span>상태</span><strong>${esc(request?.status||'생성 완료')}</strong></div></div><div class="notice notice-info" style="margin-top:12px">${cleaningWorkflowEnabled()?'청소 계획을 저장했습니다. 실제 시작 가능 여부는 최신 배정·수행 상태와 서버 응답으로 확인합니다.':'배정·수행 API가 추가되기 전까지 요청 상태만 서버에 보존됩니다.'}</div>`,secondaryLabel:request?'요청 취소':'',secondaryAction:request?'confirm-live-cleaning-cancel':'',secondaryVariant:'danger',secondaryExtra:request?`data-id="${esc(request.id)}" data-version="${Number(request.version)}"`:''});await loadLiveRooms();}
+        catch(error){if(error.status===409&&cleaningWorkflowEnabled())await refreshCleaningConflict();liveAccountMutationButtonDisabled(false);toast(`${apiErrorCopy(error,'청소 요청을 만들지 못했습니다.')}${error?.requestId?` · 문의 번호 ${error.requestId}`:''}`,'error');}
       }
       async function cancelLiveCleaningRequest(id,expectedVersion){try{await mutationApiRequest(`/v1/reservations/cleaning-requests/${encodeURIComponent(id)}/cancel`,{body:{expectedVersion:Number(expectedVersion),reasonCode:'ADMIN_MANUAL_CLEANING_CANCELLED'}});state.remote.roomOperations.delete(id);closeModal();toast('청소 요청을 취소했습니다.');await loadLiveRooms();}catch(error){toast(`${apiErrorCopy(error,'청소 요청을 취소하지 못했습니다.')}${error?.requestId?` · 문의 번호 ${error.requestId}`:''}`,'error');}}
       async function openLiveRoomDetail(roomId,trigger=document.activeElement){
@@ -7935,11 +7960,172 @@
       document.addEventListener('focusin',event=>{if(!event.target.closest?.('.info-tip'))closeInfoTips();},true);
       document.addEventListener('keydown',event=>{if(event.key!=='Escape'||document.querySelector('#modal-root .modal, .calendar-dialog'))return;if(closeInfoTips({restoreFocus:true})){event.preventDefault();event.stopImmediatePropagation();}},true);
 
+      // Source contract: backend PR #166. Runtime producers keep this release gate OFF.
+      function cleaningWorkflowEnabled(){return liveMode()&&LIVE_RUNTIME.config?.featureFlags?.optionalCleaningWorkflow===true;}
+      function cleaningActor(role=null){return cleaningWorkflowEnabled()&&state.remote.auth.status==='authenticated'&&(!role||state.remote.auth.user?.role===role)&&['admin','maid'].includes(state.remote.auth.user?.role);}
+      function initialCleaningState(){return {status:'idle',assignments:[],attempts:new Map(),templates:[],incidents:new Map(),blockedTargets:new Set(),error:null,requestId:null,serviceDate:liveKstIsoDate(),pending:null,busy:false,loadRevision:0};}
+      function cleaningState(){return state.remote.cleaning;}
+      // Only opaque incident IDs are retained for a reported case across a reload.
+      // No PIN, person name, photo, command body, or auth material is stored here.
+      function cleaningIncidentStorageKey(){return `castle-cleaning-incident-ids:${state.remote.auth.user?.profileId||'none'}`;}
+      function knownCleaningIncidentIds(){try{const ids=JSON.parse(sessionStorage.getItem(cleaningIncidentStorageKey())||'[]');return Array.isArray(ids)?ids.filter(id=>typeof id==='string'&&/^[0-9a-f-]{36}$/i.test(id)).slice(-50):[];}catch{return [];}}
+      function rememberCleaningIncidentId(id){try{sessionStorage.setItem(cleaningIncidentStorageKey(),JSON.stringify([...new Set([...knownCleaningIncidentIds(),id])].slice(-50)));}catch{}}
+      function cleaningDuration(value){return value==null?'미설정(선택사항)':`${value}분`;}
+      /** @param {import('./cleaning-api').PublishCleaningTemplateRequest} body */
+      function normalizeCleaningTemplateRequest(body){return {...body,durationMinutes:body.durationMinutes??null};}
+      function cleaningExecutionBody(assignment,attempt){
+        if(!assignment?.isCurrent||!assignment.notifiedAt||!attempt||attempt.assignmentId!==assignment.assignmentId||attempt.assignmentRevision!==assignment.revision)throw new ApiRequestError('latest assignment required',{status:409,code:'ATTEMPT_EXECUTION_CONFLICT'});
+        return {expectedExecutionVersion:attempt.executionVersion,expectedAssignmentId:assignment.assignmentId,expectedAssignmentRevision:assignment.revision};
+      }
+      Object.assign(API_ERROR_COPY,{
+        PREVIOUS_REQUEST_UNCONFIRMED:'앞선 요청 결과를 먼저 확인해 주세요.',CLEANING_TEMPLATE_NOT_CONFIGURED:'해당 객실 유형의 게시된 퇴실 청소 템플릿이 없습니다. 사진 슬롯을 설정하고 게시해 주세요.',
+        INVALID_CLEANING_TEMPLATE_DURATION:'예상 청소시간은 비워 두거나 1~10080분의 정수로 입력하세요.',
+        INVALID_CLEANING_TEMPLATE_SLOTS:'객실 유형별 필수 사진 슬롯과 촬영 이름을 확인하세요.',
+        CLEANING_TEMPLATE_VERSION_CONFLICT:'템플릿이 먼저 변경됐습니다. 최신 템플릿을 확인한 뒤 다시 편집하세요.',
+        PREVIOUS_ROOM_WORKFLOW_ACTIVE:'같은 객실의 이전 청소가 진행 중입니다',CHECKOUT_INCIDENT_OPEN:'고객 퇴실 여부를 관리자가 확인 중입니다',MAID_ALREADY_IN_PROGRESS:'이미 다른 객실 청소를 진행 중입니다',
+        ATTEMPT_VERSION_CONFLICT:'최신 배정 상태를 다시 불러와 주세요',ATTEMPT_EXECUTION_CONFLICT:'최신 배정 상태를 다시 불러와 주세요',ASSIGNMENT_VERSION_CONFLICT:'최신 배정 상태를 다시 불러와 주세요',
+        CHECKOUT_INCIDENT_REPORT_CONFLICT:'최신 배정 상태를 다시 불러와 주세요',CHECKOUT_INCIDENT_VERSION_CONFLICT:'사건이 먼저 변경됐습니다. 변경된 영향을 확인하고 다시 결정하세요.',CHECKOUT_INCIDENT_IMPACT_CHANGED:'담당·예약·수행 상태가 바뀌었습니다. 변경된 영향을 확인하고 다시 결정하세요.',
+        INVALID_CHECKOUT_INCIDENT_DECISION:'결정에 맞는 체크아웃 시각과 새 담당·일정을 확인하세요.',CHECKOUT_INCIDENT_NOT_FOUND:'사건 번호를 확인해 주세요.'
+      });
+      function cleaningErrorMarkup(error){return error?`<div class="notice notice-danger" role="alert"><div><strong>${esc(apiErrorCopy(error,/VERSION|REVISION|CONFLICT/.test(error.code||'')?'최신 배정 상태를 다시 불러와 주세요':'요청을 완료하지 못했습니다.'))}</strong>${error.requestId?`<br><small>문의 번호 ${esc(error.requestId)}</small>`:''}</div></div>`:'';}
+      async function loadLiveCleaning({quiet=false}={}){
+        if(!cleaningActor())return false;
+        const slice=cleaningState(),generation=LIVE_RUNTIME.authGeneration,revision=++slice.loadRevision,role=state.remote.auth.user.role,date=slice.serviceDate;
+        if(!quiet){slice.status='loading';slice.error=null;render();}
+        try{
+          const {data}=await apiRequest(`/v1/assignments?serviceDate=${encodeURIComponent(date)}`);
+          if(generation!==LIVE_RUNTIME.authGeneration||revision!==slice.loadRevision)return false;
+          const assignments=Array.isArray(data?.assignments)?data.assignments:[];
+          const attempts=new Map(),incidents=new Map(slice.incidents);
+          await Promise.all(knownCleaningIncidentIds().map(async id=>{const response=await apiRequest(`/v1/checkout-incidents/${encodeURIComponent(id)}`);if(response.data?.incident)incidents.set(id,response.data.incident);}));
+          if(generation!==LIVE_RUNTIME.authGeneration||revision!==slice.loadRevision)return false;
+          if(role==='maid')await Promise.all(assignments.map(async assignment=>{const response=await apiRequest(`/v1/attempts/current?assignmentId=${encodeURIComponent(assignment.assignmentId)}`);attempts.set(assignment.assignmentId,response.data?.attempt??null);}));
+          if(generation!==LIVE_RUNTIME.authGeneration||revision!==slice.loadRevision)return false;
+          let templates=slice.templates;
+          if(role==='admin'){const response=await apiRequest('/v1/cleaning-templates?cleaningKind=checkout');templates=response.data?.templates?.roomTypes||[];}
+          if(generation!==LIVE_RUNTIME.authGeneration||revision!==slice.loadRevision)return false;
+          // A newly notified revision can replace a blocked attempt only after a server read.
+          for(const target of slice.blockedTargets){const old=slice.assignments.find(a=>a.cleaningTargetId===target),next=assignments.find(a=>a.cleaningTargetId===target);if(old&&next&&next.assignmentId!==old.assignmentId)slice.blockedTargets.delete(target);}
+          for(const incident of incidents.values()){if(incident.status==='open')slice.blockedTargets.add(incident.cleaningTargetId);else if(assignments.some(a=>a.assignmentId===incident.decision?.nextAssignmentId))slice.blockedTargets.delete(incident.cleaningTargetId);}
+          Object.assign(slice,{status:'ready',assignments,attempts,templates,incidents,error:null});if(!quiet)render();return true;
+        }catch(error){if(generation!==LIVE_RUNTIME.authGeneration||revision!==slice.loadRevision)return false;Object.assign(slice,{status:'error',error,requestId:error.requestId});if(!quiet)render();return false;}
+      }
+      async function refreshCleaningConflict(incidentId=null){
+        if(!cleaningActor())return;
+        await Promise.allSettled([loadLiveCleaning({quiet:true}),...(state.role==='admin'?[loadLiveRooms(),loadLiveReservations()]:[])]);
+        if(incidentId&&cleaningActor('admin')){try{await readCleaningIncident(incidentId);}catch(error){cleaningState().error=error;}}
+      }
+      function renderCleaningAssignment(assignment){
+        const slice=cleaningState(),attempt=slice.attempts.get(assignment.assignmentId),blocked=slice.blockedTargets.has(assignment.cleaningTargetId),status=blocked?'관리자 확인 대기':({scheduled:'시작 대기',in_progress:'청소 중',field_completed:'현장 완료',interrupted:'중단됨',superseded:'이전 업무 종료',submitted:'제출 완료',approved:'검수 완료'}[attempt?.status]||'수행 상태 확인 대기');
+        const actual=attempt?.startedAt&&attempt?.fieldCompletedAt?Math.max(0,Math.round((Date.parse(attempt.fieldCompletedAt)-Date.parse(attempt.startedAt))/60000)):null;
+        const disabled=slice.busy||!!slice.pending||blocked||slice.status!=='ready';
+        return `<article class="card cleaning-workflow-row" data-cleaning-assignment="${esc(assignment.assignmentId)}"><div class="mobile-section-title"><h3>${esc(assignment.roomNumber||'객실 정보 없음')}${assignment.roomNumber?'호':''}</h3><span class="badge-row">${blocked?icon('alert','icon-sm'):icon('briefcase','icon-sm')}${statusBadge(status,blocked?'amber':'blue')}</span></div><div class="info-grid"><div class="info-item"><span>청소 시작 가능</span><strong>${esc(assignment.availableFrom?liveKstDateTimeLabel(assignment.availableFrom):'미설정')}</strong></div><div class="info-item"><span>업무 마감</span><strong>${esc(assignment.dueAt?liveKstDateTimeLabel(assignment.dueAt):'미설정')}</strong></div>${state.role==='admin'?`<div class="info-item"><span>담당 · 순서</span><strong>${esc(assignment.maidDisplayName)} · ${assignment.sequenceNumber}번째</strong></div>`:''}${actual!==null?`<div class="info-item"><span>이번 작업 실제 청소시간</span><strong>${actual}분</strong></div>`:''}</div><p class="audit-note">표시된 시각은 시작 가능 시각과 업무 마감입니다. 종료 예상시각은 계산하지 않습니다.</p>${state.role==='maid'?`<div class="live-operation-grid">${button('청소 시작','cleaning-start','primary',`data-id="${esc(assignment.assignmentId)}" ${disabled||attempt?.status!=='scheduled'?'disabled':''}`)}${button('현장 청소 완료','cleaning-complete','outline',`data-id="${esc(assignment.assignmentId)}" ${disabled||attempt?.status!=='in_progress'?'disabled':''}`)}${button('고객이 아직 객실에 있음','cleaning-report-review','outline',`data-id="${esc(assignment.assignmentId)}" ${disabled||!['scheduled','in_progress'].includes(attempt?.status)?'disabled':''}`)}<button class="btn btn-outline" disabled>${blocked?'PIN 접근 · 관리자 확인 대기':'PIN 접근 · 연동 준비 중'}</button><button class="btn btn-outline" disabled>${blocked?'사진 제출 · 관리자 확인 대기':'사진 제출 · 연동 준비 중'}</button></div>${blocked?'<p class="room-action-reason">관리자 확인이 끝난 뒤 최신 배정 상태를 다시 불러와 주세요.</p>':''}`:''}</article>`;
+      }
+      function renderLiveCleaningWorkflow(){
+        const slice=cleaningState(),admin=state.role==='admin';
+        const templates=admin?`<section class="card cleaning-workflow-row"><div class="mobile-section-title"><div><h2>퇴실 청소 템플릿</h2><p>예상 청소시간은 선택사항입니다.</p></div></div><div class="rail-list">${slice.templates.map(item=>`<div class="rail-row"><strong>${esc(item.roomTypeName)}</strong><span>${item.currentPublished?`v${item.currentPublished.version} · ${cleaningDuration(item.currentPublished.durationMinutes)}`:'게시된 템플릿 없음 · 사진 슬롯 설정 필요'}</span>${button(item.currentPublished?'수정·게시':'설정·게시','cleaning-template-edit','outline',`data-id="${esc(item.roomTypeCode)}" ${slice.busy||slice.pending?'disabled':''}`)}</div>`).join('')}</div></section>`:'';
+        return `<div class="view-stack">${cleaningErrorMarkup(slice.error)}${slice.pending?`<div class="notice notice-warning"><div><strong>요청 결과 확인이 필요합니다.</strong><br>내용을 바꾸기 전에 같은 요청으로 결과를 확인하세요.${button('같은 요청 결과 확인','cleaning-retry','outline',slice.busy?'disabled':'')}</div></div>`:''}<div class="mobile-section-title"><div><h2>${admin?'청소 계획':'내 업무'}</h2><p>저장과 실제 수행 가능 여부는 서버가 판정합니다.</p></div>${button('최신 상태 조회','cleaning-refresh','outline',slice.busy?'disabled':'')}</div><div class="field"><label for="cleaning-service-date">서비스 날짜</label><input id="cleaning-service-date" class="input-control" type="date" value="${esc(slice.serviceDate)}" ${slice.busy||slice.pending?'disabled':''}></div>${slice.status==='loading'?'<p role="status">최신 배정 상태 확인 중…</p>':slice.assignments.map(renderCleaningAssignment).join('')||'<section class="inline-empty"><h3>통보된 청소 계획이 없습니다</h3></section>'}${admin?`<section class="card cleaning-workflow-row"><h3>수동 청소 계획 추가</h3><p>열린 퇴실 청소 계획이 있어도 추가 요청을 보낼 수 있습니다.</p><div class="field"><label for="cleaning-manual-room">객실</label><select id="cleaning-manual-room" class="select-control">${state.remote.rooms.items.map(room=>`<option value="${esc(room.id)}">${esc(room.roomNumber)}호</option>`).join('')}</select></div>${button('청소 계획 추가','cleaning-manual','outline')}</section>${templates}<section class="card cleaning-workflow-row"><h3>고객 미퇴실 사건</h3><div class="field"><label for="cleaning-incident-id">사건 번호</label><input id="cleaning-incident-id" class="input-control" autocomplete="off" placeholder="신고 응답의 사건 번호"></div>${button('사건 조회','cleaning-incident-open','outline')}<p class="audit-note">현재 API 알림에는 사건 번호가 제공되지 않습니다. 신고 응답으로 확인한 사건을 조회합니다.</p></section>`:''}</div>`;
+      }
+      function validateCleaningSlots(slots,type){
+        const count={standard:10,premium:11,oceanPremium:13,oceanFamily:15}[type];
+        return Array.isArray(slots)&&slots.length===count&&new Set(slots.map(s=>s.slotKey)).size===count&&slots.every((s,i)=>s.displayOrder===i&&/^[a-z][a-z0-9-]{0,79}$/.test(s.slotKey)&&typeof s.required==='boolean'&&typeof s.label==='string'&&s.label.trim().length>0&&s.label.length<=80)&&slots.filter(s=>s.required).length===count-1&&slots.filter(s=>s.required&&s.slotKey==='tv-on').length===1;
+      }
+      function cleaningDemoSlots(type){const count={standard:10,premium:11,oceanPremium:13,oceanFamily:15}[type];return Array.from({length:count},(_,i)=>({slotKey:i===0?'tv-on':`slot-${i}`,displayOrder:i,required:i<count-1,label:i===0?'TV 켜짐':i===count-1?'기타 사진':`촬영 구역 ${i} · 데모`}));}
+      async function editCleaningTemplate(type,conflict=false){
+        if(!cleaningActor('admin')||cleaningState().pending)return;
+        if(!await loadLiveCleaning({quiet:true})){render();return;}
+        const item=cleaningState().templates.find(t=>t.roomTypeCode===type);if(!item)return;
+        const slots=item.currentPublished?.slots||cleaningDemoSlots(type);
+        showModal({title:`${esc(item.roomTypeName)} 퇴실 청소 템플릿`,subtitle:conflict?'최신 템플릿을 다시 조회했습니다. 변경 내용을 확인하고 재편집하세요.':'예상 청소시간은 선택사항 · 사진 슬롯은 필수',large:true,body:`<form id="cleaning-template-form"><div class="field"><label for="cleaning-template-duration">예상 청소시간 · 선택사항</label><input id="cleaning-template-duration" class="input-control" type="number" min="1" max="10080" step="1" value="${item.currentPublished?.durationMinutes??''}"><small>비우면 미설정으로 게시합니다. 입력 시 1~10080분.</small></div>${item.currentPublished?'':'<div class="notice notice-warning">초기 촬영 구역은 데모입니다. 실제 촬영 이름을 확인해 게시하세요.</div>'}<div class="rail-list">${slots.map((slot,i)=>`<div class="field"><label for="cleaning-slot-${i}">${i+1}. ${slot.required?'필수':'선택'} 사진${slot.slotKey==='tv-on'?' · TV 켜짐':''}</label><input id="cleaning-slot-${i}" class="input-control" value="${esc(slot.label)}" maxlength="80" required></div>`).join('')}</div></form>`,confirmLabel:'템플릿 게시',confirmAction:'cleaning-template-publish',confirmExtra:`data-id="${esc(type)}"`,historyKind:'cleaning-template'});
+        cleaningState().templateEdit={type,expectedVersion:item.expectedVersion,slots:slots.map(slot=>({...slot}))};
+      }
+      async function publishCleaningTemplate(){
+        if(!cleaningActor('admin')||cleaningState().busy||cleaningState().pending)return;
+        const edit=cleaningState().templateEdit,form=document.getElementById('cleaning-template-form');if(!edit||!form?.reportValidity())return;
+        const raw=document.getElementById('cleaning-template-duration').value,durationMinutes=raw===''?null:Number(raw),slots=edit.slots.map((slot,i)=>({...slot,label:document.getElementById(`cleaning-slot-${i}`).value.trim()}));
+        if(durationMinutes!==null&&(!Number.isInteger(durationMinutes)||durationMinutes<1||durationMinutes>10080)||!validateCleaningSlots(slots,edit.type)){toast('예상시간 범위와 필수 사진 슬롯을 확인하세요.','error');return;}
+        await runCleaningCommand({kind:'template',path:'/v1/cleaning-templates',body:normalizeCleaningTemplateRequest({roomTypeCode:edit.type,cleaningKind:'checkout',expectedVersion:edit.expectedVersion,durationMinutes,slots}),type:edit.type});
+      }
+      async function performCleaningExecution(id,operation){
+        if(!cleaningActor('maid')||cleaningState().busy||cleaningState().pending)return;
+        const slice=cleaningState();slice.busy=true;render();
+        try{
+          if(!await loadLiveCleaning({quiet:true}))return;
+          const assignment=slice.assignments.find(a=>a.assignmentId===id),attempt=slice.attempts.get(id);if(!assignment)throw new ApiRequestError('assignment changed',{status:409,code:'ASSIGNMENT_VERSION_CONFLICT'});if(slice.blockedTargets.has(assignment.cleaningTargetId))return;
+          const body=cleaningExecutionBody(assignment,attempt);
+          await runCleaningCommand({kind:operation,path:`/v1/attempts/${encodeURIComponent(attempt.attemptId)}/${operation==='report'?'checkout-not-completed':operation==='start'?'start':'complete-field-work'}`,body,target:assignment.cleaningTargetId},true);
+        }catch(error){slice.error=error;await refreshCleaningConflict();}finally{if(cleaningState()===slice){slice.busy=false;render();}}
+      }
+      function reviewCleaningReport(id){
+        if(!cleaningActor('maid'))return;
+        showModal({title:'고객이 아직 객실에 있나요?',body:'<div class="notice notice-warning">신고 후 관리자 확인 동안 청소 시작·완료·제출과 이후 PIN 접근이 차단됩니다.</div>',confirmLabel:'관리자에게 신고',confirmAction:'cleaning-report',confirmExtra:`data-id="${esc(id)}"`,confirmVariant:'danger',historyKind:'cleaning-report'});
+      }
+      async function runCleaningCommand(command,alreadyBusy=false){
+        if(!cleaningActor(command.kind==='template'||command.kind==='decision'?'admin':'maid'))return;
+        const slice=cleaningState(),generation=LIVE_RUNTIME.authGeneration;if(slice.busy&&!alreadyBusy)return;if(uncertainLiveMutation){toast('앞선 요청 결과를 먼저 확인해 주세요.','error');return;}
+        slice.busy=true;slice.error=null;command.key=command.key||crypto.randomUUID();slice.pending=command;document.querySelectorAll('#modal-root button').forEach(b=>{b.disabled=true;});render();
+        try{
+          const {data}=await apiRequest(command.path,{method:'POST',body:command.body,idempotencyKey:command.key});
+          if(generation!==LIVE_RUNTIME.authGeneration)return;
+          if(command.kind==='template'&&!data?.template?.id||command.kind==='decision'&&!data?.incident?.incidentId||['start','complete'].includes(command.kind)&&!data?.attempt?.attemptId)throw new ApiRequestError('invalid command response',{status:502,code:'INVALID_RESPONSE'});
+          if(command.kind==='report'){if(!data?.incident?.incidentId)throw new ApiRequestError('missing incident',{status:502,code:'INVALID_RESPONSE'});slice.incidents.set(data.incident.incidentId,data.incident);rememberCleaningIncidentId(data.incident.incidentId);slice.blockedTargets.add(command.target);}
+          slice.pending=null;closeModal();await loadLiveCleaning({quiet:true});if(generation!==LIVE_RUNTIME.authGeneration)return;
+          if(command.kind==='decision'){slice.incidents.set(data.incident.incidentId,data.incident);await refreshCleaningConflict();}
+          if(command.kind==='report')showModal({title:'관리자 확인 대기',body:`<p>고객 미퇴실 신고가 접수되었습니다. 이후 PIN 접근과 수행 동작은 관리자 확인까지 차단됩니다.</p><p>사건 번호 <strong class="cleaning-reference">${esc(data.incident.incidentId)}</strong></p>`,historyKind:'cleaning-receipt'});
+          toast(command.kind==='template'?'템플릿을 게시했습니다.':command.kind==='decision'?'사건을 처리했습니다. 최신 담당·수행 상태를 확인하세요.':command.kind==='report'?'관리자 확인 대기':'서버에 수행 상태를 기록했습니다.');
+        }catch(error){
+          if(generation!==LIVE_RUNTIME.authGeneration)return;
+          slice.error=error;const definitive=error.status>=400&&error.status<500&&![408,425,429].includes(error.status);
+          if(definitive){slice.pending=null;if(error.code==='CHECKOUT_INCIDENT_OPEN')slice.blockedTargets.add(command.target);}
+          if(error.status===409){closeModal();await refreshCleaningConflict(command.incidentId);if(generation!==LIVE_RUNTIME.authGeneration)return;slice.error=error;
+            if(command.kind==='template'){slice.busy=false;await editCleaningTemplate(command.type,true);}
+            if(command.kind==='decision'&&slice.incidents.has(command.incidentId)){slice.busy=false;await showCleaningIncident(command.incidentId,true);}
+          }else{closeModal();}
+        }finally{if(generation===LIVE_RUNTIME.authGeneration){slice.busy=false;render();document.querySelectorAll('#modal-root button').forEach(b=>{b.disabled=false;});}}
+      }
+      async function readCleaningIncident(id){
+        if(!cleaningActor())return null;
+        const generation=LIVE_RUNTIME.authGeneration,{data}=await apiRequest(`/v1/checkout-incidents/${encodeURIComponent(id)}`);if(generation!==LIVE_RUNTIME.authGeneration)return null;
+        if(!data?.incident)throw new ApiRequestError('incident missing',{status:502,code:'INVALID_RESPONSE'});cleaningState().incidents.set(id,data.incident);rememberCleaningIncidentId(id);return data.incident;
+      }
+      async function showCleaningIncident(id,conflict=false){
+        if(!cleaningActor('admin')||cleaningState().pending)return;
+        try{
+          const incident=await readCleaningIncident(id);if(!incident)return;
+          const generation=LIVE_RUNTIME.authGeneration;await refreshCleaningConflict();if(!cleaningActor('admin')||generation!==LIVE_RUNTIME.authGeneration)return;const assignment=cleaningState().assignments.find(a=>a.cleaningTargetId===incident.cleaningTargetId),reservation=liveReservationById(incident.reservationId),maids=state.remote.accounts.items.filter(a=>a.role==='maid'&&a.status==='active');
+          let currentAttempt=null;if(assignment){const response=await apiRequest(`/v1/attempts/lifecycle-impact?assignmentId=${encodeURIComponent(assignment.assignmentId)}`);currentAttempt=response.data?.attempt??null;}if(!cleaningActor('admin')||generation!==LIVE_RUNTIME.authGeneration)return;
+          showModal({title:'고객 미퇴실 사건 처리',subtitle:incident.status==='resolved'?'처리 완료':conflict?'변경된 영향을 다시 확인하세요. 자동으로 덮어쓰지 않았습니다.':'최신 사건·예약·배정 상태 기준',large:true,body:`${conflict?cleaningErrorMarkup(cleaningState().error):''}<div class="info-grid"><div class="info-item"><span>객실</span><strong>${esc(liveRoomLabel(incident.roomId))}</strong></div><div class="info-item"><span>현재 담당 · 배정 버전</span><strong>${esc(assignment?.maidDisplayName||'현재 날짜의 배정 없음')} · ${assignment?.revision??'—'}</strong></div><div class="info-item"><span>예약 체크아웃</span><strong>${esc(reservation?.checkOutAt?liveKstDateTimeLabel(reservation.checkOutAt):'조회값 없음')}</strong></div><div class="info-item"><span>현재 수행 상태</span><strong>${esc(({scheduled:'시작 대기',in_progress:'청소 중',field_completed:'현장 완료',interrupted:'중단됨',superseded:'이전 업무 종료'}[currentAttempt?.status])||'조회값 없음')}</strong></div><div class="info-item"><span>현재 시작 가능 · 업무 마감</span><strong>${esc(assignment?.availableFrom?liveKstDateTimeLabel(assignment.availableFrom):'미설정')} · ${esc(assignment?.dueAt?liveKstDateTimeLabel(assignment.dueAt):'미설정')}</strong></div><div class="info-item"><span>사건 상태 · 확인 버전</span><strong>${incident.status==='open'?'관리자 확인 대기':'처리 완료'} · v${incident.version}</strong></div></div>${incident.status==='open'?`<form id="cleaning-decision-form" class="form-grid"><div class="field"><label for="cleaning-decision">처리 결정</label><select id="cleaning-decision" class="select-control"><option value="CONFIRM_DEPARTED">실제 퇴실 확인</option><option value="EXTEND_CHECKOUT">체크아웃 연장</option><option value="FALSE_REPORT">잘못된 신고 확인</option></select></div><div class="field"><label for="cleaning-new-checkout">연장 체크아웃 · 연장 시 필수</label><input id="cleaning-new-checkout" class="input-control" type="datetime-local"></div><div class="field"><label for="cleaning-reassign-maid">새 담당</label><select id="cleaning-reassign-maid" class="select-control" required><option value="">담당 선택</option>${maids.map(maid=>`<option value="${esc(maid.profileId||maid.id)}">${esc(maid.displayName)}</option>`).join('')}</select></div><div class="field"><label for="cleaning-reassign-sequence">새 업무 순서</label><input id="cleaning-reassign-sequence" class="input-control" type="number" min="1" step="1" required></div><div class="field"><label for="cleaning-reassign-date">새 서비스 날짜</label><input id="cleaning-reassign-date" class="input-control" type="date" required></div><div class="field"><label for="cleaning-reassign-from">새 시작 가능 시각</label><input id="cleaning-reassign-from" class="input-control" type="datetime-local" required></div><div class="field"><label for="cleaning-reassign-due">새 업무 마감</label><input id="cleaning-reassign-due" class="input-control" type="datetime-local" required></div><label class="remember-login"><input id="cleaning-impact-confirm" type="checkbox" required><span>현재 예약·담당·사건 상태와 새 일정을 확인했습니다.</span></label></form>`:''}`,confirmLabel:incident.status==='open'?'영향 확인·결정 저장':'',confirmAction:incident.status==='open'?'cleaning-decision-save':'',confirmExtra:`data-id="${esc(id)}"`,historyKind:'cleaning-incident'});
+          cleaningState().incidentEdit={id,expectedVersion:incident.version,expectedImpactFingerprint:incident.impactFingerprint};
+        }catch(error){cleaningState().error=error;render();}
+      }
+      async function saveCleaningDecision(){
+        if(!cleaningActor('admin')||cleaningState().busy||cleaningState().pending)return;
+        const edit=cleaningState().incidentEdit,form=document.getElementById('cleaning-decision-form');if(!edit||!form?.reportValidity())return;
+        const value=id=>document.getElementById(id).value,decision=value('cleaning-decision'),newCheckoutAt=decision==='EXTEND_CHECKOUT'?liveKstInputToIso(value('cleaning-new-checkout')):null;
+        if(decision==='EXTEND_CHECKOUT'&&!newCheckoutAt){toast('연장 체크아웃 시각을 입력하세요.','error');return;}
+        const reassignment={maidProfileId:value('cleaning-reassign-maid'),sequenceNumber:Number(value('cleaning-reassign-sequence')),serviceDate:value('cleaning-reassign-date'),availableFrom:liveKstInputToIso(value('cleaning-reassign-from')),dueAt:liveKstInputToIso(value('cleaning-reassign-due'))};
+        await runCleaningCommand({kind:'decision',incidentId:edit.id,path:`/v1/checkout-incidents/${encodeURIComponent(edit.id)}/decision`,body:{expectedVersion:edit.expectedVersion,expectedImpactFingerprint:edit.expectedImpactFingerprint,decision,reasonCode:{EXTEND_CHECKOUT:'GUEST_STILL_PRESENT_EXTENDED',CONFIRM_DEPARTED:'GUEST_DEPARTURE_CONFIRMED',FALSE_REPORT:'REPORT_FALSE_CONFIRMED'}[decision],newCheckoutAt,reassignment}});
+      }
+      function handleCleaningAction(action,el){
+        if(!cleaningActor())return;
+        if(action==='cleaning-refresh')void loadLiveCleaning();
+        if(action==='cleaning-template-edit')void editCleaningTemplate(el.dataset.id);
+        if(action==='cleaning-template-publish')void publishCleaningTemplate();
+        if(action==='cleaning-start'||action==='cleaning-complete'||action==='cleaning-report')void performCleaningExecution(el.dataset.id,action==='cleaning-start'?'start':action==='cleaning-complete'?'complete':'report');
+        if(action==='cleaning-report-review')reviewCleaningReport(el.dataset.id);
+        if(action==='cleaning-retry'&&cleaningState().pending)void runCleaningCommand(cleaningState().pending);
+        if(action==='cleaning-manual'&&cleaningActor('admin'))openLiveCleaningRequest(document.getElementById('cleaning-manual-room').value,el);
+        if(action==='cleaning-incident-open'&&cleaningActor('admin')){const id=document.getElementById('cleaning-incident-id').value.trim();if(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))void showCleaningIncident(id);else toast('사건 번호를 확인해 주세요.','error');}
+        if(action==='cleaning-decision-save')void saveCleaningDecision();
+      }
+      document.addEventListener('change',event=>{if(event.target.id==='cleaning-service-date'&&cleaningActor()&&!cleaningState().pending&&!cleaningState().busy){cleaningState().serviceDate=event.target.value;void loadLiveCleaning();}});
+
       const rebuiltActions=new Set(['toggle-demo','reset','switch-role','nav','filter-rooms','filter-room-type','back','close-modal','backdrop-close','room-detail','cleaning-detail','maid-detail','complaint-detail','pay-detail','admin-pay-detail','template','template-detail','template-back-list','template-edit','template-cancel-edit','template-review','template-save','inspection-photo','open-room-export','export-rooms-csv','export-rooms-xls','open-calendar','open-pay-calendar','open-work-history-calendar','calendar-backdrop','calendar-close','calendar-month','calendar-select','calendar-today','date-shift','date-today','toggle-section','clear-room-filters','edit-room-info','save-room-info','pin-show','pin-hide','pin-edit','pin-clear','pin-random','pin-review','pin-back','pin-save','reservation-edit','new-reservation','save-reservation-v2','create-stayover','confirm-stayover','toggle-room-cleaning','confirm-room-cleaning-on','confirm-room-cleaning-off','complete-checkout-inspection','confirm-checkout-inspection','operation-status','confirm-operation-stop','resume-operation','candle-change','task-candle-change','direct-assign','confirm-direct-assign','cleaning-tab','assignment-type-filter','admin-maid-tab','go-today','go-workforce','go-work-history','go-payroll','go-complaints','go-cleaning-drafts','go-cleaning-assignment','go-inspection','go-open','go-schedule','go-my','go-maid-pay','toggle-maid-pay-week','clear-maid-pay-week','new-cleaning','confirm-new-cleaning','toggle-week-day','submit-week-availability','edit-week-availability','request-availability-change','save-assignments','set-availability','change-availability','confirm-off-active','claim-job','confirm-claim','start-cleaning','confirm-start','capture-task-photo','choose-task-photo','remove-task-photo','remove-task-photo-item','retry-task-photo','retry-all-task-photos','field-complete-v2','submit-cleaning-v2','approve-inspection-v2','reject-inspection-v2','confirm-approve-v2','confirm-reject-v2','toggle-payment','confirm-toggle-payment','confirm-finish-payment','mark-payment-check','confirm-payment-open-v2','confirm-reverse-payment','delete-complaint','undo-complaint','publish-selected','confirm-publish','retry-network','alerts','audit-log','rates','logout','request-cancel','confirm-request-cancel','cancel-review','confirm-cancel','rule-complaint-v2','ack-complaint','object-complaint','confirm-objection','close-complaint-v2','correct-complaint-v2','confirm-correct-complaint-v2','reclean-existing','demo-info','notification-permission','confirm-notification-permission']);
       ['cleaning-history-detail','cleaning-history-photo','clear-cleaning-history-search','open-room-pin-sheet-sync','confirm-room-pin-sheet-sync'].forEach(action=>rebuiltActions.add(action));
       ['focus-assignment-room','quick-reservation-edit','quick-month-shift','quick-month-today','quick-reservation-enter-fullscreen','quick-reservation-exit-fullscreen','quick-reservation-undo','reservation-week-shift','open-reservation-week-calendar','reservation-add','reservation-guest-change','cancel-cleaning-target','confirm-cancel-cleaning-target','reservation-cancel-review','confirm-reservation-cancel'].forEach(action=>rebuiltActions.add(action));
       ['random-assignments','undo-random-assignment'].forEach(action=>rebuiltActions.add(action));
       ['resolve-conflict-v2','confirm-conflict-v2','deactivate-maid-v2','confirm-start-deactivation-v2','complete-deactivation-v2','admin-pay-week','export-rooms-xlsx','room-issue-photo','choose-room-issue-files','remove-room-issue-photo','save-room-issue','bomb-room-photo','choose-bomb-room-files','remove-bomb-room-photo','add-demo-bomb-room-photos','save-bomb-room-report','approve-bomb-room','reject-bomb-room','confirm-approve-bomb-room','confirm-reject-bomb-room'].forEach(action=>rebuiltActions.add(action));
+      ['confirm-uncertain-live-mutation','cleaning-refresh','cleaning-template-edit','cleaning-template-publish','cleaning-start','cleaning-complete','cleaning-report-review','cleaning-report','cleaning-retry','cleaning-manual','cleaning-incident-open','cleaning-decision-save'].forEach(action=>rebuiltActions.add(action));
       const mutationActionLocks=new Set(),mutationActions=new Set(['complete-checkout-inspection','confirm-checkout-inspection','toggle-room-cleaning','confirm-room-cleaning-on','confirm-room-cleaning-off','save-reservation-v2','submit-cleaning-v2','confirm-approve-v2','confirm-reject-v2','confirm-toggle-payment','mark-payment-check','confirm-payment-open-v2','confirm-finish-payment']);
       const deprecatedStateActions=new Set(['retry-photo','field-complete','submit-cleaning','approve-inspection','reject-inspection','confirm-approve','confirm-reject','recover-candle','confirm-candle','save-reservation','show-pin','hide-pin','resolve-conflict','confirm-conflict','deactivate-maid','confirm-deactivate','start-payment','confirm-payment','finish-payment','payment-check','payment-open','rule-complaint','confirm-ruling','close-complaint','correct-complaint','publish-template','change-availability','confirm-off-active']);
       deprecatedStateActions.forEach(action=>rebuiltActions.add(action));
@@ -7956,6 +8142,8 @@
         if(a==='calendar-backdrop'&&e.target!==el)return;
         e.preventDefault();e.stopImmediatePropagation();
         const mutationKey=mutationActions.has(a)?[a,id||'',el.dataset.room||'',el.dataset.reservation||'',el.dataset.submission||'',el.dataset.week||'',el.dataset.maid||''].join(':'):'';if(mutationKey&&mutationActionLocks.has(mutationKey))return;if(mutationKey){mutationActionLocks.add(mutationKey);queueMicrotask(()=>mutationActionLocks.delete(mutationKey));}
+        if(a==='confirm-uncertain-live-mutation'){if(liveMode())void confirmUncertainLiveMutation();return;}
+        if(a.startsWith('cleaning-')&&['cleaning-refresh','cleaning-template-edit','cleaning-template-publish','cleaning-start','cleaning-complete','cleaning-report-review','cleaning-report','cleaning-retry','cleaning-manual','cleaning-incident-open','cleaning-decision-save'].includes(a)){handleCleaningAction(a,el);return;}
         if(deprecatedStateActions.has(a)){closeModal();render();toast('오래된 화면의 확정 동작은 차단했습니다. 최신 청소 상세에서 다시 진행해 주세요.','error');return;}
         if(a==='toggle-demo'){state.demoOpen=!state.demoOpen;render();requestAnimationFrame(()=>document.querySelector('[data-action="toggle-demo"]')?.focus());return;}
         if(a==='reset'){maskPin();releaseRoomIssuePhotoUrls();protectedPinOverrides.clear();pendingPin=null;pendingTemplateChange=null;pendingDraftPublish=null;state=makeScenario(state.scenario);hydrateTemplateSnapshotsForState();closeModal();render();requestAnimationFrame(()=>document.querySelector('[data-action="reset"]')?.focus());toast('시나리오를 초기 상태로 재설정했습니다.');return;}

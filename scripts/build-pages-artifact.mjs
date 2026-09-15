@@ -82,6 +82,7 @@ if (runtimeMode === "demo") {
     supabaseUrl: value("SUPABASE_URL").replace(/\/+$/u, ""),
     supabasePublishableKey: value("SUPABASE_PUBLISHABLE_KEY"),
     sessionPersistence: value("RMS_SESSION_PERSISTENCE", "session").toLowerCase(),
+    featureFlags: { optionalCleaningWorkflow: false },
   };
   const refs = [
     projectRef(config.apiBaseUrl, "/functions/v1/api"),
