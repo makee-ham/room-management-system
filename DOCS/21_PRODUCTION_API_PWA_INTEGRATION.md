@@ -8,7 +8,7 @@
 
 | 구분 | exact commit | 의미 |
 |---|---|---|
-| 프런트 `main` | `8c1c14da93294a36ce5fc842143bf668ad9cf373` | 현재 배포 정본. 운영 `v0.2.0`의 39 paths / 43 operations subset을 실제 소비한다. |
+| 프런트 `main` | `8c1c14da93294a36ce5fc842143bf668ad9cf373` | 현재 배포 정본. 운영 `v0.2.0` 계약 검사면은 39 paths / 43 operations이고 실제 UI 호출면은 31 paths / 35 operations다. |
 | 프런트 `dev` | `a0d6c07f5bd6cc86e02b2644abc4addc414adfc5` | `main`보다 2 commit 앞선 차기 후보. 선택형 청소시간·미퇴실 사건 UI는 기능 플래그 OFF다. |
 | 백엔드 `dev` | `c32aa9eec3945334ddda956afc62cc92d801c410` | source OpenAPI `0.2.0`, 109 paths / 117 operations. source 제공을 production 활성화로 해석하지 않는다. |
 | 백엔드 `main` | `6604b2215e06b9e9ebf0b3138e3716a000c57ddb` | 예상 청소시간 선택화를 포함한 GitHub release source 정본이다. |
@@ -27,6 +27,12 @@
 | 주급·컴플레인 | 데모 | 동일 | 제공 | 연동 대기 |
 | PIN·Google Sheets | legacy 상태 기록만 | 신규 API 미소비 | source 제공 | 민감정보 경계 유지, hosted 활성화 별도 |
 | 검수 대기열 cursor | 미소비 | 미소비 | 백엔드 PR #176 후보 | 병합 뒤 generated client 갱신 대상 |
+
+`scripts/check-api-integration.mjs`의 39 paths / 43 operations는 health·OpenAPI·Swagger와 운영 진단용 endpoint를 포함한 계약 검사 범위다. `WIREFRAME/index.html`이 직접 호출하는 현재 UI 소비면은 31 paths / 35 operations다. `/health`, `/openapi.json`, `/docs`, 개발자 감사·활동·진단 일부, 예약 전이 processor, 객실 master-data 명령은 현재 화면이 호출하지 않는다.
+
+## 알려진 사진 슬롯 계약 충돌
+
+`DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md`는 객실 타입별 총 9 / 10 / 12 / 14 슬롯을 프런트 구현 정본으로 둔다. 백엔드 제품 가이드·현재 published template 검증은 최소 10 / 11 / 13 / 15 슬롯을 전제로 하므로 두 계약은 아직 일치하지 않는다. [백엔드 Decision #179](https://github.com/wrongstory/room-management-system-backend/issues/179)에서 슬롯 ID·순서·필수 여부·장수와 기존 attempt 호환 전환을 확정하기 전에는 어느 값을 통합 정본으로 승격하거나 기존 template/fixture를 임의 변경하지 않는다.
 
 공통 계약은 다음과 같다.
 
