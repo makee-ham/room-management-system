@@ -116,4 +116,37 @@ const requestAnyOfAfter = structuredClone(requestAnyOfBefore);
 requestAnyOfAfter.paths['/v1/items'].post.requestBody.content['application/json'].schema.properties.name.anyOf.push({ type: 'number' });
 assertCompatible(requestAnyOfBefore, requestAnyOfAfter, 'Adding a request anyOf alternative');
 
+const requestUniqueItemsBefore = clone();
+requestUniqueItemsBefore.paths['/v1/items'].post.requestBody.content['application/json'].schema.properties.tags = { type: 'array', items: { type: 'string' } };
+const requestUniqueItemsAfter = structuredClone(requestUniqueItemsBefore);
+requestUniqueItemsAfter.paths['/v1/items'].post.requestBody.content['application/json'].schema.properties.tags.uniqueItems = true;
+if (!findBreakingChanges(requestUniqueItemsBefore, requestUniqueItemsAfter).some((difference) => difference.includes('uniqueItems narrowed request values'))) {
+  throw new Error('Adding uniqueItems to a request array must be detected as narrowing.');
+}
+
+const responseUniqueItemsBefore = clone();
+responseUniqueItemsBefore.paths['/v1/items'].post.responses['201'].content['application/json'].schema.properties.tags = { type: 'array', uniqueItems: true, items: { type: 'string' } };
+const responseUniqueItemsAfter = structuredClone(responseUniqueItemsBefore);
+delete responseUniqueItemsAfter.paths['/v1/items'].post.responses['201'].content['application/json'].schema.properties.tags.uniqueItems;
+if (!findBreakingChanges(responseUniqueItemsBefore, responseUniqueItemsAfter).some((difference) => difference.includes('uniqueItems response guarantee was removed'))) {
+  throw new Error('Removing uniqueItems from a response array must be detected as widening.');
+}
+
+const requestTypeExpandedBefore = clone();
+const requestTypeExpandedAfter = structuredClone(requestTypeExpandedBefore);
+requestTypeExpandedAfter.paths['/v1/items'].post.requestBody.content['application/json'].schema.properties.name.type = ['string', 'number'];
+assertCompatible(requestTypeExpandedBefore, requestTypeExpandedAfter, 'Expanding a request type union');
+
+const responseTypeNarrowedBefore = clone();
+responseTypeNarrowedBefore.paths['/v1/items'].post.responses['201'].content['application/json'].schema.properties.label.type = ['string', 'number'];
+const responseTypeNarrowedAfter = structuredClone(responseTypeNarrowedBefore);
+responseTypeNarrowedAfter.paths['/v1/items'].post.responses['201'].content['application/json'].schema.properties.label.type = 'string';
+assertCompatible(responseTypeNarrowedBefore, responseTypeNarrowedAfter, 'Narrowing a response type union');
+
+const requestAnyOfReorderedBefore = clone();
+requestAnyOfReorderedBefore.paths['/v1/items'].post.requestBody.content['application/json'].schema.properties.name = { anyOf: [{ type: 'string' }, { type: 'number' }] };
+const requestAnyOfReorderedAfter = structuredClone(requestAnyOfReorderedBefore);
+requestAnyOfReorderedAfter.paths['/v1/items'].post.requestBody.content['application/json'].schema.properties.name.anyOf.reverse();
+assertCompatible(requestAnyOfReorderedBefore, requestAnyOfReorderedAfter, 'Reordering request anyOf alternatives');
+
 process.stdout.write('OpenAPI 3.1 breaking-diff regression tests passed.\n');

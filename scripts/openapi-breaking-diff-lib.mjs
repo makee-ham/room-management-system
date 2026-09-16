@@ -12,6 +12,30 @@ const values = (value) => new Set(value ?? []);
 const isSubset = (subset, superset) => [...subset].every((item) => superset.has(item));
 const normalizedType = (schema) => JSON.stringify(Array.isArray(schema?.type) ? [...schema.type].sort() : schema?.type ?? null);
 const hasKeyword = (schema, keyword) => schema && Object.hasOwn(schema, keyword);
+const schemaTypes = (schema) => {
+  if (!hasKeyword(schema, 'type')) return null;
+  return new Set(Array.isArray(schema.type) ? schema.type : [schema.type]);
+};
+const typeSetContains = (superset, type) => superset === null || superset.has(type) || (type === 'integer' && superset.has('number'));
+const typeSetIsSubset = (subset, superset) => subset !== null && [...subset].every((type) => typeSetContains(superset, type));
+const stableStringify = (value) => {
+  if (Array.isArray(value)) return `[${value.map((item) => stableStringify(item)).join(',')}]`;
+  if (value && typeof value === 'object') {
+    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
+  }
+  return JSON.stringify(value);
+};
+const unmatchedSchemas = (beforeItems, afterItems) => {
+  const remainingAfter = [...afterItems];
+  const remainingBefore = [];
+  for (const beforeItem of beforeItems) {
+    const signature = stableStringify(beforeItem);
+    const matchIndex = remainingAfter.findIndex((afterItem) => stableStringify(afterItem) === signature);
+    if (matchIndex >= 0) remainingAfter.splice(matchIndex, 1);
+    else remainingBefore.push(beforeItem);
+  }
+  return [remainingBefore, remainingAfter];
+};
 
 function compareSchema(beforeDocument, afterDocument, beforeInput, afterInput, mode, location, differences, seenPairs = new Set()) {
   const before = resolveSchema(beforeDocument, beforeInput);
@@ -25,7 +49,12 @@ function compareSchema(beforeDocument, afterDocument, beforeInput, afterInput, m
   if (seenPairs.has(pairKey)) return;
   seenPairs.add(pairKey);
 
-  if (normalizedType(before) !== normalizedType(after)) differences.push(`${location}: type changed from ${normalizedType(before)} to ${normalizedType(after)}`);
+  const beforeTypes = schemaTypes(before);
+  const afterTypes = schemaTypes(after);
+  const typesCompatible = mode === 'request'
+    ? afterTypes === null || typeSetIsSubset(beforeTypes, afterTypes)
+    : beforeTypes === null || typeSetIsSubset(afterTypes, beforeTypes);
+  if (!typesCompatible) differences.push(`${location}: type changed incompatibly from ${normalizedType(before)} to ${normalizedType(after)} for ${mode}`);
   if (before.format !== after.format) {
     if ((mode === 'request' && after.format !== undefined) || (mode === 'response' && before.format !== undefined)) {
       differences.push(`${location}: format became incompatible for ${mode}`);
@@ -103,6 +132,10 @@ function compareSchema(beforeDocument, afterDocument, beforeInput, afterInput, m
       if (beforeMaximum !== undefined && (afterMaximum === undefined || afterMaximum > beforeMaximum)) differences.push(`${location}: ${maximumKey} response guarantee was widened`);
     }
   }
+  const beforeUniqueItems = before.uniqueItems === true;
+  const afterUniqueItems = after.uniqueItems === true;
+  if (mode === 'request' && !beforeUniqueItems && afterUniqueItems) differences.push(`${location}: uniqueItems narrowed request values`);
+  if (mode === 'response' && beforeUniqueItems && !afterUniqueItems) differences.push(`${location}: uniqueItems response guarantee was removed`);
 
   const beforeRequired = values(before.required);
   const afterRequired = values(after.required);
@@ -133,8 +166,9 @@ function compareSchema(beforeDocument, afterDocument, beforeInput, afterInput, m
     } else if (beforeItems.length !== afterItems.length) {
       differences.push(`${location}.${key}: exclusive alternatives changed`);
     }
-    for (let index = 0; index < Math.min(beforeItems.length, afterItems.length); index += 1) {
-      compareSchema(beforeDocument, afterDocument, beforeItems[index], afterItems[index], mode, `${location}.${key}[${index}]`, differences, new Set(seenPairs));
+    const [unmatchedBefore, unmatchedAfter] = unmatchedSchemas(beforeItems, afterItems);
+    for (let index = 0; index < Math.min(unmatchedBefore.length, unmatchedAfter.length); index += 1) {
+      compareSchema(beforeDocument, afterDocument, unmatchedBefore[index], unmatchedAfter[index], mode, `${location}.${key}[${index}]`, differences, new Set(seenPairs));
     }
   }
 }
