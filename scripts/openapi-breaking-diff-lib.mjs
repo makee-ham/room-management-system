@@ -11,7 +11,6 @@ const resolveSchema = (document, schema, seen = new Set()) => {
 const values = (value) => new Set(value ?? []);
 const isSubset = (subset, superset) => [...subset].every((item) => superset.has(item));
 const normalizedType = (schema) => JSON.stringify(Array.isArray(schema?.type) ? [...schema.type].sort() : schema?.type ?? null);
-const composition = (schema) => JSON.stringify({ allOf: schema?.allOf, anyOf: schema?.anyOf, oneOf: schema?.oneOf, not: schema?.not });
 const hasKeyword = (schema, keyword) => schema && Object.hasOwn(schema, keyword);
 
 function compareSchema(beforeDocument, afterDocument, beforeInput, afterInput, mode, location, differences, seenPairs = new Set()) {
@@ -27,7 +26,6 @@ function compareSchema(beforeDocument, afterDocument, beforeInput, afterInput, m
   seenPairs.add(pairKey);
 
   if (normalizedType(before) !== normalizedType(after)) differences.push(`${location}: type changed from ${normalizedType(before)} to ${normalizedType(after)}`);
-  if (composition(before) !== composition(after)) differences.push(`${location}: composed schema changed`);
   if (before.format !== after.format) {
     if ((mode === 'request' && after.format !== undefined) || (mode === 'response' && before.format !== undefined)) {
       differences.push(`${location}: format became incompatible for ${mode}`);
@@ -38,10 +36,31 @@ function compareSchema(beforeDocument, afterDocument, beforeInput, afterInput, m
       differences.push(`${location}: pattern became incompatible for ${mode}`);
     }
   }
-  if (before.additionalProperties !== after.additionalProperties) {
-    if ((mode === 'request' && after.additionalProperties === false) || (mode === 'response' && before.additionalProperties === false)) {
-      differences.push(`${location}: additionalProperties compatibility changed`);
-    }
+  const beforeAdditional = hasKeyword(before, 'additionalProperties') ? before.additionalProperties : true;
+  const afterAdditional = hasKeyword(after, 'additionalProperties') ? after.additionalProperties : true;
+  if (mode === 'request') {
+    if (
+      (beforeAdditional === true && afterAdditional !== true) ||
+      (beforeAdditional !== false && afterAdditional === false)
+    ) differences.push(`${location}: additionalProperties narrowed for request`);
+  } else if (
+    (beforeAdditional === false && afterAdditional !== false) ||
+    (beforeAdditional !== true && beforeAdditional !== false && afterAdditional === true)
+  ) differences.push(`${location}: additionalProperties guarantee widened for response`);
+  if (
+    beforeAdditional && typeof beforeAdditional === 'object' &&
+    afterAdditional && typeof afterAdditional === 'object'
+  ) {
+    compareSchema(
+      beforeDocument,
+      afterDocument,
+      beforeAdditional,
+      afterAdditional,
+      mode,
+      `${location}.*`,
+      differences,
+      new Set(seenPairs),
+    );
   }
 
   const beforeHasEnum = hasKeyword(before, 'enum');
@@ -58,8 +77,20 @@ function compareSchema(beforeDocument, afterDocument, beforeInput, afterInput, m
     const compatible = mode === 'request' ? !afterHasConst : !beforeHasConst;
     if (!compatible) differences.push(`${location}: const became incompatible for ${mode}`);
   }
+  if (JSON.stringify(before.not) !== JSON.stringify(after.not)) {
+    if ((mode === 'request' && after.not !== undefined) || (mode === 'response' && before.not !== undefined)) {
+      differences.push(`${location}: not constraint became incompatible for ${mode}`);
+    }
+  }
 
-  for (const [minimumKey, maximumKey] of [['minimum', 'maximum'], ['minLength', 'maxLength'], ['minItems', 'maxItems']]) {
+  for (const [minimumKey, maximumKey] of [
+    ['minimum', 'maximum'],
+    ['exclusiveMinimum', 'exclusiveMaximum'],
+    ['minLength', 'maxLength'],
+    ['minItems', 'maxItems'],
+    ['minProperties', 'maxProperties'],
+    ['minContains', 'maxContains'],
+  ]) {
     const beforeMinimum = before[minimumKey];
     const afterMinimum = after[minimumKey];
     const beforeMaximum = before[maximumKey];
@@ -93,6 +124,15 @@ function compareSchema(beforeDocument, afterDocument, beforeInput, afterInput, m
   for (const key of ['allOf', 'anyOf', 'oneOf']) {
     const beforeItems = before[key] ?? [];
     const afterItems = after[key] ?? [];
+    if (key === 'allOf') {
+      if (mode === 'request' && afterItems.length > beforeItems.length) differences.push(`${location}.${key}: request constraints were added`);
+      if (mode === 'response' && afterItems.length < beforeItems.length) differences.push(`${location}.${key}: response guarantees were removed`);
+    } else if (key === 'anyOf') {
+      if (mode === 'request' && afterItems.length < beforeItems.length) differences.push(`${location}.${key}: request alternatives were removed`);
+      if (mode === 'response' && afterItems.length > beforeItems.length) differences.push(`${location}.${key}: response alternatives were added`);
+    } else if (beforeItems.length !== afterItems.length) {
+      differences.push(`${location}.${key}: exclusive alternatives changed`);
+    }
     for (let index = 0; index < Math.min(beforeItems.length, afterItems.length); index += 1) {
       compareSchema(beforeDocument, afterDocument, beforeItems[index], afterItems[index], mode, `${location}.${key}[${index}]`, differences, new Set(seenPairs));
     }

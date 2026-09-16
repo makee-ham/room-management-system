@@ -84,4 +84,36 @@ const reorderedTypeAfter = clone();
 reorderedTypeAfter.paths['/v1/items'].post.requestBody.content['application/json'].schema.properties.note.type = ['null', 'string'];
 assertCompatible(reorderedTypeBefore, reorderedTypeAfter, 'Reordering a type union');
 
+const requestAdditionalPropertiesBefore = clone();
+requestAdditionalPropertiesBefore.paths['/v1/items'].post.requestBody.content['application/json'].schema.additionalProperties = true;
+const requestAdditionalPropertiesAfter = structuredClone(requestAdditionalPropertiesBefore);
+requestAdditionalPropertiesAfter.paths['/v1/items'].post.requestBody.content['application/json'].schema.additionalProperties = { type: 'string' };
+if (!findBreakingChanges(requestAdditionalPropertiesBefore, requestAdditionalPropertiesAfter).some((difference) => difference.includes('additionalProperties narrowed for request'))) {
+  throw new Error('Narrowing request additionalProperties from true to a schema must be detected.');
+}
+
+const responseAdditionalPropertiesBefore = clone();
+responseAdditionalPropertiesBefore.paths['/v1/items'].post.responses['201'].content['application/json'].schema.additionalProperties = { type: 'string' };
+const responseAdditionalPropertiesAfter = structuredClone(responseAdditionalPropertiesBefore);
+responseAdditionalPropertiesAfter.paths['/v1/items'].post.responses['201'].content['application/json'].schema.additionalProperties = true;
+if (!findBreakingChanges(responseAdditionalPropertiesBefore, responseAdditionalPropertiesAfter).some((difference) => difference.includes('additionalProperties guarantee widened for response'))) {
+  throw new Error('Widening response additionalProperties from a schema to true must be detected.');
+}
+
+const exclusiveMinimumBefore = clone();
+exclusiveMinimumBefore.paths['/v1/items'].post.requestBody.content['application/json'].schema.properties.name = { type: 'number', exclusiveMinimum: 0 };
+const exclusiveMinimumAfter = structuredClone(exclusiveMinimumBefore);
+exclusiveMinimumAfter.paths['/v1/items'].post.requestBody.content['application/json'].schema.properties.name.exclusiveMinimum = 1;
+if (!findBreakingChanges(exclusiveMinimumBefore, exclusiveMinimumAfter).some((difference) => difference.includes('exclusiveMinimum was narrowed'))) {
+  throw new Error('Increasing a request exclusiveMinimum must be detected.');
+}
+
+const requestAnyOfBefore = clone();
+requestAnyOfBefore.paths['/v1/items'].post.requestBody.content['application/json'].schema.properties.name = {
+  anyOf: [{ type: 'string' }],
+};
+const requestAnyOfAfter = structuredClone(requestAnyOfBefore);
+requestAnyOfAfter.paths['/v1/items'].post.requestBody.content['application/json'].schema.properties.name.anyOf.push({ type: 'number' });
+assertCompatible(requestAnyOfBefore, requestAnyOfAfter, 'Adding a request anyOf alternative');
+
 process.stdout.write('OpenAPI 3.1 breaking-diff regression tests passed.\n');

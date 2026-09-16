@@ -59,10 +59,14 @@ const resolveRef = (schema, seen = new Set()) => {
   seen.add(schema.$ref);
   return resolveRef(schema.$ref.slice(2).split('/').reduce((value, key) => value[key], document), seen);
 };
-const operationParameters = ({ operation, pathItem }) => [
-  ...(pathItem.parameters ?? []),
-  ...(operation.parameters ?? []),
-].map((parameter) => resolveRef(parameter));
+const operationParameters = ({ operation, pathItem }) => {
+  const parameters = new Map();
+  for (const parameterInput of [...(pathItem.parameters ?? []), ...(operation.parameters ?? [])]) {
+    const parameter = resolveRef(parameterInput);
+    parameters.set(`${parameter.in}:${parameter.name}`, parameter);
+  }
+  return [...parameters.values()];
+};
 const assertExactOperationSet = (actualOperations, expectedIds, label) => {
   const actualIds = actualOperations.map(({ operation }) => operation.operationId).sort();
   const expected = [...expectedIds].sort();
@@ -76,6 +80,16 @@ const schemaHasProperty = (schema, property, seen = new Set()) => {
   if (!schema || typeof schema !== 'object') return false;
   if (schema.properties && Object.hasOwn(schema.properties, property)) return true;
   return ['allOf', 'anyOf', 'oneOf'].some((key) => schema[key]?.some((item) => schemaHasProperty(item, property, new Set(seen))));
+};
+const schemaRequiresProperty = (schema, property, seen = new Set()) => {
+  schema = resolveRef(schema, seen);
+  if (!schema || typeof schema !== 'object') return false;
+  if (schema.required?.includes(property)) return true;
+  if (schema.allOf?.some((item) => schemaRequiresProperty(item, property, new Set(seen)))) return true;
+  for (const key of ['anyOf', 'oneOf']) {
+    if (schema[key]?.length && schema[key].every((item) => schemaRequiresProperty(item, property, new Set(seen)))) return true;
+  }
+  return false;
 };
 
 const allowedWithoutIdempotency = new Set([
@@ -126,6 +140,10 @@ assertExactOperationSet(casOperations, [
   'startPayrollCycle',
   'submitAvailability',
 ], 'CAS');
+for (const { method, operation } of casOperations) {
+  const requestSchema = resolveRef(operation.requestBody)?.content?.['application/json']?.schema;
+  assert(schemaRequiresProperty(requestSchema, 'expectedVersion'), `${method.toUpperCase()} ${operation.operationId} must require expectedVersion.`);
+}
 
 const cursorOperations = operations.filter((entry) => operationParameters(entry).some((parameter) => parameter.name === 'cursor' && parameter.in === 'query'));
 assertExactOperationSet(cursorOperations, [
