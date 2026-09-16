@@ -416,10 +416,10 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 - 의도적인 로컬 데모 QA만 `RMS_RUNTIME_MODE=demo python3 scripts/serve.py --port 4174`로 실행한다.
 - 운영 대상은 Supabase project ref `aodikrxcczbogjpsjwjt`이며 다른 project ref와 섞인 URL·키는 거부한다.
 - 운영 모드는 기존 관리자·메이드 메인과 전체 역할별 내비게이션을 유지한다. 백엔드 `v0.3.0`의 계정·객실·예약·근무 가능일·청소·알림·개발자 상태 응답을 기존 카드와 목록에 표시하며 데모 값으로 대신하지 않는다.
-- 관리자는 예약 목록·등록·변경·취소·수동 체크아웃과 연박/추가 청소 요청, 객실 촛불·운영 차단·이슈·PIN 동기화 상태를 운영 API에 기록할 수 있다. 예약 고객명은 관리자 단건 조회에서만 현재 DOM에 두고 목록·URL·로그·웹 저장소에는 남기지 않는다. PIN 숫자 원문은 조회하거나 입력하지 않는다.
+- 관리자는 예약 목록·등록·변경·취소·수동 체크아웃과 연박/추가 청소 요청, 객실 촛불·운영 차단·이슈·PIN 동기화 상태를 운영 API에 기록할 수 있다. 예약 고객명은 관리자 단건 조회에서만 현재 DOM에 두고 목록·URL·로그·웹 저장소에는 남기지 않는다. 객실 PIN은 명시적 `보기`에서 한 객실·최대 30초만 메모리에 표시하고, `수정`은 서버 prepare/confirm/rollback 흐름과 현재 pin version을 사용한다.
 - 운영 객실은 기존 카탈로그의 타입·객실 순서를 그대로 사용한다. 관리자 `메이드`도 계정 표가 아니라 기존 네 탭과 주간 근무표·메이드 카드 구성을 유지하며, 실제 메이드 계정과 다음 주 가능일을 표시하고 변경 요청을 승인·반려한다. 메이드는 일요일 제출 창에서 최초/재제출하고, 마감 뒤에는 관리자 변경 요청을 보낸다.
 - 개발자는 운영 상태에서 Edge runtime, migration·RLS, scheduler와 계정·객실 요약을 읽고 계정 화면을 함께 사용한다. 설정 비밀값은 표시하지 않고 설정 여부만 보여 준다.
-- 청소 배정·현장 수행·attempt별 사진 슬롯·immutable submission·관리자 검수·앱 내부 알림은 운영 API에 연결한다. 주급·PIN 원문·외부 Web Push 전달은 별도 범위다. 객실 기준정보 변경은 안전한 `roomTypeId` 카탈로그 endpoint가 없어 ID를 추측하지 않고 잠근다.
+- 청소 배정·현장 수행·attempt별 사진 슬롯·immutable submission·관리자 검수·앱 내부 알림은 운영 API에 연결한다. 객실 PIN은 명시적 조회와 prepare/confirm/rollback 변경 흐름으로 연결하며, 주급·외부 Web Push 전달은 별도 범위다. 객실 기준정보 변경은 안전한 `roomTypeId` 카탈로그 endpoint가 없어 ID를 추측하지 않고 잠근다.
 - 전용 origin의 개인 기기에서는 `local`, 공용 기기에서는 `session`을 사용한다. 공유 `makee-ham.github.io` origin에는 운영 로그인 대신 자격 증명이 없는 데모 확인본만 배포한다. 브라우저 종료 뒤에도 운영 로그인을 안전하게 유지하려면 앱 전용 custom domain이 필요하다.
 - PWA 설치와 브라우저 알림 권한은 준비됐다. 앱 내부 알림은 `/v1/notifications`에서 읽고, 앱이 닫힌 동안의 실제 Web Push 전달 여부는 별도로 표현한다.
 - 공통 배포 계약은 `DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md`, 청소 흐름과 endpoint 매핑은 `DOCS/23_CLEANING_API_INTEGRATION.md`를 따른다. `node scripts/check-api-integration.mjs`와 `node scripts/generate-cleaning-client.mjs --production --check`는 운영 OpenAPI `0.3.0`, 109 paths / 117 operations을 읽기 전용으로 확인한다.
@@ -450,3 +450,5 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 로컬 서버와 Pages live 산출물의 `featureFlags.optionalCleaningWorkflow`는 true다. 운영 모드에서 API 실패 시 fixture로 전환하지 않는다. `WIREFRAME/cleaning-api.d.ts`는 운영 OpenAPI v0.3.0에서 생성하며 생성 파일을 직접 수정하지 않는다. 상세 endpoint·CAS·멱등·권한·오류 매핑은 `DOCS/23_CLEANING_API_INTEGRATION.md`를 따른다.
 
 검증은 `node scripts/check-workspace.mjs`, `node scripts/generate-cleaning-client.mjs --production --check`, Playwright가 설치된 Node 환경에서 `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-cleaning-workflow.mjs`를 사용한다. 브라우저 회귀는 업무 요청을 로컬 fixture로 가로채며 운영 mutation을 실행하지 않는다.
+
+운영 연결 뒤에도 UI 정본은 기존 와이어프레임이다. 관리자 오늘 화면의 네 상태 카드, 객실 목록의 열·PIN 관리·네 작업 버튼, 객실 상세, 청소의 다섯 탭과 단계형 배정 화면을 유지하고 API 객체를 그 자리에 투영한다. API에 없는 값은 fixture나 추정값으로 채우지 않고 `API 미제공` 또는 계약 부재 상태로 표시한다.

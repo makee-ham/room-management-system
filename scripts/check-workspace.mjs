@@ -2490,7 +2490,7 @@ for(const contract of [
   'const liveMaidNav=maidNav;',
   'function renderLiveAdminToday(){',
   "const LIVE_ROOM_TYPE_ORDER=Object.freeze(['standard','premium','oceanPremium','oceanFamily']);",
-  "const LIVE_ROOM_TYPE_LABELS=Object.freeze({standard:'스탠다드',premium:'프리미어',oceanPremium:'파셜 오션뷰 프리미어',oceanFamily:'파셜 오션뷰 패밀리 투룸'});",
+  "const LIVE_ROOM_TYPE_LABELS=Object.freeze({standard:'스탠다드',premium:'프리미어',oceanPremium:'파셜 오션뷰',oceanFamily:'패밀리 투룸'});",
   'catalogOrder=new Map(ROOM_CATALOG.map(([roomNo],index)=>[roomNo,index]))',
   'const typeTabs=LIVE_ROOM_TYPE_ORDER.map(',
   'function renderLiveMaids(){',
@@ -2519,15 +2519,29 @@ for(const contract of [
   if(!html.includes(contract))throw new Error(`Role-based production UI contract missing: ${contract}`);
 }
 const liveRoomRowSource=html.slice(html.indexOf('function liveRoomListRow'),html.indexOf('function renderLiveRooms'));
-if(liveRoomRowSource.includes('room-list-badges'))throw new Error('Production room rows expose secondary reason badges that the canonical room list hides.');
 for(const contract of [
   'allocationReady=room.allocationReady===true',
   'disabled aria-describedby=',
-  '현재 예약 없음',
-  '차단 사유를 해소한 뒤 등록 가능',
+  '체크인 <strong>일정 없음</strong>',
+  '체크아웃 <strong>일정 없음</strong>',
+  'room-list-badges',
+  'renderLiveRoomPinManager(room)',
+  "data-action=\"live-room-operations\"",
+  "data-action=\"open-live-cleaning-request\"",
+  "data-action=\"open-live-room-detail\"",
   '예약 등록 불가 · ${esc(reasonText)}',
 ]){
   if(!liveRoomRowSource.includes(contract))throw new Error(`Reservation allocation card guard missing: ${contract}`);
+}
+for(const contract of [
+  'function clearLivePinReveal(',
+  '/pin/reveal`,{method:\'POST\',body:{}}',
+  '/pin-changes/prepare`,{body:{pinDigits,expectedPinVersion:',
+  '/pin-changes/${encodeURIComponent(context.leaseId)}/${action}`',
+  'clearLivePageSecretsForHide(){',
+  'clearLivePinReveal();document.querySelectorAll',
+]){
+  if(!html.includes(contract))throw new Error(`Production room PIN contract missing: ${contract}`);
 }
 const liveReservationGuardSource=html.slice(html.indexOf('function liveReservationAvailableRooms'),html.indexOf('function openLiveCleaningRequest'));
 for(const contract of [
@@ -2601,6 +2615,9 @@ for(const contract of ['/v1/assignments/preview','/v1/assignments/commit-impact'
 }
 for(const contract of ['runLiveCleaningMutation','expectedImpactFingerprint','expectedPhotoRevision','clientSubmissionId','responseType===\'blob\'','handleLiveNotificationAction']){
   if(!html.includes(contract))throw new Error(`Cleaning live implementation contract missing: ${contract}`);
+}
+for(const contract of ['function liveCleaningTabButton','function renderLiveAdminAssignmentDashboard','class="assignment-page tab-panel"','오늘 배정','내일 배정','진행 중','검수 대상 목록','data-cleaning-planning','data-cleaning-assignments',"if(liveMode()){\n            state.cleaningTab=tab;"]){
+  if(!html.includes(contract))throw new Error(`Cleaning wireframe fidelity contract missing: ${contract}`);
 }
 for(const forbidden of ['function cleaningDemoSlots','||cleaningDemoSlots(','초기 촬영 구역은 데모입니다']){
   if(html.includes(forbidden))throw new Error(`Cleaning live implementation still contains an operational fixture fallback: ${forbidden}`);
