@@ -9,7 +9,7 @@
 | 구분 | exact commit | 의미 |
 |---|---|---|
 | 프런트 `main` | `8c1c14da93294a36ce5fc842143bf668ad9cf373` | 현재 배포 정본. 운영 `v0.2.0` 계약 검사면은 39 paths / 43 operations이고 실제 UI 호출면은 31 paths / 35 operations다. |
-| 프런트 `dev` | `a0d6c07f5bd6cc86e02b2644abc4addc414adfc5` | `main`보다 2 commit 앞선 차기 후보. 선택형 청소시간·미퇴실 사건 UI는 기능 플래그 OFF다. |
+| 프런트 `dev` | `c604acbccba886c851f91859bb77127189e6dc7a` | `main`보다 3 commit 앞선 차기 후보. 청소 배정·수행·사진·제출·검수·앱 내부 알림 운영 API 연결이 포함됐다. |
 | 백엔드 `dev` | `c32aa9eec3945334ddda956afc62cc92d801c410` | source OpenAPI `0.2.0`, 109 paths / 117 operations. source 제공을 production 활성화로 해석하지 않는다. |
 | 백엔드 `main` | `6604b2215e06b9e9ebf0b3138e3716a000c57ddb` | 예상 청소시간 선택화를 포함한 GitHub release source 정본이다. |
 
@@ -21,9 +21,9 @@
 |---|---|---|---|
 | 인증·계정·개발자 상태 | 소비 | 동일 | 제공 | 호환 |
 | 가능일·예약·객실 | 소비 | 동일 | 제공 | 호환. CAS·멱등 키·409 재조회 유지 |
-| 청소 템플릿·수행·미퇴실 사건 | 미소비 | 기능 플래그 OFF, intercepted fixture 검증 | 제공 | production 활성화 아님 |
-| 배정·사진·제출·검수 | 데모 | 일부 후보 외 미소비 | 제공 | generated client/adapter 연동 대기 |
-| 알림·Web Push | PWA shell/권한만 | 동일 | source 제공 | hosted provider와 실제 소비 별도 |
+| 청소 템플릿·수행·미퇴실 사건 | 미소비 | 운영 API 소비 | 제공 | `dev` 연동 완료, 운영 계정 hosted smoke 대기 |
+| 배정·사진·제출·검수 | 데모 | 운영 API 소비 | 제공 | `dev` 연동 완료, 사진 다중 컬렉션은 #180 대기 |
+| 알림·Web Push | PWA shell/권한만 | 앱 내부 알림 소비·Web Push 전달 별도 | source 제공 | 외부 push provider 활성화 별도 |
 | 주급·컴플레인 | 데모 | 동일 | 제공 | 연동 대기 |
 | PIN·Google Sheets | legacy 상태 기록만 | 신규 API 미소비 | source 제공 | 민감정보 경계 유지, hosted 활성화 별도 |
 | 검수 대기열 cursor | 미소비 | 미소비 | 백엔드 PR #176 후보 | 병합 뒤 generated client 갱신 대상 |
@@ -32,7 +32,7 @@
 
 ## 사진 슬롯 계약 결정과 전환 상태
 
-2026-09-16 사용자 결정과 [백엔드 Decision #179](https://github.com/wrongstory/room-management-system-backend/issues/179)에 따라 A안을 확정했다. 새 v8+ 퇴실 청소 template은 객실 타입별 총 9 / 10 / 12 / 14 슬롯, 필수 8 / 9 / 11 / 13 슬롯을 사용한다. required `tv-on`·`entry-storage`는 유지하고 중복 `entry-number`는 제외하며, 마지막 `extra-proof`만 선택·`maxPhotos: 10`이다. 기존 v7 template/진행 중 attempt/제출·검수 snapshot의 10 / 11 / 13 / 15 계약은 재작성하지 않는다.
+2026-09-16 사용자 결정과 [백엔드 Decision #179](https://github.com/wrongstory/room-management-system-backend/issues/179)에 따라 A안을 확정했다. 새 v8+ 퇴실 청소 template은 객실 타입별 총 9 / 10 / 12 / 14 슬롯, 필수 8 / 9 / 11 / 13 슬롯을 사용한다. required `tv-on`·`entry-storage`는 유지하고 중복 `entry-number`는 제외하며, 마지막 `extra-proof`만 선택·`maxPhotos: 10`이다. 프런트 데모의 pre-A v7과 백엔드의 `maxPhotos` 없는 pre-A v7 이상 template/진행 중 attempt/제출·검수 snapshot의 10 / 11 / 13 / 15 계약은 재작성하지 않는다.
 
 백엔드 #179 source 후보가 append-only v8 validator·publisher·OpenAPI를 구현하지만 운영 DB 적용과 template 재게시는 아직 아니다. 현재 백엔드는 슬롯당 current 사진 한 장 구조이므로 `extra-proof`의 실제 0~10장 추가·개별 삭제·제출 봉인은 [백엔드 #180](https://github.com/wrongstory/room-management-system-backend/issues/180)에서 완료한다. #180 전에는 이 UI fixture를 운영 API가 완전히 지원한다고 표시하거나 v8 운영 template을 게시하지 않는다.
 
@@ -61,7 +61,7 @@
 - 객실 단건 projection, 촛불 수량, 운영 차단, 객실 이슈, PIN 동기화 상태 기록을 연결했다. PIN 숫자 원문은 `v0.2.0` 계약에도 프런트에도 입력하지 않는다.
 - 개발자 기본 화면에 runtime·database·scheduler·계정/객실 요약을 연결했다. 설정은 `configured` 여부만 표시하고 값·길이·해시는 표시하지 않는다.
 - 관리자는 기존 `오늘·객실·간편 예약·청소·메이드·더보기`, 메이드는 기존 `내 업무·근무 일정·주급·더보기` 정보 구조를 그대로 사용한다.
-- 운영 API가 있는 화면은 기존 카드·목록 안에 실제 응답을 표시하고, 아직 endpoint가 없는 화면은 같은 내비게이션과 레이아웃 안에서 `API 연결 대기` 상태를 표시한다.
+- 운영 API가 있는 화면은 기존 카드·목록 안에 실제 응답을 표시한다. `dev@c604acb`부터 청소 배정·수행·사진·제출·검수·앱 내부 알림도 이 원칙으로 연결하며, 아직 endpoint가 없는 주급·컴플레인 등은 같은 내비게이션과 레이아웃 안에서 `API 연결 대기` 상태를 표시한다.
 - 객실 탭과 목록은 정본 순서 `전체 → 스탠다드 → 프리미어 → 파셜 오션뷰 프리미어 → 파셜 오션뷰 패밀리 투룸` 및 기존 객실 카탈로그 순서를 사용한다.
 - 관리자 `메이드`는 계정 목록으로 대체하지 않고 기존 `주간 근무표·근무 기록·주급 정산·컴플레인·벌점` 구조를 유지한다. 계정 API의 실제 메이드와 실제 가능일을 주간 표·카드에 표시하고, 배정·근무 이력·주급·컴플레인 값은 `API 연결 대기`로 둔다.
 - 개발자는 `운영 상태·계정·더보기`를 사용하고, 모든 역할은 서버가 반환한 역할 범위 안에서만 데이터와 작업을 볼 수 있다.
@@ -79,7 +79,7 @@
 
 ## 백엔드 source에는 있으나 현재 `main`이 소비하지 않는 범위
 
-현재 백엔드 source OpenAPI에는 청소 담당 배정·현장 수행·사진 업로드·검수, 주급, PIN 변경·단기 reveal, 알림함, Web Push 구독 endpoint가 있다. 그러나 프런트 `main`의 운영 adapter는 이를 소비하지 않으며, source 제공·production 배포·hosted provider 활성화도 서로 다른 단계다. 이 기능은 데모 화면을 운영 데이터처럼 보여 주지 않고 기존 역할별 화면 안에서 `API 연결 대기` 또는 기능 플래그 OFF 상태로 유지한다.
+현재 백엔드 source OpenAPI에는 청소 담당 배정·현장 수행·사진 업로드·검수, 주급, PIN 변경·단기 reveal, 알림함, Web Push 구독 endpoint가 있다. 프런트 `main`은 청소 운영 adapter를 아직 소비하지 않지만 `dev@c604acb`는 배정·수행·사진·제출·검수·앱 내부 알림을 연결했다. 주급·컴플레인·PIN 원문·외부 Web Push 전달은 계속 별도 범위이며, source 제공·production 배포·hosted provider 활성화도 서로 다른 단계다.
 
 객실 기준정보 변경은 `roomTypeId`가 필요하지만 `v0.2.0`에는 프런트가 안전하게 선택할 객실 유형 ID 카탈로그 endpoint가 없다. 객실 유형 ID를 추측하지 않으며 카탈로그 계약이 추가될 때까지 운영 화면에서 기준정보 mutation을 노출하지 않는다. 운영 차단·객실 이슈 해제도 목록 endpoint가 없으므로 현재 브라우저 세션에서 생성 응답의 `entityId`를 받은 건만 바로 해제할 수 있다.
 

@@ -139,7 +139,7 @@ def load_runtime_config() -> dict[str, object]:
         "supabaseUrl": values["supabaseUrl"].rstrip("/"),
         "supabasePublishableKey": values["supabasePublishableKey"],
         "sessionPersistence": persistence,
-        "featureFlags": {"optionalCleaningWorkflow": False},
+        "featureFlags": {"optionalCleaningWorkflow": True},
     }
 
 
