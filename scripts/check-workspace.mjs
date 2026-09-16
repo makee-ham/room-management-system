@@ -18,11 +18,17 @@ const required = [
   'DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md',
   'DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md',
   'DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md',
+  'DOCS/24_RESERVATION_ARRIVAL_ROOM_MOVE_BACKEND_HANDOFF.md',
   'DOCS/WIREFRAME_TASK_PROMPT.md',
   'DOCS/22_OPTIONAL_CLEANING_DURATION_FRONTEND_RELEASE.md',
+  'DOCS/24_RESERVATION_ARRIVAL_ROOM_MOVE_BACKEND_HANDOFF.md',
   'WIREFRAME/cleaning-api.d.ts',
   'scripts/generate-cleaning-client.mjs',
   'scripts/check-cleaning-workflow.mjs',
+  'scripts/check-reservation-arrival-room-move.mjs',
+  'WIREFRAME/QA/screenshots/admin-room-arrival-status-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-arrival-status-1440.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-room-move-390.png',
   'WIREFRAME/QA/screenshots/optional-duration-template-390.png',
   'WIREFRAME/QA/screenshots/optional-duration-template-1440.png',
   'WIREFRAME/QA/screenshots/optional-duration-maid-blocked-390.png',
@@ -142,6 +148,9 @@ if (missing.length) {
 }
 
 const requiredPngEvidence = [
+  'WIREFRAME/QA/screenshots/admin-room-arrival-status-390.png',
+  'WIREFRAME/QA/screenshots/admin-room-arrival-status-1440.png',
+  'WIREFRAME/QA/screenshots/admin-reservation-room-move-390.png',
   'WIREFRAME/QA/screenshots/live-api-login-1440.png',
   'WIREFRAME/QA/screenshots/live-api-login-390.png',
   'WIREFRAME/QA/screenshots/admin-assignment-room-link-1440.png',
@@ -655,6 +664,8 @@ for (const contract of [
   "key:'blocked',tone:'red',status:'배정 불가'",
   "key:'cleaning',tone:'amber',status:'청소 필요'",
   "key:'occupied',tone:'neutral',status:'투숙 중'",
+  "key:'arrival',tone:'blue',status:'입실 예정'",
+  "key:'reserved',tone:'neutral',status:'예약 있음'",
   "key:'available',tone:'green',status:'배정 가능'",
   'roomCleaningStageLabel(job)',
   'cardReservationStatus(no)',
@@ -664,17 +675,17 @@ for (const contract of [
   if (!html.includes(contract)) throw new Error(`Four-state room card contract missing: ${contract}`);
 }
 const roomPresentationSource = html.slice(html.indexOf('function roomPresentation(no)'), html.indexOf('function renderPinRow', html.indexOf('function roomPresentation(no)')));
-const roomPresentationOrder = ["if(blockers.length)return", "if(room.occupancy==='occupied')return", "if(cleaning)return", "key:'available'"]
+const roomPresentationOrder = ["if(blockers.length)return", "if(room.occupancy==='occupied')return", "if(lifecycle.key==='arrival')return", "if(lifecycle.key==='reserved')return", "if(cleaning)return", "key:'available'"]
   .map((marker) => roomPresentationSource.indexOf(marker));
 if (roomPresentationOrder.some((index) => index < 0) || roomPresentationOrder.some((index, position) => position && index <= roomPresentationOrder[position - 1])) {
-  throw new Error(`Room card priority must remain blocked > occupied (with subordinate cleaning) > cleaning > available: ${roomPresentationOrder.join(', ')}`);
+  throw new Error(`Room card priority must remain blocked > occupied > arrival > reserved > cleaning > available: ${roomPresentationOrder.join(', ')}`);
 }
 for (const contract of [
   'function roomCleaningControl(no)',
   "label:'청소 요청'",
   "label:'청소 취소'",
   "confirmLabel:request?'청소 취소':'청소 대기열에 넣기'",
-  "if(state.roomFilter==='occupied')return r.occupancy==='occupied'",
+  "if(['occupied','reserved','arrival','available','blocked'].includes(state.roomFilter))return p.key===state.roomFilter",
   "if(state.roomFilter==='cleaning')return roomNeedsCleaningNow(r.no)",
   'data-room-cleaning-control=\"${no}\"',
   "청소 필요 · ${p.cleaningKind||'청소'}",
@@ -1959,10 +1970,11 @@ console.log('Manual room-cleaning toggle static contracts: passed');
 for (const contract of [
   'function operationalMoment(targetState=state)',
   'function reservationAtOperationalMoment(roomNo,targetState=state)',
+  'function roomReservationLifecycle(roomNo,targetState=state)',
   'function latestCheckedOutReservationForRoom(roomNo,targetState=state)',
   'function roomCheckoutCleaningDue(no,targetState=state)',
   "reservation.checkInAt<=moment&&moment<reservation.checkOutAt",
-  '입실·퇴실은 예약 시각에 자동 반영됩니다.',
+  '예약 상태는 체크인 전날부터 표시됩니다.',
 ]) {
   if (!html.includes(contract)) throw new Error(`Automatic occupancy contract missing: ${contract}`);
 }

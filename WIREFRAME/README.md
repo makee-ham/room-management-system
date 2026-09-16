@@ -452,3 +452,12 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 검증은 `node scripts/check-workspace.mjs`, `node scripts/generate-cleaning-client.mjs --production --check`, Playwright가 설치된 Node 환경에서 `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-cleaning-workflow.mjs`를 사용한다. 브라우저 회귀는 업무 요청을 로컬 fixture로 가로채며 운영 mutation을 실행하지 않는다.
 
 운영 연결 뒤에도 UI 정본은 기존 와이어프레임이다. 관리자 오늘 화면의 네 상태 카드, 객실 목록의 열·PIN 관리·네 작업 버튼, 객실 상세, 청소의 다섯 탭과 단계형 배정 화면을 유지하고 API 객체를 그 자리에 투영한다. API에 없는 값은 fixture나 추정값으로 채우지 않고 `API 미제공` 또는 계약 부재 상태로 표시한다.
+
+## 예약 임박 상태·객실 변경 (2026-09-16)
+
+- 객실 목록은 체크인 D-1에 `예약 있음`, D-day 예정 시각 전에 `입실 예정`, 예정 시각부터 `투숙 중`을 큰 상태로 표시한다. D+2 이후 미래 예약은 현재 준비 상태를 덮지 않는다.
+- 큰 상태 우선순위는 `배정 불가 → 투숙 중 → 입실 예정 → 예약 있음 → 청소 필요 → 배정 가능`이며 청소·차단·예약 임박 정보는 필요한 경우 보조 배지로 남긴다.
+- 데모 예약 상세에는 체크인 전 `예약 객실 변경`, 체크인 뒤 `방 이동`을 제공한다. 예약 전 변경은 예약 ID를 유지하고, 투숙 중 이동은 원 객실 구간을 보존한 채 새 구간을 만든다.
+- 투숙 중 이동 뒤 원 객실은 공실·청소 필요, 새 객실은 투숙 중으로 계산한다.
+- 운영 모드에는 아직 객실 변경 API가 없어 같은 입력 자리를 잠그고 `객실 변경·방 이동 API 미제공`으로 표시한다. 백엔드 계약은 `DOCS/24_RESERVATION_ARRIVAL_ROOM_MOVE_BACKEND_HANDOFF.md`를 따른다.
+- 회귀 검증은 Playwright가 있는 Node 환경에서 `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-reservation-arrival-room-move.mjs`로 실행한다.

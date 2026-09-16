@@ -1653,3 +1653,26 @@ Browser 플러그인이 제공되지 않아 앱 번들 Node 패키지와 설치�
 - `QA/screenshots/live-wireframe-cleaning-1440.png`
 
 승인된 운영 계정이 없어 protected production 예약·배정 데이터와 실제 mutation은 hosted 검증하지 않았다. 배포 뒤에는 운영 mutation 없이 새 정적 자산, 런타임 live 설정, 간편 예약 표와 청소 배정 화면의 읽기 렌더만 확인한다.
+
+## 2026-09-16 · 예약 있음·입실 예정·객실 변경
+
+Browser 플러그인이 제공되지 않아 앱 번들 Playwright와 설치된 Chrome 152.0.7977.83을 사용했다. `RMS_RUNTIME_MODE=demo` 로컬 서버에서만 상태와 mutation을 실행했으며 운영 API에는 요청하지 않았다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| D-1 `예약 있음` → D-day 시각 전 `입실 예정` → 시각 도달 `투숙 중` | 통과 |
+| D+2 이후 미래 예약이 현재 주 상태를 점유하지 않음 | 통과 |
+| 객실 목록·상태 필터·큰 상태와 청소/차단 보조 배지 | 통과 |
+| 체크인 전 객실 변경 시 예약 ID·일정 유지, 대상 전체 기간 겹침 재검증 | 통과 |
+| 투숙 중 방 이동 시 원 객실 구간 보존, 새 구간 생성, 원 객실 청소 필요, 새 객실 투숙 중 | 통과 |
+| 예약 상세 → 객실 변경 확인 모달, 키보드 Escape 닫기 | 통과 |
+| 360·390·768·1440px 문서 가로 넘침 0px, 보이는 주요 객실 버튼 44×44px 이상 | 통과 |
+| 앱 JavaScript error·console warning/error | 0건 |
+
+대표 PNG를 `view_image`로 확인했다.
+
+- `QA/screenshots/admin-room-arrival-status-390.png`
+- `QA/screenshots/admin-room-arrival-status-1440.png`
+- `QA/screenshots/admin-reservation-room-move-390.png`
+
+운영 API에는 예약 객실 변경·투숙 중 방 이동 endpoint와 예약 임박/readiness 분리 조회 필드가 아직 없다. 운영 모드는 성공을 흉내 내지 않고 `API 미제공`으로 잠그며, 구현 요구사항은 `DOCS/24_RESERVATION_ARRIVAL_ROOM_MOVE_BACKEND_HANDOFF.md`에 기록했다. 실제 운영 계정·DB 동시성·PIN lease 폐기·outbox 알림은 백엔드 구현 뒤 별도 검증해야 한다.
