@@ -1629,3 +1629,27 @@ Browser 플러그인이 제공되지 않아 앱 번들 Node 패키지와 설치�
 - `QA/screenshots/live-wireframe-inspection-detail-1440.png`
 
 승인된 운영 계정이 없어 protected 운영 GET, 실제 PIN·객실·청소 mutation, production 사진 content는 hosted 검증하지 않았다. PR 병합과 배포 뒤에는 임의 mutation 없이 역할별 읽기 smoke와 정적 자산 반영만 확인해야 한다.
+
+## 2026-09-16 · 현재 시각 기준 객실 상태 분기
+
+백엔드 `dev@fb50775289b14f16b27679af471e282504b5f5f6`의 `RoomProjection.evaluatedAt`과 `reservationPhase=none|upcoming|current` 계약을 사용해 객실 현황의 대표 상태를 다섯 가지로 분리했다. 브라우저 시각으로 예약 상태를 다시 추정하지 않고 한 응답 snapshot의 서버 기준 시각을 사용한다.
+
+| 회귀 시나리오 | 기대 결과 | 결과 |
+| --- | --- | --- |
+| 현재·미래 예약이 같은 객실에 있고 legacy `occupied=false` | 서버 `evaluatedAt` 구간의 현재 예약을 표시하고 `투숙 중` | 통과 |
+| 활성 청소 의무 | `청소 필요` | 통과 |
+| 미래 체크인 예약과 planned checkout target | `투숙 예정`, 현재 청소 필요로 집계하지 않음 | 통과 |
+| 현재 배정 조건 충족 | `배정 가능` | 통과 |
+| 현재 운영·정보 확인 차단 | `배정 불가` | 통과 |
+| 다섯 상태 요약과 필터 | 객실별 정확히 한 상태, 중복 집계 0건, `투숙 예정` 요약 버튼이 해당 1실 필터로 이동 | 통과 |
+| 360/390/768/1440px | 가로 넘침 없음 | 통과 |
+| 앱 JavaScript error, console warning/error | 0건 | 통과 |
+
+기존 청소관리 전체 browser 회귀도 함께 실행해 오늘 요약 다섯 버튼, 객실 카드·PIN·예약·운영·청소·상세 행동, 역할·멱등·민감정보 비노출 계약이 유지되는지 확인했다.
+
+대표 PNG:
+
+- `QA/screenshots/live-room-current-status-390.png`
+- `QA/screenshots/live-room-current-status-1440.png`
+
+미검증: 이 후보는 아직 운영 Vercel에 배포하지 않았고, production API도 `evaluatedAt`·`reservationPhase`를 제공하는 백엔드 source로 승격하기 전이다. 운영 배포는 백엔드 migration/API 선행 후 프런트 산출물을 배포하고, 역할별 읽기 smoke에서 실제 예약 시각 분기를 다시 확인해야 한다.

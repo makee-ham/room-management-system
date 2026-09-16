@@ -2,15 +2,15 @@
 
 작성일: 2026-08-31
 
-최종 갱신: 2026-09-16 · 프런트 `main@c0657e2`·`dev@2c2675b`와 백엔드 `v0.3.0` (109 paths / 117 operations) 재대조
+최종 갱신: 2026-09-16 · 프런트 운영 통합 기준 `70935dc`와 백엔드 `dev@fb50775` (109 paths / 117 operations) 재대조
 
 ## 계약 snapshot과 문서 성격
 
 | 구분 | exact commit | 의미 |
 |---|---|---|
-| 프런트 `main` | `c0657e2680355e4132424f35498c6dbb1708003c` | 현재 배포 정본. 운영 청소 `v0.3.0` 연결과 와이어프레임 UI를 포함하며 계약 검사는 필수 63 paths / 68 operations를 확인한다. 이 수치는 실제 UI 호출 수가 아니라 운영 진단 endpoint까지 포함한 검증 범위다. |
-| 프런트 `dev` | `2c2675b3f132bdbff77bfceaf204641e10e37f12` | 현재 `main`의 운영 청소 연결을 바탕으로 객실·예약·운영·PIN·청소·검수 상세 화면을 와이어프레임 정본에 맞춘 차기 후보다. |
-| 백엔드 `dev` | `ff4dd507ee2b9eefbc7d489c390b857d4fa5b1e2` | source OpenAPI `0.3.0`, 109 paths / 117 operations. #179 A안 후보는 별도 PR이며 production 활성화로 해석하지 않는다. |
+| 프런트 `main` | `c0657e2680355e4132424f35498c6dbb1708003c` | GitHub 기본 브랜치의 마지막 통합 지점. 수동 Vercel 배포 산출물과 정확히 같은 source라고 간주하지 않는다. |
+| 프런트 운영 통합선 | `70935dc322045586adda0a4fc8a3dbc787fe806f` | 현재 수동 Vercel 산출물과 가장 가까운 운영 API UI 기준. 객실·예약·운영·PIN·청소·검수 상세 화면을 포함하며, 현재 객실 상태 보완 브랜치의 기준 commit이다. |
+| 백엔드 `dev` | `fb50775289b14f16b27679af471e282504b5f5f6` | source OpenAPI `0.3.0`, 109 paths / 117 operations. `evaluatedAt`과 `reservationPhase`를 포함한 현재 객실 상태 projection이 source/dev에 통합됐다. production 활성화로 해석하지 않는다. |
 | 백엔드 `main` | `a12595edf68644b94215c4792e0d3aadd64772c6` | production 56 migrations·API v16·v7 템플릿 게시 결과를 문서화한 GitHub 정본이다. runtime source identity는 `6604b2215e06b9e9ebf0b3138e3716a000c57ddb`다. |
 
 이 문서는 시점이 붙은 운영 연동 기록이다. 제품 정책 정본이나 생성 client 자체가 아니며, runtime OpenAPI와 exact source commit이 다르면 runtime을 우선하고 차이를 Issue로 기록한다. generated client와 breaking diff CI는 백엔드 [#173](https://github.com/wrongstory/room-management-system-backend/issues/173), 전체 adapter 전환과 권한별 browser E2E는 [#13](https://github.com/wrongstory/room-management-system-backend/issues/13)에서 진행한다.
@@ -61,7 +61,7 @@
 - 객실 단건 projection, 촛불 수량, 운영 차단, 객실 이슈, PIN 동기화 상태 기록을 연결했다. v0.3.0의 명시적 PIN reveal과 prepare/confirm/rollback 변경 흐름도 기존 객실 카드의 `보기·수정` UI에 연결하며 원문은 한 객실·최대 30초 메모리에만 둔다.
 - 개발자 기본 화면에 runtime·database·scheduler·계정/객실 요약을 연결했다. 설정은 `configured` 여부만 표시하고 값·길이·해시는 표시하지 않는다.
 - 관리자는 기존 `오늘·객실·간편 예약·청소·메이드·더보기`, 메이드는 기존 `내 업무·근무 일정·주급·더보기` 정보 구조를 그대로 사용한다.
-- 운영 API가 있는 화면은 기존 카드·목록 안에 실제 응답을 표시한다. 현재 `main@c0657e2`가 청소 배정·수행·사진·제출·검수·앱 내부 알림을 운영 연결했고, 최신 `dev@2c2675b`는 그 연결을 유지하면서 상세 화면을 와이어프레임 정보 구조에 맞췄다. 아직 endpoint가 없는 화면은 같은 내비게이션과 레이아웃 안에서 `API 연결 대기` 상태를 표시한다.
+- 운영 API가 있는 화면은 기존 카드·목록 안에 실제 응답을 표시한다. 수동 Vercel 산출물과 가장 가까운 운영 통합 기준은 `70935dc`이며, 현재 객실 상태 보완 후보는 이 기준에서 분기했다. 아직 endpoint가 없는 화면은 같은 내비게이션과 레이아웃 안에서 `API 연결 대기` 상태를 표시한다.
 - 객실 탭과 목록은 최신 와이어프레임 정본 순서 `전체 → 스탠다드 → 프리미어 → 파셜 오션뷰 → 패밀리 투룸` 및 기존 객실 카탈로그 순서를 사용한다.
 - 관리자 `메이드`는 계정 목록으로 대체하지 않고 기존 `주간 근무표·근무 기록·주급 정산·컴플레인·벌점` 구조를 유지한다. 계정 API의 실제 메이드와 실제 가능일을 주간 표·카드에 표시하고, 배정·근무 이력·주급·컴플레인 값은 `API 연결 대기`로 둔다.
 - 개발자는 `운영 상태·계정·더보기`를 사용하고, 모든 역할은 서버가 반환한 역할 범위 안에서만 데이터와 작업을 볼 수 있다.
@@ -70,6 +70,11 @@
 - PWA manifest, 아이콘, 서비스 워커, 설치 안내, 브라우저 알림 권한 요청을 추가했다.
 
 ## 예약 배정 차단 계약
+
+- `GET /v1/rooms`의 모든 객실은 같은 서버 snapshot 시각 `evaluatedAt`을 사용한다. 프런트는 브라우저 시각으로 현재 상태를 다시 추정하지 않고 서버가 계산한 `reservationPhase=none|upcoming|current`를 사용한다.
+- 대표 상태는 `current 또는 occupied → 투숙 중`, `cleaningRequired → 청소 필요`, `upcoming → 투숙 예정`, `allocationReady → 배정 가능`, 나머지 `배정 불가` 순서로 정확히 하나를 고른다. 각 독립 상태 축과 `reasonCodes`는 보존한다.
+- 미래 예약의 planned checkout target은 일정·청소 계획으로 유지하되 현재 `cleaningRequired`로 표시하지 않는다. 실제 체크아웃 또는 현재 청소 의무가 활성화된 뒤에만 `청소 필요`로 표시한다.
+- 오늘 요약과 객실 필터의 다섯 상태 수치는 위 대표 상태 기준으로 서로 겹치지 않게 집계한다.
 
 - 예약 등록 UI는 `GET /v1/rooms`의 `allocationReady`, `allocationBlocked`, `reasonCodes`, `pinSyncStatus`, `dataStatus`, `stateVersion`을 함께 사용한다. `allocationReady === true`인 객실만 등록 버튼과 option을 활성화한다.
 - `DATA_UNCONFIRMED`는 `pinSyncStatus`와 `dataStatus`를 함께 확인해 `PIN 동기화 미설정`, `PIN 불일치`, `객실 기준정보 미확인`을 중복 없이 모두 표시한다.

@@ -282,6 +282,16 @@ async function checkOpenApi(apiBaseUrl) {
   );
   assert(Object.keys(document.paths ?? {}).length === 109, "OpenAPI path 수가 v0.3.0의 109개와 다릅니다.");
   assert(operationCount === 117, "OpenAPI operation 수가 v0.3.0의 117개와 다릅니다.");
+  const roomProjection = document.components?.schemas?.RoomProjection;
+  assert(roomProjection?.properties?.evaluatedAt?.format === "date-time", "RoomProjection.evaluatedAt 계약이 없습니다.");
+  assert(
+    JSON.stringify(roomProjection?.properties?.reservationPhase?.enum) === JSON.stringify(["none", "upcoming", "current"]),
+    "RoomProjection.reservationPhase 계약이 none/upcoming/current와 다릅니다.",
+  );
+  assert(
+    roomProjection?.required?.includes("evaluatedAt") && roomProjection.required.includes("reservationPhase"),
+    "RoomProjection의 현재 시각 상태 필드가 required가 아닙니다.",
+  );
 }
 
 async function checkCors(apiBaseUrl) {
@@ -326,7 +336,7 @@ async function main() {
     console.log("[ok] 운영 health 계약을 확인했습니다.");
 
     await checkOpenApi(apiBaseUrl);
-    console.log("[ok] OpenAPI 0.3.0의 109개 path와 117개 operation을 확인했습니다.");
+    console.log("[ok] OpenAPI 0.3.0의 109개 path, 117개 operation과 현재 객실 상태 계약을 확인했습니다.");
 
   } catch (error) {
     console.error(`[fail] ${error instanceof Error ? error.message : "API 계약 검사에 실패했습니다."}`);

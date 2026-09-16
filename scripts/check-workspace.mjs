@@ -23,6 +23,7 @@ const required = [
   'WIREFRAME/cleaning-api.d.ts',
   'scripts/generate-cleaning-client.mjs',
   'scripts/check-cleaning-workflow.mjs',
+  'scripts/check-room-current-status.mjs',
   'WIREFRAME/QA/screenshots/optional-duration-template-390.png',
   'WIREFRAME/QA/screenshots/optional-duration-template-1440.png',
   'WIREFRAME/QA/screenshots/optional-duration-maid-blocked-390.png',
@@ -2521,6 +2522,7 @@ for(const contract of [
 const liveRoomRowSource=html.slice(html.indexOf('function liveRoomListRow'),html.indexOf('function renderLiveRooms'));
 for(const contract of [
   'allocationReady=room.allocationReady===true',
+  "primary.key==='upcoming'?'calendar'",
   'disabled aria-describedby=',
   '체크인 <strong>일정 없음</strong>',
   '체크아웃 <strong>일정 없음</strong>',
@@ -2532,6 +2534,34 @@ for(const contract of [
   '예약 등록 불가 · ${esc(reasonText)}',
 ]){
   if(!liveRoomRowSource.includes(contract))throw new Error(`Reservation allocation card guard missing: ${contract}`);
+}
+const liveRoomStatusSource=html.slice(html.indexOf('function liveRoomReservationPhase'),html.indexOf('function renderLiveRemoteState'));
+for(const contract of [
+  "['none','upcoming','current'].includes(room?.reservationPhase)",
+  "reservationPhase==='current'||room?.occupied===true",
+  "room?.cleaningRequired===true",
+  "reservationPhase==='upcoming'",
+  "room?.allocationReady===true",
+  "{upcoming:0,occupied:0,cleaning:0,ready:0,blocked:0}",
+  "liveRoomPrimary(room).key===filter",
+]){
+  if(!liveRoomStatusSource.includes(contract))throw new Error(`Current room status mapper contract missing: ${contract}`);
+}
+for(const contract of [
+  "evaluatedAt=Date.parse(room?.evaluatedAt||'')",
+  "phase==='current'",
+  "phase==='upcoming'",
+]){
+  if(!html.includes(contract))throw new Error(`Server-snapshot reservation selection contract missing: ${contract}`);
+}
+for(const contract of [
+  'data-filter="upcoming"',
+  "['upcoming','occupied','cleaning','available','blocked'].includes(filter)",
+  '<span>투숙 예정</span><strong>${counts.upcoming}</strong>',
+  '<option value="upcoming"',
+  '상태 기준 ${esc(liveTimeLabel(items[0]?.evaluatedAt||slice.lastSuccessAt))}',
+]){
+  if(!html.includes(contract))throw new Error(`Current room status UI contract missing: ${contract}`);
 }
 for(const contract of [
   'function clearLivePinReveal(',
