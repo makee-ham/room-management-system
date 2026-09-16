@@ -1600,3 +1600,32 @@ Browser 플러그인이 제공되지 않아 앱 번들 Node 패키지와 설치�
 
 - 승인된 운영 계정이 없어 protected 운영 GET과 실제 mutation은 실행하지 않았다. production 배포 화면의 변경 반영은 PR 병합·배포 뒤 읽기 smoke가 필요하다.
 - 완료 청소 최근 7일 전용 목록과 청소요금은 현재 OpenAPI에 없어 데모 값으로 대체하지 않고 각각 계약 부재와 `API 미제공`으로 표시한다.
+
+## 2026-09-16 · 운영 팝업·세부페이지 와이어프레임 완전 정합
+
+운영 API 데이터를 축약형 카드·모달에 맞추던 잔여 화면을 제거하고, 기존 와이어프레임의 화면 구조 위에만 서버 값을 투영하도록 다시 비교했다. Browser 플러그인이 제공되지 않아 앱 번들 Playwright와 설치된 Chrome 152.0.7977.83을 사용했다. 모든 업무 mutation은 로컬 OpenAPI 형태 fixture로 가로챘고 운영 데이터는 변경하지 않았다.
+
+| 비교 지점 | 와이어프레임 정합 결과 |
+| --- | --- |
+| 객실 전체 상세 | 목록 복귀, 객실 기본정보, 현재 상태, 예약·입퇴실, 현재 투숙, 촛불, 특이사항, 청소 작업, 운영 상태, 사건 타임라인, 하단 고정 행동 순서로 복원 |
+| 예약 팝업 | 객실·인원 첫 행, 장기숙박 자리, 번호가 붙은 체크인·체크아웃, 기간 안내, 고객명, 하단 취소·저장 구조 유지 |
+| 운영 상태 팝업 | 운영 중지 안내, 대체 객실, 사유, 하단 취소·확정 구조 유지. 계약이 없는 입력은 같은 자리에서 `API 미제공`으로 잠금 |
+| PIN 수정 팝업 | 4자리 직접 입력·무작위 생성·검토의 기존 하단 시트 구조에 prepare→confirm/rollback 계약 연결 |
+| 객실별 청소 상세 | 진행 탭으로 우회하지 않고 기존 청소 상세 전체 페이지와 하단 주 행동으로 진입 |
+| 관리자 제출 검수 | 축약 모달을 없애고 제출 요약·사진·특이사항·판정·하단 승인/반려가 있는 기존 전체 페이지로 진입 |
+
+360·390·768·1440px에서 객실 상세의 정보 순서와 2열 확장, 팝업 폭·스크롤·44px 이상 행동, 객실별 청소 상세와 제출 검수 상세의 가로 넘침을 확인했다. 객실 카드 네 버튼은 각각 기존 목적 화면만 열었고, 앱 JavaScript error와 console warning/error는 0건이었다. token·PIN·고객 PII sentinel은 console과 URL에 나타나지 않았다.
+
+대표 PNG:
+
+- `QA/screenshots/live-wireframe-room-detail-390.png`
+- `QA/screenshots/live-wireframe-room-detail-1440.png`
+- `QA/screenshots/live-wireframe-reservation-modal-390.png`
+- `QA/screenshots/live-wireframe-reservation-modal-1440.png`
+- `QA/screenshots/live-wireframe-operation-modal-390.png`
+- `QA/screenshots/live-wireframe-operation-modal-1440.png`
+- `QA/screenshots/live-wireframe-pin-sheet-390.png`
+- `QA/screenshots/live-wireframe-room-cleaning-detail-1440.png`
+- `QA/screenshots/live-wireframe-inspection-detail-1440.png`
+
+승인된 운영 계정이 없어 protected 운영 GET, 실제 PIN·객실·청소 mutation, production 사진 content는 hosted 검증하지 않았다. PR 병합과 배포 뒤에는 임의 mutation 없이 역할별 읽기 smoke와 정적 자산 반영만 확인해야 한다.
