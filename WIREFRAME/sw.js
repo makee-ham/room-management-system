@@ -266,7 +266,7 @@ self.addEventListener("notificationclick", (event) => {
 });
 
 self.addEventListener("pushsubscriptionchange", (event) => {
-  // The backend does not expose a subscription endpoint yet. The page can
-  // request a fresh subscription after receiving this message in a later phase.
+  // The page obtains a fresh session-bound proof before rotating the browser
+  // subscription through the authenticated backend endpoint.
   event.waitUntil(notifyClients({ type: "PUSH_SUBSCRIPTION_CHANGE_REQUIRED" }));
 });

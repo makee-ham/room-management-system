@@ -427,6 +427,356 @@ export type CleaningTemplateRoomTypeState = {
   currentPublished: PublishedCleaningTemplate | null;
 };
 
+export type PayrollAdjustment = {
+  adjustmentId: string;
+  maidProfileId: string;
+  bookVersion: number;
+  availableWeekStart: string;
+  amount: number;
+  currency: "KRW";
+  reasonCode: PayrollAdjustmentReason;
+  rootEarningId: string;
+  correctionOfEarningId?: string;
+  correctionOfAdjustmentId?: string;
+  reversalOfEarningId?: string;
+  reversalOfAdjustmentId?: string;
+  lateCarriedEarningId?: string;
+  alreadyClaimed: boolean;
+  createdAt: string;
+};
+
+export type PayrollAdjustmentCorrectionRequest = {
+  sourceAdjustmentId: string;
+  amount: number;
+  expectedVersion: number;
+};
+
+export type PayrollAdjustmentEntry = {
+  adjustmentId: string;
+  availableWeekStart: string;
+  amount: number;
+  reasonCode: PayrollAdjustmentReason;
+  alreadyClaimed: boolean;
+};
+
+export type PayrollAdjustmentEnvelope = {
+  adjustment: PayrollAdjustment;
+};
+
+export type PayrollAdjustmentReason = "earning_correction" | "adjustment_correction" | "earning_reversal" | "adjustment_reversal" | "late_earning_carry";
+
+export type PayrollAdjustmentReversalRequest = {
+  sourceAdjustmentId: string;
+  expectedVersion: number;
+};
+
+export type PayrollCorrectionRequest = PayrollEarningCorrectionRequest | PayrollAdjustmentCorrectionRequest;
+
+export type PayrollCycle = {
+  cycleId: string | null;
+  maidProfileId: string;
+  weekStart: string;
+  status: PayrollStatus;
+  version: number;
+  lockedAmount: number | null;
+  paymentStartedAt: string | null;
+  itemCount: number;
+  totalAmount: number;
+  items: Array<PayrollItem>;
+  itemsNextCursor: string | null;
+  lateEarningCount: number;
+  lateEarningAmount: number;
+  lateEarnings: Array<PayrollLateEarning>;
+  lateEarningsNextCursor: string | null;
+  offsetSettled: boolean;
+  adjustmentAmount: number;
+  carryInAmount: number;
+  carryOutAmount: number;
+  payableAmount: number;
+  adjustmentCount: number;
+  paymentAttemptId: string | null;
+  paymentAttemptNumber: number | null;
+  paidAt: string | null;
+  checkReasonCode: "TRANSFER_RESULT_UNCERTAIN" | null;
+  lastReopenReasonCode: "NO_TRANSFER_CONFIRMED" | null;
+};
+
+export type PayrollCycleEnvelope = {
+  payroll: PayrollCycle;
+};
+
+export type PayrollEarningCorrectionRequest = {
+  sourceEarningId: string;
+  amount: number;
+  expectedVersion: number;
+};
+
+export type PayrollEarningReversalRequest = {
+  sourceEarningId: string;
+  expectedVersion: number;
+};
+
+export type PayrollEntriesEnvelope = {
+  kind: "items" | "lateEarnings" | "adjustments";
+  entries: Array<PayrollItem | PayrollLateEarning | PayrollAdjustmentEntry>;
+  nextCursor: string | null;
+};
+
+export type PayrollItem = {
+  earningId: string;
+  earnedOn: string;
+  amount: number;
+  alreadyClaimed: boolean;
+};
+
+export type PayrollLateCarryRequest = {
+  expectedVersion: number;
+};
+
+export type PayrollLateEarning = {
+  earningId: string;
+  earnedOn: string;
+  amount: number;
+};
+
+export type PayrollListEnvelope = {
+  payroll: Array<PayrollCycle>;
+  nextCursor: string | null;
+};
+
+export type PayrollPaymentCheckRequest = {
+  expectedVersion: number;
+  reasonCode: "TRANSFER_RESULT_UNCERTAIN";
+};
+
+export type PayrollPaymentPaidRequest = {
+  expectedVersion: number;
+  paymentMethod: "bank_transfer";
+  providerReferenceId: string;
+};
+
+export type PayrollPaymentReopenRequest = {
+  expectedVersion: number;
+  reasonCode: "NO_TRANSFER_CONFIRMED";
+};
+
+export type PayrollPaymentResult = {
+  paymentResultId: string;
+  paymentAttemptId: string;
+  payrollCycleId: string;
+  resultType: "check" | "paid" | "reopened";
+  beforeStatus: "paying" | "check";
+  afterStatus: "check" | "paid" | "open";
+  cycleVersion: number;
+  lockedAmount: number;
+  paymentMethod?: "bank_transfer";
+  providerReferenceId?: string;
+  reasonCode?: "TRANSFER_RESULT_UNCERTAIN" | "NO_TRANSFER_CONFIRMED";
+  occurredAt: string;
+};
+
+export type PayrollPaymentResultEnvelope = {
+  paymentResult: PayrollPaymentResult;
+};
+
+export type PayrollReversalRequest = PayrollEarningReversalRequest | PayrollAdjustmentReversalRequest;
+
+export type PayrollStartRequest = {
+  maidProfileId: string;
+  weekStart: string;
+  expectedVersion: number;
+};
+
+export type PayrollStatus = "open" | "paying" | "check" | "paid";
+
+export type Complaint = {
+  id: string;
+  roomId: string;
+  cleaningTargetId: string;
+  cleaningAttemptId: string;
+  submissionId: string;
+  inspectionDecisionId: string;
+  originalEarningId: string;
+  maidProfileId: string;
+  category: ComplaintCategory;
+  status: ComplaintStatus;
+  version: number;
+  currentDecisionId: string | null;
+  firstDecidedAt: string | null;
+  responseDeadline: string | null;
+  receivedAt: string;
+  updatedAt: string;
+  currentDecision: ComplaintDecision | null;
+  maidResponse: ComplaintMaidResponse | null;
+  reworkDecision: ComplaintReworkDecision | null;
+};
+
+export type ComplaintCasRequest = {
+  expectedVersion: number;
+};
+
+export type ComplaintCategory = "cleanliness_general" | "bathroom_cleanliness" | "bedding_quality" | "trash_not_removed" | "amenity_missing" | "damage_or_loss" | "odor_or_smoke" | "access_or_handover";
+
+export type ComplaintCreateRequest = {
+  originalEarningId: string;
+  category: ComplaintCategory;
+  expectedVersion: 0;
+};
+
+export type ComplaintDecision = {
+  id: string;
+  complaintId: string;
+  decisionVersion: number;
+  decisionKind: "initial" | "correction";
+  priorDecisionId: string | null;
+  finding: ComplaintFinding;
+  penaltyScore: number;
+  reworkRequired: boolean;
+  decidedAt: string;
+};
+
+export type ComplaintDecisionRequest = {
+  expectedVersion: number;
+  finding: ComplaintFinding;
+  penaltyScore: number;
+  reworkRequired: boolean;
+};
+
+export type ComplaintEnvelope = {
+  complaint: Complaint;
+};
+
+export type ComplaintFinding = "confirmed" | "unverifiable" | "false";
+
+export type ComplaintHistoryEnvelope = {
+  events: Array<ComplaintHistoryEvent>;
+  nextCursor: string | null;
+};
+
+export type ComplaintHistoryEvent = {
+  eventId: number;
+  eventType: "received" | "review_started" | "decided" | "acknowledged" | "appealed" | "closed" | "corrected" | "rework_materialized";
+  fromStatus?: "received" | "under_review" | "decided" | "acknowledged" | "appealed" | "closed";
+  toStatus: ComplaintStatus;
+  caseVersion: number;
+  occurredAt: string;
+  decision?: ComplaintDecision;
+  maidResponse?: ComplaintMaidResponse;
+  compensationDecisionId?: string;
+};
+
+export type ComplaintListEnvelope = {
+  complaints: Array<Complaint>;
+  nextCursor: string | null;
+};
+
+export type ComplaintMaidResponse = {
+  id: string;
+  complaintId: string;
+  decisionId: string;
+  maidProfileId: string;
+  responseType: "acknowledged" | "appealed";
+  appealReasonCode: "work_completed_as_required" | "evidence_misinterpreted" | "not_responsible" | "timeline_mismatch" | null;
+  respondedAt: string;
+};
+
+export type ComplaintResponseRequest = {
+  expectedVersion: number;
+  responseType: "acknowledged";
+} | {
+  expectedVersion: number;
+  responseType: "appealed";
+  appealReasonCode: "work_completed_as_required" | "evidence_misinterpreted" | "not_responsible" | "timeline_mismatch";
+};
+
+export type ComplaintReworkDecision = {
+  view: "originalMaid";
+  sameMaid: boolean;
+  sourceDecisionIsCurrent: boolean;
+} | {
+  view: "assigneeMaid";
+  id: string;
+  reworkCleaningTargetId: string;
+  compensationAmount: number;
+  currency: "KRW";
+  sourceDecisionIsCurrent: boolean;
+} | {
+  view: "admin";
+  id: string;
+  complaintId: string;
+  sourceComplaintDecisionId: string;
+  currentComplaintDecisionId: string;
+  sourceDecisionIsCurrent: boolean;
+  originalCleaningTargetId: string;
+  reworkCleaningTargetId: string;
+  originalMaidProfileId: string;
+  assigneeMaidProfileId: string;
+  sameMaid: boolean;
+  originalBaseFeeSnapshot: number;
+  compensationAmount: number;
+  currency: "KRW";
+  sourceCaseVersion: number;
+  decisionVersion: 1;
+  decidedAt: string;
+};
+
+export type ComplaintReworkEnvelope = {
+  complaint: Complaint;
+  reworkDecision: ComplaintReworkDecision;
+  assignment: {
+  id: string;
+  cleaningTargetId: string;
+  maidProfileId: string;
+  sequenceNumber: number;
+  revision: number;
+  serviceDate: string;
+  availableFrom: string;
+  dueAt: string | null;
+};
+};
+
+export type ComplaintReworkRequest = {
+  expectedVersion: number;
+  complaintDecisionId: string;
+  assigneeMaidProfileId: string;
+  compensationAmount: number;
+};
+
+export type ComplaintStatus = "received" | "under_review" | "decided" | "acknowledged" | "appealed" | "closed";
+
+export type WebPushSubscription = {
+  id: string;
+  version: number;
+  status: "active" | "retired";
+  createdAt: string;
+  updatedAt: string;
+  retiredAt: string | null;
+};
+
+export type WebPushSubscriptionEnvelope = {
+  subscription: WebPushSubscription;
+};
+
+export type WebPushSubscriptionRegisterRequest = {
+  bindingProof: string;
+  subscription: {
+  endpoint: string;
+  expirationTime: number | null;
+  keys: {
+  p256dh: string;
+  auth: string;
+};
+};
+  expectedCurrent?: {
+  subscriptionId: string;
+  version: number;
+};
+};
+
+export type WebPushSubscriptionRetireRequest = {
+  expectedVersion: number;
+};
+
 export type AssignmentPreviewRow = {
   cleaningTargetId: string;
   roomId: string;
