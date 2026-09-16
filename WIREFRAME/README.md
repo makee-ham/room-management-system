@@ -123,7 +123,7 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 
 네 타입의 새 퇴실 청소 `v7` 이상에는 `TV 켜짐·화면 출력 확인` 필수 슬롯이 하나씩 있습니다. TV 전체와 켜진 중립 화면을 촬영하고 계정·QR·알림·고객 정보가 보이지 않게 합니다. 과거 `v6` 작업·제출에는 TV 슬롯을 소급하지 않습니다.
 
-메이드 작업은 작업 생성 당시 스냅샷, 관리자 검수는 제출 당시 스냅샷을 사용합니다. `기타`를 제외한 모든 인증 항목은 사진 한 장 이상이 있어야 완료할 수 있습니다. 모든 구역은 항목별로 사진을 추가·삭제할 수 있고, 한 구역에 속한 전체 항목의 사진 합계는 최대 10장입니다. 여러 필수 항목이 같은 구역에 있으면 아직 비어 있는 필수 항목마다 최소 한 장을 남겨 두고 추가 가능 수를 계산합니다. 객실 특이사항과 폭탄방 증빙도 각각 최대 10장으로 제한합니다. 객실 호수는 작업 상단에 이미 표시되므로 별도의 `객실번호·현관` 촬영 슬롯은 사용하지 않습니다. 카메라·갤러리 이미지는 현재 탭 메모리의 `blob:` 미리보기 데모이고 실제 서버 업로드·보존은 연결하지 않았습니다. 대표 검증 화면은 `QA/screenshots/maid-zone-photo-limit-390.png`입니다.
+메이드 작업은 작업 생성 당시 스냅샷, 관리자 검수는 제출 당시 스냅샷을 사용합니다. `기타`를 제외한 모든 인증 항목은 사진 한 장 이상이 있어야 완료할 수 있습니다. 모든 구역은 항목별로 사진을 추가·삭제할 수 있고, 한 구역에 속한 전체 항목의 사진 합계는 최대 10장입니다. 여러 필수 항목이 같은 구역에 있으면 아직 비어 있는 필수 항목마다 최소 한 장을 남겨 두고 추가 가능 수를 계산합니다. 객실 특이사항과 폭탄방 증빙도 각각 최대 10장으로 제한합니다. 객실 호수는 작업 상단에 이미 표시되므로 별도의 `객실번호·현관` 촬영 슬롯은 사용하지 않습니다. 데모 모드의 카메라·갤러리 이미지는 현재 탭 메모리의 `blob:` 미리보기이며, 운영 모드는 서버가 발급한 attempt 슬롯으로 업로드한다. 대표 데모 검증 화면은 `QA/screenshots/maid-zone-photo-limit-390.png`입니다.
 
 ## 청소 운영 흐름
 
@@ -211,7 +211,7 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 - PIN·고객명·사진 원문을 URL, 알림, 로그, 브라우저 영속 저장소에 남기지 않습니다.
 - 사용자가 선택한 객실 특이사항 이미지는 현재 탭의 메모리 `blob:` 미리보기로만 유지되며 초기화·시나리오 교체 또는 탭 종료 뒤 복원되지 않습니다. 파일명은 화면 상태와 이력에 저장하지 않습니다.
 - 사용자가 선택한 폭탄방 이미지도 현재 탭 메모리에서만 미리보고, 과거 승인 건은 기능 확인용 이미지 fixture로 표시합니다. 화면의 2배 금액은 실제 자동 지급 결과가 아니라 결정적 원장 시뮬레이션입니다.
-- 청소 구역별 카메라·갤러리에서 선택한 이미지는 현재 탭 메모리의 `blob:` 미리보기로만 유지합니다. 항목별 사진을 개별 추가·삭제하고 구역별 전체 합계를 최대 10장으로 제한하며, 파일명과 `blob:` URL 문자열은 화면 상태·URL·로그·영속 저장소에 남기지 않습니다. 실제 서버 업로드·재전송·영속 보존은 연결하지 않았습니다.
+- 데모 모드에서 청소 구역별 카메라·갤러리 이미지는 현재 탭 메모리의 `blob:` 미리보기로만 유지합니다. 운영 모드는 서버의 attempt 사진 슬롯과 revision을 사용해 JPEG/WebP를 업로드하고 성공 뒤 슬롯을 재조회합니다. 어느 모드에서도 파일명·사진 원문·업로드 인증정보를 URL·로그·영속 저장소에 남기지 않습니다.
 - `clean-template/` 참고 원본 123장은 앱·저장소에 복사하지 않았습니다. 타입별 참고 객실·사진 수와 촬영 구역 문구만 fixture로 사용하며, 표지 사진의 운영 연락처 등 개인정보성 정보는 화면에 옮기지 않습니다.
 - 타입별 사진 템플릿은 같은 타입의 모든 객실에 같은 고정 공간 구성과 슬롯 계약을 적용합니다. 객실번호는 타입 매칭에만 사용하며, 실제 이미지 서버 전송·자동분류·서버 버전 게시·영속 보존은 구현하지 않았습니다.
 - 실제 서비스에는 서버 권한 검사, 감사 로그, 알림 발송, 업로드 재개, 동시 배정 충돌 처리가 필요합니다.
@@ -415,14 +415,14 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 - 유효한 설정은 운영 모드로 실행하고, 설정이 없거나 잘못되면 데모로 우회하지 않고 로그인 화면에서 연결 오류를 표시한다.
 - 의도적인 로컬 데모 QA만 `RMS_RUNTIME_MODE=demo python3 scripts/serve.py --port 4174`로 실행한다.
 - 운영 대상은 Supabase project ref `aodikrxcczbogjpsjwjt`이며 다른 project ref와 섞인 URL·키는 거부한다.
-- 운영 모드는 기존 관리자·메이드 메인과 전체 역할별 내비게이션을 유지한다. 백엔드 `v0.2.0`의 계정·객실·예약·근무 가능일·개발자 상태 응답을 기존 카드와 목록에 표시하며 데모 값으로 대신하지 않는다.
+- 운영 모드는 기존 관리자·메이드 메인과 전체 역할별 내비게이션을 유지한다. 백엔드 `v0.3.0`의 계정·객실·예약·근무 가능일·청소·알림·개발자 상태 응답을 기존 카드와 목록에 표시하며 데모 값으로 대신하지 않는다.
 - 관리자는 예약 목록·등록·변경·취소·수동 체크아웃과 연박/추가 청소 요청, 객실 촛불·운영 차단·이슈·PIN 동기화 상태를 운영 API에 기록할 수 있다. 예약 고객명은 관리자 단건 조회에서만 현재 DOM에 두고 목록·URL·로그·웹 저장소에는 남기지 않는다. PIN 숫자 원문은 조회하거나 입력하지 않는다.
 - 운영 객실은 기존 카탈로그의 타입·객실 순서를 그대로 사용한다. 관리자 `메이드`도 계정 표가 아니라 기존 네 탭과 주간 근무표·메이드 카드 구성을 유지하며, 실제 메이드 계정과 다음 주 가능일을 표시하고 변경 요청을 승인·반려한다. 메이드는 일요일 제출 창에서 최초/재제출하고, 마감 뒤에는 관리자 변경 요청을 보낸다.
 - 개발자는 운영 상태에서 Edge runtime, migration·RLS, scheduler와 계정·객실 요약을 읽고 계정 화면을 함께 사용한다. 설정 비밀값은 표시하지 않고 설정 여부만 보여 준다.
-- 청소 배정·현장 수행·사진·검수·주급·PIN 원문·Web Push는 `v0.2.0` 이후 범위이므로 같은 화면 안에서 `API 연결 대기`로 구분한다. 객실 기준정보 변경은 안전한 `roomTypeId` 카탈로그 endpoint가 없어 ID를 추측하지 않고 잠근다.
+- 청소 배정·현장 수행·attempt별 사진 슬롯·immutable submission·관리자 검수·앱 내부 알림은 운영 API에 연결한다. 주급·PIN 원문·외부 Web Push 전달은 별도 범위다. 객실 기준정보 변경은 안전한 `roomTypeId` 카탈로그 endpoint가 없어 ID를 추측하지 않고 잠근다.
 - 전용 origin의 개인 기기에서는 `local`, 공용 기기에서는 `session`을 사용한다. 공유 `makee-ham.github.io` origin에는 운영 로그인 대신 자격 증명이 없는 데모 확인본만 배포한다. 브라우저 종료 뒤에도 운영 로그인을 안전하게 유지하려면 앱 전용 custom domain이 필요하다.
-- PWA 설치와 브라우저 알림 권한은 준비됐다. 앱이 닫힌 동안 실제 알림을 받으려면 서버의 Web Push 구독·이벤트·발송 계층이 더 필요하다.
-- 배포·백엔드 후속 계약은 `DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md`를 따른다. `node scripts/check-api-integration.mjs`는 운영 OpenAPI가 `0.2.0`, 39개 path, 43개 operation인지 확인한다.
+- PWA 설치와 브라우저 알림 권한은 준비됐다. 앱 내부 알림은 `/v1/notifications`에서 읽고, 앱이 닫힌 동안의 실제 Web Push 전달 여부는 별도로 표현한다.
+- 공통 배포 계약은 `DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md`, 청소 흐름과 endpoint 매핑은 `DOCS/23_CLEANING_API_INTEGRATION.md`를 따른다. `node scripts/check-api-integration.mjs`와 `node scripts/generate-cleaning-client.mjs --production --check`는 운영 OpenAPI `0.3.0`, 109 paths / 117 operations을 읽기 전용으로 확인한다.
 
 ### 예약 배정 가능 상태 방어
 
@@ -443,10 +443,10 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 - 청소 배정 카드의 `1단계`·`2단계` 같은 숫자 단계 표기는 노출하지 않고 각 기능 제목만 유지한다.
 - 메이드 청소 상세는 `구역별 촬영`과 `촬영` 버튼처럼 모바일에서 짧은 문구를 사용한다. 420px 이하에서는 사진 카드 안쪽 여백과 미리보기 크기를 줄이고 `촬영 / 갤러리` 두 버튼을 48px 높이 한 줄로 유지한다.
 
-## 2026-09-15 예상 청소시간 선택사항 구현 · 운영 OFF
+## 2026-09-16 청소관리 운영 API v0.3.0 연결
 
-예상시간 nullable 템플릿 게시, 배정/수행 조회, 최신 version으로 시작·현장 완료·미퇴실 신고, 관리자 사건 조회/결정, 409 재조회와 같은 요청 결과 확인을 구현했다. 관리자 `청소 관리`와 메이드 `내 업무`에 기존 카드·폼·모달 디자인을 재사용한다.
+관리자 배정 Preview·초안·impact·Commit·변경·해제·요청 결정, 메이드 current attempt·lease 시작·현장 완료·미퇴실/특이 객실 신고, 서버 사진 슬롯·업로드, immutable submission, 관리자 사진 검수·승인·반려·재청소, 앱 내부 알림을 운영 API에 연결했다. 기존 카드·폼·모달과 역할별 내비게이션을 유지한다.
 
-로컬 서버와 Pages 산출물의 `featureFlags.optionalCleaningWorkflow`는 false 고정이다. 운영 배포 전에는 켜지 않는다. 기존 데모 fixture와 OFF 상태 화면을 유지한다. 생성 타입은 백엔드 PR #166 exact source 기반이며 운영 OpenAPI 재생성은 보류한다. 적용 순서·현재 사건 ID/PIN/사진 연동 한계는 `DOCS/22_OPTIONAL_CLEANING_DURATION_FRONTEND_RELEASE.md`에 기록했다.
+로컬 서버와 Pages live 산출물의 `featureFlags.optionalCleaningWorkflow`는 true다. 운영 모드에서 API 실패 시 fixture로 전환하지 않는다. `WIREFRAME/cleaning-api.d.ts`는 운영 OpenAPI v0.3.0에서 생성하며 생성 파일을 직접 수정하지 않는다. 상세 endpoint·CAS·멱등·권한·오류 매핑은 `DOCS/23_CLEANING_API_INTEGRATION.md`를 따른다.
 
-검증은 `node scripts/check-workspace.mjs`, Playwright가 설치된 Node 환경에서 `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-cleaning-workflow.mjs`를 사용한다. 브라우저 회귀 전에 `RMS_RUNTIME_MODE=demo python3 scripts/serve.py --port 4175`를 실행한다. 회귀의 API 쓰기는 데모 fixture로 가로채며 운영을 활성화하지 않는다.
+검증은 `node scripts/check-workspace.mjs`, `node scripts/generate-cleaning-client.mjs --production --check`, Playwright가 설치된 Node 환경에서 `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-cleaning-workflow.mjs`를 사용한다. 브라우저 회귀는 업무 요청을 로컬 fixture로 가로채며 운영 mutation을 실행하지 않는다.

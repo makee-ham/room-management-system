@@ -1529,3 +1529,36 @@ Chrome 152.0.7977.83 / Playwright 1.62.1, `http://127.0.0.1:4175/index.html`에�
 - `QA/screenshots/optional-duration-incident-conflict-390.png`
 
 미검증/활성화 보류: 운영 56번째 migration·main exact source API 배포·운영 nullable OpenAPI/Swagger·운영 타입 재생성·예약/템플릿 smoke·실제 서버 두 메이드 동시 시작. 사건 알림에 incident ID가 없어 자동 관리자 사건 큐 연결과 다른 기기의 사전 차단은 현재 단건 계약만으로 완료할 수 없다. 기존 PIN 공개·사진 업로드/제출 연동도 대기 상태를 유지한다. 이 조건을 확인/보완하기 전 플래그 ON 금지. 상세 인계는 `DOCS/22_OPTIONAL_CLEANING_DURATION_FRONTEND_RELEASE.md`를 따른다.
+
+## 2026-09-16 · 청소관리 운영 API v0.3.0
+
+운영 `openapi.json`과 Swagger를 읽어 v0.3.0, 109 paths / 117 operations 및 배정·attempt·사진·submission·inspection·notification 계약을 확인하고 `WIREFRAME/cleaning-api.d.ts`를 다시 생성했다. 운영 source 기준은 `main@6604b2215e06b9e9ebf0b3138e3716a000c57ddb`다.
+
+Browser 플러그인이 제공되지 않아 앱 번들 Node 패키지와 설치된 Chrome 152.0.7977.83을 Playwright로 제어했다. 모든 업무 API 쓰기는 로컬 fixture로 가로챘으며 운영 mutation은 실행하지 않았다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 관리자 배정 조회, 비영속 Preview, version 초안 저장 | 통과 |
+| Commit impact fingerprint와 assignment/availability version, Commit 뒤 재조회 | 통과 |
+| 배정 revision 이력, 담당 변경, 취소 요청 결정 | 통과 |
+| 메이드 본인 통보 배정만 표시, 다른 메이드 attempt 403 | 통과 |
+| 작업 시작 응답 유실 후 동일 idempotency key/payload replay | 통과 |
+| attempt 409에서 로컬 성공 전이 없음, 최신 상태 재조회 | 통과 |
+| lease 기반 시작, 현장 완료, 서버 시각 기반 실제 37분 표시 | 통과 |
+| 서버 사진 슬롯, 필수 누락 차단, 업로드 415 실패와 재선택, verified 재조회 | 통과 |
+| immutable submission, 중복 클릭 1회, 검수 대기 표시 | 통과 |
+| 관리자 사진 원본 proxy 상세, 승인, 반려·재청소 | 통과 |
+| stale submission 승인 409 차단과 검수 목록 재조회 | 통과 |
+| 서버 알림 목록, 읽음 POST, allowlist 대상 진입 전 재조회 | 통과 |
+| 401 세션 만료와 403 역할 오류 구분 | 통과 |
+| token/PIN/guest PII가 console·URL에 없음 | 통과 |
+| 360/390/768/1440px 가로 넘침 없음, 보이는 주요 버튼 44×44px 이상 | 통과 |
+| 앱 JavaScript error, console warning/error | 0건 |
+
+대표 PNG:
+
+- `QA/screenshots/cleaning-api-admin-390.png`
+- `QA/screenshots/cleaning-api-admin-1440.png`
+- `QA/screenshots/cleaning-api-maid-390.png`
+
+미검증: 승인된 운영 계정이 없어 실제 로그인, protected 운영 GET, production 사진 content, 실제 mutation, DB 동시성, 실기기 카메라, 장시간 refresh token, 외부 Web Push 전달은 확인하지 않았다. 운영에서는 공개 health/OpenAPI/Swagger/CORS 읽기 smoke만 실행한다. 2026-09-15의 운영 OFF 기록은 역사 기록이며 현재 정본은 `DOCS/23_CLEANING_API_INTEGRATION.md`다.

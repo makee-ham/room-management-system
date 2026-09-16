@@ -1167,7 +1167,9 @@ for (const contract of [
 ]) {
   if (!html.includes(contract)) throw new Error(`Reservation cancellation contract missing: ${contract}`);
 }
-if (html.includes('id="reservation-cancel-other"') || html.includes('normalizedReservationCancelOther') || html.includes('reasonDetail')) {
+const reservationCancelRecordStart = html.indexOf('function cancelReservationRecord');
+const reservationCancelRecordSource = html.slice(reservationCancelRecordStart, html.indexOf('function ', reservationCancelRecordStart + 20));
+if (html.includes('id="reservation-cancel-other"') || html.includes('normalizedReservationCancelOther') || reservationCancelRecordSource.includes('reasonDetail')) {
   throw new Error('Reservation cancellation must not expose or persist a free-form reason field.');
 }
 const reservationAssignmentCancelStart = html.indexOf('function cancelReservationAssignmentRecord');
@@ -2542,6 +2544,15 @@ await import('./check-pwa.mjs');
 
 const cleaningTypes=readFileSync(resolve(root,'WIREFRAME/cleaning-api.d.ts'),'utf8');
 if(!cleaningTypes.includes('durationMinutes?: number | null | undefined;')||!cleaningTypes.includes('durationMinutes: number | null;'))throw new Error('Optional nullable cleaning duration client contract missing.');
-if(!serveSource.includes('"optionalCleaningWorkflow": False')||!pagesBuildSource.includes('optionalCleaningWorkflow: false'))throw new Error('Optional cleaning workflow production gate must remain OFF.');
+if(!serveSource.includes('"optionalCleaningWorkflow": True')||!pagesBuildSource.includes('optionalCleaningWorkflow: true'))throw new Error('Cleaning workflow live runtime gate must be enabled.');
 if(!html.includes("value.featureFlags?.optionalCleaningWorkflow===true"))throw new Error('Cleaning release gate must require an explicit boolean.');
-console.log('Optional cleaning client types and OFF release gate static contracts: passed');
+for(const contract of ['/v1/assignments/preview','/v1/assignments/commit-impact','/v1/attempts/{attemptId}/photo-slots','/v1/attempts/{attemptId}/submissions','/v1/inspections/{submissionId}/approve','/v1/notifications/{notificationId}/read']){
+  if(!cleaningTypes.includes(contract.split('/').at(-1) || '')&&!readFileSync(resolve(root,'scripts/generate-cleaning-client.mjs'),'utf8').includes(contract))throw new Error(`Cleaning API generated contract missing: ${contract}`);
+}
+for(const contract of ['runLiveCleaningMutation','expectedImpactFingerprint','expectedPhotoRevision','clientSubmissionId','responseType===\'blob\'','handleLiveNotificationAction']){
+  if(!html.includes(contract))throw new Error(`Cleaning live implementation contract missing: ${contract}`);
+}
+for(const forbidden of ['function cleaningDemoSlots','||cleaningDemoSlots(','초기 촬영 구역은 데모입니다']){
+  if(html.includes(forbidden))throw new Error(`Cleaning live implementation still contains an operational fixture fallback: ${forbidden}`);
+}
+console.log('Production cleaning client types and enabled live runtime static contracts: passed');

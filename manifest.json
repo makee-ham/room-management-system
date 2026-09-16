@@ -1,7 +1,7 @@
 {
   "package": "CASTLE THE ART room management wireframe",
-  "version": "2026-09-13-reservation-allocation-guard",
-  "generated_at_kst": "2026-09-13T10:24:38+09:00",
+  "version": "2026-09-16-cleaning-api-v0.3.0",
+  "generated_at_kst": "2026-09-16T12:37:35+09:00",
   "repository": "https://github.com/makee-ham/room-management-system",
   "entrypoint": "WIREFRAME/index.html",
   "policy_source": "DOCS/FINAL_UX_AUDIT.md",
@@ -12,9 +12,10 @@
   "codex_instructions": "AGENTS.md",
   "qa_record": "WIREFRAME/QA.md",
   "production_integration": "DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md",
+  "cleaning_api_integration": "DOCS/23_CLEANING_API_INTEGRATION.md",
   "sha256": {
     "DOCS/FINAL_UX_AUDIT.md": "e479e468c32c27ef606a311fd090ed7a4a8718590d363c9634da014960956c78",
-    "WIREFRAME/index.html": "e9286ca34c2906a33796cf287c165e225d52f2279197e78be169dd8ab66868b1",
+    "WIREFRAME/index.html": "f36636047e8479e96d62ade87cf60a74891eed177bb4448c38d502bc5f7588d3",
     "DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md": "eec820aabd2551083d782dc19531bd1c785c46d2cc85668a230fbf7e243cf97f"
   },
   "runtime": {
@@ -32,7 +33,7 @@
     768,
     1440
   ],
-  "data_classification": "non-personal August room master plus deterministic demo operational fixtures",
+  "data_classification": "non-personal August room master, deterministic demo fixtures, and authenticated no-store operational API projections",
   "excluded_from_git": [
     ".codex-remote-attachments/",
     "local caches",
