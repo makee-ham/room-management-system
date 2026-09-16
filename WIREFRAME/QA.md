@@ -1629,3 +1629,27 @@ Browser 플러그인이 제공되지 않아 앱 번들 Node 패키지와 설치�
 - `QA/screenshots/live-wireframe-inspection-detail-1440.png`
 
 승인된 운영 계정이 없어 protected 운영 GET, 실제 PIN·객실·청소 mutation, production 사진 content는 hosted 검증하지 않았다. PR 병합과 배포 뒤에는 임의 mutation 없이 역할별 읽기 smoke와 정적 자산 반영만 확인해야 한다.
+
+## 2026-09-16 · 운영 간편 예약·청소 배정 와이어프레임 복원
+
+운영 API 연결 뒤 생긴 예약 목록형 화면과 독립 `배정 Preview·확정 영향` 패널을 제거했다. API 응답은 새 화면을 만들지 않고 기존 와이어프레임 표시 모델에 투영했다. Browser 플러그인이 제공되지 않아 앱 번들 Playwright와 설치된 Chrome 152.0.7977.83을 사용했으며, 모든 업무 mutation은 로컬 fixture에서 가로채 운영 데이터를 변경하지 않았다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 운영 간편 예약이 기존 29일 객실×날짜표, 고정 객실 열·날짜 머리글, 1박·연박·잠금 범례, 검색·유형 필터, 전체화면을 유지 | 통과 |
+| 516호의 연속 빈 날짜 두 칸을 마우스로 가로 드래그 → 기존 예약 등록 팝업에 선택 객실·16:00 체크인·마지막 날 다음 날 11:00 체크아웃 입력 | 통과 · POST 0건 |
+| 운영 예약 칸 선택 → 서버 예약 상세, 객실번호 선택 → 기존 객실 전체 상세 | 통과 |
+| 청소 배정에서 `배정 Preview·확정 영향` 독립 패널 부재 | 통과 |
+| `동선 고려 랜덤 배정 → 객실별 담당 수정 → 메이드별 배정 요약·저장 통보` 정보 구조와 기존 카드·표·버튼 규격 유지 | 통과 |
+| Preview 비영속, 초안 CAS 저장, commit impact 확인, version/fingerprint 확정, 성공 뒤 목록 재조회 | 통과 |
+| 360·390·768·1440px 문서 가로 넘침 0px, 주요 컨트롤 44px, 앱 JavaScript error·console warning/error 0건 | 통과 |
+| token·PIN·고객 PII sentinel이 console·URL에 없음 | 통과 |
+
+대표 PNG:
+
+- `QA/screenshots/live-wireframe-quick-booking-390.png`
+- `QA/screenshots/live-wireframe-quick-booking-1440.png`
+- `QA/screenshots/live-wireframe-cleaning-390.png`
+- `QA/screenshots/live-wireframe-cleaning-1440.png`
+
+승인된 운영 계정이 없어 protected production 예약·배정 데이터와 실제 mutation은 hosted 검증하지 않았다. 배포 뒤에는 운영 mutation 없이 새 정적 자산, 런타임 live 설정, 간편 예약 표와 청소 배정 화면의 읽기 렌더만 확인한다.
