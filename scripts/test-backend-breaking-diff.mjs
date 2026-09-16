@@ -149,4 +149,15 @@ const requestAnyOfReorderedAfter = structuredClone(requestAnyOfReorderedBefore);
 requestAnyOfReorderedAfter.paths['/v1/items'].post.requestBody.content['application/json'].schema.properties.name.anyOf.reverse();
 assertCompatible(requestAnyOfReorderedBefore, requestAnyOfReorderedAfter, 'Reordering request anyOf alternatives');
 
+const referencedAnyOfBefore = clone();
+referencedAnyOfBefore.components = { schemas: { NamedItem: { type: 'object', properties: { label: { type: 'string' } } } } };
+referencedAnyOfBefore.paths['/v1/items'].post.requestBody.content['application/json'].schema.properties.name = {
+  anyOf: [{ $ref: '#/components/schemas/NamedItem' }, { type: 'string' }],
+};
+const referencedAnyOfAfter = structuredClone(referencedAnyOfBefore);
+referencedAnyOfAfter.components.schemas.NamedItem.required = ['label'];
+if (!findBreakingChanges(referencedAnyOfBefore, referencedAnyOfAfter).some((difference) => difference.includes('became required in request'))) {
+  throw new Error('Changes inside an unchanged composition $ref must still be compared.');
+}
+
 process.stdout.write('OpenAPI 3.1 breaking-diff regression tests passed.\n');

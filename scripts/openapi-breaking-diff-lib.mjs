@@ -25,16 +25,17 @@ const stableStringify = (value) => {
   }
   return JSON.stringify(value);
 };
-const unmatchedSchemas = (beforeItems, afterItems) => {
+const matchSchemas = (beforeItems, afterItems) => {
   const remainingAfter = [...afterItems];
   const remainingBefore = [];
+  const matched = [];
   for (const beforeItem of beforeItems) {
     const signature = stableStringify(beforeItem);
     const matchIndex = remainingAfter.findIndex((afterItem) => stableStringify(afterItem) === signature);
-    if (matchIndex >= 0) remainingAfter.splice(matchIndex, 1);
+    if (matchIndex >= 0) matched.push([beforeItem, remainingAfter.splice(matchIndex, 1)[0]]);
     else remainingBefore.push(beforeItem);
   }
-  return [remainingBefore, remainingAfter];
+  return { matched, remainingBefore, remainingAfter };
 };
 
 function compareSchema(beforeDocument, afterDocument, beforeInput, afterInput, mode, location, differences, seenPairs = new Set()) {
@@ -166,7 +167,10 @@ function compareSchema(beforeDocument, afterDocument, beforeInput, afterInput, m
     } else if (beforeItems.length !== afterItems.length) {
       differences.push(`${location}.${key}: exclusive alternatives changed`);
     }
-    const [unmatchedBefore, unmatchedAfter] = unmatchedSchemas(beforeItems, afterItems);
+    const { matched, remainingBefore: unmatchedBefore, remainingAfter: unmatchedAfter } = matchSchemas(beforeItems, afterItems);
+    for (let index = 0; index < matched.length; index += 1) {
+      compareSchema(beforeDocument, afterDocument, matched[index][0], matched[index][1], mode, `${location}.${key}[matched:${index}]`, differences, new Set(seenPairs));
+    }
     for (let index = 0; index < Math.min(unmatchedBefore.length, unmatchedAfter.length); index += 1) {
       compareSchema(beforeDocument, afterDocument, unmatchedBefore[index], unmatchedAfter[index], mode, `${location}.${key}[${index}]`, differences, new Set(seenPairs));
     }
