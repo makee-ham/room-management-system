@@ -1467,3 +1467,165 @@
 - 청소 담당 배정·현장 수행·사진·검수·주급·PIN 원문·Web Push는 `v0.2.0` 이후 범위다. 수동 청소 요청 생성·취소까지만 연결했다.
 - 객실 기준정보 변경은 요청에 필요한 `roomTypeId` 카탈로그 endpoint가 없어 안전하게 노출하지 않았다. 운영 차단·객실 이슈 해제는 목록 endpoint가 없으므로 현재 세션에서 생성 응답의 `entityId`를 받은 건만 바로 해제할 수 있다.
 - 실기기 PWA, 장시간 refresh token 갱신, 다중 관리자 CAS 충돌과 실제 운영 고객명 복호화는 승인된 운영 계정으로 후속 확인해야 한다.
+
+## 2026-09-13 · Issue #137 예약 배정 불가 방어
+
+### 변경·확인
+
+- 운영 배포의 `WIREFRAME/index.html` SHA-256이 작업 시작 시 `origin/main` commit `8c1c14da93294a36ce5fc842143bf668ad9cf373`과 일치하는지 먼저 확인했다.
+- `allocationReady === false`인 객실 카드에서 예약 등록 버튼이 disabled이고, `현재 예약 없음 · 차단 사유를 해소한 뒤 등록 가능`과 모든 한국어 차단 사유가 표시되는지 확인했다. disabled 버튼의 programmatic click 뒤 예약 POST는 0건이었다.
+- 배정 가능한 객실이 0실이면 `새 예약 등록` 폼 대신 `예약 등록 불가` 안내와 사유별 객실 수를 표시했다. Escape로 닫으면 동등한 `새 예약` 버튼으로 초점이 복귀했다.
+- 등록 모달에서 배정 불가 option은 disabled와 `배정 불가` 문구를 함께 가졌다. 배정 가능 객실 선택 뒤 `stateVersion`이 8 → 9로 바뀐 모의 응답을 다시 읽고, 제출 직전 10으로 바뀐 최신 값을 `expectedRoomVersion: 10`으로 한 번만 POST했다.
+- `ROOM_ALLOCATION_BLOCKED` 409 뒤 객실 목록을 재조회해 `PIN 불일치`와 `객실 기준정보 미확인`을 함께 표시했다. 안내는 서버 내부 message가 아닌 코드 매핑 문구였고 문의 번호 `b557bdd4-571a-4b67-b3f8-b77d3959d16a`을 유지했다.
+- `STALE_VERSION`은 객실 재조회와 최신 상태 안내를, `RESERVATION_OVERLAP`은 기존 겹침 안내를 유지했다. 기존 인증 세션 복원, 예약 목록·상세, 변경 PATCH, soft cancel, 수동 체크아웃 요청도 전부 모의 API에서 회귀 확인했다.
+- `node scripts/check-pwa.mjs`의 VM Service Worker 검사에서 실패한 navigation이 rejected promise 대신 캐시 또는 503 fallback으로 완료되고, `/v1/reservations` POST에는 `respondWith`, cache read, Service Worker fetch·재시도가 모두 0건인지 확인했다.
+- Browser 플러그인이 제공되지 않아 로컬 Chrome을 Playwright로 제어했다. 360·390·768·1440px에서 가로 넘침 0px, 모달 키보드 닫기·초점 복귀, 예상한 모의 409 네트워크 로그 외 앱 console warning/error 0건을 확인했다.
+
+### 대표 PNG
+
+- `QA/screenshots/issue-137-blocked-rooms-390.png`
+- `QA/screenshots/issue-137-blocked-rooms-1440.png`
+- `QA/screenshots/issue-137-allocation-race-409-390.png`
+
+### 한계
+
+- 운영 사이트에서는 실제 예약을 생성·변경·취소·체크아웃하지 않는다. production smoke test는 공개 런타임 설정·정적 자산·health·OpenAPI 읽기까지만 수행했고, 배정 불가 UI와 mutation 경쟁 상태는 `v0.2.0` 계약과 같은 모의 응답으로 검증했다.
+- 청소 담당 배정은 Issue #137과 이 변경의 범위에 포함하지 않는다.
+
+## 2026-09-15 예상 청소시간 nullable · 미퇴실 수행 · 운영 OFF
+
+Chrome 152.0.7977.83 / Playwright 1.62.1, `http://127.0.0.1:4175/index.html`에서 확인했다. `Browser plugin not available`이므로 설치된 Chrome을 Playwright로 제어했다. 테스트는 문서 응답에만 QA 진입점을 주입하고 모든 Edge 업무 요청을 데모 fixture로 가로챈다. 실제 로그인 bootstrap·운영 mutation·DB 동시성 결과로 취급하지 않는다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 백엔드 PR #166 exact source OpenAPI 109 paths / 117 operations, 요청 duration 필수 제거·요청/응답 nullable·1~10080 범위, 소스 타입 생성 | 통과 |
+| 로컬/Pages live 설정 생성기의 플래그 OFF, OFF 화면의 새 템플릿 API 미호출 | 통과 |
+| null 조회 `미설정(선택사항)`, 빈 예상시간 폼, 필수 표시 없음, null 게시 | 통과 |
+| 0 / 10081 입력 거부, 1 / 10080 게시 허용, 필수 사진 이름 누락 시 게시 차단 | 통과 |
+| 생략/null 정규화, 응답 유실 뒤 동일 payload/key, 서버에서 이미 처리된 결과의 멱등 replay | 통과 · 데모 API |
+| 템플릿 CAS 409 후 재조회/재편집, 게시 템플릿 없음 안내 | 통과 |
+| 예상시간 없는 템플릿으로 예약 POST, 예약 응답 유실 시 같은 요청 결과 확인 | 통과 · 데모 API |
+| 열린 checkout 배정이 있어도 수동 추가 계획 POST, dueAt 빈 값 null, 임의 예상 종료 없음 | 통과 |
+| 최신 assignment/current attempt 조회 후 execution version·assignment ID/revision 전달 | 통과 |
+| PREVIOUS_ROOM_WORKFLOW_ACTIVE / CHECKOUT_INCIDENT_OPEN / MAID_ALREADY_IN_PROGRESS / ATTEMPT_VERSION_CONFLICT의 안내·재조회, 409에서 로컬 성공 없음 | 통과 |
+| 동시에 보낸 두 client 요청 중 데모 API가 한 건 수용/다른 건 room 409 반환 | 통과 · 실제 서버 동시성 미검증 |
+| 이번 attempt의 startedAt→fieldCompletedAt 37분, 중단/재시작 합산 없음 | 통과 |
+| 미퇴실 신고 후 시작·완료·PIN·사진 제출 버튼 차단, 같은 탭 재로드 후 사건 GET으로 차단 유지 | 통과 |
+| 관리자 version/fingerprint 충돌 후 변경된 예약·배정·수행 영향 재확인, 입력/확인 체크 초기화, 최신 CAS로 결정, 새 assignment 갱신 | 통과 |
+| EXTEND_CHECKOUT / CONFIRM_DEPARTED / FALSE_REPORT별 reasonCode·newCheckoutAt·reassignment·키 | 통과 |
+| 360 / 390 / 768 / 1440px 본문/템플릿 모달 가로 넘침 없음, 주요 버튼 최소 44×44px | 통과 |
+| 템플릿 모달 Tab 포커스 내부 유지, Escape 닫기, 브라우저 뒤로가기 닫기, 이후 배경 포커스 복구, dialog 접근성 이름 | 통과 · 스크린리더 실기기 미검증 |
+| 앱 JavaScript error / console warning·error 없음 | 통과 · 의도한 데모 401/409/응답 유실 network 진단은 구분 |
+| 계정 전환 중 도착한 401에서 이전 payload를 새 계정으로 재실행하지 않음 | 통과 |
+| `node scripts/check-workspace.mjs`, PIN/PWA/권한/예약 배정 가능 guard·자체 포함 JS·이식성·감사 해시 유지 | 통과 |
+
+대표 PNG를 `view_image`로 확인했다. 기존 내 업무와 모달의 폰트·네이비 버튼·카드·여백을 재사용했고, 모바일 긴 폼은 본문 스크롤과 하단 확인 버튼을 유지한다.
+
+- `QA/screenshots/optional-duration-template-360.png`
+- `QA/screenshots/optional-duration-template-390.png`
+- `QA/screenshots/optional-duration-template-768.png`
+- `QA/screenshots/optional-duration-template-1440.png`
+- `QA/screenshots/optional-duration-maid-blocked-390.png`
+- `QA/screenshots/optional-duration-incident-conflict-390.png`
+
+미검증/활성화 보류: 운영 56번째 migration·main exact source API 배포·운영 nullable OpenAPI/Swagger·운영 타입 재생성·예약/템플릿 smoke·실제 서버 두 메이드 동시 시작. 사건 알림에 incident ID가 없어 자동 관리자 사건 큐 연결과 다른 기기의 사전 차단은 현재 단건 계약만으로 완료할 수 없다. 기존 PIN 공개·사진 업로드/제출 연동도 대기 상태를 유지한다. 이 조건을 확인/보완하기 전 플래그 ON 금지. 상세 인계는 `DOCS/22_OPTIONAL_CLEANING_DURATION_FRONTEND_RELEASE.md`를 따른다.
+
+## 2026-09-16 · 청소관리 운영 API v0.3.0
+
+운영 `openapi.json`과 Swagger를 읽어 v0.3.0, 109 paths / 117 operations 및 배정·attempt·사진·submission·inspection·notification 계약을 확인하고 `WIREFRAME/cleaning-api.d.ts`를 다시 생성했다. 운영 source 기준은 `main@6604b2215e06b9e9ebf0b3138e3716a000c57ddb`다.
+
+Browser 플러그인이 제공되지 않아 앱 번들 Node 패키지와 설치된 Chrome 152.0.7977.83을 Playwright로 제어했다. 모든 업무 API 쓰기는 로컬 fixture로 가로챘으며 운영 mutation은 실행하지 않았다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 관리자 배정 조회, 비영속 Preview, version 초안 저장 | 통과 |
+| Commit impact fingerprint와 assignment/availability version, Commit 뒤 재조회 | 통과 |
+| 배정 revision 이력, 담당 변경, 취소 요청 결정 | 통과 |
+| 메이드 본인 통보 배정만 표시, 다른 메이드 attempt 403 | 통과 |
+| 작업 시작 응답 유실 후 동일 idempotency key/payload replay | 통과 |
+| attempt 409에서 로컬 성공 전이 없음, 최신 상태 재조회 | 통과 |
+| lease 기반 시작, 현장 완료, 서버 시각 기반 실제 37분 표시 | 통과 |
+| 서버 사진 슬롯, 필수 누락 차단, 업로드 415 실패와 재선택, verified 재조회 | 통과 |
+| immutable submission, 중복 클릭 1회, 검수 대기 표시 | 통과 |
+| 관리자 사진 원본 proxy 상세, 승인, 반려·재청소 | 통과 |
+| stale submission 승인 409 차단과 검수 목록 재조회 | 통과 |
+| 서버 알림 목록, 읽음 POST, allowlist 대상 진입 전 재조회 | 통과 |
+| 401 세션 만료와 403 역할 오류 구분 | 통과 |
+| token/PIN/guest PII가 console·URL에 없음 | 통과 |
+| 360/390/768/1440px 가로 넘침 없음, 보이는 주요 버튼 44×44px 이상 | 통과 |
+| 앱 JavaScript error, console warning/error | 0건 |
+
+대표 PNG:
+
+- `QA/screenshots/cleaning-api-admin-390.png`
+- `QA/screenshots/cleaning-api-admin-1440.png`
+- `QA/screenshots/cleaning-api-maid-390.png`
+
+미검증: 승인된 운영 계정이 없어 실제 로그인, protected 운영 GET, production 사진 content, 실제 mutation, DB 동시성, 실기기 카메라, 장시간 refresh token, 외부 Web Push 전달은 확인하지 않았다. 운영에서는 공개 health/OpenAPI/Swagger/CORS 읽기 smoke만 실행한다. 2026-09-15의 운영 OFF 기록은 역사 기록이며 현재 정본은 `DOCS/23_CLEANING_API_INTEGRATION.md`다.
+
+## 2026-09-16 · 운영 API 화면의 와이어프레임 정합성 복원
+
+운영 연결 화면을 기존 데모 와이어프레임과 나란히 비교했다. Browser 플러그인이 제공되지 않아 앱 번들 Playwright와 설치된 Chrome 152.0.7977.83을 사용했다. 업무 요청은 모두 로컬 OpenAPI 형태 fixture로 가로챘고 운영 mutation은 실행하지 않았다.
+
+### 발견한 차이와 수정 결과
+
+| 비교 지점 | 수정 전 | 수정 후 |
+| --- | --- | --- |
+| 객실 유형 | API의 긴 이름을 그대로 표시 | 기존 `스탠다드 / 프리미어 / 파셜 오션뷰 / 패밀리 투룸` 표기 |
+| 객실 일정 | API 상태 설명 문장을 일정 칸에 표시 | 기존 `체크인 / 체크아웃` 두 줄과 `일정 없음` |
+| 객실 상태 | allocation 차단을 항상 대표 상태로 표시 | `투숙 중 → 청소 필요 → 배정 가능 → 배정 불가` 순으로 주 상태를 표시하고 PIN 등 차단 이유는 보조 배지 |
+| PIN 영역 | 동기화 상태와 `상태 관리`만 표시 | 기존 `객실 PIN •••• / 보기 / 수정`; reveal 최대 30초, 변경 lease·version 연결 |
+| 객실 카드 작업 | API 동작명이 직접 노출 | 기존 `예약 / 운영 상태 / 청소 / 전체 상세` 네 작업과 기존 목적 화면 |
+| 전체 상세 | API 필드 나열 모달 | 기존 목록 복귀·2열 상세·기본정보·예약·청소·촛불·특이사항·운영 상태 구조 |
+| 청소 관리자 | `청소 계획·검수` 단일 API 스택 | 기존 다섯 탭과 단계형 오늘/내일 배정 화면 안에 API 데이터 투영 |
+
+### 실제 확인
+
+- 오늘 요약의 네 상태 카드를 각각 눌러 기존 객실 목록으로 이동하고 `occupied / cleaning / ready / blocked` 필터 결과만 표시되는지 확인했다.
+- 객실 행마다 PIN `보기·수정`과 네 작업 버튼이 유지되는지, 예약 상세·변경 모달, 운영 중지 모달, 해당 객실 청소 진행, 전체 객실 상세로 이동하는지 확인했다.
+- PIN reveal은 숨김 뒤 DOM에서 제거되고, PIN 변경은 prepare lease 뒤 confirm에 같은 current pin version과 각 mutation의 `Idempotency-Key`를 보내는지 확인했다. token·PIN·고객명 sentinel은 console과 URL에 0건이었다.
+- 청소의 `오늘 배정 / 내일 배정 / 진행 중 / 검수 대상 목록 / 완료` 탭, 배정 요약·근무표·Preview/impact·객실별 담당 영역을 확인했다. Preview/Commit/검수/사진/제출의 기존 API 회귀도 함께 통과했다.
+- 객실 목록·객실 상세·청소 화면을 360/390/768/1440px에서 확인했고 가로 넘침 0, 앱 JavaScript error와 console warning/error 0건이었다.
+
+### 대표 PNG
+
+- `QA/screenshots/live-wireframe-rooms-390.png`
+- `QA/screenshots/live-wireframe-rooms-1440.png`
+- `QA/screenshots/live-wireframe-room-detail-390.png`
+- `QA/screenshots/live-wireframe-room-detail-1440.png`
+- `QA/screenshots/live-wireframe-cleaning-390.png`
+- `QA/screenshots/live-wireframe-cleaning-1440.png`
+
+### 한계
+
+- 승인된 운영 계정이 없어 protected 운영 GET과 실제 mutation은 실행하지 않았다. production 배포 화면의 변경 반영은 PR 병합·배포 뒤 읽기 smoke가 필요하다.
+- 완료 청소 최근 7일 전용 목록과 청소요금은 현재 OpenAPI에 없어 데모 값으로 대체하지 않고 각각 계약 부재와 `API 미제공`으로 표시한다.
+
+## 2026-09-16 · 운영 팝업·세부페이지 와이어프레임 완전 정합
+
+운영 API 데이터를 축약형 카드·모달에 맞추던 잔여 화면을 제거하고, 기존 와이어프레임의 화면 구조 위에만 서버 값을 투영하도록 다시 비교했다. Browser 플러그인이 제공되지 않아 앱 번들 Playwright와 설치된 Chrome 152.0.7977.83을 사용했다. 모든 업무 mutation은 로컬 OpenAPI 형태 fixture로 가로챘고 운영 데이터는 변경하지 않았다.
+
+| 비교 지점 | 와이어프레임 정합 결과 |
+| --- | --- |
+| 객실 전체 상세 | 목록 복귀, 객실 기본정보, 현재 상태, 예약·입퇴실, 현재 투숙, 촛불, 특이사항, 청소 작업, 운영 상태, 사건 타임라인, 하단 고정 행동 순서로 복원 |
+| 예약 팝업 | 객실·인원 첫 행, 장기숙박 자리, 번호가 붙은 체크인·체크아웃, 기간 안내, 고객명, 하단 취소·저장 구조 유지 |
+| 운영 상태 팝업 | 운영 중지 안내, 대체 객실, 사유, 하단 취소·확정 구조 유지. 계약이 없는 입력은 같은 자리에서 `API 미제공`으로 잠금 |
+| PIN 수정 팝업 | 4자리 직접 입력·무작위 생성·검토의 기존 하단 시트 구조에 prepare→confirm/rollback 계약 연결 |
+| 객실별 청소 상세 | 진행 탭으로 우회하지 않고 기존 청소 상세 전체 페이지와 하단 주 행동으로 진입 |
+| 관리자 제출 검수 | 축약 모달을 없애고 제출 요약·사진·특이사항·판정·하단 승인/반려가 있는 기존 전체 페이지로 진입 |
+
+360·390·768·1440px에서 객실 상세의 정보 순서와 2열 확장, 팝업 폭·스크롤·44px 이상 행동, 객실별 청소 상세와 제출 검수 상세의 가로 넘침을 확인했다. 객실 카드 네 버튼은 각각 기존 목적 화면만 열었고, 앱 JavaScript error와 console warning/error는 0건이었다. token·PIN·고객 PII sentinel은 console과 URL에 나타나지 않았다.
+
+대표 PNG:
+
+- `QA/screenshots/live-wireframe-room-detail-390.png`
+- `QA/screenshots/live-wireframe-room-detail-1440.png`
+- `QA/screenshots/live-wireframe-reservation-modal-390.png`
+- `QA/screenshots/live-wireframe-reservation-modal-1440.png`
+- `QA/screenshots/live-wireframe-operation-modal-390.png`
+- `QA/screenshots/live-wireframe-operation-modal-1440.png`
+- `QA/screenshots/live-wireframe-pin-sheet-390.png`
+- `QA/screenshots/live-wireframe-room-cleaning-detail-1440.png`
+- `QA/screenshots/live-wireframe-inspection-detail-1440.png`
+
+승인된 운영 계정이 없어 protected 운영 GET, 실제 PIN·객실·청소 mutation, production 사진 content는 hosted 검증하지 않았다. PR 병합과 배포 뒤에는 임의 mutation 없이 역할별 읽기 smoke와 정적 자산 반영만 확인해야 한다.

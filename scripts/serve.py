@@ -104,7 +104,7 @@ def is_browser_publishable_key(value: str) -> bool:
     return isinstance(payload, dict) and payload.get("role") == "anon"
 
 
-def load_runtime_config() -> dict[str, str]:
+def load_runtime_config() -> dict[str, object]:
     file_values = parse_env_file(ENV_FILE)
     requested_mode = os.environ.get(
         RUNTIME_MODE_ENV_NAME, file_values.get(RUNTIME_MODE_ENV_NAME, "")
@@ -139,6 +139,7 @@ def load_runtime_config() -> dict[str, str]:
         "supabaseUrl": values["supabaseUrl"].rstrip("/"),
         "supabasePublishableKey": values["supabasePublishableKey"],
         "sessionPersistence": persistence,
+        "featureFlags": {"optionalCleaningWorkflow": True},
     }
 
 

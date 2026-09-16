@@ -19,6 +19,14 @@ const required = [
   'DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md',
   'DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md',
   'DOCS/WIREFRAME_TASK_PROMPT.md',
+  'DOCS/22_OPTIONAL_CLEANING_DURATION_FRONTEND_RELEASE.md',
+  'WIREFRAME/cleaning-api.d.ts',
+  'scripts/generate-cleaning-client.mjs',
+  'scripts/check-cleaning-workflow.mjs',
+  'WIREFRAME/QA/screenshots/optional-duration-template-390.png',
+  'WIREFRAME/QA/screenshots/optional-duration-template-1440.png',
+  'WIREFRAME/QA/screenshots/optional-duration-maid-blocked-390.png',
+  'WIREFRAME/QA/screenshots/optional-duration-incident-conflict-390.png',
   'WIREFRAME/index.html',
   'WIREFRAME/app.webmanifest',
   'WIREFRAME/sw.js',
@@ -29,6 +37,9 @@ const required = [
   'WIREFRAME/QA.md',
   'WIREFRAME/QA/screenshots/live-api-login-1440.png',
   'WIREFRAME/QA/screenshots/live-api-login-390.png',
+  'WIREFRAME/QA/screenshots/issue-137-blocked-rooms-1440.png',
+  'WIREFRAME/QA/screenshots/issue-137-blocked-rooms-390.png',
+  'WIREFRAME/QA/screenshots/issue-137-allocation-race-409-390.png',
   'scripts/build-pages-artifact.mjs',
   'scripts/check-api-integration.mjs',
   'scripts/check-pwa.mjs',
@@ -1156,7 +1167,9 @@ for (const contract of [
 ]) {
   if (!html.includes(contract)) throw new Error(`Reservation cancellation contract missing: ${contract}`);
 }
-if (html.includes('id="reservation-cancel-other"') || html.includes('normalizedReservationCancelOther') || html.includes('reasonDetail')) {
+const reservationCancelRecordStart = html.indexOf('function cancelReservationRecord');
+const reservationCancelRecordSource = html.slice(reservationCancelRecordStart, html.indexOf('function ', reservationCancelRecordStart + 20));
+if (html.includes('id="reservation-cancel-other"') || html.includes('normalizedReservationCancelOther') || reservationCancelRecordSource.includes('reasonDetail')) {
   throw new Error('Reservation cancellation must not expose or persist a free-form reason field.');
 }
 const reservationAssignmentCancelStart = html.indexOf('function cancelReservationAssignmentRecord');
@@ -2427,7 +2440,7 @@ for(const contract of [
   'const liveMaidNav=maidNav;',
   'function renderLiveAdminToday(){',
   "const LIVE_ROOM_TYPE_ORDER=Object.freeze(['standard','premium','oceanPremium','oceanFamily']);",
-  "const LIVE_ROOM_TYPE_LABELS=Object.freeze({standard:'스탠다드',premium:'프리미어',oceanPremium:'파셜 오션뷰 프리미어',oceanFamily:'파셜 오션뷰 패밀리 투룸'});",
+  "const LIVE_ROOM_TYPE_LABELS=Object.freeze({standard:'스탠다드',premium:'프리미어',oceanPremium:'파셜 오션뷰',oceanFamily:'패밀리 투룸'});",
   'catalogOrder=new Map(ROOM_CATALOG.map(([roomNo],index)=>[roomNo,index]))',
   'const typeTabs=LIVE_ROOM_TYPE_ORDER.map(',
   'function renderLiveMaids(){',
@@ -2456,9 +2469,70 @@ for(const contract of [
   if(!html.includes(contract))throw new Error(`Role-based production UI contract missing: ${contract}`);
 }
 const liveRoomRowSource=html.slice(html.indexOf('function liveRoomListRow'),html.indexOf('function renderLiveRooms'));
-if(liveRoomRowSource.includes('room-list-badges'))throw new Error('Production room rows expose secondary reason badges that the canonical room list hides.');
+for(const contract of [
+  'allocationReady=room.allocationReady===true',
+  'disabled aria-describedby=',
+  '체크인 <strong>일정 없음</strong>',
+  '체크아웃 <strong>일정 없음</strong>',
+  'room-list-badges',
+  'renderLiveRoomPinManager(room)',
+  "data-action=\"live-room-operations\"",
+  "data-action=\"open-live-cleaning-request\"",
+  "data-action=\"open-live-room-detail\"",
+  '예약 등록 불가 · ${esc(reasonText)}',
+]){
+  if(!liveRoomRowSource.includes(contract))throw new Error(`Reservation allocation card guard missing: ${contract}`);
+}
+for(const contract of [
+  'function clearLivePinReveal(',
+  '/pin/reveal`,{method:\'POST\',body:{}}',
+  '/pin-changes/prepare`,{body:{pinDigits,expectedPinVersion:',
+  '/pin-changes/${encodeURIComponent(context.leaseId)}/${action}`',
+  'clearLivePageSecretsForHide(){',
+  'clearLivePinReveal();document.querySelectorAll',
+]){
+  if(!html.includes(contract))throw new Error(`Production room PIN contract missing: ${contract}`);
+}
+const liveReservationGuardSource=html.slice(html.indexOf('function liveReservationAvailableRooms'),html.indexOf('function openLiveCleaningRequest'));
+for(const contract of [
+  'function liveReservationAvailableRooms(){return (state.remote.rooms.items||[]).filter(room=>room.allocationReady===true);}',
+  "status=room.allocationReady===true?'배정 가능':`배정 불가 · ${liveRoomBlockReasonText(room)}`",
+  "${selectable?'':'disabled'}",
+  '현재 예약을 배정할 수 있는 객실이 없습니다.',
+  'refreshLiveReservationRoomSelection(roomId)',
+  'Number(roomSelect?.dataset.stateVersion)!==Number(room.stateVersion)',
+  'expectedRoomVersion:Number(room.stateVersion)',
+  "['ROOM_ALLOCATION_BLOCKED','STALE_VERSION'].includes(error?.code)",
+  "apiErrorCopy(error,'예약 변경을 완료하지 못했습니다.')",
+  '문의 번호 ${esc(error.requestId)}',
+]){
+  if(!liveReservationGuardSource.includes(contract))throw new Error(`Reservation allocation submit/modal guard missing: ${contract}`);
+}
+const liveReservationCreateSource=liveReservationGuardSource.slice(liveReservationGuardSource.indexOf('async function submitLiveReservationCreate'),liveReservationGuardSource.indexOf('async function submitLiveReservationUpdate'));
+if(liveReservationCreateSource.indexOf('refreshLiveReservationRoomSelection(roomId)')<0||liveReservationCreateSource.indexOf('refreshLiveReservationRoomSelection(roomId)')>liveReservationCreateSource.indexOf('runLiveReservationMutation'))throw new Error('Reservation create must refresh and validate the room before POST.');
+for(const [code,copy] of [
+  ['ROOM_ALLOCATION_BLOCKED','현재 객실은 예약 배정이 불가능합니다. 차단 사유를 확인해 주세요.'],
+  ['STALE_VERSION','다른 변경이 먼저 반영됐습니다. 최신 객실 정보를 확인한 뒤 다시 시도하세요.'],
+  ['RESERVATION_OVERLAP','같은 객실의 기존 예약과 시간이 겹칩니다.'],
+]){
+  if(!html.includes(`${code}:'${copy}'`))throw new Error(`Reservation API error copy missing: ${code}`);
+}
+for(const [code,copy] of [
+  ['OCCUPIED','투숙 중'],
+  ['CLEANING_REQUIRED','청소 또는 검수 미완료'],
+  ['CANDLE_PRESENT','객실 내 촛불 미회수'],
+  ['OPERATION_BLOCKED','객실 운영 중지'],
+  ['ROOM_ISSUE_BLOCKED','입실 차단 객실 이슈 존재'],
+  ['PIN_MISMATCH','PIN 불일치'],
+  ['DATA_UNCONFIRMED','객실 기준정보 또는 PIN 동기화 미확인'],
+]){
+  if(!html.includes(`${code}:'${copy}'`))throw new Error(`Room allocation reason copy missing: ${code}`);
+}
+for(const detail of ["room.pinSyncStatus==='unconfigured'", "room.pinSyncStatus==='mismatch'", "room.dataStatus!=='verified'", 'PIN 동기화 미설정', '객실 기준정보 미확인']){
+  if(!html.includes(detail))throw new Error(`Detailed room allocation reason guard missing: ${detail}`);
+}
 if(html.includes('미지원 업무는 운영 화면에서 숨김'))throw new Error('Production UI still hides unsupported role views instead of preserving the existing navigation.');
-console.log('Role-based production main-screen parity contracts: passed');
+console.log('Role-based production main-screen and reservation-allocation guard contracts: passed');
 const serveSource=readFileSync(resolve(root,'scripts/serve.py'),'utf8');
 const pagesBuildSource=readFileSync(resolve(root,'scripts/build-pages-artifact.mjs'),'utf8');
 const apiCheckSource=readFileSync(resolve(root,'scripts/check-api-integration.mjs'),'utf8');
@@ -2481,3 +2555,21 @@ for(const contract of ["if: ${{ vars.RMS_APP_ORIGIN != '' }}","RMS_RUNTIME_MODE:
 console.log('Production project, session isolation, auth-race, and deployment-origin contracts: passed');
 
 await import('./check-pwa.mjs');
+
+const cleaningTypes=readFileSync(resolve(root,'WIREFRAME/cleaning-api.d.ts'),'utf8');
+if(!cleaningTypes.includes('durationMinutes?: number | null | undefined;')||!cleaningTypes.includes('durationMinutes: number | null;'))throw new Error('Optional nullable cleaning duration client contract missing.');
+if(!serveSource.includes('"optionalCleaningWorkflow": True')||!pagesBuildSource.includes('optionalCleaningWorkflow: true'))throw new Error('Cleaning workflow live runtime gate must be enabled.');
+if(!html.includes("value.featureFlags?.optionalCleaningWorkflow===true"))throw new Error('Cleaning release gate must require an explicit boolean.');
+for(const contract of ['/v1/assignments/preview','/v1/assignments/commit-impact','/v1/attempts/{attemptId}/photo-slots','/v1/attempts/{attemptId}/submissions','/v1/inspections/{submissionId}/approve','/v1/notifications/{notificationId}/read']){
+  if(!cleaningTypes.includes(contract.split('/').at(-1) || '')&&!readFileSync(resolve(root,'scripts/generate-cleaning-client.mjs'),'utf8').includes(contract))throw new Error(`Cleaning API generated contract missing: ${contract}`);
+}
+for(const contract of ['runLiveCleaningMutation','expectedImpactFingerprint','expectedPhotoRevision','clientSubmissionId','responseType===\'blob\'','handleLiveNotificationAction']){
+  if(!html.includes(contract))throw new Error(`Cleaning live implementation contract missing: ${contract}`);
+}
+for(const contract of ['function liveCleaningTabButton','function renderLiveAdminAssignmentDashboard','class="assignment-page tab-panel"','오늘 배정','내일 배정','진행 중','검수 대상 목록','data-cleaning-planning','data-cleaning-assignments',"if(liveMode()){\n            state.cleaningTab=tab;"]){
+  if(!html.includes(contract))throw new Error(`Cleaning wireframe fidelity contract missing: ${contract}`);
+}
+for(const forbidden of ['function cleaningDemoSlots','||cleaningDemoSlots(','초기 촬영 구역은 데모입니다']){
+  if(html.includes(forbidden))throw new Error(`Cleaning live implementation still contains an operational fixture fallback: ${forbidden}`);
+}
+console.log('Production cleaning client types and enabled live runtime static contracts: passed');
