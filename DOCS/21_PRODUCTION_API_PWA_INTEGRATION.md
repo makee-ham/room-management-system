@@ -2,7 +2,46 @@
 
 작성일: 2026-08-31
 
-최종 갱신: 2026-09-16 · 백엔드 `v0.3.0` (109 paths / 117 operations)
+최종 갱신: 2026-09-16 · 프런트 `main@c0657e2`·`dev@2c2675b`와 백엔드 `v0.3.0` (109 paths / 117 operations) 재대조
+
+## 계약 snapshot과 문서 성격
+
+| 구분 | exact commit | 의미 |
+|---|---|---|
+| 프런트 `main` | `c0657e2680355e4132424f35498c6dbb1708003c` | 현재 배포 정본. 운영 청소 `v0.3.0` 연결과 와이어프레임 UI를 포함하며 계약 검사는 필수 63 paths / 68 operations를 확인한다. 이 수치는 실제 UI 호출 수가 아니라 운영 진단 endpoint까지 포함한 검증 범위다. |
+| 프런트 `dev` | `2c2675b3f132bdbff77bfceaf204641e10e37f12` | 현재 `main`의 운영 청소 연결을 바탕으로 객실·예약·운영·PIN·청소·검수 상세 화면을 와이어프레임 정본에 맞춘 차기 후보다. |
+| 백엔드 `dev` | `ff4dd507ee2b9eefbc7d489c390b857d4fa5b1e2` | source OpenAPI `0.3.0`, 109 paths / 117 operations. #179 A안 후보는 별도 PR이며 production 활성화로 해석하지 않는다. |
+| 백엔드 `main` | `a12595edf68644b94215c4792e0d3aadd64772c6` | production 56 migrations·API v16·v7 템플릿 게시 결과를 문서화한 GitHub 정본이다. runtime source identity는 `6604b2215e06b9e9ebf0b3138e3716a000c57ddb`다. |
+
+이 문서는 시점이 붙은 운영 연동 기록이다. 제품 정책 정본이나 생성 client 자체가 아니며, runtime OpenAPI와 exact source commit이 다르면 runtime을 우선하고 차이를 Issue로 기록한다. generated client와 breaking diff CI는 백엔드 [#173](https://github.com/wrongstory/room-management-system-backend/issues/173), 전체 adapter 전환과 권한별 browser E2E는 [#13](https://github.com/wrongstory/room-management-system-backend/issues/13)에서 진행한다.
+
+## 실제 소비와 source 제공 구분
+
+| 영역 | `main` 실제 소비 | `dev` 차기 후보 | 백엔드 source | 상태 |
+|---|---|---|---|
+| 인증·계정·개발자 상태 | 소비 | 동일 | 제공 | 호환 |
+| 가능일·예약·객실 | 소비 | 동일 | 제공 | 호환. CAS·멱등 키·409 재조회 유지 |
+| 청소 템플릿·수행·미퇴실 사건 | 운영 API 소비 | 동일 | 제공 | `main` 연동 완료, 운영 계정 hosted smoke 대기 |
+| 배정·사진·제출·검수 | 운영 API 소비 | 동일. #179 A안 fixture·정적 계약은 PR #141 후보 | 제공 | 현재 단일 사진 운영 연결 완료, 사진 다중 컬렉션은 #180 대기 |
+| 알림·Web Push | PWA shell/권한만 | 앱 내부 알림 소비·Web Push 전달 별도 | source 제공 | 외부 push provider 활성화 별도 |
+| 주급·컴플레인 | 데모 | 동일 | 제공 | 연동 대기 |
+| PIN·Google Sheets | legacy 상태 기록만 | 신규 API 미소비 | source 제공 | 민감정보 경계 유지, hosted 활성화 별도 |
+| 검수 대기열 cursor | 미소비 | 미소비 | 백엔드 PR #176 후보 | 병합 뒤 generated client 갱신 대상 |
+
+`scripts/check-api-integration.mjs`의 63 paths / 68 operations는 health·OpenAPI·Swagger와 운영 진단용 endpoint를 포함한 필수 계약 검사 범위다. 이 수치는 `WIREFRAME/index.html`의 실제 UI 호출 수가 아니다. `/health`, `/openapi.json`, `/docs`, 개발자 감사·활동·진단 일부, 예약 전이 processor, 객실 master-data 명령처럼 배포 검증이나 별도 worker가 사용하는 계약도 포함한다.
+
+## 사진 슬롯 계약 결정과 전환 상태
+
+2026-09-16 사용자 결정과 [백엔드 Decision #179](https://github.com/wrongstory/room-management-system-backend/issues/179)에 따라 A안을 확정했다. 새 v8+ 퇴실 청소 template은 객실 타입별 총 9 / 10 / 12 / 14 슬롯, 필수 8 / 9 / 11 / 13 슬롯을 사용한다. required `tv-on`·`entry-storage`는 유지하고 중복 `entry-number`는 제외하며, 마지막 `extra-proof`만 선택·`maxPhotos: 10`이다. 프런트 데모의 pre-A v7과 백엔드의 `maxPhotos` 없는 pre-A v7 이상 template/진행 중 attempt/제출·검수 snapshot의 10 / 11 / 13 / 15 계약은 재작성하지 않는다.
+
+백엔드 #179 source 후보가 append-only v8 validator·publisher·OpenAPI를 구현하지만 운영 DB 적용과 template 재게시는 아직 아니다. 현재 백엔드는 슬롯당 current 사진 한 장 구조이므로 `extra-proof`의 실제 0~10장 추가·개별 삭제·제출 봉인은 [백엔드 #180](https://github.com/wrongstory/room-management-system-backend/issues/180)에서 완료한다. #180 전에는 이 UI fixture를 운영 API가 완전히 지원한다고 표시하거나 v8 운영 template을 게시하지 않는다.
+
+공통 계약은 다음과 같다.
+
+- 역할과 권한은 access token actor 및 서버의 최신 role/status/capability를 정본으로 사용한다. 401/403에서 다른 계정이나 역할로 자동 재실행하지 않는다.
+- 오류는 HTTP status, 안정된 `error.code`, `requestId`로 분기한다. 서버 message와 request body를 화면 문구·로그 정본으로 사용하지 않는다.
+- 모든 mutation은 `Idempotency-Key`를 사용한다. 응답 유실 때 같은 actor·path·정규화 body에만 같은 키를 재사용하고 Service Worker는 mutation을 캐시하거나 반복하지 않는다.
+- 서버 응답의 `version`, `stateVersion`, assignment revision, execution version, impact fingerprint를 CAS 입력으로 사용한다. 409 뒤 관련 projection을 다시 읽고 사용자에게 재확인받는다.
 
 ## 연결 대상으로 확정한 프로젝트
 
@@ -17,13 +56,13 @@
 - `/v1/auth/login`, Supabase refresh token, `/v1/auth/me`를 연결했다.
 - 전용 origin의 개인 기기에서는 `로그인 유지`를 켤 수 있고, access token 만료 전에 refresh token으로 세션을 갱신한다.
 - 관리자에게 운영 객실 읽기와 계정 생성·역할·상태·잠금·비밀번호 초기화 기능을 연결했다.
-- 백엔드 `v0.2.0`의 예약 목록·단건 고객명 조회·등록·변경·취소·수동 체크아웃과 연박/추가 청소 요청 생성·취소를 연결했다. 고객명은 관리자 단건 모달의 현재 DOM에만 두고 목록·URL·로그·`localStorage`·`sessionStorage`에 남기지 않는다.
+- 백엔드 `v0.3.0` 운영 계약의 예약 목록·단건 고객명 조회·등록·변경·취소·수동 체크아웃과 연박/추가 청소 요청 생성·취소를 연결했다. 고객명은 관리자 단건 모달의 현재 DOM에만 두고 목록·URL·로그·`localStorage`·`sessionStorage`에 남기지 않는다.
 - 메이드의 다음 주 가능일 최초/재제출과 마감 후 변경 요청, 관리자의 메이드별 가능일 표와 변경 요청 승인·반려를 연결했다. 모든 mutation은 현재 version을 CAS 값으로 보내고 멱등 키를 사용한다.
 - 객실 단건 projection, 촛불 수량, 운영 차단, 객실 이슈, PIN 동기화 상태 기록을 연결했다. v0.3.0의 명시적 PIN reveal과 prepare/confirm/rollback 변경 흐름도 기존 객실 카드의 `보기·수정` UI에 연결하며 원문은 한 객실·최대 30초 메모리에만 둔다.
 - 개발자 기본 화면에 runtime·database·scheduler·계정/객실 요약을 연결했다. 설정은 `configured` 여부만 표시하고 값·길이·해시는 표시하지 않는다.
 - 관리자는 기존 `오늘·객실·간편 예약·청소·메이드·더보기`, 메이드는 기존 `내 업무·근무 일정·주급·더보기` 정보 구조를 그대로 사용한다.
-- 운영 API가 있는 화면은 기존 카드·목록 안에 실제 응답을 표시하고, 아직 endpoint가 없는 화면은 같은 내비게이션과 레이아웃 안에서 `API 연결 대기` 상태를 표시한다.
-- 객실 탭과 목록은 정본 순서 `전체 → 스탠다드 → 프리미어 → 파셜 오션뷰 → 패밀리 투룸` 및 기존 객실 카탈로그 순서를 사용한다.
+- 운영 API가 있는 화면은 기존 카드·목록 안에 실제 응답을 표시한다. 현재 `main@c0657e2`가 청소 배정·수행·사진·제출·검수·앱 내부 알림을 운영 연결했고, 최신 `dev@2c2675b`는 그 연결을 유지하면서 상세 화면을 와이어프레임 정보 구조에 맞췄다. 아직 endpoint가 없는 화면은 같은 내비게이션과 레이아웃 안에서 `API 연결 대기` 상태를 표시한다.
+- 객실 탭과 목록은 최신 와이어프레임 정본 순서 `전체 → 스탠다드 → 프리미어 → 파셜 오션뷰 → 패밀리 투룸` 및 기존 객실 카탈로그 순서를 사용한다.
 - 관리자 `메이드`는 계정 목록으로 대체하지 않고 기존 `주간 근무표·근무 기록·주급 정산·컴플레인·벌점` 구조를 유지한다. 계정 API의 실제 메이드와 실제 가능일을 주간 표·카드에 표시하고, 배정·근무 이력·주급·컴플레인 값은 `API 연결 대기`로 둔다.
 - 개발자는 `운영 상태·계정·더보기`를 사용하고, 모든 역할은 서버가 반환한 역할 범위 안에서만 데이터와 작업을 볼 수 있다.
 - 운영 API 오류나 런타임 설정 오류를 데모 데이터로 대체하지 않는다.
@@ -38,11 +77,11 @@
 - 서버의 `ROOM_ALLOCATION_BLOCKED` 409와 `STALE_VERSION`은 정상적인 경쟁 상태로 처리한다. 객실 목록을 다시 읽고 `error.code`에 해당하는 사용자 안내, 최신 차단 사유, `requestId`만 표시하며 서버 내부 message는 화면 문구로 사용하지 않는다.
 - 서비스 워커는 API, Authorization, 민감 URL, cross-origin, 모든 non-GET 요청을 브라우저 네트워크에 직접 맡긴다. 예약 POST는 서비스 워커가 캐시하거나 자동 재시도하지 않는다. navigation 실패는 캐시된 앱 문서가 없더라도 503 HTML fallback을 반환한다.
 
-## 아직 운영 API가 없는 범위
+## 백엔드 source에는 있으나 현재 `main`이 소비하지 않는 범위
 
-현재 OpenAPI v0.3.0에는 주급 정산·지급, 외부 Web Push 구독·전달, 완료 청소의 최근 7일 전용 목록 endpoint가 없다. 이 기능은 데모 화면을 운영 데이터처럼 보여 주지 않고 기존 역할별 화면 안에서 `API 연결 대기` 또는 정확한 빈 상태로 표시한다. 청소 배정·현장 수행·사진·제출·검수·앱 내부 알림과 객실 PIN 조회·변경은 v0.3.0 운영 계약에 연결되어 있다.
+현재 OpenAPI v0.3.0에는 주급 정산·지급, 외부 Web Push 구독·전달, 완료 청소의 최근 7일 전용 목록 endpoint가 없다. 이 기능은 데모 화면을 운영 데이터처럼 보여 주지 않고 기존 역할별 화면 안에서 `API 연결 대기` 또는 정확한 빈 상태로 표시한다. 청소 배정·현장 수행·사진·제출·검수·앱 내부 알림과 객실 PIN 조회·변경은 v0.3.0 운영 계약에 연결되어 있다. 다만 A안 `extra-proof` 다중 사진 collection은 #180 완료 전 운영 활성화하지 않는다.
 
-객실 기준정보 변경은 `roomTypeId`가 필요하지만 `v0.2.0`에는 프런트가 안전하게 선택할 객실 유형 ID 카탈로그 endpoint가 없다. 객실 유형 ID를 추측하지 않으며 카탈로그 계약이 추가될 때까지 운영 화면에서 기준정보 mutation을 노출하지 않는다. 운영 차단·객실 이슈 해제도 목록 endpoint가 없으므로 현재 브라우저 세션에서 생성 응답의 `entityId`를 받은 건만 바로 해제할 수 있다.
+객실 기준정보 변경은 `roomTypeId`가 필요하지만 현재 `v0.3.0` 운영 계약에는 프런트가 안전하게 선택할 객실 유형 ID 카탈로그 endpoint가 없다. 객실 유형 ID를 추측하지 않으며 카탈로그 계약이 추가될 때까지 운영 화면에서 기준정보 mutation을 노출하지 않는다. 운영 차단·객실 이슈 해제도 목록 endpoint가 없으므로 현재 브라우저 세션에서 생성 응답의 `entityId`를 받은 건만 바로 해제할 수 있다.
 
 브라우저 알림 권한을 허용하는 것만으로 앱이 닫힌 동안 알림을 보낼 수는 없다. 다음 백엔드가 추가되어야 한다.
 

@@ -6,6 +6,10 @@
 
 이 문서는 청소관리 프런트의 현재 운영 연결 정본이다. 요청·응답 타입과 endpoint는 운영 `openapi.json`만을 기계 판독 정본으로 사용한다. 이전 `DOCS/22_OPTIONAL_CLEANING_DURATION_FRONTEND_RELEASE.md`의 운영 OFF 상태와 PR #166 임시 계약은 이 문서로 대체한다.
 
+## 사진 슬롯 A안 전환
+
+새 퇴실 청소 fixture와 백엔드 #179 계약은 v8부터 객실 타입별 총 9 / 10 / 12 / 14 슬롯과 필수 8 / 9 / 11 / 13 슬롯을 사용한다. `tv-on`과 `entry-storage`는 필수로 유지하고 중복 `entry-number`는 제거하며, 마지막 `extra-proof`만 선택·`maxPhotos: 10`이다. pre-A v7의 10 / 11 / 13 / 15 스냅샷은 그대로 재생한다. 실제 다중 사진 업로드·개별 삭제·제출 봉인은 백엔드 #180 완료 전 운영 활성화하지 않는다.
+
 ## 운영 설정
 
 `scripts/serve.py`는 저장소 루트의 `.env.local` 또는 프로세스 환경변수에서 다음 공개 브라우저 설정을 읽는다.

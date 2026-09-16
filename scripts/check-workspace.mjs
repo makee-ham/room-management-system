@@ -417,13 +417,34 @@ if ([typePhotoGroupsStart, typePhotoGroupsEnd, typePhotoObjectStart, typePhotoOb
   throw new Error('TV-required checkout photo template source could not be resolved.');
 }
 const typePhotoGroups = Function(`"use strict";return (${typePhotoGroupsSource.slice(typePhotoObjectStart, typePhotoObjectEnd + 1)});`)();
-const expectedCheckoutPhotoCounts = {
+const enforcePhotoRulesStart = html.indexOf('function enforceCleaningPhotoRequirementRules');
+const enforcePhotoRulesEnd = html.indexOf('function templateSnapshotFor', enforcePhotoRulesStart);
+if (enforcePhotoRulesStart < 0 || enforcePhotoRulesEnd <= enforcePhotoRulesStart) {
+  throw new Error('Cleaning photo requirement materializer could not be resolved.');
+}
+const enforceCleaningPhotoRequirementRules = Function(
+  'MAID_ZONE_PHOTO_LIMIT',
+  `"use strict";return (${html.slice(enforcePhotoRulesStart, enforcePhotoRulesEnd).trim()});`,
+)(10);
+const expectedCheckoutBasePhotoCounts = {
   standard:{total:9,required:8},
   premium:{total:10,required:9},
   oceanPremium:{total:12,required:11},
   oceanFamily:{total:10,required:9},
 };
-for (const [typeId, expected] of Object.entries(expectedCheckoutPhotoCounts)) {
+const expectedCheckoutMaterializedPhotoCounts = {
+  standard:{total:9,required:8},
+  premium:{total:10,required:9},
+  oceanPremium:{total:12,required:11},
+  oceanFamily:{total:14,required:13},
+};
+const checkoutLayoutMultiplicity = {
+  standard:{bedrooms:1,bathrooms:1,drains:1,pantry:false},
+  premium:{bedrooms:1,bathrooms:1,drains:1,pantry:false},
+  oceanPremium:{bedrooms:1,bathrooms:1,drains:1,pantry:true},
+  oceanFamily:{bedrooms:2,bathrooms:2,drains:2,pantry:false},
+};
+for (const [typeId, expected] of Object.entries(expectedCheckoutBasePhotoCounts)) {
   const rules = typePhotoGroups[typeId] || [];
   const tvRules = rules.filter(rule => rule.id === 'tv-on');
   if (rules.length !== expected.total || rules.filter(rule => rule.required).length !== expected.required) {
@@ -442,16 +463,33 @@ for (const [typeId, expected] of Object.entries(expectedCheckoutPhotoCounts)) {
   if (rules.some(rule => rule.zone === '기타' && (rule.required !== false || rule.maxPhotos !== 10))) {
     throw new Error(`${typeId} 기타 slot must be optional with maxPhotos 10.`);
   }
+  const profile = checkoutLayoutMultiplicity[typeId];
+  const materializedRules = rules.flatMap(rule => {
+    if (rule.conditionalBy && !profile[rule.conditionalBy]) return [];
+    const count = rule.repeatBy ? Math.max(1, Number(profile[rule.repeatBy]) || 1) : 1;
+    return Array.from({length:count}, () => rule);
+  });
+  const materializedExpected = expectedCheckoutMaterializedPhotoCounts[typeId];
+  if (materializedRules.length !== materializedExpected.total || materializedRules.filter(rule => rule.required).length !== materializedExpected.required) {
+    throw new Error(`${typeId} materialized checkout photo counts do not match the A-contract.`);
+  }
+  const enforcedRules = enforceCleaningPhotoRequirementRules(materializedRules);
+  if (enforcedRules.some(rule => {
+    const optional = (rule.zone || '사진') === '기타';
+    return rule.required !== !optional || rule.multiple !== optional || rule.maxPhotos !== (optional ? 10 : 1);
+  })) {
+    throw new Error(`${typeId} materialized checkout maxPhotos contract does not match the A-contract.`);
+  }
 }
 for (const contract of [
-  "checkout:{name:'퇴실 청소',version:'v7'",
+  "checkout:{name:'퇴실 청소',version:'v8'",
   'function legacyCheckoutTemplateSnapshotFor',
-  "version:'v6',photos:Object.freeze(current.photos.filter(item=>item.id!=='tv-on')",
+  "version:'v7',photos:Object.freeze([entryNumber,...current.photos.map(",
   "if(exact)return {status:exact.status||'empty',upload:exact};",
   "draft.kind==='퇴실 청소'?legacyCheckoutTemplateSnapshotFor(draft.room)",
-  "templateVersionSeed:'v7'",
-  "attempt.templateVersionSeed!=='v7'?legacyCheckoutTemplateSnapshotFor(attempt.room)",
-  "snapshot.version==='v6'&&state.jobs[attempt.room]==='upload'&&!prior.templateId",
+  "templateVersionSeed:'v8'",
+  "attempt.templateVersionSeed!=='v8'?legacyCheckoutTemplateSnapshotFor(attempt.room)",
+  "snapshot.version==='v7'&&state.jobs[attempt.room]==='upload'&&!prior.templateId",
   'TV 켜짐·화면 출력 확인',
   'TV는 켜고 계정·QR·알림 없는 기본 화면',
 ]) {
@@ -560,7 +598,7 @@ if (/attempt\.workDate\s*&&\s*attempt\.workDate\s*!==\s*completedDate/.test(vali
 if (html.includes('if(!submission.templateSnapshot&&!submission.templateId)return submission;') || !html.includes('submission.templateSnapshot=legacySnapshot;submission.templateId=legacySnapshot.id;submission.templateVersion=legacySnapshot.version;')) {
   throw new Error('Legacy cleaning submissions can bypass their immutable template/photo validation.');
 }
-if (!html.includes("snapshot.version==='v6'&&state.jobs[attempt.room]==='upload'&&!prior.templateId") || !html.includes("upload.required&&upload.status==='empty'")) {
+if (!html.includes("snapshot.version==='v7'&&state.jobs[attempt.room]==='upload'&&!prior.templateId") || !html.includes("upload.required&&upload.status==='empty'")) {
   throw new Error('Legacy upload-stage fixtures can become permanently blocked after photo-only template migration.');
 }
 for (const contract of ['currentAttemptId(no)!==attemptId', 'currentAttemptId(id)!==attemptId', 'latestTask?.attemptId!==attemptId']) {
@@ -1686,7 +1724,7 @@ for (const contract of [
 }
 for (const contract of [
   '추가 검증 · Google Drive 객실 PIN 시트·청소 사진 이력',
-  '검수 결정 시점부터 7일',
+  '서버 수락 업로드 시각부터 7일',
   '배정 통보 순간부터 최종 검수 전까지',
   'admin-room-pin-sheet-sync-1440.png',
   'maid-assigned-pin-390.png',
@@ -1694,6 +1732,18 @@ for (const contract of [
   'maid-cleaning-history-expired-390.png',
 ]) {
   if (!qa.includes(contract)) throw new Error(`Room PIN sheet and cleaning-history QA documentation missing: ${contract}`);
+}
+for (const contract of [
+  'photoUploadedAt:',
+  "function demoUpload(id,label,required,status='empty',fixture=id,uploadedAt=null)",
+  "demoUpload('history-536-bed','침대·침구',true,'done','bed','2026.08.14 14:27')",
+  "demoUpload('history-332-bed','침대·침구',true,'done','bed','2026.08.12 12:06')",
+  "demoUpload('history-528-bed','침대·침구',true,'done','bed','2026.08.14 11:14')",
+  "demoUpload('history-639-bed','침대·침구',true,'done','bed','2026.08.13 14:09')",
+  '서버가 수락한 업로드 시각부터 7일간 보관',
+  '제출·승인·반려로 기한을 연장하지 않',
+]) {
+  if (!html.includes(contract)) throw new Error(`Upload-based photo retention UI contract missing: ${contract}`);
 }
 for (const contract of [
   '추가 검증 · 관리자 완료 청소 최근 7일 검색',
@@ -2050,7 +2100,7 @@ const taskZoneCardSource=html.slice(taskZoneCardStart,taskZoneCardEnd);
 for(const stale of ["${esc(upload.label)} · ${upload.required?'필수':'선택'}", "${esc(upload.description||'청소 완료 상태를 촬영합니다.')}"]){
   if(taskZoneCardSource.includes(stale))throw new Error(`Maid photo card still renders redundant slot copy: ${stale}`);
 }
-if(html.includes("{id:'entry-number',zone:'현관',label:'객실번호·현관'"))throw new Error('Current templates still contain the redundant room-number entrance slot.');
+if(typePhotoGroupsSource.includes("{id:'entry-number',zone:'현관',label:'객실번호·현관'"))throw new Error('Current templates still contain the redundant room-number entrance slot.');
 if((html.match(/required:false,fixture:'supply',multiple:true,maxPhotos:10/g)||[]).length!==6)throw new Error('All six optional evidence slots must use maxPhotos 10.');
 if((html.match(/zone:'기타'/g)||[]).length<6||html.includes("zone:'선택 증빙'"))throw new Error('Optional evidence zone must be named 기타 everywhere.');
 for(const contract of [
@@ -2067,7 +2117,7 @@ for(const contract of [
 for(const removed of ['ROOM_LAYOUT_PROFILES','DEFAULT_LAYOUT_PROFILES','template-preview-room','templateSlotRange','레이아웃 확인 보류','최소 공통 슬롯','필수 촬영 구역 ${requiredUploads.length}개','여러 장 허용',"snapshot?.version==='v7'"]){
   if(html.includes(removed))throw new Error(`Obsolete or contradictory template contract remains: ${removed}`);
 }
-if(!html.includes("version:'v6'")||!html.includes("filter(item=>item.id!=='tv-on')"))throw new Error('Historical v6 snapshot preservation contract is missing.');
+if(!html.includes("version:'v7'")||!html.includes("id:'entry-number'"))throw new Error('Historical pre-A v7 snapshot preservation contract is missing.');
 console.log('Fixed type template static contracts: passed');
 
 console.log('Workspace check: passed');

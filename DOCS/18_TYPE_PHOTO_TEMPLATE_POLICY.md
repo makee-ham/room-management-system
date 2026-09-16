@@ -3,6 +3,7 @@
 - 최초 확정일: 2026-08-16
 - 사진 전용·TV 작동 증빙 확정일: 2026-08-18
 - 타입 고정 구성 정정일: 2026-08-24
+- 백엔드 통합 계약 확정일: 2026-09-16 · Decision [wrongstory/room-management-system-backend#179](https://github.com/wrongstory/room-management-system-backend/issues/179) A안
 - 근거: 사용자 확정 운영 규칙, 2026년 8월 객실 마스터, 사용자 제공 `clean-template/` 참고 사진 123장
 - 상태: 객실번호·타입·청소 사진 템플릿의 구현 정본
 
@@ -78,11 +79,13 @@
 
 ## 6. TV 작동 증빙
 
-네 타입의 새 퇴실 청소 `v7` 이상에는 `tv-on` 필수 슬롯을 정확히 하나 둔다. 표시 이름은 `TV 켜짐·화면 출력 확인`이다.
+네 타입의 퇴실 청소에는 `tv-on` 필수 슬롯을 정확히 하나 둔다. 표시 이름은 `TV 켜짐·화면 출력 확인`이다. 기존 백엔드 v7의 10 / 11 / 13 / 15 슬롯 snapshot은 이력으로 유지하고, 이 문서의 9 / 10 / 12 / 14 구성은 새 백엔드 v8+ 계약으로 적용한다.
 
 TV 전체와 켜진 화면이 한 장에 보여야 한다. 계정·프로필·QR·페어링 코드·알림·Wi-Fi 기기명·캐스트 화면·방송·영화·사람이 보이면 입력 선택·설정·음량·신호 없음 등 TV 자체의 중립 화면으로 바꾼다.
 
 TV 안내는 버전 문자열이 아니라 제출 스냅샷에 `tv-on` 슬롯이 실제로 있는지로 결정한다. 과거 퇴실 청소 `v6`에는 TV 슬롯을 소급 추가하지 않는다.
+
+v8+는 required `entry-storage`를 유지하고 `entry-number`를 포함하지 않는다. 마지막 `extra-proof`만 선택·`maxPhotos: 10`이며, 백엔드의 실제 다중 사진 collection이 [wrongstory/room-management-system-backend#180](https://github.com/wrongstory/room-management-system-backend/issues/180)에서 완료되기 전에는 운영 템플릿 재게시와 기능 플래그 활성화를 하지 않는다.
 
 ## 7. 버전과 스냅샷
 
