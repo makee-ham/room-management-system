@@ -30,9 +30,11 @@
 
 `scripts/check-api-integration.mjs`의 39 paths / 43 operations는 health·OpenAPI·Swagger와 운영 진단용 endpoint를 포함한 계약 검사 범위다. `WIREFRAME/index.html`이 직접 호출하는 현재 UI 소비면은 31 paths / 35 operations다. `/health`, `/openapi.json`, `/docs`, 개발자 감사·활동·진단 일부, 예약 전이 processor, 객실 master-data 명령은 현재 화면이 호출하지 않는다.
 
-## 알려진 사진 슬롯 계약 충돌
+## 사진 슬롯 계약 결정과 전환 상태
 
-`DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md`는 객실 타입별 총 9 / 10 / 12 / 14 슬롯을 프런트 구현 정본으로 둔다. 백엔드 제품 가이드·현재 published template 검증은 최소 10 / 11 / 13 / 15 슬롯을 전제로 하므로 두 계약은 아직 일치하지 않는다. [백엔드 Decision #179](https://github.com/wrongstory/room-management-system-backend/issues/179)에서 슬롯 ID·순서·필수 여부·장수와 기존 attempt 호환 전환을 확정하기 전에는 어느 값을 통합 정본으로 승격하거나 기존 template/fixture를 임의 변경하지 않는다.
+2026-09-16 사용자 결정과 [백엔드 Decision #179](https://github.com/wrongstory/room-management-system-backend/issues/179)에 따라 A안을 확정했다. 새 v8+ 퇴실 청소 template은 객실 타입별 총 9 / 10 / 12 / 14 슬롯, 필수 8 / 9 / 11 / 13 슬롯을 사용한다. required `tv-on`·`entry-storage`는 유지하고 중복 `entry-number`는 제외하며, 마지막 `extra-proof`만 선택·`maxPhotos: 10`이다. 기존 v7 template/진행 중 attempt/제출·검수 snapshot의 10 / 11 / 13 / 15 계약은 재작성하지 않는다.
+
+백엔드 #179 source 후보가 append-only v8 validator·publisher·OpenAPI를 구현하지만 운영 DB 적용과 template 재게시는 아직 아니다. 현재 백엔드는 슬롯당 current 사진 한 장 구조이므로 `extra-proof`의 실제 0~10장 추가·개별 삭제·제출 봉인은 [백엔드 #180](https://github.com/wrongstory/room-management-system-backend/issues/180)에서 완료한다. #180 전에는 이 UI fixture를 운영 API가 완전히 지원한다고 표시하거나 v8 운영 template을 게시하지 않는다.
 
 공통 계약은 다음과 같다.
 
