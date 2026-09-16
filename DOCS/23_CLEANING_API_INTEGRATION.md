@@ -39,7 +39,7 @@ RMS_RUNTIME_MODE=live
 | 사진 슬롯/업로드 | `GET .../photo-slots`, `POST .../{slotId}/upload` | assignment ID/revision, slot `currentRevision` | 슬롯을 다시 읽어 `verified` 확인 |
 | 청소 제출 | `GET/POST .../submissions` | 명시적 client submission UUID, current submission revision | immutable 제출 이력 재조회 |
 | 관리자 검수 | `GET /v1/inspections`, `GET /v1/inspections/{submissionId}`, approve/reject/bomb decision | 서버 submission ID; stale 여부는 서버가 판정 | 검수 목록 재조회 |
-| 사진 원본 | `GET /v1/photos/{photoId}/content` | 현재 로그인 권한 재검증 | 메모리 object URL로만 표시하고 모달 종료 시 폐기 |
+| 사진 원본 | `GET /v1/photos/{photoId}/content` | 현재 로그인 권한 재검증 | 메모리 object URL로만 표시하고 상세 화면 이탈 시 폐기 |
 | 알림 | `GET /v1/notifications`, `POST .../{notificationId}/read` | 서버 notification ID | 목록 재조회; deep-link 대상 API 재조회 |
 
 ## 관리자 흐름
@@ -80,13 +80,13 @@ RMS_RUNTIME_MODE=live
 
 - 관리자 오늘 화면의 `투숙 중·청소 필요·배정 가능·배정 불가` 카드는 기존 객실 목록과 상태 필터로 이동한다.
 - 객실 목록은 기존 `객실 / 객실 유형·위치 / 체크인·체크아웃 / 상태 / PIN 관리` 열, 짧은 객실 유형명, `예약 / 운영 상태 / 청소 / 전체 상세` 네 작업을 유지한다.
-- 예약 버튼은 기존 예약 상세·변경 모달, 운영 상태 버튼은 기존 운영 중지 확인 모달, 청소 버튼은 해당 객실로 좁힌 진행 탭, 전체 상세는 기존 2열 객실 상세 화면으로 이동한다. 백엔드가 청소요금 같은 값을 제공하지 않으면 fixture를 넣지 않고 `API 미제공`으로 표시한다.
+- 예약 버튼은 기존 예약 상세·변경 모달, 운영 상태 버튼은 기존 운영 중지 확인 모달, 청소 버튼은 기존 객실별 청소 상세, 전체 상세는 기존 2열 객실 상세 화면으로 이동한다. 팝업과 상세 화면의 제목·정보 순서·카드·하단 고정 행동은 와이어프레임을 그대로 유지한다. 백엔드가 청소요금·장기숙박 유형처럼 해당 자리에 필요한 값을 제공하지 않으면 fixture나 새 API 필드를 만들지 않고 같은 UI 자리에서 `API 미제공`으로 표시한다.
 - 객실 PIN `보기·수정`은 `/pin/reveal`과 `/pin-changes/prepare → confirm|rollback`에 연결한다. 원문과 새 PIN 입력은 URL·console·웹 저장소에 남기지 않으며 background/pagehide 때 즉시 지운다.
-- 관리자 청소는 기존 `오늘 배정 / 내일 배정 / 진행 중 / 검수 대상 목록 / 완료` 탭과 단계형 배정 화면을 유지한다. Preview·impact·current revision·검수 submission만 API 데이터로 바꾼다.
+- 관리자 청소는 기존 `오늘 배정 / 내일 배정 / 진행 중 / 검수 대상 목록 / 완료` 탭과 단계형 배정 화면을 유지한다. Preview·impact·current revision·검수 submission만 API 데이터로 바꾼다. 검수 대상은 기존 전체 페이지 상세와 하단 승인·반려 행동으로 열고, API 응답을 별도 축약 모달로 바꾸지 않는다.
 - 완료 전용 목록처럼 OpenAPI에 없는 조회는 샘플 완료 이력으로 대체하지 않고 같은 탭 안에서 계약 부재를 표시한다.
 
 ## 검증과 남은 hosted smoke
 
-로컬 Chromium 회귀는 모든 업무 API를 OpenAPI 형태의 fixture로 가로채고 다음을 확인한다: 관리자 Preview/초안/Commit, 본인 작업과 타인 403, 시작 replay, 409 CAS, 필수 사진 누락, 업로드 실패/성공, 중복 제출 차단, 승인/반려, stale 검수, 알림 읽음, 객실 요약 4개 필터, 객실 카드 4개 목적 화면, PIN reveal·변경 lease/version/idempotency, 401/403, console·URL의 token/PIN/고객 PII 부재, 360/390/768/1440px 넘침과 44px 컨트롤.
+로컬 Chromium 회귀는 모든 업무 API를 OpenAPI 형태의 fixture로 가로채고 다음을 확인한다: 관리자 Preview/초안/Commit, 본인 작업과 타인 403, 시작 replay, 409 CAS, 필수 사진 누락, 업로드 실패/성공, 중복 제출 차단, 승인/반려, stale 검수, 알림 읽음, 객실 요약 4개 필터, 객실 카드 4개 목적 화면, 예약·운영·PIN 팝업, 객실 전체 상세·객실별 청소 상세·검수 전체 상세, PIN reveal·변경 lease/version/idempotency, 401/403, console·URL의 token/PIN/고객 PII 부재, 360/390/768/1440px 넘침과 44px 컨트롤.
 
 운영에서는 `/health`, `/docs`, `/openapi.json`과 CORS만 읽기 smoke한다. 승인된 운영 계정이 없으므로 실제 로그인, 역할별 protected GET, production 사진 content, mutation, 실제 DB 동시성, 실기기 카메라, 장시간 refresh, 외부 Web Push 전달은 통과로 기록하지 않는다. 운영 데이터로 임의 mutation을 실행하지 않는다.
