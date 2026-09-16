@@ -2178,9 +2178,9 @@ for (const demoQuickWindowContract of [
   "const DEMO_TODAY='2026-08-15'",
   "quickReservationAnchorDate:'2026-08-15', quickReservationFollowsToday:true",
   'function refreshQuickReservationActualToday({rerender=false}={})',
-  'const today=DEMO_TODAY;',
+  'const today=liveMode()?liveKstIsoDate():DEMO_TODAY;',
   'else{state.quickReservationAnchorDate=DEMO_TODAY;state.quickReservationFollowsToday=true;}',
-  'state.quickReservationFollowsToday=true;state.quickReservationAnchorDate=DEMO_TODAY;',
+  'state.quickReservationFollowsToday=true;state.quickReservationAnchorDate=liveMode()?liveKstIsoDate():DEMO_TODAY;',
   'data-action="quick-month-today">오늘</button>',
   '.quick-month-tools > [data-action="quick-month-today"] { grid-column:1/-1; width:100%; min-height:44px; }',
   '8월 15일 기준 29일',
@@ -2566,9 +2566,10 @@ for(const contract of ['/v1/assignments/preview','/v1/assignments/commit-impact'
 for(const contract of ['runLiveCleaningMutation','expectedImpactFingerprint','expectedPhotoRevision','clientSubmissionId','responseType===\'blob\'','handleLiveNotificationAction']){
   if(!html.includes(contract))throw new Error(`Cleaning live implementation contract missing: ${contract}`);
 }
-for(const contract of ['function liveCleaningTabButton','function renderLiveAdminAssignmentDashboard','class="assignment-page tab-panel"','오늘 배정','내일 배정','진행 중','검수 대상 목록','data-cleaning-planning','data-cleaning-assignments',"if(liveMode()){\n            state.cleaningTab=tab;"]){
+for(const contract of ['function liveCleaningTabButton','function renderLiveAdminAssignmentDashboard','function renderLiveRandomAssignmentCard','class="assignment-page tab-panel"','오늘 배정','내일 배정','진행 중','검수 대상 목록','id="cleaning-section-random"','data-cleaning-assignments',"if(liveMode()){\n            state.cleaningTab=tab;"]){
   if(!html.includes(contract))throw new Error(`Cleaning wireframe fidelity contract missing: ${contract}`);
 }
+if(html.includes('<h3>배정 Preview·확정 영향</h3>'))throw new Error('API-shaped cleaning planning panel must not replace the canonical assignment wireframe.');
 for(const forbidden of ['function cleaningDemoSlots','||cleaningDemoSlots(','초기 촬영 구역은 데모입니다']){
   if(html.includes(forbidden))throw new Error(`Cleaning live implementation still contains an operational fixture fallback: ${forbidden}`);
 }
