@@ -1695,6 +1695,11 @@ for (const contract of [
 }
 for (const contract of [
   'photoUploadedAt:',
+  "function demoUpload(id,label,required,status='empty',fixture=id,uploadedAt=null)",
+  "demoUpload('history-536-bed','침대·침구',true,'done','bed','2026.08.14 14:27')",
+  "demoUpload('history-332-bed','침대·침구',true,'done','bed','2026.08.12 12:06')",
+  "demoUpload('history-528-bed','침대·침구',true,'done','bed','2026.08.14 11:14')",
+  "demoUpload('history-639-bed','침대·침구',true,'done','bed','2026.08.13 14:09')",
   '서버가 수락한 업로드 시각부터 7일간 보관',
   '제출·승인·반려로 기한을 연장하지 않',
 ]) {
