@@ -8,6 +8,8 @@ on:
       - "scripts/*backend-contract*.mjs"
       - "scripts/*breaking-diff*.mjs"
       - "scripts/check-backend-breaking-diff.mjs"
+      - "scripts/generate-backend-client.mjs"
+      - "scripts/check-workspace.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/api-contract.yml"
@@ -19,6 +21,8 @@ on:
       - "scripts/*backend-contract*.mjs"
       - "scripts/*breaking-diff*.mjs"
       - "scripts/check-backend-breaking-diff.mjs"
+      - "scripts/generate-backend-client.mjs"
+      - "scripts/check-workspace.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/api-contract.yml"
@@ -43,6 +47,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: node scripts/check-workspace.mjs
       - run: npm run contract:check
       - run: npm run contract:test-diff
       - name: Compare the pull request contract with its base

@@ -22,6 +22,10 @@ const assertBreaking = (mutate, expected) => {
   const differences = findBreakingChanges(schema, changed);
   if (!differences.some((difference) => difference.includes(expected))) throw new Error(`Expected breaking difference containing "${expected}", received:\n${differences.join('\n')}`);
 };
+const assertCompatible = (before, after, label) => {
+  const differences = findBreakingChanges(before, after);
+  if (differences.length) throw new Error(`${label} must remain compatible, received:\n${differences.join('\n')}`);
+};
 
 if (findBreakingChanges(schema, clone()).length) throw new Error('Identical OpenAPI documents must be compatible.');
 const additive = clone();
@@ -42,5 +46,42 @@ referencedAfter.components.schemas.ItemRequest.required.push('note');
 if (!findBreakingChanges(referencedBefore, referencedAfter).some((difference) => difference.includes('became required in request'))) {
   throw new Error('Referenced request component changes must be detected.');
 }
+
+const requestEnumAddedBefore = clone();
+const requestEnumAddedAfter = structuredClone(requestEnumAddedBefore);
+requestEnumAddedAfter.paths['/v1/items'].post.requestBody.content['application/json'].schema.properties.name.enum = ['allowed'];
+if (!findBreakingChanges(requestEnumAddedBefore, requestEnumAddedAfter).some((difference) => difference.includes('enum became incompatible for request'))) {
+  throw new Error('Adding a request enum constraint must be detected as narrowing.');
+}
+const requestEnumRemovedBefore = structuredClone(requestEnumAddedAfter);
+const requestEnumRemovedAfter = clone();
+assertCompatible(requestEnumRemovedBefore, requestEnumRemovedAfter, 'Removing a request enum constraint');
+
+const responseEnumRemovedBefore = clone();
+responseEnumRemovedBefore.paths['/v1/items'].post.responses['201'].content['application/json'].schema.properties.label.enum = ['ready', 'done'];
+const responseEnumRemovedAfter = structuredClone(responseEnumRemovedBefore);
+delete responseEnumRemovedAfter.paths['/v1/items'].post.responses['201'].content['application/json'].schema.properties.label.enum;
+if (!findBreakingChanges(responseEnumRemovedBefore, responseEnumRemovedAfter).some((difference) => difference.includes('enum became incompatible for response'))) {
+  throw new Error('Removing a response enum guarantee must be detected as widening.');
+}
+
+const requestSchemaAddedBefore = clone();
+delete requestSchemaAddedBefore.paths['/v1/items'].post.requestBody.content['application/json'].schema;
+if (!findBreakingChanges(requestSchemaAddedBefore, clone()).some((difference) => difference.includes('request schema was added'))) {
+  throw new Error('Adding a previously absent request schema must be detected.');
+}
+
+const responsePatternRemovedBefore = clone();
+responsePatternRemovedBefore.paths['/v1/items'].post.responses['201'].content['application/json'].schema.properties.id.pattern = '^[a-z]+$';
+const responsePatternRemovedAfter = structuredClone(responsePatternRemovedBefore);
+delete responsePatternRemovedAfter.paths['/v1/items'].post.responses['201'].content['application/json'].schema.properties.id.pattern;
+if (!findBreakingChanges(responsePatternRemovedBefore, responsePatternRemovedAfter).some((difference) => difference.includes('pattern became incompatible for response'))) {
+  throw new Error('Removing a response pattern guarantee must be detected.');
+}
+
+const reorderedTypeBefore = clone();
+const reorderedTypeAfter = clone();
+reorderedTypeAfter.paths['/v1/items'].post.requestBody.content['application/json'].schema.properties.note.type = ['null', 'string'];
+assertCompatible(reorderedTypeBefore, reorderedTypeAfter, 'Reordering a type union');
 
 process.stdout.write('OpenAPI 3.1 breaking-diff regression tests passed.\n');

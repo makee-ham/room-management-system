@@ -10,14 +10,16 @@ const resolveSchema = (document, schema, seen = new Set()) => {
 
 const values = (value) => new Set(value ?? []);
 const isSubset = (subset, superset) => [...subset].every((item) => superset.has(item));
-const normalizedType = (schema) => JSON.stringify(schema?.type ?? null);
+const normalizedType = (schema) => JSON.stringify(Array.isArray(schema?.type) ? [...schema.type].sort() : schema?.type ?? null);
 const composition = (schema) => JSON.stringify({ allOf: schema?.allOf, anyOf: schema?.anyOf, oneOf: schema?.oneOf, not: schema?.not });
+const hasKeyword = (schema, keyword) => schema && Object.hasOwn(schema, keyword);
 
 function compareSchema(beforeDocument, afterDocument, beforeInput, afterInput, mode, location, differences, seenPairs = new Set()) {
   const before = resolveSchema(beforeDocument, beforeInput);
   const after = resolveSchema(afterDocument, afterInput);
   if (!before || !after) {
-    if (before && !after) differences.push(`${location}: schema was removed`);
+    if (mode === 'request' && !before && after) differences.push(`${location}: request schema was added`);
+    if (mode === 'response' && before && !after) differences.push(`${location}: response schema was removed`);
     return;
   }
   const pairKey = `${beforeInput?.$ref ?? location}|${afterInput?.$ref ?? location}|${mode}`;
@@ -26,21 +28,36 @@ function compareSchema(beforeDocument, afterDocument, beforeInput, afterInput, m
 
   if (normalizedType(before) !== normalizedType(after)) differences.push(`${location}: type changed from ${normalizedType(before)} to ${normalizedType(after)}`);
   if (composition(before) !== composition(after)) differences.push(`${location}: composed schema changed`);
-  if (before.format !== after.format) differences.push(`${location}: format changed from ${before.format ?? 'none'} to ${after.format ?? 'none'}`);
-  if (mode === 'request' && before.pattern !== after.pattern && after.pattern !== undefined) differences.push(`${location}: request pattern changed`);
+  if (before.format !== after.format) {
+    if ((mode === 'request' && after.format !== undefined) || (mode === 'response' && before.format !== undefined)) {
+      differences.push(`${location}: format became incompatible for ${mode}`);
+    }
+  }
+  if (before.pattern !== after.pattern) {
+    if ((mode === 'request' && after.pattern !== undefined) || (mode === 'response' && before.pattern !== undefined)) {
+      differences.push(`${location}: pattern became incompatible for ${mode}`);
+    }
+  }
   if (before.additionalProperties !== after.additionalProperties) {
     if ((mode === 'request' && after.additionalProperties === false) || (mode === 'response' && before.additionalProperties === false)) {
       differences.push(`${location}: additionalProperties compatibility changed`);
     }
   }
 
-  const beforeEnum = values(before.enum);
-  const afterEnum = values(after.enum);
-  if (before.enum || after.enum) {
-    const compatible = mode === 'request' ? isSubset(beforeEnum, afterEnum) : isSubset(afterEnum, beforeEnum);
+  const beforeHasEnum = hasKeyword(before, 'enum');
+  const afterHasEnum = hasKeyword(after, 'enum');
+  if (beforeHasEnum || afterHasEnum) {
+    const compatible = mode === 'request'
+      ? !afterHasEnum || (beforeHasEnum && isSubset(values(before.enum), values(after.enum)))
+      : !beforeHasEnum || (afterHasEnum && isSubset(values(after.enum), values(before.enum)));
     if (!compatible) differences.push(`${location}: enum became incompatible for ${mode}`);
   }
-  if (before.const !== after.const && (before.const !== undefined || after.const !== undefined)) differences.push(`${location}: const changed`);
+  const beforeHasConst = hasKeyword(before, 'const');
+  const afterHasConst = hasKeyword(after, 'const');
+  if (before.const !== after.const && (beforeHasConst || afterHasConst)) {
+    const compatible = mode === 'request' ? !afterHasConst : !beforeHasConst;
+    if (!compatible) differences.push(`${location}: const became incompatible for ${mode}`);
+  }
 
   for (const [minimumKey, maximumKey] of [['minimum', 'maximum'], ['minLength', 'maxLength'], ['minItems', 'maxItems']]) {
     const beforeMinimum = before[minimumKey];

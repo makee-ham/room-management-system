@@ -20,7 +20,7 @@ const assert = (condition, message) => {
 const operations = [];
 for (const [path, pathItem] of Object.entries(document.paths)) {
   for (const [method, operation] of Object.entries(pathItem)) {
-    if (['get', 'post', 'put', 'patch', 'delete'].includes(method)) operations.push({ path, method, operation });
+    if (['get', 'post', 'put', 'patch', 'delete'].includes(method)) operations.push({ path, method, operation, pathItem });
   }
 }
 
@@ -59,6 +59,18 @@ const resolveRef = (schema, seen = new Set()) => {
   seen.add(schema.$ref);
   return resolveRef(schema.$ref.slice(2).split('/').reduce((value, key) => value[key], document), seen);
 };
+const operationParameters = ({ operation, pathItem }) => [
+  ...(pathItem.parameters ?? []),
+  ...(operation.parameters ?? []),
+].map((parameter) => resolveRef(parameter));
+const assertExactOperationSet = (actualOperations, expectedIds, label) => {
+  const actualIds = actualOperations.map(({ operation }) => operation.operationId).sort();
+  const expected = [...expectedIds].sort();
+  assert(
+    JSON.stringify(actualIds) === JSON.stringify(expected),
+    `${label} operation inventory changed. Expected ${expected.join(', ')}; received ${actualIds.join(', ')}.`,
+  );
+};
 const schemaHasProperty = (schema, property, seen = new Set()) => {
   schema = resolveRef(schema, seen);
   if (!schema || typeof schema !== 'object') return false;
@@ -74,30 +86,70 @@ const allowedWithoutIdempotency = new Set([
   'markNotificationRead',
   'revealRoomPin',
 ]);
-for (const { method, operation } of operations.filter(({ method }) => method !== 'get')) {
-  const parameters = operation.parameters ?? [];
+for (const entry of operations.filter(({ method }) => method !== 'get')) {
+  const { method, operation } = entry;
+  const parameters = operationParameters(entry);
   assert(
-    allowedWithoutIdempotency.has(operation.operationId) || parameters.some((parameter) => parameter.name === 'Idempotency-Key' && parameter.in === 'header'),
+    allowedWithoutIdempotency.has(operation.operationId) || parameters.some((parameter) => parameter.name === 'Idempotency-Key' && parameter.in === 'header' && parameter.required === true),
     `${method.toUpperCase()} ${operation.operationId} is missing Idempotency-Key.`,
   );
 }
 
-const casOperations = operations.filter(({ operation }) => schemaHasProperty(operation.requestBody?.content?.['application/json']?.schema, 'expectedVersion'));
-assert(casOperations.length === 28, `Expected 28 CAS request contracts, found ${casOperations.length}.`);
-for (const required of ['submitAvailability', 'publishCleaningTemplate', 'changeReservation', 'cancelReservation', 'changeRoomMasterData', 'startPayrollCycle']) {
-  assert(casOperations.some(({ operation }) => operation.operationId === required), `${required} must retain expectedVersion.`);
-}
+const casOperations = operations.filter(({ operation }) => schemaHasProperty(resolveRef(operation.requestBody)?.content?.['application/json']?.schema, 'expectedVersion'));
+assertExactOperationSet(casOperations, [
+  'cancelManualCleaningRequest',
+  'cancelReservation',
+  'carryForwardPayrollCycle',
+  'carryLatePayrollEarning',
+  'changeReservation',
+  'changeRoomMasterData',
+  'closeComplaint',
+  'confirmAssignmentDurationPolicy',
+  'correctComplaintDecision',
+  'createComplaint',
+  'decideAvailabilityChange',
+  'decideCheckoutIncident',
+  'decideComplaint',
+  'manualCheckoutReservation',
+  'materializeComplaintRework',
+  'publishCleaningTemplate',
+  'recordPayrollCorrection',
+  'recordPayrollPaymentCheck',
+  'recordPayrollPaymentPaid',
+  'reopenPayrollPaymentAttempt',
+  'requestAvailabilityChange',
+  'requestRoomPinSheetFullResync',
+  'respondComplaint',
+  'retireWebPushSubscription',
+  'reversePayrollSource',
+  'startComplaintReview',
+  'startPayrollCycle',
+  'submitAvailability',
+], 'CAS');
 
-const cursorOperations = operations.filter(({ operation }) => operation.parameters?.some((parameter) => parameter.name === 'cursor' && parameter.in === 'query'));
-assert(cursorOperations.length === 9, `Expected 9 cursor list contracts, found ${cursorOperations.length}.`);
-for (const required of ['listNotifications', 'listPayrollCycles', 'listPayrollEntries', 'listComplaints']) {
-  assert(cursorOperations.some(({ operation }) => operation.operationId === required), `${required} must retain cursor pagination.`);
-}
+const cursorOperations = operations.filter((entry) => operationParameters(entry).some((parameter) => parameter.name === 'cursor' && parameter.in === 'query'));
+assertExactOperationSet(cursorOperations, [
+  'listAssignmentChangeRequests',
+  'listComplaintHistory',
+  'listComplaints',
+  'listDeveloperActivityEvents',
+  'listDeveloperAuditEvents',
+  'listNotifications',
+  'listOfflineQuarantines',
+  'listPayrollCycles',
+  'listPayrollEntries',
+], 'cursor');
 
 const errorEnvelopeRef = '#/components/schemas/ErrorEnvelope';
+const allowedWithoutStandardErrors = new Set(['getHealth', 'getOpenApiDocument', 'getSwaggerUi']);
 for (const { path, method, operation } of operations) {
-  for (const [status, response] of Object.entries(operation.responses ?? {})) {
-    if (Number(status) < 400) continue;
+  const errorResponses = Object.entries(operation.responses ?? {}).filter(([status]) => Number(status) >= 400);
+  assert(
+    allowedWithoutStandardErrors.has(operation.operationId) || errorResponses.length > 0,
+    `${method.toUpperCase()} ${path} has no standard error response.`,
+  );
+  for (const [status, responseInput] of errorResponses) {
+    const response = resolveRef(responseInput);
     const responseRef = response.content?.['application/json']?.schema?.$ref;
     const previewConflict = operation.operationId === 'previewAssignments' && status === '409' && responseRef === '#/components/schemas/AssignmentPreviewUnconfirmed';
     assert(responseRef === errorEnvelopeRef || previewConflict, `${method.toUpperCase()} ${path} ${status} lost the stable error envelope.`);
