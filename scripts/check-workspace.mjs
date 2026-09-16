@@ -25,6 +25,7 @@ const required = [
   'WIREFRAME/cleaning-api.d.ts',
   'scripts/generate-cleaning-client.mjs',
   'scripts/check-cleaning-workflow.mjs',
+  'scripts/check-operational-api.mjs',
   'scripts/check-reservation-arrival-room-move.mjs',
   'WIREFRAME/QA/screenshots/admin-room-arrival-status-390.png',
   'WIREFRAME/QA/screenshots/admin-room-arrival-status-1440.png',
@@ -33,6 +34,10 @@ const required = [
   'WIREFRAME/QA/screenshots/optional-duration-template-1440.png',
   'WIREFRAME/QA/screenshots/optional-duration-maid-blocked-390.png',
   'WIREFRAME/QA/screenshots/optional-duration-incident-conflict-390.png',
+  'WIREFRAME/QA/screenshots/live-admin-payroll-390.png',
+  'WIREFRAME/QA/screenshots/live-admin-complaint-1440.png',
+  'WIREFRAME/QA/screenshots/live-maid-payroll-390.png',
+  'WIREFRAME/QA/screenshots/live-push-settings-390.png',
   'WIREFRAME/index.html',
   'WIREFRAME/app.webmanifest',
   'WIREFRAME/sw.js',
@@ -2586,3 +2591,12 @@ for(const forbidden of ['function cleaningDemoSlots','||cleaningDemoSlots(','초
   if(html.includes(forbidden))throw new Error(`Cleaning live implementation still contains an operational fixture fallback: ${forbidden}`);
 }
 console.log('Production cleaning client types and enabled live runtime static contracts: passed');
+
+for(const contract of ['PayrollListEnvelope','PayrollPaymentPaidRequest','ComplaintListEnvelope','ComplaintDecisionRequest','WebPushSubscriptionRegisterRequest','WebPushSubscriptionRetireRequest']){
+  if(!cleaningTypes.includes(`export type ${contract}`))throw new Error(`Operational API generated contract missing: ${contract}`);
+}
+for(const contract of ['/v1/payroll/start','/v1/payroll/adjustments/corrections',"/v1/complaints/${encodeURIComponent(id)}/${correction?'corrections':'decision'}",'/v1/push-subscriptions/config','function registerLivePushSubscription','function retireLivePushSubscription','primaryDisplayStatus','reservationLifecycle']){
+  if(!html.includes(contract))throw new Error(`Operational API adapter contract missing: ${contract}`);
+}
+if(!html.includes('정정 버전 API 미제공'))throw new Error('Payroll adjustment version blocker must be explicit instead of guessed.');
+console.log('Payroll, complaint, Web Push, and room primary-status adapter contracts: passed');

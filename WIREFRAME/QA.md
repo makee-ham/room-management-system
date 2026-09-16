@@ -1676,3 +1676,36 @@ Browser 플러그인이 제공되지 않아 앱 번들 Playwright와 설치된 C
 - `QA/screenshots/admin-reservation-room-move-390.png`
 
 운영 API에는 예약 객실 변경·투숙 중 방 이동 endpoint와 예약 임박/readiness 분리 조회 필드가 아직 없다. 운영 모드는 성공을 흉내 내지 않고 `API 미제공`으로 잠그며, 구현 요구사항은 `DOCS/24_RESERVATION_ARRIVAL_ROOM_MOVE_BACKEND_HANDOFF.md`에 기록했다. 실제 운영 계정·DB 동시성·PIN lease 폐기·outbox 알림은 백엔드 구현 뒤 별도 검증해야 한다.
+
+## 2026-09-16 · 주급·컴플레인·Web Push 운영 연결
+
+Browser 플러그인이 제공되지 않아 저장소의 Playwright 회귀와 설치된 Chrome 152.0.7977.83을 사용했다. 운영 OpenAPI/health/CORS는 읽기 전용으로 확인했고, 인증이 필요한 모든 mutation은 로컬 fixture에서 가로채 운영 데이터는 변경하지 않았다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 운영 OpenAPI v0.3.0 | 109 paths / 117 operations, 주급 10·컴플레인 10·Web Push 3 operation 존재 확인 |
+| 관리자 주급 | 마감 주차 목록·kind별 상세 pagination·확정 수익 정정·지급 시작·외부 송금 완료 전이 통과 |
+| 메이드 주급 | 본인 주급 카드와 산출 상세만 표시, 관리자 지급 행동 미노출 통과 |
+| 컴플레인 | 관리자 접수→검토→판정, 메이드 본인 확인, 관리자 종결과 사건 history 재조회 통과 |
+| 주급 원칙 | 외부 송금 결과만 기록, 컴플레인 벌점 자동 차감 없음, 모든 POST idempotency key 확인 통과 |
+| Web Push | session-bound proof 조회, keyVersion 비전송, 브라우저 subscription 등록, safe projection 저장, retire·unsubscribe 통과 |
+| 객실 상태 | `입실 예정`·`예약 있음` 큰 상태와 두 필터, `CLEANING_REQUIRED`를 실제 운영 차단으로 오인하지 않는 fallback 통과 |
+| 반응형 | 주급·컴플레인·푸시 화면 360·390·768·1440px 문서 가로 넘침 0px |
+| 접근성·콘솔 | 의미 있는 버튼 이름 유지, 앱 JavaScript error·console warning/error 0건 |
+| 민감정보 | access token·푸시 endpoint/key를 URL·console·웹 저장소에 기록하지 않음. 웹 저장소는 safe subscription ID/version/status만 허용 |
+
+대표 PNG는 실제 브라우저 렌더를 `view_image`로 확인했다.
+
+- `QA/screenshots/live-admin-payroll-390.png`
+- `QA/screenshots/live-admin-complaint-1440.png`
+- `QA/screenshots/live-maid-payroll-390.png`
+- `QA/screenshots/live-push-settings-390.png`
+
+회귀 명령은 `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-operational-api.mjs`다. 이 환경에서는 앱 번들 Playwright 경로를 `NODE_PATH`로 제공했다. 기존 청소 회귀도 다시 실행해 객실 큰 상태 변경에 맞춘 `blocked` 예상값 3→1을 확인하고 전체 시나리오를 통과했다.
+
+### 확인된 백엔드 blocker
+
+- `PayrollAdjustmentEntry`에 후속 정정·취소 CAS용 `bookVersion`이 없어 기존 adjustment의 재정정·취소는 활성화하지 않았다.
+- 완료 청소 최근 7일 전용 목록, 객실 이동 preview/commit, 예약 구간 전체 bookability, 객실 유형 ID 카탈로그 endpoint가 없다.
+- 실제 외부 푸시 발송은 provider/worker 운영 설정이 필요하다. 프런트 구독 등록 성공과 외부 전달 성공을 같은 것으로 기록하지 않는다.
+- 승인된 운영 계정으로 protected 주급·컴플레인·푸시 데이터를 읽거나 실제 mutation/외부 푸시 수신을 실행하지 않았다. 배포 뒤에는 역할별 읽기 smoke와 별도 테스트 계정의 승인된 소액/비운영 대상 검증이 필요하다.

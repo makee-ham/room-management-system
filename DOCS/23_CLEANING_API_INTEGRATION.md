@@ -2,7 +2,7 @@
 
 기준일: 2026-09-16
 운영 계약: `CASTLE THE ART Room Management API` v0.3.0, 109 paths / 117 operations
-백엔드 기준 source: `main@6604b2215e06b9e9ebf0b3138e3716a000c57ddb`
+백엔드 검토 기준 source: `main@a12595edf68644b94215c4792e0d3aadd64772c6`
 
 이 문서는 청소관리 프런트의 현재 운영 연결 정본이다. 요청·응답 타입과 endpoint는 운영 `openapi.json`만을 기계 판독 정본으로 사용한다. 이전 `DOCS/22_OPTIONAL_CLEANING_DURATION_FRONTEND_RELEASE.md`의 운영 OFF 상태와 PR #166 임시 계약은 이 문서로 대체한다.
 
@@ -41,6 +41,13 @@ RMS_RUNTIME_MODE=live
 | 관리자 검수 | `GET /v1/inspections`, `GET /v1/inspections/{submissionId}`, approve/reject/bomb decision | 서버 submission ID; stale 여부는 서버가 판정 | 검수 목록 재조회 |
 | 사진 원본 | `GET /v1/photos/{photoId}/content` | 현재 로그인 권한 재검증 | 메모리 object URL로만 표시하고 상세 화면 이탈 시 폐기 |
 | 알림 | `GET /v1/notifications`, `POST .../{notificationId}/read` | 서버 notification ID | 목록 재조회; deep-link 대상 API 재조회 |
+| 주급 목록/상세 | `GET /v1/payroll`, `GET /v1/payroll/entries` | 마감 주차, 메이드 ID, kind별 opaque cursor | 기존 주급 카드·산출 상세에 pagination 전체 투영 |
+| 지급 시작/상계 | `POST /v1/payroll/start`, `POST /v1/payroll/carry-forward` | cycle `version`, 메이드 ID, 주차 | 주급 목록 재조회 |
+| 지급 결과 | `POST /v1/payroll/payment-attempts/{attemptId}/check|paid|reopen` | payment attempt ID와 cycle `version` | 송금 자체가 아닌 외부 결과만 기록 후 재조회 |
+| 주급 정정 | corrections/reversals/late carry endpoint | earning은 `expectedVersion: 0`; adjustment는 응답의 `bookVersion` 필요 | append-only 원장 재조회 |
+| 컴플레인 목록/상세 | `GET/POST /v1/complaints`, `GET .../{id}`, `GET .../history` | 원 청소 earning ID, category, case version/cursor | 기존 컴플레인 카드·상세·감사 이력 투영 |
+| 컴플레인 상태 전이 | review/decision/corrections/response/close/rework | case `version`, current decision ID | 사건과 history 재조회; 주급 자동 차감 없음 |
+| Web Push | `GET /v1/push-subscriptions/config`, `POST /v1/push-subscriptions`, `POST .../{id}/retire` | session-bound proof, logical subscription version | 안전 projection만 저장; endpoint/key는 비영속 |
 
 ## 관리자 흐름
 
@@ -72,7 +79,15 @@ RMS_RUNTIME_MODE=live
 
 ## 알림과 deep-link
 
-앱 내부 알림 목록과 외부 Web Push 전달은 별도 상태다. 허용 kind는 OpenAPI의 `cleaningTarget`, `assignmentRequest`, `submission`, `complaintCase`, `payrollCycle`, `payrollProfile`뿐이다. 현재 청소 화면은 앞의 세 kind만 직접 처리한다. 알림의 UUID와 category는 탐색 힌트일 뿐 권한·소유권 근거가 아니며 대상 화면 진입 시 assignment 또는 inspection API를 다시 읽는다.
+앱 내부 알림 목록과 외부 Web Push 전달은 별도 상태다. 허용 kind는 OpenAPI의 `cleaningTarget`, `assignmentRequest`, `submission`, `complaintCase`, `payrollCycle`, `payrollProfile`뿐이다. 앞의 세 kind는 청소/검수, `complaintCase`는 컴플레인 상세, `payrollCycle`·`payrollProfile`은 역할별 주급 화면으로 이동하며 대상 API를 다시 읽는다. 알림의 UUID와 category는 탐색 힌트일 뿐 권한·소유권 근거가 아니다.
+
+## 주급·컴플레인·Web Push 연결 원칙
+
+- 주급 금액은 서버 원장만 사용한다. 프런트가 객실 단가를 다시 계산하거나 벌점을 차감하지 않는다. 지급 완료는 앱이 송금했다는 뜻이 아니라 관리자 입력의 외부 송금 참조번호와 서버 상태 전이를 기록한 것이다.
+- 모든 주급·컴플레인 mutation은 `Idempotency-Key`와 현재 응답의 CAS version을 사용한다. 응답 유실 시 다른 mutation을 잠그고 같은 key/payload만 재확인한다.
+- `PayrollAdjustmentEntry`에 `bookVersion`이 없는 현재 계약에서는 기존 adjustment의 재정정·취소를 활성화하지 않는다. earning/late-earning의 생성형 명령은 계약상 초기 version `0`을 사용한다.
+- 컴플레인 상세는 사건과 history pagination을 별도로 읽는다. 관리자는 접수·검토·판정/정정·종결·재청소, 메이드는 본인 사건의 확인/이의만 수행한다.
+- Web Push 원문 capability(endpoint, `p256dh`, `auth`)와 binding proof는 요청 순간에만 메모리에 둔다. 브라우저에는 서버가 반환한 safe projection의 ID/version/status만 보존한다.
 
 ## 와이어프레임 UI와 운영 데이터 매핑
 
