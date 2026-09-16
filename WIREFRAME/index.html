@@ -4843,7 +4843,7 @@
         return {typeId:String(typeId),kind,roomCount:rooms.length,composition:profile?.composition||'',slotCount:contracts[0]?.contract.length||0,signatures,allSame:signatures.length===1,rooms:contracts.map(item=>item.room)};
       }
       function enforceCleaningPhotoRequirementRules(items=[]) {
-        return items.map(item=>({...item,required:(item.zone||'사진')!=='기타',multiple:true,maxPhotos:MAID_ZONE_PHOTO_LIMIT}));
+        return items.map(item=>{const optional=(item.zone||'사진')==='기타';return {...item,required:!optional,multiple:optional,maxPhotos:optional?MAID_ZONE_PHOTO_LIMIT:1};});
       }
       function templateSnapshotFor(roomNo,kind='퇴실 청소') {
         const room=ROOMS.find(item=>item.no===roomNo), typeId=room?.type||'standard';

@@ -417,6 +417,15 @@ if ([typePhotoGroupsStart, typePhotoGroupsEnd, typePhotoObjectStart, typePhotoOb
   throw new Error('TV-required checkout photo template source could not be resolved.');
 }
 const typePhotoGroups = Function(`"use strict";return (${typePhotoGroupsSource.slice(typePhotoObjectStart, typePhotoObjectEnd + 1)});`)();
+const enforcePhotoRulesStart = html.indexOf('function enforceCleaningPhotoRequirementRules');
+const enforcePhotoRulesEnd = html.indexOf('function templateSnapshotFor', enforcePhotoRulesStart);
+if (enforcePhotoRulesStart < 0 || enforcePhotoRulesEnd <= enforcePhotoRulesStart) {
+  throw new Error('Cleaning photo requirement materializer could not be resolved.');
+}
+const enforceCleaningPhotoRequirementRules = Function(
+  'MAID_ZONE_PHOTO_LIMIT',
+  `"use strict";return (${html.slice(enforcePhotoRulesStart, enforcePhotoRulesEnd).trim()});`,
+)(10);
 const expectedCheckoutBasePhotoCounts = {
   standard:{total:9,required:8},
   premium:{total:10,required:9},
@@ -463,6 +472,13 @@ for (const [typeId, expected] of Object.entries(expectedCheckoutBasePhotoCounts)
   const materializedExpected = expectedCheckoutMaterializedPhotoCounts[typeId];
   if (materializedRules.length !== materializedExpected.total || materializedRules.filter(rule => rule.required).length !== materializedExpected.required) {
     throw new Error(`${typeId} materialized checkout photo counts do not match the A-contract.`);
+  }
+  const enforcedRules = enforceCleaningPhotoRequirementRules(materializedRules);
+  if (enforcedRules.some(rule => {
+    const optional = (rule.zone || '사진') === '기타';
+    return rule.required !== !optional || rule.multiple !== optional || rule.maxPhotos !== (optional ? 10 : 1);
+  })) {
+    throw new Error(`${typeId} materialized checkout maxPhotos contract does not match the A-contract.`);
   }
 }
 for (const contract of [
