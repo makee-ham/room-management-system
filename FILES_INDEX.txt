@@ -27,10 +27,15 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 - DOCS/13_QA_REPORT.md
 - DOCS/14_CLICKABLE_WIREFRAME_HANDOFF.md
 - DOCS/15_TWO_PASS_AUDIT_RESULT.md
+- DOCS/23_BACKEND_OPENAPI_GENERATED_CLIENT.md
 - DOCS/CODEX_PROMPT.md
 - DOCS/FINAL_UX_AUDIT.md
 - DOCS/WIREFRAME_TASK_PROMPT.md
 - FILES_INDEX.txt
+- contracts/backend-openapi.json
+- contracts/backend-openapi.manifest.json
+- package.json
+- package-lock.json
 - FLOWCHARTS/01_room_operation_guest_allocation.dot
 - FLOWCHARTS/01_room_operation_guest_allocation.png
 - FLOWCHARTS/01_room_operation_guest_allocation.svg
@@ -113,6 +118,11 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 - QA/screenshots_v13/castle_the_art_v13_handoff_screens/10_calendar.png
 - README.md
 - scripts/check-workspace.mjs
+- scripts/check-backend-contract.mjs
+- scripts/check-backend-breaking-diff.mjs
+- scripts/generate-backend-client.mjs
+- scripts/openapi-breaking-diff-lib.mjs
+- scripts/test-backend-breaking-diff.mjs
 - scripts/serve.py
 - SHA256SUMS.txt
 - TOOLS/ARCHIVE/build_castle_handoff_v12.py
@@ -125,6 +135,7 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 - TOOLS/patch_v13_maid_candle_permissions.py
 - TOOLS/README.md
 - WIREFRAME/index.html
+- WIREFRAME/generated/backend-api.d.ts
 - WIREFRAME/QA.md
 - WIREFRAME/QA/screenshots/admin-inspection-other-up-to-10-390.png
 - WIREFRAME/QA/screenshots/maid-other-up-to-10-320.png

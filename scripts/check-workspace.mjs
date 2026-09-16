@@ -20,6 +20,17 @@ const required = [
   'DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md',
   'DOCS/WIREFRAME_TASK_PROMPT.md',
   'DOCS/22_OPTIONAL_CLEANING_DURATION_FRONTEND_RELEASE.md',
+  'DOCS/23_BACKEND_OPENAPI_GENERATED_CLIENT.md',
+  'contracts/backend-openapi.json',
+  'contracts/backend-openapi.manifest.json',
+  'WIREFRAME/generated/backend-api.d.ts',
+  'package.json',
+  'package-lock.json',
+  'scripts/generate-backend-client.mjs',
+  'scripts/check-backend-contract.mjs',
+  'scripts/check-backend-breaking-diff.mjs',
+  'scripts/openapi-breaking-diff-lib.mjs',
+  'scripts/test-backend-breaking-diff.mjs',
   'WIREFRAME/cleaning-api.d.ts',
   'scripts/generate-cleaning-client.mjs',
   'scripts/check-cleaning-workflow.mjs',
@@ -186,6 +197,7 @@ const portableDocs = [
   'DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md',
   'DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md',
   'DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md',
+  'DOCS/23_BACKEND_OPENAPI_GENERATED_CLIENT.md',
   'DOCS/WIREFRAME_TASK_PROMPT.md',
   'WIREFRAME/README.md',
   'WIREFRAME/QA.md',
@@ -1719,6 +1731,13 @@ const checksums = Object.fromEntries(checksumLines.map((line) => {
   if (!match) throw new Error(`Invalid SHA256SUMS entry: ${line}`);
   return [match[2], match[1]];
 }));
+const checksumMismatches = Object.entries(checksums).filter(([file, expected]) => {
+  const path = resolve(root, file);
+  return !existsSync(path) || createHash('sha256').update(readFileSync(path)).digest('hex') !== expected;
+});
+if (checksumMismatches.length) {
+  throw new Error(`SHA256SUMS mismatch:\n${checksumMismatches.map(([file]) => file).join('\n')}`);
+}
 if (auditHash !== expectedAuditHash || indexHash !== expectedIndexHash || checksums['DOCS/FINAL_UX_AUDIT.md'] !== auditHash || checksums['WIREFRAME/index.html'] !== indexHash) {
   throw new Error([
     'Canonical file hash mismatch.',
