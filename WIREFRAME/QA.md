@@ -1562,3 +1562,41 @@ Browser 플러그인이 제공되지 않아 앱 번들 Node 패키지와 설치�
 - `QA/screenshots/cleaning-api-maid-390.png`
 
 미검증: 승인된 운영 계정이 없어 실제 로그인, protected 운영 GET, production 사진 content, 실제 mutation, DB 동시성, 실기기 카메라, 장시간 refresh token, 외부 Web Push 전달은 확인하지 않았다. 운영에서는 공개 health/OpenAPI/Swagger/CORS 읽기 smoke만 실행한다. 2026-09-15의 운영 OFF 기록은 역사 기록이며 현재 정본은 `DOCS/23_CLEANING_API_INTEGRATION.md`다.
+
+## 2026-09-16 · 운영 API 화면의 와이어프레임 정합성 복원
+
+운영 연결 화면을 기존 데모 와이어프레임과 나란히 비교했다. Browser 플러그인이 제공되지 않아 앱 번들 Playwright와 설치된 Chrome 152.0.7977.83을 사용했다. 업무 요청은 모두 로컬 OpenAPI 형태 fixture로 가로챘고 운영 mutation은 실행하지 않았다.
+
+### 발견한 차이와 수정 결과
+
+| 비교 지점 | 수정 전 | 수정 후 |
+| --- | --- | --- |
+| 객실 유형 | API의 긴 이름을 그대로 표시 | 기존 `스탠다드 / 프리미어 / 파셜 오션뷰 / 패밀리 투룸` 표기 |
+| 객실 일정 | API 상태 설명 문장을 일정 칸에 표시 | 기존 `체크인 / 체크아웃` 두 줄과 `일정 없음` |
+| 객실 상태 | allocation 차단을 항상 대표 상태로 표시 | `투숙 중 → 청소 필요 → 배정 가능 → 배정 불가` 순으로 주 상태를 표시하고 PIN 등 차단 이유는 보조 배지 |
+| PIN 영역 | 동기화 상태와 `상태 관리`만 표시 | 기존 `객실 PIN •••• / 보기 / 수정`; reveal 최대 30초, 변경 lease·version 연결 |
+| 객실 카드 작업 | API 동작명이 직접 노출 | 기존 `예약 / 운영 상태 / 청소 / 전체 상세` 네 작업과 기존 목적 화면 |
+| 전체 상세 | API 필드 나열 모달 | 기존 목록 복귀·2열 상세·기본정보·예약·청소·촛불·특이사항·운영 상태 구조 |
+| 청소 관리자 | `청소 계획·검수` 단일 API 스택 | 기존 다섯 탭과 단계형 오늘/내일 배정 화면 안에 API 데이터 투영 |
+
+### 실제 확인
+
+- 오늘 요약의 네 상태 카드를 각각 눌러 기존 객실 목록으로 이동하고 `occupied / cleaning / ready / blocked` 필터 결과만 표시되는지 확인했다.
+- 객실 행마다 PIN `보기·수정`과 네 작업 버튼이 유지되는지, 예약 상세·변경 모달, 운영 중지 모달, 해당 객실 청소 진행, 전체 객실 상세로 이동하는지 확인했다.
+- PIN reveal은 숨김 뒤 DOM에서 제거되고, PIN 변경은 prepare lease 뒤 confirm에 같은 current pin version과 각 mutation의 `Idempotency-Key`를 보내는지 확인했다. token·PIN·고객명 sentinel은 console과 URL에 0건이었다.
+- 청소의 `오늘 배정 / 내일 배정 / 진행 중 / 검수 대상 목록 / 완료` 탭, 배정 요약·근무표·Preview/impact·객실별 담당 영역을 확인했다. Preview/Commit/검수/사진/제출의 기존 API 회귀도 함께 통과했다.
+- 객실 목록·객실 상세·청소 화면을 360/390/768/1440px에서 확인했고 가로 넘침 0, 앱 JavaScript error와 console warning/error 0건이었다.
+
+### 대표 PNG
+
+- `QA/screenshots/live-wireframe-rooms-390.png`
+- `QA/screenshots/live-wireframe-rooms-1440.png`
+- `QA/screenshots/live-wireframe-room-detail-390.png`
+- `QA/screenshots/live-wireframe-room-detail-1440.png`
+- `QA/screenshots/live-wireframe-cleaning-390.png`
+- `QA/screenshots/live-wireframe-cleaning-1440.png`
+
+### 한계
+
+- 승인된 운영 계정이 없어 protected 운영 GET과 실제 mutation은 실행하지 않았다. production 배포 화면의 변경 반영은 PR 병합·배포 뒤 읽기 smoke가 필요하다.
+- 완료 청소 최근 7일 전용 목록과 청소요금은 현재 OpenAPI에 없어 데모 값으로 대체하지 않고 각각 계약 부재와 `API 미제공`으로 표시한다.
