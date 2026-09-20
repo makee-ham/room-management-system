@@ -100,6 +100,7 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-calendar-standard-390.png',
   'WIREFRAME/QA/screenshots/admin-reservation-cancel-1440.png',
   'WIREFRAME/QA/screenshots/admin-reservation-cancel-390.png',
+  'WIREFRAME/QA/screenshots/openapi-v040-reservation-cancel-390.png',
   'WIREFRAME/QA/screenshots/admin-reservation-guests-1440.png',
   'WIREFRAME/QA/screenshots/admin-reservation-guests-390.png',
   'WIREFRAME/QA/screenshots/maid-reservation-guests-390.png',
@@ -153,6 +154,7 @@ const required = [
   'WIREFRAME/reference/redesign-concepts/maid-weekly-availability.png',
   'WIREFRAME/reference/redesign-concepts/admin-quick-booking-1440.png',
   'WIREFRAME/reference/redesign-concepts/admin-quick-booking-390.png',
+  'src/api/generated/room-management-api.ts',
 ];
 
 const missing = required.filter((file) => !existsSync(resolve(root, file)));
@@ -171,6 +173,7 @@ const requiredPngEvidence = [
   'WIREFRAME/QA/screenshots/admin-assignment-summary-edit-390.png',
   'WIREFRAME/QA/screenshots/admin-reservation-cancel-1440.png',
   'WIREFRAME/QA/screenshots/admin-reservation-cancel-390.png',
+  'WIREFRAME/QA/screenshots/openapi-v040-reservation-cancel-390.png',
   'WIREFRAME/QA/screenshots/admin-room-card-guest-count-1440.png',
   'WIREFRAME/QA/screenshots/admin-room-card-guest-count-390.png',
   'WIREFRAME/QA/screenshots/admin-room-extra-guests-filter-1440.png',
@@ -2544,6 +2547,11 @@ for(const contract of [
   "['ROOM_ALLOCATION_BLOCKED','STALE_VERSION'].includes(error?.code)",
   "apiErrorCopy(error,'예약 변경을 완료하지 못했습니다.')",
   '문의 번호 ${esc(error.requestId)}',
+  'function liveReservationCanCancel(reservation)',
+  "reasonCode:'GUEST_REQUEST'",
+  "RESERVATION_CANCELLATION_NOT_ALLOWED:'체크인 이후 또는 현재 예약 상태에서는 취소할 수 없습니다.'",
+  "CLEANING_WORKFLOW_CANCEL_CONFLICT:'이미 진행 중인 청소 업무가 있어 예약을 취소할 수 없습니다.'",
+  'excludeReservationId:null',
 ]){
   if(!liveReservationGuardSource.includes(contract)&&!html.includes(contract))throw new Error(`Reservation interval bookability guard missing: ${contract}`);
 }
@@ -2588,6 +2596,9 @@ for(const contract of ['id: pages','RMS_APP_ORIGIN','steps.pages.outputs.origin'
 for(const contract of ['RMS_RUNTIME_MODE','runtimeMode === "demo"','config = { mode: "demo" }','without production credentials']){
   if(!pagesBuildSource.includes(contract))throw new Error(`Pages demo artifact contract missing: ${contract}`);
 }
+for(const contract of ['RMS_DEPLOYMENT_CHANNEL','deploymentChannel','운영 API 연결 중 · Preview']){
+  if(!pagesBuildSource.includes(contract)&&!html.includes(contract))throw new Error(`Vercel Preview runtime marker missing: ${contract}`);
+}
 for(const contract of ["if: ${{ vars.RMS_APP_ORIGIN != '' }}","RMS_RUNTIME_MODE: ${{ vars.RMS_APP_ORIGIN != '' && 'live' || 'demo' }}","RMS_SESSION_PERSISTENCE: ${{ vars.RMS_APP_ORIGIN != '' && 'local' || 'session' }}"]){
   if(!pagesWorkflowSource.includes(contract))throw new Error(`Pages safe fallback contract missing: ${contract}`);
 }
@@ -2596,6 +2607,10 @@ console.log('Production project, session isolation, auth-race, and deployment-or
 await import('./check-pwa.mjs');
 
 const cleaningTypes=readFileSync(resolve(root,'WIREFRAME/cleaning-api.d.ts'),'utf8');
+const generatedTypes=readFileSync(resolve(root,'src/api/generated/room-management-api.ts'),'utf8');
+for(const contract of ['export interface paths {','"/v1/reservations/{reservationId}/cancel"','cancelReservation: {','ReservationMutationRequest: {']){
+  if(!generatedTypes.includes(contract))throw new Error(`openapi-typescript 7.13.0 generated contract missing: ${contract}`);
+}
 if(!cleaningTypes.includes('durationMinutes?: number | null | undefined;')||!cleaningTypes.includes('durationMinutes: number | null;'))throw new Error('Optional nullable cleaning duration client contract missing.');
 for(const contract of ['export type RoomProjection =','primaryDisplayStatus: RoomPrimaryDisplayStatus;','export type ReservationBookabilityCandidate =','intervalBookable: boolean;','checkInReady: boolean;','export type ReservationRangePageEnvelope =','nextCursor: string | null;','export type ReservationRoomMovePreviewRequest =','export type ReservationRoomMoveCommitRequest =']){
   if(!cleaningTypes.includes(contract))throw new Error(`Generated OpenAPI 0.4.0 contract missing: ${contract}`);

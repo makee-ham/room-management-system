@@ -1772,3 +1772,26 @@ Browser 플러그인이 제공되지 않아 저장소의 Playwright 회귀와 �
 - Google Drive 사진 provider, Google Sheets PIN projection, Web Push/Cron의 hosted 동작은 OpenAPI endpoint 존재와 별개이며 이번 검수에서 성공으로 기록하지 않는다.
 - 관리자·메이드·개발자 역할별 기존 권한 회귀는 통과했지만 production 데이터의 동시성은 로컬 fixture로 대체하지 않았다.
 - 승인된 production 업무 계정이 없어 live 모드의 보호된 데이터 화면은 hosted 로그인으로 검증하지 않았다. 동일한 배포 파일의 live UI는 OpenAPI fixture E2E로, 배포 정적 파일과 전체 와이어프레임 화면은 demo-mode hosted smoke로 나누어 검증했다.
+
+## 2026-09-20 · 운영 API Vercel Preview와 예약 취소 보강
+
+프런트 `dev` 기준 별도 브랜치에서 production 배포 없이 Vercel Preview만 준비했다. Preview runtime은 운영 Supabase Edge API와 같은 project ref를 사용하되 세션 영속성은 `session`으로 제한하고, 로그인 전부터 `운영 API 연결 중 · Preview`를 표시한다. Browser 플러그인이 제공되지 않아 앱 번들 Playwright와 Chrome 153.0.8010.48을 사용했다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 공개 OpenAPI | 0.4.0 · 120 paths / 130 operations · 예약 취소 POST 존재 |
+| 생성 타입 | `openapi-typescript@7.13.0`으로 `src/api/generated/room-management-api.ts` 생성 |
+| 예약 취소 노출 | 서버 snapshot 시각이 체크인 전인 active 예약에만 버튼 표시, 투숙 중 예약에는 미표시 |
+| 확인 모달 | 객실·투숙 기간·고정 사유 `GUEST_REQUEST`·최신 version 표시, 고객명 미표시 |
+| 취소 command | 최신 `expectedVersion`, 사용자 동작별 `Idempotency-Key`, hard delete 없는 cancelled projection 확인 |
+| stale 처리 | 첫 `STALE_VERSION`에서 단건·목록·객실·달력을 다시 읽고 자동 재시도 없이 사용자가 재확인 |
+| 성공 후 갱신 | 예약 목록·객실 현황·29일 달력·동일 기간 bookability를 서버에서 재조회 |
+| 오류 분기 | `RESERVATION_CANCELLATION_NOT_ALLOWED`, `CLEANING_WORKFLOW_CANCEL_CONFLICT`를 message가 아닌 code로 안내 |
+| 반응형·콘솔 | 360/390/768/1440px 가로 넘침 0건, JavaScript error·console warning/error 0건 |
+| 운영 데이터 | 로그인·객실 보호 조회·예약/청소/PIN mutation 모두 미실행 |
+
+대표 PNG:
+
+- `QA/screenshots/openapi-v040-reservation-cancel-390.png`
+
+실제 운영 로그인과 121개 객실 조회, 승인된 기존 예약의 취소·동일 key replay·취소 기간 재예약 가능 여부는 Preview URL에서 사용자가 승인한 계정과 대상에 한해 수동 확인해야 한다.
