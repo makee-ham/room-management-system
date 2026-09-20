@@ -37,13 +37,17 @@ const REQUIRED_PATHS = new Map([
   ["/v1/availability/change-requests/{requestId}/decision", ["post"]],
   ["/v1/availability/candidates", ["get"]],
   ["/v1/reservations", ["get", "post"]],
+  ["/v1/reservations/bookability/preview", ["post"]],
   ["/v1/reservations/{reservationId}", ["get", "patch"]],
+  ["/v1/reservations/{reservationId}/room-change/preview", ["post"]],
+  ["/v1/reservations/{reservationId}/room-change", ["post"]],
   ["/v1/reservations/{reservationId}/cancel", ["post"]],
   ["/v1/reservations/{reservationId}/manual-checkout", ["post"]],
   ["/v1/reservations/cleaning-requests", ["post"]],
   ["/v1/reservations/cleaning-requests/{targetId}/cancel", ["post"]],
   ["/v1/reservations/transitions/process", ["post"]],
   ["/v1/rooms", ["get"]],
+  ["/v1/room-types", ["get"]],
   ["/v1/rooms/{roomId}", ["get"]],
   ["/v1/rooms/{roomId}/master-data", ["patch"]],
   ["/v1/rooms/{roomId}/operation-blocks", ["post"]],
@@ -77,6 +81,8 @@ const REQUIRED_PATHS = new Map([
   ["/v1/inspections/{submissionId}/bomb-room-decision", ["post"]],
   ["/v1/notifications", ["get"]],
   ["/v1/notifications/{notificationId}/read", ["post"]],
+  ["/v1/cleaning-history", ["get"]],
+  ["/v1/work-history", ["get"]],
   ["/v1/payroll", ["get"]],
   ["/v1/payroll/entries", ["get"]],
   ["/v1/payroll/start", ["post"]],
@@ -291,7 +297,7 @@ async function checkOpenApi(apiBaseUrl) {
   } catch {
     throw new Error("OpenAPI 응답이 JSON이 아닙니다.");
   }
-  assert(document?.info?.version === "0.3.0", "OpenAPI info.version이 0.3.0이 아닙니다.");
+  assert(document?.info?.version === "0.4.0", "OpenAPI info.version이 0.4.0이 아닙니다.");
   assert(/^3\.1(?:\.|$)/u.test(document?.openapi ?? ""), "OpenAPI 문서 버전이 3.1 계열이 아닙니다.");
   for (const [endpoint, methods] of REQUIRED_PATHS) {
     assert(document.paths?.[endpoint], `OpenAPI 필수 path가 없습니다: ${endpoint}`);
@@ -300,11 +306,11 @@ async function checkOpenApi(apiBaseUrl) {
     }
   }
   const operationCount = Object.values(document.paths ?? {}).reduce(
-    (count, item) => count + Object.keys(item).filter((key) => ["get", "post", "patch", "delete"].includes(key)).length,
+    (count, item) => count + Object.keys(item).filter((key) => ["get", "post", "put", "patch", "delete", "head", "options"].includes(key)).length,
     0,
   );
-  assert(Object.keys(document.paths ?? {}).length === 109, "OpenAPI path 수가 v0.3.0의 109개와 다릅니다.");
-  assert(operationCount === 117, "OpenAPI operation 수가 v0.3.0의 117개와 다릅니다.");
+  assert(Object.keys(document.paths ?? {}).length === 120, "OpenAPI path 수가 v0.4.0의 120개와 다릅니다.");
+  assert(operationCount === 130, "OpenAPI operation 수가 v0.4.0의 130개와 다릅니다.");
 }
 
 async function checkCors(apiBaseUrl) {
@@ -349,7 +355,7 @@ async function main() {
     console.log("[ok] 운영 health 계약을 확인했습니다.");
 
     await checkOpenApi(apiBaseUrl);
-    console.log("[ok] OpenAPI 0.3.0의 109개 path와 117개 operation을 확인했습니다.");
+    console.log("[ok] OpenAPI 0.4.0의 120개 path와 130개 operation을 확인했습니다.");
 
   } catch (error) {
     console.error(`[fail] ${error instanceof Error ? error.message : "API 계약 검사에 실패했습니다."}`);
