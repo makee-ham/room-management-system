@@ -73,6 +73,8 @@ Pages workflow는 `RMS_APP_ORIGIN`이 설정된 전용 origin에서는 정적 �
 
 Vercel Preview는 production deployment와 분리한다. Preview 범위에는 `RMS_RUNTIME_MODE`, `RMS_API_BASE_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `RMS_SESSION_PERSISTENCE`, `RMS_DEPLOYMENT_CHANNEL` 이름만 등록하고 `RMS_DEPLOYMENT_CHANNEL=preview`, `RMS_SESSION_PERSISTENCE=session`으로 빌드한다. 화면 상단에는 로그인 전부터 `운영 API 연결 중 · Preview`를 표시해 운영 데이터를 사용하는 사전 확인 환경임을 알린다. publishable key 원문은 코드·PR·문서·스크린샷에 남기지 않으며 Preview 산출물의 브라우저 공개 runtime config에만 포함한다. Preview 자동 검증은 health·OpenAPI·CORS와 로컬 계약 fixture만 사용하고 인증 업무 데이터나 mutation을 실행하지 않는다. 수동 검수용 고정 Preview origin은 운영 Edge Function의 `CORS_ORIGINS`에 정확히 추가한 뒤 preflight 204를 확인해야 하며, 임시 배포 URL 전체나 wildcard를 허용하지 않는다.
 
+2026-09-20 고정 Preview origin `https://room-management-system-prod-preview.vercel.app` 등록 뒤 실제 preflight 204, 정확한 origin echo, credentials·필수 header·method 허용을 확인했다. 운영 health와 OpenAPI 0.4.0의 120 paths / 130 operations도 같은 검수에서 통과했다. 승인된 운영 계정과 mutation 대상은 사용하지 않았으므로 보호 조회와 예약 취소의 실제 데이터 검수는 별도 승인 범위로 남긴다.
+
 `makee-ham.github.io`는 저장소 경로가 달라도 browser storage와 service worker 권한의 origin을 공유한다. 다른 Pages 앱이 운영 token에 접근할 가능성을 없애기 위해 workflow는 이 공유 origin을 운영 로그인 배포 대상으로 거부하고 데모 확인본만 게시한다. 브라우저를 닫아도 로그인을 안전하게 유지하려면 이 앱만 사용하는 custom domain 또는 전용 origin이 필요하며, 도메인을 연결할 때 `RMS_APP_ORIGIN`, CORS allowlist와 Pages 설정을 함께 바꾼다.
 
 ## 배포 전 백엔드 필수 설정

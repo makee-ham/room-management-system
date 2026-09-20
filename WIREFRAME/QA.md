@@ -1798,8 +1798,14 @@ Browser 플러그인이 제공되지 않아 저장소의 Playwright 회귀와 �
 
 - 고정 Preview origin `https://room-management-system-prod-preview.vercel.app`은 Vercel deployment `target=preview`, `Ready`다. Production 승격은 실행하지 않았다.
 - 보호된 배포의 `runtime-config.json`을 Vercel 인증 요청으로 확인해 `mode=live`, 정본 API/project ref, publishable key 유형, `sessionPersistence=session`, `deploymentChannel=preview`와 금지된 secret key 이름 0건을 확인했다. 키 원문은 출력하지 않았다.
-- 배포된 `index.html`에 `운영 API 연결 중 · Preview` 표식이 포함되고, Vercel이 삽입한 Preview toolbar 코드 외 로컬 산출물과 같은 앱 문서를 제공함을 확인했다.
-- 운영 Edge API preflight는 이 고정 Preview origin에 `403 ORIGIN_NOT_ALLOWED`를 반환했다. 따라서 로그인·`/v1/auth/me`·121개 객실 보호 조회와 실제 예약 취소 수동 검수는 실행하지 않았으며, 성공으로 기록하지 않는다.
-- 운영 백엔드의 기존 `CORS_ORIGINS` 값을 보존한 채 위 고정 origin을 추가하고 preflight 204를 확인한 다음에만 사용자가 승인한 계정과 대상으로 수동 검수를 진행한다. 프런트에서 wildcard 또는 임의 proxy로 우회하지 않는다.
+- 2026-09-20 사용자가 고정 Preview origin 등록을 완료한 뒤 실제 preflight가 `204`를 반환하고 `access-control-allow-origin`이 정확한 origin을 echo하며 credentials와 `authorization, apikey, content-type, idempotency-key, x-request-id`, `GET, POST, PATCH, OPTIONS`를 허용함을 다시 확인했다. 이어 운영 health와 OpenAPI `0.4.0`의 120 paths / 130 operations가 모두 통과했다.
+- Vercel 보호를 통과한 읽기 전용 요청으로 배포된 `index.html`, `runtime-config.json`, `sw.js`, `app.webmanifest`를 내려받아 Preview 산출물과 바이트 단위로 일치함을 확인했다. 따라서 배포 문서와 동일한 산출물을 설치된 Chrome 153.0.8010.48에서 렌더링해 시각 검수했다.
+- Browser 플러그인이 제공되지 않아 저장소의 Playwright를 사용했다. 360·390·768·1440px 모두 가로 넘침 0px, 로그인 버튼 높이 44px, 로그인 필드 접근성 이름, 빈 제출 시 첫 필수 입력 포커스, Preview의 영구 로그인 비활성 상태를 확인했다. 페이지 예외·console warning/error·실패한 네트워크 요청은 0건이다.
+- 객실 상태·예약 달력·예약 생성/취소·객실 변경, 청소 배정/수행/검수, 주급·컴플레인·Web Push 회귀를 OpenAPI 0.4.0 로컬 fixture로 다시 실행해 각각 9·19·6·8개 검사를 통과했다. 모든 mutation은 fixture가 가로챘고 production 데이터는 읽거나 변경하지 않았다.
 
-실제 운영 로그인과 121개 객실 조회, 승인된 기존 예약의 취소·동일 key replay·취소 기간 재예약 가능 여부는 CORS 허용 뒤 Preview URL에서 사용자가 승인한 계정과 대상에 한해 수동 확인해야 한다.
+대표 PNG:
+
+- `QA/screenshots/vercel-preview-login-390.png`
+- `QA/screenshots/vercel-preview-login-1440.png`
+
+실제 운영 로그인과 121개 객실 조회, 승인된 기존 예약의 취소·동일 key replay·취소 기간 재예약 가능 여부는 승인된 계정과 대상이 제공되지 않아 실행하지 않았다. 이 항목은 Preview URL에서 사용자가 승인한 계정과 대상에 한해 수동 확인해야 한다.
