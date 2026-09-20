@@ -1863,4 +1863,11 @@ Browser 플러그인이 제공되지 않아 번들 Playwright로 검증했다. �
 - `QA/screenshots/live-room-reservation-status-390.png`
 - `QA/screenshots/live-room-reservation-status-1440.png`
 
-예약·청소·주급·컴플레인·Web Push mutation은 모두 로컬 OpenAPI fixture에서 가로챘다. production 업무 데이터는 읽거나 변경하지 않았다.
+예약·청소·주급·컴플레인·Web Push mutation은 모두 로컬 OpenAPI fixture에서 가로챘다. production mutation은 실행하지 않았다.
+
+### 고정 Preview 배포 확인
+
+- PR #158을 `dev`에 squash merge한 뒤 Vercel Preview deployment `dpl_ExVrGS9EK5GyWZCgBk7ykwTMKUqb`를 만들고 고정 origin `https://room-management-system-prod-preview.vercel.app`에 연결했다. Production 승격은 실행하지 않았다.
+- 배포된 HTML은 Vercel Toolbar 주입분을 제외하면 로컬 `WIREFRAME/index.html`과 바이트 단위로 일치하며 SHA-256은 `2b7e719b3c892dd54bfe4d48fc3bcdfa195b178560440f3daf9d01bbb50d3efd`다. runtime은 `mode=live`, `sessionPersistence=session`, `deploymentChannel=preview`, optional cleaning workflow 활성이고 브라우저 publishable key만 포함한다.
+- 사용자가 인증한 Chrome의 고정 Preview에서 보호된 객실 121개를 읽기 전용으로 확인했다. 350호 카드에 `예약 현황 · 1건`과 기존 `운영 상태`가 함께 표시됐고, 예약 현황을 열면 서버의 활성 예약 1건과 체크아웃 완료 기록 1건이 고객명 없이 표시됐다.
+- 같은 배포 화면을 기본 데스크톱과 390×900에서 확인했다. 390px 문서 `scrollWidth=innerWidth=390`, 모달·목록 잘림 없음, console warning/error 0건이며 닫기 뒤 원래 객실 화면으로 복귀했다.
