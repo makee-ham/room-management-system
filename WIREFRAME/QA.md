@@ -1815,3 +1815,29 @@ Browser 플러그인이 제공되지 않아 저장소의 Playwright 회귀와 �
 - `QA/screenshots/vercel-preview-login-1440.png`
 
 승인된 135호 예약 취소 외 production 예약 생성·변경·객실 이동, 청소·PIN mutation은 실행하지 않았다. 실제 stale version과 취소 금지·청소 충돌 오류는 production 상태를 인위적으로 만들지 않고 OpenAPI 0.4.0 로컬 fixture 회귀로만 확인했다.
+
+## 2026-09-20 · 메이드 API 최신화와 잔여 화면 연결
+
+백엔드 인계 문서 전체와 공개 OpenAPI를 다시 읽고 메이드 화면에서 아직 연결되지 않았거나 이전 계약을 가정하던 부분을 조사했다. 공개 정본은 계속 `0.4.0`, 120 paths / 130 operations이며 전체 TypeScript 생성물은 기존 정본과 바이트 단위로 일치했다. 축약 청소 타입 생성 목록에는 이번 화면이 직접 사용하는 `RoomPinRevealRequest`, `CleaningHistoryPage`, `WorkHistoryPage` 계열을 추가했다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 메이드 PIN 요청 | 통과 · 현재 통보된 exact `assignmentId`만 전송, deprecated `attemptId`·`accessLeaseId` 0건 |
+| 관리자 PIN 요청 | 통과 · 같은 reveal endpoint에 빈 객체 전송 |
+| PIN 원문 수명 | 통과 · 최대 30초 현재 탭 메모리, 내비게이션 이동 즉시 제거, local/session storage·URL·console 노출 0건 |
+| PIN 권한 변경 | 통과 · 최신 청소 재조회에서 current/notified 배정이 아니면 즉시 제거 |
+| 메이드 청소 내역 | 통과 · `GET /v1/cleaning-history?date=&limit=100` 최근 7일, 본인 수행 기록만 기존 `청소 내역` 카드에 표시 |
+| 관리자 완료 청소 | 통과 · 같은 history endpoint를 기존 청소 `완료` 탭과 검색 UI에 표시 |
+| 과거 사진·제출 상세 | 계약 부재 · 기존 상세 버튼 위치를 유지하고 `사진·제출 상세 · API 미제공`으로 비활성 표시 |
+| 관리자 주간 근무 기록 | 통과 · `GET /v1/work-history?weekStart=&limit=100`, 가능 제출·담당 통보·실근무 완료를 독립 축으로 표시 |
+| pagination | 통과 · 두 이력 endpoint의 opaque `nextCursor`를 변형하지 않고 최대 100개씩 이어서 조회 |
+| 권한·오류 | 통과 · 다른 메이드 attempt 403, 401 세션 오류, 409 CAS 충돌을 fixture 성공 상태로 대체하지 않음 |
+| 반응형 | 통과 · 신규 청소 내역·주간 근무 기록 360/390/768/1440px 가로 넘침 0건 |
+| 브라우저 품질 | 통과 · Chromium 151.0.7922.34, page error·console warning/error·접근성 이름 없는 신규 버튼 0건 |
+
+Browser 플러그인이 제공되지 않아 번들 Playwright로 검증했다. 인증 업무 요청과 mutation은 OpenAPI 형태의 로컬 fixture에서 가로챘고 production 데이터를 읽거나 변경하지 않았다. 실제 운영 계정의 protected history 응답, production PIN 원문, provider 사진 원본, DB 동시성은 이번 통과 범위에 포함하지 않는다.
+
+대표 PNG:
+
+- `QA/screenshots/live-maid-cleaning-history-390.png`
+- `QA/screenshots/live-admin-work-history-1440.png`
