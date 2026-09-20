@@ -449,6 +449,10 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 
 관리자 배정 Preview·초안·impact·Commit·변경·해제·요청 결정, 메이드 current attempt·lease 시작·현장 완료·미퇴실/특이 객실 신고, 서버 사진 슬롯·업로드, immutable submission, 관리자 사진 검수·승인·반려·재청소, 앱 내부 알림을 운영 API에 연결했다. 기존 카드·폼·모달과 역할별 내비게이션을 유지한다.
 
+최신 OpenAPI를 다시 생성해 메이드 관련 잔여 계약도 연결했다. 메이드 객실 PIN 조회는 `POST /v1/rooms/{roomId}/pin/reveal`에 현재 통보된 정확한 `assignmentId`만 보내며 deprecated `attemptId`·`accessLeaseId`는 보내지 않는다. 관리자는 같은 endpoint에 빈 객체를 보낸다. PIN 원문은 한 객실·최대 30초 동안 현재 탭 메모리에만 두고, 화면 이동·뒤로가기·앱 백그라운드·담당 해제 또는 세션 종료 시 즉시 지운다.
+
+메이드 `청소 내역`과 관리자 청소 `완료`는 `GET /v1/cleaning-history`의 최근 7일 snapshot을 사용한다. 관리자 `메이드 → 근무 기록`은 `GET /v1/work-history`의 가능일 제출·담당 통보·실제 현장 완료 축을 서로 합치지 않고 표시한다. 두 endpoint의 opaque cursor는 응답값 그대로 이어 간다. OpenAPI에는 과거 청소의 사진 원본이나 제출 상세를 다시 여는 안전한 history detail endpoint가 없으므로 기존 상세 버튼 자리는 유지하되 `사진·제출 상세 · API 미제공`으로 비활성 표시한다.
+
 로컬 서버와 Pages live 산출물의 `featureFlags.optionalCleaningWorkflow`는 true다. 운영 모드에서 API 실패 시 fixture로 전환하지 않는다. `WIREFRAME/cleaning-api.d.ts`는 코드 생성 정본 OpenAPI v0.4.0에서 생성하며 생성 파일을 직접 수정하지 않는다. 상세 endpoint·CAS·멱등·권한·오류 매핑은 `DOCS/23_CLEANING_API_INTEGRATION.md`를 따른다.
 
 검증은 `node scripts/check-workspace.mjs`, `node scripts/check-api-integration.mjs`, `node scripts/generate-cleaning-client.mjs --production --check`, Playwright가 설치된 Node 환경에서 `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-cleaning-workflow.mjs`, `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-operational-api.mjs`, `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-reservation-bookability.mjs`를 사용한다. 배포 뒤 정적 자산·전 화면 반응형 검수는 `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-deployed-visual.mjs`로 실행한다. 브라우저 회귀는 업무 요청을 로컬 fixture로 가로채거나 hosted runtime config만 demo로 대체하며 운영 mutation을 실행하지 않는다. 예약 취소 회귀는 체크인 전 버튼 노출, 체크인 후 버튼 미노출, `GUEST_REQUEST`·최신 version·Idempotency-Key, `STALE_VERSION` 재조회·재확인, soft cancel 뒤 예약·객실·달력·bookability 재조회를 함께 검증한다.

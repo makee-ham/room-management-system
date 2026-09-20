@@ -647,6 +647,93 @@ export type NotificationListEnvelope = {
   nextCursor: string | null;
 };
 
+export type CleaningHistoryItem = {
+  submissionId: string | null;
+  attemptId: string;
+  cleaningTargetId: string;
+  roomId: string;
+  roomNumber: string | null;
+  roomTypeCode: string | null;
+  roomTypeName: string | null;
+  performerProfileId: string;
+  performerDisplayName: string;
+  cleaningKind: "checkout" | "stayover" | "additional" | "reclean";
+  originalServiceDate: string;
+  serviceDate: string;
+  startedAt: string | null;
+  fieldCompletedAt: string;
+  submittedAt: string | null;
+  inspectionStatus: "not_submitted" | "pending" | "approved" | "rejected";
+  decidedAt: string | null;
+  photoCount: number;
+  mediaAvailability: "not_submitted" | "available" | "purged" | "unavailable";
+  expiresAt: string | null;
+  baseFeeSnapshot: number;
+  earningTotalAmount: number | null;
+};
+
+export type CleaningHistoryPage = {
+  date: string;
+  fromDate: string;
+  toDate: string;
+  items: Array<CleaningHistoryItem>;
+  nextCursor: string | null;
+};
+
+export type WorkHistoryDay = {
+  date: string;
+  availableSubmitted: boolean;
+  assignmentNotified: boolean;
+  fieldCompleted: boolean;
+};
+
+export type WorkHistoryItem = {
+  maidProfileId: string;
+  maidDisplayName: string;
+  maidDisplayNameSource: "current_profile";
+  availabilitySubmittedAt: string | null;
+  availabilityCurrentVersion: number | null;
+  availabilityVersionCount: number;
+  days: Array<WorkHistoryDay>;
+};
+
+export type WorkHistorySummary = {
+  maidCount: number;
+  availabilityMaidCount: number;
+  availabilityDayCount: number;
+  notifiedMaidCount: number;
+  notifiedDayCount: number;
+  fieldCompletedMaidCount: number;
+  fieldCompletedDayCount: number;
+};
+
+export type WorkHistoryPage = {
+  weekStart: string;
+  weekEnd: string;
+  timezone: "Asia/Seoul";
+  summary: WorkHistorySummary;
+  items: Array<WorkHistoryItem>;
+  nextCursor: string | null;
+};
+
+export type RoomPinRevealRequest = {
+  assignmentId?: string;
+  attemptId?: string;
+  accessLeaseId?: string;
+};
+
+export type RoomPinReveal = {
+  roomId: string;
+  credential: string;
+  pinVersion: number;
+  clearAfterSeconds: number;
+  expiresAt: string;
+};
+
+export type RoomPinRevealEnvelope = {
+  pin: RoomPinReveal;
+};
+
 export type PublishCleaningTemplateRequest = {
   roomTypeCode: CleaningTemplateRoomTypeCode;
   cleaningKind: "checkout";

@@ -305,6 +305,17 @@ async function checkOpenApi(apiBaseUrl) {
       assert(document.paths[endpoint][method], `OpenAPI 필수 operation이 없습니다: ${method.toUpperCase()} ${endpoint}`);
     }
   }
+  const pinRevealRequest = document.components?.schemas?.RoomPinRevealRequest;
+  assert(pinRevealRequest?.properties?.assignmentId, "RoomPinRevealRequest.assignmentId가 없습니다.");
+  assert(pinRevealRequest?.properties?.attemptId?.deprecated === true, "RoomPinRevealRequest.attemptId가 deprecated가 아닙니다.");
+  assert(pinRevealRequest?.properties?.accessLeaseId?.deprecated === true, "RoomPinRevealRequest.accessLeaseId가 deprecated가 아닙니다.");
+  const requiredQuery = (endpoint, name) => document.paths[endpoint].get.parameters?.some(
+    (parameter) => parameter.in === "query" && parameter.name === name && parameter.required === true,
+  );
+  assert(requiredQuery("/v1/cleaning-history", "date"), "cleaning-history의 필수 date query가 없습니다.");
+  assert(requiredQuery("/v1/work-history", "weekStart"), "work-history의 필수 weekStart query가 없습니다.");
+  assert(document.components?.schemas?.CleaningHistoryPage?.properties?.items, "CleaningHistoryPage.items가 없습니다.");
+  assert(document.components?.schemas?.WorkHistoryPage?.properties?.summary, "WorkHistoryPage.summary가 없습니다.");
   const operationCount = Object.values(document.paths ?? {}).reduce(
     (count, item) => count + Object.keys(item).filter((key) => ["get", "post", "put", "patch", "delete", "head", "options"].includes(key)).length,
     0,
