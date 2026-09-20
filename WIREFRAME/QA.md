@@ -1788,7 +1788,7 @@ Browser 플러그인이 제공되지 않아 저장소의 Playwright 회귀와 �
 | 성공 후 갱신 | 예약 목록·객실 현황·29일 달력·동일 기간 bookability를 서버에서 재조회 |
 | 오류 분기 | `RESERVATION_CANCELLATION_NOT_ALLOWED`, `CLEANING_WORKFLOW_CANCEL_CONFLICT`를 message가 아닌 code로 안내 |
 | 반응형·콘솔 | 360/390/768/1440px 가로 넘침 0건, JavaScript error·console warning/error 0건 |
-| 운영 데이터 | 로그인·객실 보호 조회·예약/청소/PIN mutation 모두 미실행 |
+| 운영 데이터 | 실제 로그인·`/v1/auth/me` 역할 projection·121개 객실 보호 조회·bookability preview 확인, 예약/청소/PIN mutation 미실행 |
 
 대표 PNG:
 
@@ -1802,10 +1802,13 @@ Browser 플러그인이 제공되지 않아 저장소의 Playwright 회귀와 �
 - Vercel 보호를 통과한 읽기 전용 요청으로 배포된 `index.html`, `runtime-config.json`, `sw.js`, `app.webmanifest`를 내려받아 Preview 산출물과 바이트 단위로 일치함을 확인했다. 따라서 배포 문서와 동일한 산출물을 설치된 Chrome 153.0.8010.48에서 렌더링해 시각 검수했다.
 - Browser 플러그인이 제공되지 않아 저장소의 Playwright를 사용했다. 360·390·768·1440px 모두 가로 넘침 0px, 로그인 버튼 높이 44px, 로그인 필드 접근성 이름, 빈 제출 시 첫 필수 입력 포커스, Preview의 영구 로그인 비활성 상태를 확인했다. 페이지 예외·console warning/error·실패한 네트워크 요청은 0건이다.
 - 객실 상태·예약 달력·예약 생성/취소·객실 변경, 청소 배정/수행/검수, 주급·컴플레인·Web Push 회귀를 OpenAPI 0.4.0 로컬 fixture로 다시 실행해 각각 9·19·6·8개 검사를 통과했다. 모든 mutation은 fixture가 가로챘고 production 데이터는 읽거나 변경하지 않았다.
+- 사용자가 로그인해 둔 Chrome Preview에서 active business admin 역할과 보호된 121개 객실을 실제로 조회했다. 객실 필터는 전체 121개, 예약 있음 2개, 청소 필요 7개를 각각 분리했고 예약 있음 필터의 두 카드는 청소 필요 상태로 섞이지 않았다. 관리자 `오늘·객실·간편 예약·청소·메이드·더보기`를 순회해 빈 화면·stale loading·framework overlay·console warning/error가 없음을 확인했다.
+- 실제 예약 달력에서 135호의 기존 `2026-09-22 16:00 → 2026-09-23 11:00` 예약 다음 구간인 `2026-09-23 16:00 → 2026-09-24 11:00`을 선택했다. 서버 bookability preview는 비겹침 구간을 예약 가능으로 반환했고, 현재 청소·PIN 준비도는 별도 문구로 표시했다.
+- 같은 기존 예약의 상세와 취소 확인 모달을 열어 체크인 전 active 예약의 취소 버튼, 객실·전체 기간·사유 `고객 요청`·현재 version `1`, soft cancel·감사 이력 보존 안내와 고객명 미노출을 확인했다. 확인용 실제 화면에는 운영 계정 표시명이 포함되므로 저장소 스크린샷으로 남기지 않았다.
 
 대표 PNG:
 
 - `QA/screenshots/vercel-preview-login-390.png`
 - `QA/screenshots/vercel-preview-login-1440.png`
 
-실제 운영 로그인과 121개 객실 조회, 승인된 기존 예약의 취소·동일 key replay·취소 기간 재예약 가능 여부는 승인된 계정과 대상이 제공되지 않아 실행하지 않았다. 이 항목은 Preview URL에서 사용자가 승인한 계정과 대상에 한해 수동 확인해야 한다.
+실제 예약 취소 확정은 대상을 승인받지 않아 실행하지 않았다. 따라서 soft cancel 응답, 동일 key replay, 취소 뒤 재조회와 기간 재예약 가능 여부는 승인된 대상에서 별도로 확인해야 한다. production reservation·cleaning·PIN mutation은 실행하지 않았다.
