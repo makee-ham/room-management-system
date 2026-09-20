@@ -18,6 +18,7 @@ const required = [
   'DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md',
   'DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md',
   'DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md',
+  'DOCS/23_CLEANING_API_INTEGRATION.md',
   'DOCS/24_RESERVATION_ARRIVAL_ROOM_MOVE_BACKEND_HANDOFF.md',
   'DOCS/WIREFRAME_TASK_PROMPT.md',
   'DOCS/22_OPTIONAL_CLEANING_DURATION_FRONTEND_RELEASE.md',
@@ -27,9 +28,16 @@ const required = [
   'scripts/check-cleaning-workflow.mjs',
   'scripts/check-operational-api.mjs',
   'scripts/check-reservation-arrival-room-move.mjs',
+  'scripts/check-reservation-bookability.mjs',
+  'scripts/check-deployed-visual.mjs',
   'WIREFRAME/QA/screenshots/admin-room-arrival-status-390.png',
   'WIREFRAME/QA/screenshots/admin-room-arrival-status-1440.png',
   'WIREFRAME/QA/screenshots/admin-reservation-room-move-390.png',
+  'WIREFRAME/QA/screenshots/openapi-v040-rooms-390.png',
+  'WIREFRAME/QA/screenshots/openapi-v040-calendar-1440.png',
+  'WIREFRAME/QA/screenshots/openapi-v040-reservation-create-390.png',
+  'WIREFRAME/QA/screenshots/deployed-v040-rooms-390.png',
+  'WIREFRAME/QA/screenshots/deployed-v040-calendar-1440.png',
   'WIREFRAME/QA/screenshots/optional-duration-template-390.png',
   'WIREFRAME/QA/screenshots/optional-duration-template-1440.png',
   'WIREFRAME/QA/screenshots/optional-duration-maid-blocked-390.png',
@@ -2488,7 +2496,6 @@ for(const contract of [
 const liveRoomRowSource=html.slice(html.indexOf('function liveRoomListRow'),html.indexOf('function renderLiveRooms'));
 for(const contract of [
   'allocationReady=room.allocationReady===true',
-  'disabled aria-describedby=',
   '체크인 <strong>일정 없음</strong>',
   '체크아웃 <strong>일정 없음</strong>',
   'room-list-badges',
@@ -2496,10 +2503,23 @@ for(const contract of [
   "data-action=\"live-room-operations\"",
   "data-action=\"open-live-cleaning-request\"",
   "data-action=\"open-live-room-detail\"",
-  '예약 등록 불가 · ${esc(reasonText)}',
+  '미래 예약 가능 여부는 기간 선택 후 서버에서 확인',
 ]){
-  if(!liveRoomRowSource.includes(contract))throw new Error(`Reservation allocation card guard missing: ${contract}`);
+  if(!liveRoomRowSource.includes(contract))throw new Error(`Reservation room card contract missing: ${contract}`);
 }
+if(liveRoomRowSource.includes('disabled aria-describedby='))throw new Error('Current readiness must not disable a future reservation button.');
+const livePrimarySource=html.slice(html.indexOf('const LIVE_ROOM_PRIMARY_DISPLAY'),html.indexOf('function liveRoomMatchesFilter'));
+for(const contract of ['BLOCKED:{label:', 'OCCUPIED:{label:', 'ARRIVAL_PENDING:{label:', 'RESERVATION_PRESENT:{label:', 'CLEANING_REQUIRED:{label:', 'READY:{label:', "LIVE_ROOM_PRIMARY_DISPLAY[String(room?.primaryDisplayStatus||'').toUpperCase()]"]){
+  if(!livePrimarySource.includes(contract))throw new Error(`Server primaryDisplayStatus contract missing: ${contract}`);
+}
+for(const forbidden of ['reservationLifecycle','readinessStatus','allocationReady','cleaningRequired','allocationBlocked']){
+  if(livePrimarySource.includes(forbidden))throw new Error(`Room primary status must not be recomputed from ${forbidden}.`);
+}
+const liveCalendarSource=html.slice(html.indexOf('function liveQuickActiveReservations'),html.indexOf('function liveKstIsoDate'));
+for(const contract of ["calendarRangeKey===range.key", "apiRequest(`/v1/reservations?${query.toString()}`)", "기간 선택 후 서버에서 예약 가능 여부 확인", "빈 기간은 선택 후 서버 확인"]){
+  if(!html.includes(contract))throw new Error(`Reservation range/calendar contract missing: ${contract}`);
+}
+if(liveCalendarSource.includes('if(room.allocationReady!==true)')||liveCalendarSource.includes("rowReason=room.allocationReady"))throw new Error('Current allocationReady must not lock future calendar cells.');
 for(const contract of [
   'function clearLivePinReveal(',
   '/pin/reveal`,{method:\'POST\',body:{}}',
@@ -2512,23 +2532,25 @@ for(const contract of [
 }
 const liveReservationGuardSource=html.slice(html.indexOf('function liveReservationAvailableRooms'),html.indexOf('function openLiveCleaningRequest'));
 for(const contract of [
-  'function liveReservationAvailableRooms(){return (state.remote.rooms.items||[]).filter(room=>room.allocationReady===true);}',
-  "status=room.allocationReady===true?'배정 가능':`배정 불가 · ${liveRoomBlockReasonText(room)}`",
+  'function liveReservationAvailableRooms(preview=state.remote.reservations.bookabilityPreview)',
+  "candidate?.intervalBookable===true",
+  "candidate.checkInReady?'선택 기간 예약 가능':'선택 기간 예약 가능 · 현재 입실 준비 필요'",
   "${selectable?'':'disabled'}",
-  '현재 예약을 배정할 수 있는 객실이 없습니다.',
+  "apiRequest('/v1/reservations/bookability/preview'",
+  "excludeReservationId=form?.dataset.reservationId||null",
   'refreshLiveReservationRoomSelection(roomId)',
-  'Number(roomSelect?.dataset.stateVersion)!==Number(room.stateVersion)',
-  'expectedRoomVersion:Number(room.stateVersion)',
+  'Number(roomSelect?.dataset.stateVersion)!==Number(candidate.roomStateVersion)',
+  'expectedRoomVersion:Number(candidate.roomStateVersion)',
   "['ROOM_ALLOCATION_BLOCKED','STALE_VERSION'].includes(error?.code)",
   "apiErrorCopy(error,'예약 변경을 완료하지 못했습니다.')",
   '문의 번호 ${esc(error.requestId)}',
 ]){
-  if(!liveReservationGuardSource.includes(contract))throw new Error(`Reservation allocation submit/modal guard missing: ${contract}`);
+  if(!liveReservationGuardSource.includes(contract)&&!html.includes(contract))throw new Error(`Reservation interval bookability guard missing: ${contract}`);
 }
 const liveReservationCreateSource=liveReservationGuardSource.slice(liveReservationGuardSource.indexOf('async function submitLiveReservationCreate'),liveReservationGuardSource.indexOf('async function submitLiveReservationUpdate'));
 if(liveReservationCreateSource.indexOf('refreshLiveReservationRoomSelection(roomId)')<0||liveReservationCreateSource.indexOf('refreshLiveReservationRoomSelection(roomId)')>liveReservationCreateSource.indexOf('runLiveReservationMutation'))throw new Error('Reservation create must refresh and validate the room before POST.');
 for(const [code,copy] of [
-  ['ROOM_ALLOCATION_BLOCKED','현재 객실은 예약 배정이 불가능합니다. 차단 사유를 확인해 주세요.'],
+  ['ROOM_ALLOCATION_BLOCKED','선택 기간에 이 객실을 예약할 수 없습니다. 서버 판정 사유를 확인해 주세요.'],
   ['STALE_VERSION','다른 변경이 먼저 반영됐습니다. 최신 객실 정보를 확인한 뒤 다시 시도하세요.'],
   ['RESERVATION_OVERLAP','같은 객실의 기존 예약과 시간이 겹칩니다.'],
 ]){
@@ -2575,6 +2597,9 @@ await import('./check-pwa.mjs');
 
 const cleaningTypes=readFileSync(resolve(root,'WIREFRAME/cleaning-api.d.ts'),'utf8');
 if(!cleaningTypes.includes('durationMinutes?: number | null | undefined;')||!cleaningTypes.includes('durationMinutes: number | null;'))throw new Error('Optional nullable cleaning duration client contract missing.');
+for(const contract of ['export type RoomProjection =','primaryDisplayStatus: RoomPrimaryDisplayStatus;','export type ReservationBookabilityCandidate =','intervalBookable: boolean;','checkInReady: boolean;','export type ReservationRangePageEnvelope =','nextCursor: string | null;','export type ReservationRoomMovePreviewRequest =','export type ReservationRoomMoveCommitRequest =']){
+  if(!cleaningTypes.includes(contract))throw new Error(`Generated OpenAPI 0.4.0 contract missing: ${contract}`);
+}
 if(!serveSource.includes('"optionalCleaningWorkflow": True')||!pagesBuildSource.includes('optionalCleaningWorkflow: true'))throw new Error('Cleaning workflow live runtime gate must be enabled.');
 if(!html.includes("value.featureFlags?.optionalCleaningWorkflow===true"))throw new Error('Cleaning release gate must require an explicit boolean.');
 for(const contract of ['/v1/assignments/preview','/v1/assignments/commit-impact','/v1/attempts/{attemptId}/photo-slots','/v1/attempts/{attemptId}/submissions','/v1/inspections/{submissionId}/approve','/v1/notifications/{notificationId}/read']){

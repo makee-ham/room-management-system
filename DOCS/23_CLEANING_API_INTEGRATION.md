@@ -1,8 +1,8 @@
 # 청소관리 운영 API 연동
 
-기준일: 2026-09-16
-운영 계약: `CASTLE THE ART Room Management API` v0.3.0, 109 paths / 117 operations
-백엔드 검토 기준 source: `main@a12595edf68644b94215c4792e0d3aadd64772c6`
+기준일: 2026-09-20
+운영 계약: `CASTLE THE ART Room Management API` v0.4.0, 120 paths / 130 operations
+OpenAPI 코드 생성 정본: `https://wrongstory.github.io/room-management-system-backend/openapi.json`
 
 이 문서는 청소관리 프런트의 현재 운영 연결 정본이다. 요청·응답 타입과 endpoint는 운영 `openapi.json`만을 기계 판독 정본으로 사용한다. 이전 `DOCS/22_OPTIONAL_CLEANING_DURATION_FRONTEND_RELEASE.md`의 운영 OFF 상태와 PR #166 임시 계약은 이 문서로 대체한다.
 

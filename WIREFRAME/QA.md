@@ -1709,3 +1709,66 @@ Browser 플러그인이 제공되지 않아 저장소의 Playwright 회귀와 �
 - 완료 청소 최근 7일 전용 목록, 객실 이동 preview/commit, 예약 구간 전체 bookability, 객실 유형 ID 카탈로그 endpoint가 없다.
 - 실제 외부 푸시 발송은 provider/worker 운영 설정이 필요하다. 프런트 구독 등록 성공과 외부 전달 성공을 같은 것으로 기록하지 않는다.
 - 승인된 운영 계정으로 protected 주급·컴플레인·푸시 데이터를 읽거나 실제 mutation/외부 푸시 수신을 실행하지 않았다. 배포 뒤에는 역할별 읽기 smoke와 별도 테스트 계정의 승인된 소액/비운영 대상 검증이 필요하다.
+
+## 2026-09-20 · OpenAPI v0.4.0 객실 상태·예약 기간 정합
+
+백엔드 `FRONTEND_CODEX_HANDOFF_V0.4.0.md` 전체와 운영 OpenAPI를 정본으로 다시 비교했다. 실제 공개 API에서 `0.4.0`, 120 paths / 130 operations, health, 공개키와 로컬 origin CORS를 읽기 전용으로 확인했다. Browser 플러그인이 제공되지 않아 앱 번들 Playwright와 설치된 Chrome 153.0.8010.48을 사용했다. 인증 업무 요청과 모든 mutation은 OpenAPI 0.4.0 형태의 로컬 fixture로 가로챘으며 production 데이터는 변경하지 않았다.
+
+### 조사 결과와 수정 영향
+
+| 화면 | 발견한 혼용 | 수정 결과 |
+| --- | --- | --- |
+| 객실 현황·상세 | `occupied`, `cleaningRequired`, `allocationReady`, 예약 lifecycle로 대표 상태를 다시 계산 | 서버 `primaryDisplayStatus` 여섯 값만 기존 큰 상태 UI로 변환. 나머지 축은 보조 안내로 분리 |
+| 간편 예약 달력 | 현재 `allocationReady`가 false인 객실의 미래 행·날짜까지 잠금 | 범위 GET의 예약 구간만 `[checkInAt, checkOutAt)`로 표시하고, 현재 준비 상태로 미래 칸을 잠그지 않음 |
+| 예약 생성·변경 | 객실 projection의 `allocationReady`를 미래 예약 가능성으로 사용 | `POST /v1/reservations/bookability/preview` 후보의 `intervalBookable`만 활성 조건으로 사용. `checkInReady`는 현재 청소·PIN 안내로만 표시 |
+| 예약 명령 | 현재 객실 version을 직접 사용하고 등록 후 일부 화면만 갱신 | 제출 직전 preview의 `roomStateVersion`을 보내고 성공 후 객실·예약·29일 달력을 모두 재조회 |
+| 객실 변경 | 운영 화면에서 preview/commit이 비활성 | 체크인 전·투숙 중 모두 preview의 TTL·fingerprint·세 version·effectiveAt을 그대로 commit에 전달 |
+| 객실 기준정보 | 타입 ID 카탈로그 부재 | `GET /v1/room-types`를 기존 상세 폼에 투영하고 `PATCH /v1/rooms/{roomId}/master-data` CAS에 연결 |
+
+### 인계 문서 브라우저 체크리스트
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| `primaryDisplayStatus`의 BLOCKED / OCCUPIED / ARRIVAL_PENDING / RESERVATION_PRESENT / CLEANING_REQUIRED / READY 표시 | 통과 |
+| 레거시 `cleaningRequired=true`, `allocationReady=false`와 충돌해도 대표 상태 READY 유지 | 통과 |
+| 미래 예약이 오늘 객실을 즉시 청소 필요로 바꾸지 않고 생성 성공 뒤 GET rooms 재조회 | 통과 · fixture |
+| 예약 하나의 실제 겹침 날짜만 기존 예약으로 표시하고 체크아웃 경계 이후 날짜 재선택 | 통과 |
+| PIN mismatch·현재 준비 미완료여도 `intervalBookable=true`인 미래 기간 선택·등록 | 통과 |
+| standard / long_stay discriminator, 장기 투숙 종료일 미정 `checkOutAt:null` preview | 통과 |
+| 생성 직전 preview, 후보 `roomStateVersion` → `expectedRoomVersion`, Idempotency-Key, 성공 뒤 객실·예약·달력 재조회 | 통과 · fixture |
+| BEFORE_CHECKIN 및 DURING_STAY 객실 이동 preview/commit과 TTL·fingerprint·세 version 전달 | 통과 · fixture |
+| 기존 예약 변경·취소·수동 체크아웃이 공통 성공 경로에서 객실·예약·달력을 재조회 | 통과 · 기존 운영 API 회귀 |
+| 관리자 청소 배정·검수·사진과 메이드 시작·완료, 응답 유실 동일 key/payload replay, 401/403/409 분리 | 통과 · 기존 청소 회귀 |
+| 360 / 390 / 768 / 1440px 객실·달력·예약 모달 가로 넘침 없음 | 통과 |
+| 앱 JavaScript error·console warning/error, token·PIN·고객명·service-role/provider secret의 URL·console 노출 | 0건 |
+| 생성 타입이 운영 OpenAPI 0.4.0, 120 paths / 130 operations와 일치 | 통과 |
+
+대표 PNG를 실제 렌더로 확인했다.
+
+- `QA/screenshots/openapi-v040-rooms-390.png`
+- `QA/screenshots/openapi-v040-calendar-1440.png`
+- `QA/screenshots/openapi-v040-reservation-create-390.png`
+- `QA/screenshots/live-wireframe-room-detail-390.png`
+- `QA/screenshots/live-wireframe-room-detail-1440.png`
+- `QA/screenshots/live-wireframe-quick-booking-390.png`
+- `QA/screenshots/live-wireframe-quick-booking-1440.png`
+
+### 전용 운영 origin 배포 검수
+
+- `https://room-management-system-prod.vercel.app`을 새 live 산출물로 재배포했다. 배포 뒤 `index.html` SHA-256은 로컬 정본과 같은 `c6a2cdc12d227313de2957a0165b7b4f6269a544661b6275cdb24fd74e71ad04`다.
+- 배포된 `runtime-config.json`은 `mode=live`, 정본 Supabase API, `sessionPersistence=local`, optional cleaning workflow 활성, 브라우저 publishable key만 포함한다. service-role/provider secret 이름은 없다.
+- 배포 origin을 요청 origin으로 실제 CORS preflight 204, health, OpenAPI 0.4.0 120 paths / 130 operations를 다시 확인했다.
+- production 업무 데이터를 읽거나 바꾸지 않도록 브라우저에서 runtime config만 demo로 가로채고, 배포된 정적 `index.html` 자체로 관리자 `오늘·객실·간편 예약·청소·메이드·더보기`와 메이드 `내 업무·근무 일정·주급·더보기`를 처음부터 끝까지 순회했다.
+- 전 화면을 360/390/768/1440px에서 확인해 가로 넘침, 페이지 예외, console warning/error가 0건임을 확인했다. 배포본 객실·달력 PNG를 `view_image`로 와이어프레임 기준 PNG와 나란히 검수했다.
+
+배포 증거:
+
+- `QA/screenshots/deployed-v040-rooms-390.png`
+- `QA/screenshots/deployed-v040-calendar-1440.png`
+
+### 한계
+
+- 승인된 운영 계정이 없어 protected production 객실·예약·청소 데이터를 읽거나 실제 예약·객실 이동 mutation을 실행하지 않았다.
+- Google Drive 사진 provider, Google Sheets PIN projection, Web Push/Cron의 hosted 동작은 OpenAPI endpoint 존재와 별개이며 이번 검수에서 성공으로 기록하지 않는다.
+- 관리자·메이드·개발자 역할별 기존 권한 회귀는 통과했지만 production 데이터의 동시성은 로컬 fixture로 대체하지 않았다.
+- 승인된 production 업무 계정이 없어 live 모드의 보호된 데이터 화면은 hosted 로그인으로 검증하지 않았다. 동일한 배포 파일의 live UI는 OpenAPI fixture E2E로, 배포 정적 파일과 전체 와이어프레임 화면은 demo-mode hosted smoke로 나누어 검증했다.

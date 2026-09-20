@@ -2,7 +2,7 @@
 
 작성일: 2026-08-31
 
-최종 갱신: 2026-09-16 · 백엔드 `v0.3.0` (109 paths / 117 operations)
+최종 갱신: 2026-09-20 · 백엔드 `v0.4.0` (120 paths / 130 operations)
 
 ## 연결 대상으로 확정한 프로젝트
 
@@ -17,9 +17,9 @@
 - `/v1/auth/login`, Supabase refresh token, `/v1/auth/me`를 연결했다.
 - 전용 origin의 개인 기기에서는 `로그인 유지`를 켤 수 있고, access token 만료 전에 refresh token으로 세션을 갱신한다.
 - 관리자에게 운영 객실 읽기와 계정 생성·역할·상태·잠금·비밀번호 초기화 기능을 연결했다.
-- 백엔드 `v0.3.0`의 예약 목록·단건 고객명 조회·등록·변경·취소·수동 체크아웃과 연박/추가 청소 요청 생성·취소를 연결했다. 고객명은 관리자 단건 모달의 현재 DOM에만 두고 목록·URL·로그·`localStorage`·`sessionStorage`에 남기지 않는다.
+- 백엔드 `v0.4.0`의 기간 예약 목록·예약 가능성 preview·단건 고객명 조회·등록·변경·취소·수동 체크아웃·객실 변경 preview/commit과 연박/추가 청소 요청 생성·취소를 연결했다. 고객명은 관리자 단건 모달의 현재 DOM에만 두고 목록·URL·로그·`localStorage`·`sessionStorage`에 남기지 않는다.
 - 메이드의 다음 주 가능일 최초/재제출과 마감 후 변경 요청, 관리자의 메이드별 가능일 표와 변경 요청 승인·반려를 연결했다. 모든 mutation은 현재 version을 CAS 값으로 보내고 멱등 키를 사용한다.
-- 객실 단건 projection, 촛불 수량, 운영 차단, 객실 이슈, PIN 동기화 상태 기록을 연결했다. v0.3.0의 명시적 PIN reveal과 prepare/confirm/rollback 변경 흐름도 기존 객실 카드의 `보기·수정` UI에 연결하며 원문은 한 객실·최대 30초 메모리에만 둔다.
+- 객실 단건 projection, 객실 유형 카탈로그·기준정보 변경, 촛불 수량, 운영 차단, 객실 이슈, PIN 동기화 상태 기록을 연결했다. v0.4.0의 명시적 PIN reveal과 prepare/confirm/rollback 변경 흐름도 기존 객실 카드의 `보기·수정` UI에 연결하며 원문은 한 객실·최대 30초 메모리에만 둔다.
 - 개발자 기본 화면에 runtime·database·scheduler·계정/객실 요약을 연결했다. 설정은 `configured` 여부만 표시하고 값·길이·해시는 표시하지 않는다.
 - 관리자는 기존 `오늘·객실·간편 예약·청소·메이드·더보기`, 메이드는 기존 `내 업무·근무 일정·주급·더보기` 정보 구조를 그대로 사용한다.
 - 운영 API가 있는 화면은 기존 카드·목록 안에 실제 응답을 표시하고, 아직 endpoint가 없는 화면은 같은 내비게이션과 레이아웃 안에서 `API 연결 대기` 상태를 표시한다.
@@ -29,20 +29,21 @@
 - 운영 API 오류나 런타임 설정 오류를 데모 데이터로 대체하지 않는다.
 - 더보기의 `로그인 상태`는 상태 모달만 열고, 별도의 `로그아웃` 버튼만 세션을 종료한다.
 - PWA manifest, 아이콘, 서비스 워커, 설치 안내, 브라우저 알림 권한 요청과 Web Push 공개키 조회·구독 등록/회전·폐기를 연결했다.
-- 객실 주 상태는 서버의 `primaryDisplayStatus`와 `reservationLifecycle`을 기존 객실 카드 표시 모델로 변환한다. 우선순위는 `배정 불가 → 투숙 중 → 입실 예정 → 예약 있음 → 청소 필요 → 배정 가능`이며, API 필드명을 새 화면에 노출하지 않는다.
+- 객실 주 상태는 서버의 `primaryDisplayStatus`만 기존 객실 카드 표시 모델로 변환한다. 프런트는 `reservationLifecycle`, `readinessStatus`, `allocationReady`로 대표 상태를 다시 계산하지 않는다. 서버 우선순위는 `배정 불가 → 투숙 중 → 입실 예정 → 예약 있음 → 청소 필요 → 배정 가능`이며, API 필드명을 새 화면에 노출하지 않는다.
 - 주급은 마감 주차 조회·항목 pagination·지급 시작·외부 송금 결과·상계·수익 정정/취소·늦은 확정 이월을 연결한다. 컴플레인은 접수·검토·판정/정정·메이드 확인/이의·종결·재청소 배정을 연결하며 벌점은 주급에서 자동 차감하지 않는다.
 
-## 예약 배정 차단 계약
+## 예약 기간 가능성 계약
 
-- 예약 등록 UI는 `GET /v1/rooms`의 `allocationReady`, `allocationBlocked`, `reasonCodes`, `pinSyncStatus`, `dataStatus`, `stateVersion`을 함께 사용한다. `allocationReady === true`인 객실만 등록 버튼과 option을 활성화한다.
-- `DATA_UNCONFIRMED`는 `pinSyncStatus`와 `dataStatus`를 함께 확인해 `PIN 동기화 미설정`, `PIN 불일치`, `객실 기준정보 미확인`을 중복 없이 모두 표시한다.
-- 모달 진입, 객실 선택 변경, 제출 직전에 객실 목록을 다시 읽으며, 최신 `stateVersion`을 `expectedRoomVersion`으로 보낸다. 선택 객실 누락·배정 불가·버전 불일치면 POST를 보내지 않는다.
+- 미래 예약 가능 여부는 `POST /v1/reservations/bookability/preview`의 객실별 `intervalBookable`만 사용한다. `checkInReady`와 `allocationReady`는 현재 청소·PIN 준비 상태이며 미래 기간 option이나 달력 행을 잠그지 않는다.
+- 29일 예약 달력은 `GET /v1/reservations?from=&to=&cursor=`의 strict RFC 3339 범위와 opaque cursor를 사용한다. 기존 예약 한 건은 `[checkInAt, checkOutAt)`만 차지하며 겹치지 않는 이후 날짜는 다시 선택할 수 있다.
+- 모달 진입, 날짜·예약 유형 변경, 제출 직전에 같은 기간을 다시 preview한다. `intervalBookable === true`인 후보의 `roomStateVersion`만 `expectedRoomVersion`으로 보내며 preview 결과를 성공 보장으로 취급하지 않는다.
+- `checkInReady === false`이면 현재 입실 준비가 미완료라고 안내하되 `intervalBookable === true`인 미래 예약은 계속 선택할 수 있다. PIN 불일치·미설정도 미래 기간 자체를 차단하지 않는다.
 - 서버의 `ROOM_ALLOCATION_BLOCKED` 409와 `STALE_VERSION`은 정상적인 경쟁 상태로 처리한다. 객실 목록을 다시 읽고 `error.code`에 해당하는 사용자 안내, 최신 차단 사유, `requestId`만 표시하며 서버 내부 message는 화면 문구로 사용하지 않는다.
 - 서비스 워커는 API, Authorization, 민감 URL, cross-origin, 모든 non-GET 요청을 브라우저 네트워크에 직접 맡긴다. 예약 POST는 서비스 워커가 캐시하거나 자동 재시도하지 않는다. navigation 실패는 캐시된 앱 문서가 없더라도 503 HTML fallback을 반환한다.
 
-## 아직 운영 API가 없거나 계약이 부족한 범위
+## 계약이 아직 부족한 범위
 
-현재 OpenAPI v0.3.0에는 완료 청소의 최근 7일 전용 목록, 객실 이동 preview/commit, 예약 구간 전체의 배정 가능 여부, 프런트가 안전하게 선택할 객실 유형 ID 카탈로그 endpoint가 없다. 이 기능은 데모 값을 운영 데이터처럼 보여 주지 않고 기존 역할별 화면 안에서 `API 연결 대기`, 비활성 상태 또는 정확한 빈 상태로 표시한다. 운영 차단·객실 이슈 해제도 목록 endpoint가 없으므로 현재 브라우저 세션에서 생성 응답의 `entityId`를 받은 건만 바로 해제할 수 있다.
+OpenAPI v0.4.0에서 기간 예약 목록, bookability, 객실 이동, 객실 유형 카탈로그, 청소·근무 이력 조회가 제공된다. 이 릴리즈는 객실 현황·예약 달력·예약 생성/수정·객실 이동·객실 기준정보 흐름을 연결했다. 운영 차단·객실 이슈 해제는 목록 endpoint가 없으므로 현재 브라우저 세션에서 생성 응답의 `entityId`를 받은 건만 바로 해제할 수 있다.
 
 `GET /v1/payroll/entries?kind=adjustments`의 `PayrollAdjustmentEntry`에는 후속 정정·취소 CAS에 필요한 `bookVersion`이 없다. 확정 수익 정정/취소와 늦은 확정 이월은 계약대로 `expectedVersion: 0`으로 연결했지만, 기존 adjustment의 재정정·취소 버튼은 버전을 추측하지 않고 `정정 버전 API 미제공`으로 둔다. `bookVersion`이 entries projection에 추가되면 같은 상세 행에 바로 연결한다.
 
@@ -67,6 +68,8 @@ Pages workflow는 `RMS_APP_ORIGIN`이 설정된 전용 origin에서는 정적 �
 2026-08-31 기준 repository variable `RMS_API_BASE_URL`, `SUPABASE_URL`과 secret `SUPABASE_PUBLISHABLE_KEY`는 등록했다. 공개키 값은 추적 파일이나 문서에 기록하지 않는다. Pages용 `RMS_APP_ORIGIN`은 전용 도메인이 정해진 뒤 등록한다.
 
 같은 날 전용 Vercel project `room-management-system-prod`에 운영 산출물을 배포했다. 고정 origin은 `https://room-management-system-prod.vercel.app`이며 런타임 설정은 운영 API·Supabase project와 `local` 세션 정책을 사용한다. 현재 배포는 로컬에서 만든 정적 산출물을 올린 것이므로 Git 저장소 자동 배포 연결은 별도 작업이다.
+
+2026-09-20에 OpenAPI v0.4.0 객실 상태·기간 예약 정합 산출물을 같은 project에 다시 배포했다. 배포된 `index.html` SHA-256은 로컬 정본과 동일했고, 전용 origin의 CORS·health·OpenAPI 0.4.0 120 paths / 130 operations 및 브라우저 안전 runtime config를 읽기 전용으로 재확인했다. 운영 업무 데이터에는 로그인하거나 mutation하지 않았고, 배포 정적 화면은 runtime config만 demo로 가로챈 hosted 브라우저 smoke로 관리자·메이드 전체 1차 내비게이션을 검수했다.
 
 `makee-ham.github.io`는 저장소 경로가 달라도 browser storage와 service worker 권한의 origin을 공유한다. 다른 Pages 앱이 운영 token에 접근할 가능성을 없애기 위해 workflow는 이 공유 origin을 운영 로그인 배포 대상으로 거부하고 데모 확인본만 게시한다. 브라우저를 닫아도 로그인을 안전하게 유지하려면 이 앱만 사용하는 custom domain 또는 전용 origin이 필요하며, 도메인을 연결할 때 `RMS_APP_ORIGIN`, CORS allowlist와 Pages 설정을 함께 바꾼다.
 
