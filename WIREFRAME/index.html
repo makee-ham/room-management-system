@@ -1910,6 +1910,12 @@
     .live-operation-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:14px; }
     .live-operation-grid .btn { min-height:48px; justify-content:flex-start; }
     .live-dev-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .live-developer-room-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .live-developer-room-form { display:grid; gap:14px; margin-top:16px; }
+    .live-developer-room-form .field { margin:0; }
+    .live-developer-room-form .select-control, .live-developer-room-form .input-control { width:100%; }
+    .live-developer-room-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .live-developer-room-actions .btn { min-height:44px; }
     @media (max-width:720px) {
       .assignment-disclosure-body, .weekly-availability-body { padding:0 14px 14px; }
       .live-strip-inner { align-items:flex-start; padding:8px 12px; }
@@ -1921,7 +1927,7 @@
       .live-list-head { display:none; }
       .live-room-grid, .live-account-grid, .live-reservation-grid { grid-template-columns:1fr; gap:8px; padding:14px; }
       .live-availability-days { grid-template-columns:repeat(4,minmax(0,1fr)); }
-      .live-operation-grid, .live-dev-grid { grid-template-columns:1fr; }
+      .live-operation-grid, .live-dev-grid, .live-developer-room-grid { grid-template-columns:1fr; }
       .live-actions { justify-content:flex-start; padding-top:4px; }
       .live-actions .btn { min-height:44px; }
       .live-toolbar { align-items:stretch; }
@@ -3305,7 +3311,7 @@
         {id:'my',label:'내 업무',icon:'briefcase'}, {id:'schedule',label:'근무 일정',icon:'calendar'}, {id:'done',label:'청소 내역',icon:'check'}, {id:'pay',label:'주급',icon:'wallet'}, {id:'more',label:'더보기',icon:'more'}
       ];
       const liveAdminNav=adminNav;
-      const liveDeveloperNav=[{id:'overview',label:'운영 상태',icon:'sync'},{id:'accounts',label:'계정',icon:'users'},{id:'more',label:'더보기',icon:'more'}];
+      const liveDeveloperNav=[{id:'overview',label:'운영 상태',icon:'sync'},{id:'rooms',label:'객실',icon:'rooms'},{id:'accounts',label:'계정',icon:'users'},{id:'more',label:'더보기',icon:'more'}];
       const liveMaidNav=maidNav;
 
       function currentNav() { if(liveMode())return state.role==='admin'?liveAdminNav:state.role==='developer'?liveDeveloperNav:liveMaidNav;return state.role === 'admin' ? adminNav : maidNav; }
@@ -3746,6 +3752,12 @@
         const slice=state.remote.developer,stateMarkup=renderLiveRemoteState(slice,{label:'개발자 운영 상태',retryAction:'refresh-live-developer'});if(stateMarkup)return `<div class="live-page">${stateMarkup}</div>`;
         const overview=slice.overview||{},runtime=slice.runtime||overview.runtime||{},database=slice.database||overview.database||{},scheduler=slice.scheduler||overview.scheduler||{},healthy=database.databaseReachable&&database.rlsValid&&database.migrationDrift==='equal'&&scheduler.status==='healthy';
         return `<div class="live-page"><div class="live-page-head"><div><h2>백엔드 v0.4.0 운영 상태</h2><p>설정값 원문 없이 runtime·DB·scheduler 상태만 확인합니다.</p></div>${button('새로고침','refresh-live-developer','outline')}</div><div class="live-summary"><div><span>계정</span><strong>${Number(overview.accounts?.total)||0}명</strong><small>활성 ${Number(overview.accounts?.active)||0}</small></div><div><span>객실</span><strong>${Number(overview.rooms?.total)||0}실</strong><small>운영 projection</small></div><div><span>감사 이벤트 24시간</span><strong>${Number(overview.auditEventsLast24Hours)||0}건</strong><small>append-only</small></div><div><span>종합 상태</span><strong>${healthy?'정상':'확인 필요'}</strong><small>색상 외 텍스트 제공</small></div></div><div class="live-dev-grid"><section class="card card-pad"><div class="section-head"><h3>Edge runtime</h3>${statusBadge(runtime.environment||'unknown',runtime.environment==='production'?'green':'amber')}</div><div class="info-grid"><div class="info-item"><span>API 버전</span><strong>${esc(runtime.source?.apiVersion||'확인 필요')}</strong></div><div class="info-item"><span>project ref</span><strong>${esc(runtime.projectRef||'확인 필요')}</strong></div><div class="info-item"><span>runtime</span><strong>${esc(runtime.runtime?.name||'deno')} ${esc(runtime.runtime?.version||'')}</strong></div><div class="info-item"><span>확인 시각</span><strong>${esc(liveTimeLabel(runtime.checkedAt))}</strong></div></div></section><section class="card card-pad"><div class="section-head"><h3>데이터베이스</h3>${statusBadge(database.databaseReachable&&database.rlsValid?'정상':'확인 필요',database.databaseReachable&&database.rlsValid?'green':'red')}</div><div class="info-grid"><div class="info-item"><span>migration</span><strong>${esc(database.migrationDrift||'unknown')}</strong></div><div class="info-item"><span>RLS</span><strong>${database.rlsValid?'유효':`누락 ${Number(database.rlsMissingCount)||0}`}</strong></div><div class="info-item"><span>profiles / rooms</span><strong>${Number(database.rowCounts?.profiles)||0} / ${Number(database.rowCounts?.rooms)||0}</strong></div><div class="info-item"><span>확인 시각</span><strong>${esc(liveTimeLabel(database.checkedAt))}</strong></div></div></section><section class="card card-pad"><div class="section-head"><h3>예약 scheduler</h3>${statusBadge(scheduler.status||'확인 필요',scheduler.status==='healthy'?'green':'amber')}</div><div class="info-grid"><div class="info-item"><span>Cron</span><strong>${scheduler.cronConfigured&&scheduler.cronActive?'설정·활성':'확인 필요'}</strong></div><div class="info-item"><span>주기</span><strong>${esc(scheduler.cadence||'미설정')}</strong></div><div class="info-item"><span>actor</span><strong>${scheduler.schedulerActorValid?'유효':'확인 필요'}</strong></div><div class="info-item"><span>최근 heartbeat</span><strong>${esc(liveTimeLabel(scheduler.lastHeartbeat?.completedAt))}</strong></div></div></section><section class="card card-pad"><div class="section-head"><h3>설정 준비</h3>${statusBadge('값 원문 비공개','blue')}</div><div class="rail-list">${Object.entries(runtime.configuration||{}).map(([name,value])=>`<div class="rail-row"><strong>${esc(name)}</strong><span>${value?.configured?'설정됨':'미설정'}</span></div>`).join('')||'<div class="rail-row"><strong>상태 없음</strong><span>새로고침해 주세요.</span></div>'}</div></section></div><p class="audit-note">마지막 동기화 ${esc(liveTimeLabel(slice.lastSuccessAt))} · 진단 실행과 감사 이벤트 원문 조회는 이 읽기 전용 요약에서 실행하지 않습니다.</p></div>`;
+      }
+      function renderLiveDeveloperRooms(){
+        const slice=state.remote.developer,stateMarkup=renderLiveRemoteState(slice,{label:'개발자 객실 현황',retryAction:'refresh-live-developer'});if(stateMarkup)return `<div class="live-page">${stateMarkup}</div>`;
+        const overview=slice.overview||{},database=slice.database||overview.database||{},totalRooms=Number(overview.rooms?.total)||0,databaseRooms=Number(database.rowCounts?.rooms)||0,countAligned=totalRooms===databaseRooms;
+        const roomTypeOptions=LIVE_ROOM_TYPE_ORDER.map(id=>`<option value="${id}">${esc(LIVE_ROOM_TYPE_LABELS[id])}</option>`).join('');
+        return `<div class="live-page" data-live-developer-rooms><div class="live-page-head"><div><h2>객실 등록 관리</h2><p>현재 등록 수를 확인하고 객실 추가·삭제 입력을 준비합니다.</p></div>${button('현황 새로고침','refresh-live-developer','outline')}</div><div class="live-summary" aria-label="개발자 객실 현황"><div><span>현재 등록 객실</span><strong>${totalRooms}실</strong><small>developer overview</small></div><div><span>DB 객실 행</span><strong>${databaseRooms}행</strong><small>database row count</small></div><div><span>집계 상태</span><strong>${countAligned?'일치':'확인 필요'}</strong><small>overview / DB 비교</small></div><div><span>변경 계약</span><strong>API 미제공</strong><small>OpenAPI v0.4.0</small></div></div><div class="notice notice-warning" role="status"><div><strong>객실 추가·삭제 API가 아직 제공되지 않습니다.</strong><br>현재 OpenAPI는 개발자에게 객실 총계만 제공하며, 객실 유형 목록과 생성·삭제 명령은 제공하지 않습니다. 아래 입력값은 서버에 전송되거나 저장되지 않습니다.</div></div><div class="live-developer-room-grid"><section class="card card-pad" aria-labelledby="developer-room-create-title"><div class="section-head"><div><h3 id="developer-room-create-title">객실 추가</h3><p class="audit-note">유형과 호수를 입력한 뒤 서버 계약이 준비되면 등록합니다.</p></div>${statusBadge('API 미제공','neutral')}</div><div class="live-developer-room-form"><div class="field"><label for="developer-room-type">객실 유형</label><select id="developer-room-type" class="select-control" data-control="developer-room-type">${roomTypeOptions}</select><small>현재 와이어프레임의 객실 유형 표시 항목입니다.</small></div><div class="field"><label for="developer-room-number">호수</label><input id="developer-room-number" class="input-control" type="text" inputmode="numeric" maxlength="8" autocomplete="off" data-control="developer-room-number" placeholder="예: 516"></div><div class="live-developer-room-actions">${button('객실 추가 · API 미제공','developer-room-create','primary','disabled aria-disabled="true"')}</div></div></section><section class="card card-pad" aria-labelledby="developer-room-delete-title"><div class="section-head"><div><h3 id="developer-room-delete-title">객실 삭제</h3><p class="audit-note">호수를 지정하고 연결 데이터의 영향을 확인한 뒤 처리해야 합니다.</p></div>${statusBadge('API 미제공','neutral')}</div><div class="live-developer-room-form"><div class="field"><label for="developer-room-delete-number">삭제할 객실 호수</label><input id="developer-room-delete-number" class="input-control" type="text" inputmode="numeric" maxlength="8" autocomplete="off" data-control="developer-room-delete-number" placeholder="예: 516"></div><div class="notice notice-info"><div><strong>삭제 전 영향 확인 계약이 필요합니다.</strong><br>예약·청소·PIN 이력을 보존할 비활성화 또는 삭제 방식과 충돌 방지 version을 서버가 제공해야 합니다.</div></div><div class="live-developer-room-actions">${button('삭제 영향 확인 · API 미제공','developer-room-delete','outline','disabled aria-disabled="true"')}</div></div></section></div><p class="audit-note">마지막 동기화 ${esc(liveTimeLabel(slice.lastSuccessAt))} · API가 제공될 때까지 데모 객실을 운영 데이터에 섞지 않습니다.</p></div>`;
       }
       const LIVE_PENDING_VIEW_COPY={
         quickReservation:{title:'간편 예약',icon:'calendar',summary:'예약 등록과 일정 조회 API가 준비되면 기존 예약표에 실데이터를 표시합니다.'},
@@ -4299,7 +4311,7 @@
       function renderMain(){return `${liveMode()&&uncertainLiveMutation?`<div class="notice notice-warning"><div><strong>앞선 요청 결과 확인이 필요합니다.</strong><br>내용을 변경하기 전에 같은 요청으로 서버 결과를 확인하세요.${button('같은 요청 결과 확인','confirm-uncertain-live-mutation','outline',uncertainLiveMutation.busy?'disabled':'')}</div></div>`:''}${renderMainContent()}`;}
       function renderMainContent() {
         if (!state.loggedIn) return renderLogin();
-        if(liveMode()){if(state.liveView==='accounts'&&['developer','admin'].includes(state.role))return renderLiveAccounts();if(state.liveView==='rooms'&&state.role==='admin')return renderLiveRooms();return renderLiveMore();}
+        if(liveMode()){if(state.liveView==='accounts'&&['developer','admin'].includes(state.role))return renderLiveAccounts();if(state.liveView==='rooms'&&state.role==='developer')return renderLiveDeveloperRooms();if(state.liveView==='rooms'&&state.role==='admin')return renderLiveRooms();return renderLiveMore();}
         if (state.detail) return renderDetail();
         if (state.role==='admin') {
           if (state.adminView==='today') return renderCheckoutInspectionQueueSummary()+renderAdminToday();
@@ -5152,7 +5164,7 @@
           if(liveRoomDetail)return `${liveRoomDetail.roomNumber}호 객실 상세`;
           if(state.remote.cleaning?.inspectionDetail)return `${state.remote.cleaning.inspectionDetail.submission?.reviewContext?.roomNumber||'객실'}호 청소 상세`;
           if(state.remote.cleaning?.focusRoomId){const room=liveRoomById(state.remote.cleaning.focusRoomId);if(room)return `${room.roomNumber}호 청소 상세`;}
-          const admin={today:'오늘 할 일',rooms:'객실 현황',quickReservation:'간편 예약',cleaning:'청소 관리',maids:'메이드',more:'더보기'},maid={my:'내 업무',schedule:'근무 일정',done:'청소 내역',pay:'주급',more:'더보기'},developer={overview:'운영 상태',accounts:'계정 관리',more:'더보기'};
+          const admin={today:'오늘 할 일',rooms:'객실 현황',quickReservation:'간편 예약',cleaning:'청소 관리',maids:'메이드',more:'더보기'},maid={my:'내 업무',schedule:'근무 일정',done:'청소 내역',pay:'주급',more:'더보기'},developer={overview:'운영 상태',rooms:'객실 관리',accounts:'계정 관리',more:'더보기'};
           return (state.role==='admin'?admin:state.role==='maid'?maid:developer)[currentView()]||'객실관리';
         }
         if (state.detail) {
@@ -5168,7 +5180,7 @@
         if (!state.loggedIn) return renderLogin();
         if(liveMode()){
           const view=currentView();
-          if(state.role==='developer')return view==='overview'?renderLiveDeveloperOverview():view==='accounts'?renderLiveAccounts():renderLiveMore();
+          if(state.role==='developer')return view==='overview'?renderLiveDeveloperOverview():view==='rooms'?renderLiveDeveloperRooms():view==='accounts'?renderLiveAccounts():renderLiveMore();
           if(state.role==='admin'){
             if(liveRoomDetail)return renderLiveRoomDetailPage(liveRoomDetail);
             if(state.remote.cleaning?.inspectionDetail)return renderLiveInspectionDetailPage(state.remote.cleaning.inspectionDetail);
