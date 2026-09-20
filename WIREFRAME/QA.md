@@ -1794,4 +1794,12 @@ Browser 플러그인이 제공되지 않아 저장소의 Playwright 회귀와 �
 
 - `QA/screenshots/openapi-v040-reservation-cancel-390.png`
 
-실제 운영 로그인과 121개 객실 조회, 승인된 기존 예약의 취소·동일 key replay·취소 기간 재예약 가능 여부는 Preview URL에서 사용자가 승인한 계정과 대상에 한해 수동 확인해야 한다.
+### Preview 배포 확인
+
+- 고정 Preview origin `https://room-management-system-prod-preview.vercel.app`은 Vercel deployment `target=preview`, `Ready`다. Production 승격은 실행하지 않았다.
+- 보호된 배포의 `runtime-config.json`을 Vercel 인증 요청으로 확인해 `mode=live`, 정본 API/project ref, publishable key 유형, `sessionPersistence=session`, `deploymentChannel=preview`와 금지된 secret key 이름 0건을 확인했다. 키 원문은 출력하지 않았다.
+- 배포된 `index.html`에 `운영 API 연결 중 · Preview` 표식이 포함되고, Vercel이 삽입한 Preview toolbar 코드 외 로컬 산출물과 같은 앱 문서를 제공함을 확인했다.
+- 운영 Edge API preflight는 이 고정 Preview origin에 `403 ORIGIN_NOT_ALLOWED`를 반환했다. 따라서 로그인·`/v1/auth/me`·121개 객실 보호 조회와 실제 예약 취소 수동 검수는 실행하지 않았으며, 성공으로 기록하지 않는다.
+- 운영 백엔드의 기존 `CORS_ORIGINS` 값을 보존한 채 위 고정 origin을 추가하고 preflight 204를 확인한 다음에만 사용자가 승인한 계정과 대상으로 수동 검수를 진행한다. 프런트에서 wildcard 또는 임의 proxy로 우회하지 않는다.
+
+실제 운영 로그인과 121개 객실 조회, 승인된 기존 예약의 취소·동일 key replay·취소 기간 재예약 가능 여부는 CORS 허용 뒤 Preview URL에서 사용자가 승인한 계정과 대상에 한해 수동 확인해야 한다.
