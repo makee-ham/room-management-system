@@ -748,8 +748,18 @@ if (!renderRoomsSource.includes('class="room-list-table"') || renderRoomsSource.
   throw new Error('Room screen must render the list-only layout.');
 }
 if (roomListRowSource.includes('<span>관리</span>')) throw new Error('Ambiguous room-list 관리 header returned; use PIN 관리.');
-for (const action of ['quick-reservation-edit','reservation-edit','operation-status','room-detail']) {
+for (const action of ['room-reservation-status','operation-status','room-detail']) {
   if (!roomListRowSource.includes(action)) throw new Error(`Room list action contract missing: ${action}`);
+}
+for (const contract of [
+  'data-action="open-live-room-reservation-status"',
+  'function liveRoomReservationStatusMarkup(room,reservations)',
+  'async function openLiveRoomReservationStatus(roomId',
+  "new URLSearchParams({roomId})",
+  "confirmLabel:'새 예약 등록'",
+  "if(a==='open-live-room-reservation-status')",
+]) {
+  if (!html.includes(contract)) throw new Error(`Room reservation status contract missing: ${contract}`);
 }
 for (const contract of [
   '.assignment-table td { min-width:0; overflow:hidden; }',

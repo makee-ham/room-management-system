@@ -1,7 +1,7 @@
 {
   "package": "CASTLE THE ART room management wireframe",
-  "version": "2026-09-20-vercel-preview-v0.4.0-cancellation",
-  "generated_at_kst": "2026-09-20T15:06:25+09:00",
+  "version": "2026-09-20-room-reservation-status-v0.4.0",
+  "generated_at_kst": "2026-09-20T19:57:07+09:00",
   "repository": "https://github.com/makee-ham/room-management-system",
   "entrypoint": "WIREFRAME/index.html",
   "policy_source": "DOCS/FINAL_UX_AUDIT.md",
@@ -16,7 +16,7 @@
   "reservation_room_move_handoff": "DOCS/24_RESERVATION_ARRIVAL_ROOM_MOVE_BACKEND_HANDOFF.md",
   "sha256": {
     "DOCS/FINAL_UX_AUDIT.md": "e479e468c32c27ef606a311fd090ed7a4a8718590d363c9634da014960956c78",
-    "WIREFRAME/index.html": "dff06982919e7e7ef7580431a53db2329a417826d23f5cbf8e03e10772c0bc0b",
+    "WIREFRAME/index.html": "2b7e719b3c892dd54bfe4d48fc3bcdfa195b178560440f3daf9d01bbb50d3efd",
     "DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md": "eec820aabd2551083d782dc19531bd1c785c46d2cc85668a230fbf7e243cf97f"
   },
   "runtime": {

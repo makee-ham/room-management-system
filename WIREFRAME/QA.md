@@ -1841,3 +1841,26 @@ Browser 플러그인이 제공되지 않아 번들 Playwright로 검증했다. �
 
 - `QA/screenshots/live-maid-cleaning-history-390.png`
 - `QA/screenshots/live-admin-work-history-1440.png`
+
+## 2026-09-20 · 객실별 예약 현황 버튼 통합
+
+객실 카드와 목록의 예약 행동을 `예약 현황`으로 통일했다. 운영 상태 버튼은 기존 위치·문구·기능을 그대로 유지했다. Browser 플러그인이 제공되지 않아 번들 Playwright의 Chromium 151.0.7922.34로 검증했다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 객실 예약 버튼 | 통과 · 예약 없음은 `예약 현황`, 활성 예약은 `예약 현황 · N건` |
+| 객실별 서버 조회 | 통과 · 클릭 시 `GET /v1/reservations?roomId={roomId}`, 고객명 없는 목록 projection 사용 |
+| 여러 예약 | 통과 · 현재·미래 활성 예약 2건을 한 목록에 표시하고 각 행에서 기존 예약 상세·변경으로 이동 |
+| 예약 없는 객실 | 통과 · 빈 상태를 표시하고 `새 예약 등록`에서 해당 객실을 선택한 기존 등록 화면으로 이동 |
+| 예약 가능성 축 | 통과 · 현황 목록은 기록 조회만 수행하고 새 예약은 기존 `intervalBookable` preview를 다시 사용 |
+| 운영 상태 버튼 | 통과 · 기존 `운영 상태` 문구·위치·운영 중지 모달 유지 |
+| 다른 객실 행동 | 통과 · 청소 상세·전체 상세·PIN 관리 회귀 통과 |
+| 반응형·접근성 | 통과 · 360/390/768/1440px 가로 넘침 0건, 주 버튼 최소 44px, Escape 닫기와 접근성 이름 유지 |
+| 브라우저 품질 | 통과 · page error·console warning/error·URL/console의 token·PIN·고객명 노출 0건 |
+
+대표 PNG:
+
+- `QA/screenshots/live-room-reservation-status-390.png`
+- `QA/screenshots/live-room-reservation-status-1440.png`
+
+예약·청소·주급·컴플레인·Web Push mutation은 모두 로컬 OpenAPI fixture에서 가로챘다. production 업무 데이터는 읽거나 변경하지 않았다.

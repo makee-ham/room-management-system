@@ -69,7 +69,7 @@ try {
 
   await page.evaluate(()=>{__CASTLE_TEST__.resetScenario(0);__CASTLE_TEST__.setOperationalMoment('2026-08-15','10:32');__CASTLE_TEST__.setRoomFilter('all');});
   await page.setViewportSize({width:390,height:900});
-  await page.locator('[data-room="211"] [data-action="quick-reservation-edit"]').click();await page.getByText('211호 예약 상세·변경',{exact:true}).waitFor();
+  await page.locator('[data-room="211"] [data-action="room-reservation-status"]').click();await page.getByText('211호 예약 상세·변경',{exact:true}).waitFor();
   const moveButton=page.getByRole('button',{name:'예약 객실 변경',exact:true});assert(await moveButton.isEnabled());await moveButton.click();await page.getByText('211호 예약 객실 변경',{exact:true}).waitFor();
   assert(/예약 (ID )?유지/.test(await page.locator('#modal-root').innerText()));assert(await page.locator('#reservation-room-move-target option').count()>0);
   await page.evaluate(()=>document.querySelector('#toast-region')?.replaceChildren());
