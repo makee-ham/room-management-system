@@ -1871,3 +1871,25 @@ Browser 플러그인이 제공되지 않아 번들 Playwright로 검증했다. �
 - 배포된 HTML은 Vercel Toolbar 주입분을 제외하면 로컬 `WIREFRAME/index.html`과 바이트 단위로 일치하며 SHA-256은 `2b7e719b3c892dd54bfe4d48fc3bcdfa195b178560440f3daf9d01bbb50d3efd`다. runtime은 `mode=live`, `sessionPersistence=session`, `deploymentChannel=preview`, optional cleaning workflow 활성이고 브라우저 publishable key만 포함한다.
 - 사용자가 인증한 Chrome의 고정 Preview에서 보호된 객실 121개를 읽기 전용으로 확인했다. 350호 카드에 `예약 현황 · 1건`과 기존 `운영 상태`가 함께 표시됐고, 예약 현황을 열면 서버의 활성 예약 1건과 체크아웃 완료 기록 1건이 고객명 없이 표시됐다.
 - 같은 배포 화면을 기본 데스크톱과 390×900에서 확인했다. 390px 문서 `scrollWidth=innerWidth=390`, 모달·목록 잘림 없음, console warning/error 0건이며 닫기 뒤 원래 객실 화면으로 복귀했다.
+
+## 2026-09-20 · 개발자 객실 등록 관리 화면
+
+개발자 내비게이션에 `객실`을 추가하고, 현재 등록 객실 수와 DB 객실 행을 같은 요약에서 비교하도록 구성했다. 기존 와이어프레임의 셸·요약 카드·폼·안내 색상과 반응형 규칙을 그대로 사용했다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 객실 수 현황 | 통과 · developer overview의 `rooms.total` 121실과 database `rowCounts.rooms` 121행 표시·일치 판정 |
+| 객실 유형 | 통과 · 스탠다드·프리미어·파셜 오션뷰·패밀리 투룸을 드롭다운으로 선택 |
+| 객실 추가 입력 | 통과 · 숫자 키패드 힌트가 있는 호수 입력, 브라우저 저장소·서버 전송 없음 |
+| 객실 삭제 입력 | 통과 · 삭제 대상 호수 입력과 예약·청소·PIN 이력 영향 확인 안내 |
+| 변경 API 부재 | 통과 · OpenAPI v0.4.0에 개발자용 유형 목록·객실 생성·삭제가 없어 두 변경 버튼을 `API 미제공`으로 비활성 표시 |
+| 네트워크 안전성 | 통과 · `/v1/rooms` POST·PUT·PATCH·DELETE 요청 0건, production 읽기·쓰기 0건 |
+| 반응형·접근성 | 통과 · 360/390/768/1440px 가로 넘침 0건, 신규 폼 컨트롤 최소 44px, label·키보드 포커스 순서 확인 |
+| 브라우저 품질 | 통과 · Chromium 151.0.7922.34, page error·console warning/error 0건 |
+
+Browser 플러그인이 제공되지 않아 `scripts/check-developer-room-management.mjs`를 번들 Playwright로 실행했다. 개발자 역할의 실제 보호된 응답을 사용할 자격 증명이 없어 OpenAPI 형태의 읽기 전용 fixture로 렌더링했으며, 추가·삭제 성공은 통과로 기록하지 않는다.
+
+대표 PNG:
+
+- `QA/screenshots/live-developer-room-management-390.png`
+- `QA/screenshots/live-developer-room-management-1440.png`
