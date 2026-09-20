@@ -15,10 +15,10 @@ const html=source.replace('\n      void bootApplication();',`LIVE_RUNTIME.mode='
 const browser=await chromium.launch({headless:true,...(process.env.RMS_QA_BROWSER_CHANNEL?{channel:process.env.RMS_QA_BROWSER_CHANNEL}:{})});
 const context=await browser.newContext({viewport:{width:390,height:900},serviceWorkers:'block'}),page=await context.newPage();
 page.setDefaultTimeout(10000);
-const pageErrors=[],consoleProblems=[],roomMutationRequests=[];
+const pageErrors=[],consoleProblems=[],catalogMutationRequests=[];
 page.on('pageerror',error=>pageErrors.push(error.message));
 page.on('console',message=>{if(['warning','error'].includes(message.type())&&!/^Failed to load resource:/.test(message.text()))consoleProblems.push(message.text());});
-page.on('request',request=>{if(/\/v1\/rooms(?:\/|$)/.test(request.url())&&['POST','PUT','PATCH','DELETE'].includes(request.method()))roomMutationRequests.push({method:request.method(),url:request.url()});});
+page.on('request',request=>{if(/\/v1\/(?:rooms|room-types)(?:\/|$)/.test(request.url())&&['POST','PUT','PATCH','DELETE'].includes(request.method()))catalogMutationRequests.push({method:request.method(),url:request.url()});});
 await page.route('**/favicon.ico',route=>route.fulfill({status:204,body:''}));
 await page.route('**/index.html*',route=>route.fulfill({status:200,contentType:'text/html',body:html}));
 
@@ -45,6 +45,19 @@ try{
   assert(await page.getByText('121행',{exact:true}).isVisible());
   assert(await page.getByText('일치',{exact:true}).isVisible());
 
+  const capacityRows=page.locator('[data-room-type-capacity]');
+  assert.equal(await capacityRows.count(),4);
+  const standardBase=page.locator('[data-control="developer-room-type-base"][data-room-type="standard"]'),standardMax=page.locator('[data-control="developer-room-type-max"][data-room-type="standard"]'),familyBase=page.locator('[data-control="developer-room-type-base"][data-room-type="oceanFamily"]'),familyMax=page.locator('[data-control="developer-room-type-max"][data-room-type="oceanFamily"]');
+  await standardBase.fill('2');
+  await standardMax.fill('2');
+  await familyBase.fill('4');
+  await familyMax.fill('6');
+  assert.equal(await standardBase.inputValue(),'2');
+  assert.equal(await standardMax.inputValue(),'2');
+  assert.equal(await familyBase.inputValue(),'4');
+  assert.equal(await familyMax.inputValue(),'6');
+  assert(await page.getByRole('button',{name:'유형별 인원 저장 · API 미제공',exact:true}).isDisabled());
+
   const type=page.locator('[data-control="developer-room-type"]'),roomNumber=page.locator('[data-control="developer-room-number"]'),deleteNumber=page.locator('[data-control="developer-room-delete-number"]');
   assert.deepEqual(await type.locator('option').allTextContents(),['스탠다드','프리미어','파셜 오션뷰','패밀리 투룸']);
   await type.selectOption('oceanFamily');
@@ -55,8 +68,14 @@ try{
   assert.equal(await deleteNumber.inputValue(),'350');
   assert(await page.getByRole('button',{name:'객실 추가 · API 미제공',exact:true}).isDisabled());
   assert(await page.getByRole('button',{name:'삭제 영향 확인 · API 미제공',exact:true}).isDisabled());
-  assert(await page.getByText('객실 추가·삭제 API가 아직 제공되지 않습니다.',{exact:true}).isVisible());
+  assert(await page.getByText('객실 추가·삭제·유형별 인원 변경 API가 아직 제공되지 않습니다.',{exact:true}).isVisible());
 
+  await standardBase.focus();
+  assert.equal(await page.evaluate(()=>document.activeElement?.id),'developer-room-type-standard-base');
+  await page.keyboard.press('Tab');
+  assert.equal(await page.evaluate(()=>document.activeElement?.id),'developer-room-type-standard-max');
+  await page.keyboard.press('Tab');
+  assert.equal(await page.evaluate(()=>document.activeElement?.id),'developer-room-type-premium-base');
   await type.focus();
   assert.equal(await page.evaluate(()=>document.activeElement?.id),'developer-room-type');
   await page.keyboard.press('Tab');
@@ -69,13 +88,15 @@ try{
     await page.evaluate(()=>{document.activeElement?.blur();window.scrollTo(0,0);});
     await page.waitForTimeout(50);
     if(width===390||width===1440)await page.screenshot({path:resolve(`WIREFRAME/QA/screenshots/live-developer-room-management-${width}.png`),fullPage:width===1440});
+    if(width===390){const captureStyle=await page.addStyleTag({content:'.live-strip,.topbar,.topbar-actions,.bottom-nav,.scroll-top-button{display:none!important}'});await page.locator('.live-developer-capacity-card').screenshot({path:resolve('WIREFRAME/QA/screenshots/live-developer-room-capacity-390.png')});await captureStyle.evaluate(node=>node.remove());}
   }
-  assert.deepEqual(roomMutationRequests,[]);
+  assert.deepEqual(catalogMutationRequests,[]);
   assert.deepEqual(pageErrors,[]);
   assert.deepEqual(consoleProblems,[]);
   console.log('[ok] 개발자 객실 내비게이션·현재 등록 수·DB 행 수');
+  console.log('[ok] 네 객실 유형별 기준 인원·최대 인원 입력·키보드 순서');
   console.log('[ok] 객실 유형 드롭다운·추가/삭제 호수 입력·키보드 순서');
-  console.log('[ok] 추가/삭제 API 미제공 비활성 상태·운영 mutation 0건');
+  console.log('[ok] 인원 저장·추가·삭제 API 미제공 비활성 상태·운영 mutation 0건');
   console.log('[ok] 360/390/768/1440px 가로 넘침·44px 컨트롤·console 오류 검사');
   console.log(`Environment: Chromium ${await browser.version()} via Playwright; Browser plugin unavailable. Production API writes were not executed.`);
 }catch(error){
