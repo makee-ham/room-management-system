@@ -1874,22 +1874,25 @@ Browser 플러그인이 제공되지 않아 번들 Playwright로 검증했다. �
 
 ## 2026-09-20 · 개발자 객실 등록 관리 화면
 
-개발자 내비게이션에 `객실`을 추가하고, 현재 등록 객실 수와 DB 객실 행을 같은 요약에서 비교하도록 구성했다. 기존 와이어프레임의 셸·요약 카드·폼·안내 색상과 반응형 규칙을 그대로 사용했다.
+개발자 내비게이션에 `객실`을 추가하고, 현재 등록 객실 수와 DB 객실 행을 같은 요약에서 비교하도록 구성했다. 이어 네 객실 유형별 기준 인원·최대 인원 입력을 같은 화면에 추가했다. 기존 와이어프레임의 셸·요약 카드·폼·안내 색상과 반응형 규칙을 그대로 사용했다.
 
 | 실제 확인 범위 | 결과 |
 | --- | --- |
 | 객실 수 현황 | 통과 · developer overview의 `rooms.total` 121실과 database `rowCounts.rooms` 121행 표시·일치 판정 |
 | 객실 유형 | 통과 · 스탠다드·프리미어·파셜 오션뷰·패밀리 투룸을 드롭다운으로 선택 |
+| 유형별 인원 입력 | 통과 · 네 유형마다 기준 인원·최대 인원 number input과 명시적 label 제공 |
+| 인원 규칙 안내 | 통과 · 기준 인원은 초과 인원 표시 기준, 최대 인원은 예약 허용 상한으로 분리 |
 | 객실 추가 입력 | 통과 · 숫자 키패드 힌트가 있는 호수 입력, 브라우저 저장소·서버 전송 없음 |
 | 객실 삭제 입력 | 통과 · 삭제 대상 호수 입력과 예약·청소·PIN 이력 영향 확인 안내 |
-| 변경 API 부재 | 통과 · OpenAPI v0.4.0에 개발자용 유형 목록·객실 생성·삭제가 없어 두 변경 버튼을 `API 미제공`으로 비활성 표시 |
-| 네트워크 안전성 | 통과 · `/v1/rooms` POST·PUT·PATCH·DELETE 요청 0건, production 읽기·쓰기 0건 |
+| 변경 API 부재 | 통과 · OpenAPI v0.4.0에 developer용 유형·인원 조회와 인원 변경·객실 생성·비활성화 계약이 없어 세 변경 버튼을 `API 미제공`으로 비활성 표시 |
+| 네트워크 안전성 | 통과 · `/v1/room-types`, `/v1/rooms` POST·PUT·PATCH·DELETE 요청 0건, production 읽기·쓰기 0건 |
 | 반응형·접근성 | 통과 · 360/390/768/1440px 가로 넘침 0건, 신규 폼 컨트롤 최소 44px, label·키보드 포커스 순서 확인 |
 | 브라우저 품질 | 통과 · Chromium 151.0.7922.34, page error·console warning/error 0건 |
 
-Browser 플러그인이 제공되지 않아 `scripts/check-developer-room-management.mjs`를 번들 Playwright로 실행했다. 개발자 역할의 실제 보호된 응답을 사용할 자격 증명이 없어 OpenAPI 형태의 읽기 전용 fixture로 렌더링했으며, 추가·삭제 성공은 통과로 기록하지 않는다.
+Browser 플러그인이 제공되지 않아 `scripts/check-developer-room-management.mjs`를 번들 Playwright로 실행했다. 개발자 역할의 실제 보호된 응답을 사용할 자격 증명이 없어 OpenAPI 형태의 읽기 전용 fixture로 렌더링했으며, 인원 저장·객실 추가·비활성화 성공은 통과로 기록하지 않는다. 필요한 백엔드 endpoint·schema·권한·오류·검증은 `DOCS/25_DEVELOPER_ROOM_CATALOG_CAPACITY_BACKEND_PROMPT.md`에 정리했다.
 
 대표 PNG:
 
 - `QA/screenshots/live-developer-room-management-390.png`
 - `QA/screenshots/live-developer-room-management-1440.png`
+- `QA/screenshots/live-developer-room-capacity-390.png`
