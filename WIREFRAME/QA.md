@@ -1788,7 +1788,7 @@ Browser 플러그인이 제공되지 않아 저장소의 Playwright 회귀와 �
 | 성공 후 갱신 | 예약 목록·객실 현황·29일 달력·동일 기간 bookability를 서버에서 재조회 |
 | 오류 분기 | `RESERVATION_CANCELLATION_NOT_ALLOWED`, `CLEANING_WORKFLOW_CANCEL_CONFLICT`를 message가 아닌 code로 안내 |
 | 반응형·콘솔 | 360/390/768/1440px 가로 넘침 0건, JavaScript error·console warning/error 0건 |
-| 운영 데이터 | 실제 로그인·`/v1/auth/me` 역할 projection·121개 객실 보호 조회·bookability preview 확인, 예약/청소/PIN mutation 미실행 |
+| 운영 데이터 | 실제 로그인·`/v1/auth/me` 역할 projection·121개 객실 보호 조회·bookability preview·승인된 예약 1건 soft cancel 확인, 그 밖의 예약/청소/PIN mutation 미실행 |
 
 대표 PNG:
 
@@ -1805,10 +1805,13 @@ Browser 플러그인이 제공되지 않아 저장소의 Playwright 회귀와 �
 - 사용자가 로그인해 둔 Chrome Preview에서 active business admin 역할과 보호된 121개 객실을 실제로 조회했다. 객실 필터는 전체 121개, 예약 있음 2개, 청소 필요 7개를 각각 분리했고 예약 있음 필터의 두 카드는 청소 필요 상태로 섞이지 않았다. 관리자 `오늘·객실·간편 예약·청소·메이드·더보기`를 순회해 빈 화면·stale loading·framework overlay·console warning/error가 없음을 확인했다.
 - 실제 예약 달력에서 135호의 기존 `2026-09-22 16:00 → 2026-09-23 11:00` 예약 다음 구간인 `2026-09-23 16:00 → 2026-09-24 11:00`을 선택했다. 서버 bookability preview는 비겹침 구간을 예약 가능으로 반환했고, 현재 청소·PIN 준비도는 별도 문구로 표시했다.
 - 같은 기존 예약의 상세와 취소 확인 모달을 열어 체크인 전 active 예약의 취소 버튼, 객실·전체 기간·사유 `고객 요청`·현재 version `1`, soft cancel·감사 이력 보존 안내와 고객명 미노출을 확인했다. 확인용 실제 화면에는 운영 계정 표시명이 포함되므로 저장소 스크린샷으로 남기지 않았다.
+- 사용자의 명시적 승인 뒤 위 135호 예약 한 건만 실제로 취소했다. `POST /v1/reservations/{reservationId}/cancel`은 Bearer 인증·`Idempotency-Key`, `expectedVersion: 1`, `reasonCode: GUEST_REQUEST`로 `200`을 반환했고 응답은 `status=cancelled`, version `2`, `cancelledAt` 존재를 확인했다. 같은 요청과 키를 브라우저 내부에서 한 번 재전송했을 때도 `200`, cancelled, version `2`로 유지돼 중복 side effect가 없었다.
+- 취소 성공 뒤 앱이 서버를 다시 조회해 29일 달력 요약이 예약 4→3건, 예약 객실 4→3개, 숙박 칸 5→4박으로 갱신됐고 135호의 기존 1박 셀은 빈 선택 가능 셀로 바뀌었다. 같은 `2026-09-22 16:00 → 2026-09-23 11:00` 구간의 preview 응답에서 135호 `intervalBookable=true`, `checkInReady=true`, room state version `3`, reason code 0건을 확인했다. 새 예약 모달의 서버 일정에는 기존 예약이 `취소` 상태로 남아 hard delete가 아님을 확인했다.
+- 취소 전후 객실 대표 상태 요약은 예약 있음 2개, 청소 필요 7개로 유지됐고 135호는 현재 배정 가능 상태였다. 미래 예약의 취소가 현재 객실을 청소 필요로 바꾸거나 `checkInReady`를 미래 구간 bookability로 대신 사용하지 않았다.
 
 대표 PNG:
 
 - `QA/screenshots/vercel-preview-login-390.png`
 - `QA/screenshots/vercel-preview-login-1440.png`
 
-실제 예약 취소 확정은 대상을 승인받지 않아 실행하지 않았다. 따라서 soft cancel 응답, 동일 key replay, 취소 뒤 재조회와 기간 재예약 가능 여부는 승인된 대상에서 별도로 확인해야 한다. production reservation·cleaning·PIN mutation은 실행하지 않았다.
+승인된 135호 예약 취소 외 production 예약 생성·변경·객실 이동, 청소·PIN mutation은 실행하지 않았다. 실제 stale version과 취소 금지·청소 충돌 오류는 production 상태를 인위적으로 만들지 않고 OpenAPI 0.4.0 로컬 fixture 회귀로만 확인했다.
