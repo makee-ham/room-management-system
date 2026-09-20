@@ -1849,6 +1849,8 @@
 
     /* Production API and installable app surfaces */
     .live-strip { position:sticky; top:0; z-index:45; border-bottom:1px solid #b9d8ed; background:#edf8ff; color:#174d70; }
+    .live-strip.preview { border-bottom-color:#e7c889; background:#fff7df; color:#744f16; }
+    .live-strip.preview p { color:#805f2a; }
     .live-strip-inner { min-height:42px; max-width:1600px; margin:0 auto; padding:8px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .live-strip strong { display:flex; align-items:center; gap:8px; font-size:.86rem; }
     .live-strip p { margin:0; color:#35677f; font-size:.8rem; text-align:right; }
@@ -2712,6 +2714,7 @@
       };}
       function liveMode(){return LIVE_RUNTIME.mode==='live';}
       function demoMode(){return LIVE_RUNTIME.mode==='demo';}
+      function runtimeDeploymentChannel(){return LIVE_RUNTIME.config?.deploymentChannel==='preview'?'preview':'production';}
       function runtimeProjectRef(){try{return new URL(LIVE_RUNTIME.config?.supabaseUrl||'').hostname.split('.')[0]||'';}catch{return '';}}
       function safeLiveActor(value){if(!value||!['developer','admin','maid'].includes(value.role)||typeof value.profileId!=='string'||typeof value.displayName!=='string')return null;return {authUserId:String(value.authUserId||''),profileId:value.profileId,displayName:value.displayName,role:value.role,mustChangePassword:!!value.mustChangePassword};}
       function sameLiveActorIdentity(left,right){const a=safeLiveActor(left),b=safeLiveActor(right);return !!a&&!!b&&a.profileId===b.profileId&&a.role===b.role&&(!a.authUserId||!b.authUserId||a.authUserId===b.authUserId);}
@@ -2727,12 +2730,12 @@
 
       function normalizeRuntimeConfig(value){
         if(!value||typeof value!=='object')return null;
-        const apiBaseUrl=String(value.apiBaseUrl||'').replace(/\/+$/,''),supabaseUrl=String(value.supabaseUrl||'').replace(/\/+$/,''),supabasePublishableKey=String(value.supabasePublishableKey||''),sessionPersistence=value.sessionPersistence==='local'?'local':'session';
+        const apiBaseUrl=String(value.apiBaseUrl||'').replace(/\/+$/,''),supabaseUrl=String(value.supabaseUrl||'').replace(/\/+$/,''),supabasePublishableKey=String(value.supabasePublishableKey||''),sessionPersistence=value.sessionPersistence==='local'?'local':'session',deploymentChannel=value.deploymentChannel==='preview'?'preview':'production';
         try{
           const apiUrl=new URL(apiBaseUrl),authUrl=new URL(supabaseUrl),apiHost=/^([a-z0-9]+)\.supabase\.co$/.exec(apiUrl.hostname),authHost=/^([a-z0-9]+)\.supabase\.co$/.exec(authUrl.hostname),keyOk=isBrowserPublishableKey(supabasePublishableKey);
           if(apiUrl.protocol!=='https:'||authUrl.protocol!=='https:'||apiUrl.username||apiUrl.password||authUrl.username||authUrl.password||apiUrl.port||authUrl.port||!apiHost||!authHost||apiHost[1]!==authHost[1]||apiHost[1]!==LIVE_PROJECT_REF||apiUrl.pathname!=='/functions/v1/api'||apiUrl.search||apiUrl.hash||authUrl.pathname!=='/'||authUrl.search||authUrl.hash||!keyOk)return null;
         }catch{return null;}
-        return {apiBaseUrl,supabaseUrl,supabasePublishableKey,sessionPersistence,featureFlags:{optionalCleaningWorkflow:value.featureFlags?.optionalCleaningWorkflow===true}};
+        return {apiBaseUrl,supabaseUrl,supabasePublishableKey,sessionPersistence,deploymentChannel,featureFlags:{optionalCleaningWorkflow:value.featureFlags?.optionalCleaningWorkflow===true}};
       }
       async function loadRuntimeConfig(){
         LIVE_RUNTIME.status='loading';
@@ -2774,7 +2777,7 @@
       const API_ERROR_COPY={
         INVALID_CREDENTIALS:'아이디 또는 비밀번호가 일치하지 않습니다.',ACCOUNT_LOCKED:'로그인이 잠겼습니다. 잠금 종료 뒤 다시 시도하거나 관리자에게 문의하세요.',LOGIN_RATE_LIMITED:'로그인 요청이 많습니다. 잠시 뒤 다시 시도하세요.',ACCOUNT_INACTIVE:'사용할 수 없는 계정입니다. 관리자에게 문의하세요.',SESSION_REVOKED:'로그인 세션이 종료되었습니다. 다시 로그인해 주세요.',INVALID_ACCESS_TOKEN:'로그인 세션이 만료되었습니다. 다시 로그인해 주세요.',MISSING_ACCESS_TOKEN:'로그인이 필요합니다.',PASSWORD_CHANGE_REQUIRED:'계속하려면 먼저 개인 비밀번호를 변경하세요.',INVALID_CURRENT_PASSWORD:'현재 비밀번호가 일치하지 않습니다.',LAST_ACTIVE_ADMIN_REQUIRED:'마지막 활성 관리자는 변경할 수 없습니다.',DEVELOPER_ACCOUNT_PROTECTED:'개발자 계정은 이 화면에서 변경할 수 없습니다.',PHONE_ALREADY_REGISTERED:'이미 등록된 휴대전화 번호입니다.',LOGIN_ID_CONFLICT:'로그인 아이디 생성이 충돌했습니다. 다시 시도하세요.',PHONE_REQUIRED_FOR_RESET:'비밀번호 초기화에 필요한 휴대전화 정보가 없습니다.',IDEMPOTENCY_KEY_REUSED:'같은 요청 키가 다른 내용에 사용됐습니다. 목록을 새로 확인해 주세요.',ACCOUNT_MUST_BE_INACTIVE:'퇴사 처리는 먼저 계정을 비활성으로 바꾼 뒤 진행하세요.',DEPARTED_ACCOUNT_IMMUTABLE:'퇴사 완료 계정은 다시 변경할 수 없습니다.',ADMIN_REQUIRED:'관리자 권한이 필요합니다.',ACCOUNT_MANAGER_REQUIRED:'계정 관리자 권한이 필요합니다.',VALIDATION_ERROR:'입력값을 다시 확인해 주세요.'
       };
-      Object.assign(API_ERROR_COPY,{OUTSIDE_AVAILABILITY_WINDOW:'다음 주 가능일은 일요일 12:00부터 23:59까지 제출할 수 있습니다.',STALE_VERSION:'다른 변경이 먼저 반영됐습니다. 최신 객실 정보를 확인한 뒤 다시 시도하세요.',PENDING_CHANGE_REQUEST_EXISTS:'이미 관리자 확인을 기다리는 가능일 변경 요청이 있습니다.',RESERVATION_OVERLAP:'같은 객실의 기존 예약과 시간이 겹칩니다.',ROOM_ALLOCATION_BLOCKED:'선택 기간에 이 객실을 예약할 수 없습니다. 서버 판정 사유를 확인해 주세요.',ROOM_STATE_CHANGED:'객실 상태가 먼저 바뀌었습니다. 선택 기간을 다시 확인해 주세요.',RESERVATION_PII_UNAVAILABLE:'고객 이름을 지금 확인할 수 없습니다.',RESERVATION_PII_DECRYPT_FAILED:'고객 이름을 안전하게 불러오지 못했습니다.',RESERVATION_ALREADY_STARTED:'이미 시작된 예약은 이 방식으로 취소할 수 없습니다.',RESERVATION_NOT_ACTIVE:'현재 활성 예약이 아닙니다.',MANUAL_CHECKOUT_NOT_ALLOWED:'현재 예약은 수동 체크아웃할 수 없습니다.',BOOKABILITY_PREVIEW_STALE:'예약 가능성 확인이 만료되었습니다. 선택 기간을 다시 확인해 주세요.'});
+      Object.assign(API_ERROR_COPY,{OUTSIDE_AVAILABILITY_WINDOW:'다음 주 가능일은 일요일 12:00부터 23:59까지 제출할 수 있습니다.',STALE_VERSION:'다른 변경이 먼저 반영됐습니다. 최신 객실 정보를 확인한 뒤 다시 시도하세요.',PENDING_CHANGE_REQUEST_EXISTS:'이미 관리자 확인을 기다리는 가능일 변경 요청이 있습니다.',RESERVATION_OVERLAP:'같은 객실의 기존 예약과 시간이 겹칩니다.',ROOM_ALLOCATION_BLOCKED:'선택 기간에 이 객실을 예약할 수 없습니다. 서버 판정 사유를 확인해 주세요.',ROOM_STATE_CHANGED:'객실 상태가 먼저 바뀌었습니다. 선택 기간을 다시 확인해 주세요.',RESERVATION_PII_UNAVAILABLE:'고객 이름을 지금 확인할 수 없습니다.',RESERVATION_PII_DECRYPT_FAILED:'고객 이름을 안전하게 불러오지 못했습니다.',RESERVATION_ALREADY_STARTED:'이미 시작된 예약은 이 방식으로 취소할 수 없습니다.',RESERVATION_NOT_ACTIVE:'현재 활성 예약이 아닙니다.',RESERVATION_CANCELLATION_NOT_ALLOWED:'체크인 이후 또는 현재 예약 상태에서는 취소할 수 없습니다.',CLEANING_WORKFLOW_CANCEL_CONFLICT:'이미 진행 중인 청소 업무가 있어 예약을 취소할 수 없습니다.',MANUAL_CHECKOUT_NOT_ALLOWED:'현재 예약은 수동 체크아웃할 수 없습니다.',BOOKABILITY_PREVIEW_STALE:'예약 가능성 확인이 만료되었습니다. 선택 기간을 다시 확인해 주세요.'});
       Object.assign(API_ERROR_COPY,{PAYROLL_WEEK_NOT_CLOSED:'아직 마감되지 않은 주차입니다.',PAYROLL_CYCLE_NOT_OPEN:'현재 지급 상태에서는 이 작업을 할 수 없습니다.',PAYROLL_POSITIVE_REQUIRES_START:'지급 대상 금액이 있어 지급 진행 시작이 필요합니다.',PAYROLL_NONPOSITIVE_REQUIRES_CARRY:'0원 이하 잔액은 다음 주 상계로 처리해야 합니다.',PAYROLL_PAYMENT_REFERENCE_INVALID:'외부 송금 참조번호 형식을 확인해 주세요.',PAYROLL_PAYMENT_REFERENCE_ALREADY_USED:'이미 사용된 외부 송금 참조번호입니다.',PAYROLL_SOURCE_ALREADY_REVERSED:'이미 취소 조정이 기록된 항목입니다.',PAYROLL_EARNING_NOT_LATE:'다음 주 반영 대상인 늦은 확정 청소비가 아닙니다.',COMPLAINT_INTAKE_WINDOW_CLOSED:'컴플레인 접수 가능 기간이 지났습니다.',COMPLAINT_RESPONSE_WINDOW_CLOSED:'메이드 응답 가능 기간이 지났습니다.',COMPLAINT_INVALID_TRANSITION:'현재 컴플레인 상태에서는 이 작업을 할 수 없습니다.',COMPLAINT_RESPONSE_ALREADY_RECORDED:'이미 메이드 응답이 기록됐습니다.',COMPLAINT_REWORK_DECISION_STALE:'재청소 기준 판정이 바뀌었습니다. 최신 상세를 다시 확인해 주세요.',COMPLAINT_REWORK_ALREADY_MATERIALIZED:'이미 재청소가 만들어진 컴플레인입니다.',PUSH_NOT_SUPPORTED:'현재 브라우저에서는 서버 푸시를 사용할 수 없습니다.',PUSH_CONFIGURATION_UNAVAILABLE:'서버 푸시 공개 설정이 준비되지 않았습니다.'});
       function apiErrorCopy(error,fallback='요청을 완료하지 못했습니다.'){
         if(error?.timeout)return '응답이 늦어 결과를 확인하지 못했습니다. 자동으로 다시 실행하지 않습니다.';
@@ -2916,8 +2919,8 @@
       async function loadLiveReservations(){
         if(state.remote.auth.user?.role!=='admin')return;
         const generation=LIVE_RUNTIME.authGeneration,slice=state.remote.reservations;slice.status='loading';slice.error=null;render();
-        try{const {data,requestId}=await apiRequest('/v1/reservations');if(generation!==LIVE_RUNTIME.authGeneration)return;state.remote.reservations={...slice,status:'ready',items:Array.isArray(data?.reservations)?data.reservations:[],error:null,requestId,lastSuccessAt:new Date().toISOString()};}
-        catch(error){if(generation!==LIVE_RUNTIME.authGeneration)return;state.remote.reservations={...slice,status:'error',error,requestId:error?.requestId||null};}
+        try{const {data,requestId}=await apiRequest('/v1/reservations');if(generation!==LIVE_RUNTIME.authGeneration)return;Object.assign(slice,{status:'ready',items:Array.isArray(data?.reservations)?data.reservations:[],error:null,requestId,lastSuccessAt:new Date().toISOString()});}
+        catch(error){if(generation!==LIVE_RUNTIME.authGeneration)return;Object.assign(slice,{status:'error',error,requestId:error?.requestId||null});}
         render();
       }
       function liveReservationCalendarRange(anchor=state.quickReservationAnchorDate){
@@ -3793,7 +3796,7 @@
         const passwordGate=liveMode()&&state.loggedIn&&(state.remote.auth.user?.mustChangePassword||state.remote.auth.passwordMode);
         app.className=['admin','developer'].includes(state.role)?'admin-mode':'';
         app.innerHTML=`
-          ${state.loggedIn?(liveMode()?renderLiveStrip():renderDemoStrip()):''}
+          ${liveMode()&&(state.loggedIn||runtimeDeploymentChannel()==='preview')?renderLiveStrip():state.loggedIn?renderDemoStrip():''}
           ${passwordGate?renderLivePasswordChange():state.loggedIn ? `
           <div class="app-shell">
             ${renderSidebar(nav)}
@@ -4064,8 +4067,8 @@
       }
 
       function renderLiveStrip(){
-        const actor=state.remote.auth.user,roleLabel=actor?.role==='developer'?'개발자':actor?.role==='admin'?'관리자':'메이드';
-        return `<section class="live-strip" aria-label="운영 API 연결 상태"><div class="live-strip-inner"><strong><span class="live-signal"></span>운영 연결 · ${esc(roleLabel)}</strong><p>기존 화면 유지 · 연결된 데이터는 실시간 · 준비 중 기능은 명확히 구분</p></div></section>`;
+        const actor=state.remote.auth.user,roleLabel=actor?.role==='developer'?'개발자':actor?.role==='admin'?'관리자':actor?.role==='maid'?'메이드':'로그인 전',preview=runtimeDeploymentChannel()==='preview';
+        return `<section class="live-strip ${preview?'preview':''}" aria-label="운영 API 연결 상태"><div class="live-strip-inner"><strong><span class="live-signal"></span>${preview?'운영 API 연결 중 · Preview':`운영 연결 · ${esc(roleLabel)}`}</strong><p>${preview?'운영 데이터를 사용하는 사전 확인 환경 · 승인한 대상만 변경하세요':'기존 화면 유지 · 연결된 데이터는 실시간 · 준비 중 기능은 명확히 구분'}</p></div></section>`;
       }
 
       function renderSidebar(nav) {
@@ -8002,6 +8005,8 @@
       function liveIsoToInput(value){if(!value)return '';try{const parts=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(value)).map(part=>[part.type,part.value]));return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;}catch{return '';}}
       function liveKstInputToIso(value){return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)?`${value}:00+09:00`:'';}
       function liveReservationById(id){return state.remote.reservations.items.find(item=>item.id===id)||null;}
+      function liveReservationServerTime(reservation){const room=liveRoomById(reservation?.roomId);return room?.serverTime||room?.evaluatedAt||state.remote.reservations.calendarServerTime||null;}
+      function liveReservationCanCancel(reservation){const serverTime=Date.parse(liveReservationServerTime(reservation)||''),checkInAt=Date.parse(reservation?.checkInAt||'');return reservation?.status==='active'&&Number.isFinite(serverTime)&&Number.isFinite(checkInAt)&&serverTime<checkInAt;}
       function liveBookabilityCandidate(roomId,preview=state.remote.reservations.bookabilityPreview){return preview?.candidates?.find(item=>item.roomId===roomId)||null;}
       function liveBookabilityReasonText(candidate){return (candidate?.reasonCodes||[]).map(code=>LIVE_BOOKABILITY_REASON_LABELS[code]||code).join(' ')||'서버가 선택 기간을 예약 가능으로 확인하지 않았습니다.';}
       function liveReservationAvailableRooms(preview=state.remote.reservations.bookabilityPreview){return (state.remote.rooms.items||[]).filter(room=>liveBookabilityCandidate(room.id,preview)?.intervalBookable===true);}
@@ -8053,8 +8058,8 @@
         const summary=liveReservationById(id);if(!summary){toast('최신 예약 목록에서 대상을 찾지 못했습니다.','error');return;}
         try{
           const {data}=await apiRequest(`/v1/reservations/${encodeURIComponent(id)}`),reservation=data?.reservation;if(!reservation)throw new ApiRequestError('reservation missing',{status:502,code:'INVALID_RESPONSE'});
-          const preview=await loadLiveReservationBookability({reservationType:reservation.reservationType||'standard',checkInAt:reservation.checkInAt,checkOutAt:reservation.checkOutAt||null,excludeReservationId:reservation.id}),active=reservation.status==='active',actionPanel=active?`<div class="notice notice-info"><div><strong>현재 예약 수정 가능</strong><br>인원수와 일정은 위에서 수정할 수 있습니다. 객실 변경은 서버 영향 미리보기 후 확정합니다.</div></div><div class="live-operation-grid" style="margin-top:12px"><button class="btn btn-outline" type="button" data-action="open-live-reservation-room-move" data-id="${esc(reservation.id)}" data-version="${Number(reservation.version)}">예약 객실 변경</button><button class="btn btn-outline" type="button" data-action="live-reservation-checkout-review" data-id="${esc(reservation.id)}" data-version="${Number(reservation.version)}">수동 체크아웃</button></div>`:'';
-          showModal({title:`${esc(liveRoomLabel(reservation.roomId))} 예약 상세·변경`,subtitle:'체크인부터 체크아웃까지 한 고객의 일정을 입력합니다.',large:true,trigger,body:`${liveReservationForm({reservation,preview})}<p class="audit-note">${esc(liveReservationStatusLabel(reservation.status))} · 예약 v${Number(reservation.version)}</p>${actionPanel}`,secondaryLabel:active?'예약 취소':'',secondaryAction:active?'live-reservation-cancel-review':'',secondaryVariant:'danger',secondaryExtra:active?`data-id="${esc(reservation.id)}" data-version="${Number(reservation.version)}"`:'',confirmLabel:active?'예약정보 수정 저장':'',confirmAction:active?'submit-live-reservation-update':''});
+          const preview=await loadLiveReservationBookability({reservationType:reservation.reservationType||'standard',checkInAt:reservation.checkInAt,checkOutAt:reservation.checkOutAt||null,excludeReservationId:reservation.id}),active=reservation.status==='active',canCancel=liveReservationCanCancel(reservation),actionPanel=active?`<div class="notice notice-info"><div><strong>현재 예약 수정 가능</strong><br>인원수와 일정은 위에서 수정할 수 있습니다. 객실 변경은 서버 영향 미리보기 후 확정합니다.${canCancel?'':' 체크인 이후 예약은 취소할 수 없습니다.'}</div></div><div class="live-operation-grid" style="margin-top:12px"><button class="btn btn-outline" type="button" data-action="open-live-reservation-room-move" data-id="${esc(reservation.id)}" data-version="${Number(reservation.version)}">예약 객실 변경</button><button class="btn btn-outline" type="button" data-action="live-reservation-checkout-review" data-id="${esc(reservation.id)}" data-version="${Number(reservation.version)}">수동 체크아웃</button></div>`:'';
+          showModal({title:`${esc(liveRoomLabel(reservation.roomId))} 예약 상세·변경`,subtitle:'체크인부터 체크아웃까지 한 고객의 일정을 입력합니다.',large:true,trigger,body:`${liveReservationForm({reservation,preview})}<p class="audit-note">${esc(liveReservationStatusLabel(reservation.status))} · 예약 v${Number(reservation.version)}</p>${actionPanel}`,secondaryLabel:canCancel?'예약 취소':'',secondaryAction:canCancel?'live-reservation-cancel-review':'',secondaryVariant:'danger',secondaryExtra:canCancel?`data-id="${esc(reservation.id)}" data-version="${Number(reservation.version)}"`:'',confirmLabel:active?'예약정보 수정 저장':'',confirmAction:active?'submit-live-reservation-update':''});
           const confirm=document.querySelector('[data-action="submit-live-reservation-update"]');confirm?.setAttribute('data-id',reservation.id);confirm?.setAttribute('data-version',String(reservation.version));
           syncLiveReservationRoomUi(reservation.roomId,{preview});
         }catch(error){toast(`${apiErrorCopy(error,'예약 상세를 불러오지 못했습니다.')}${error?.requestId?` · 문의 번호 ${error.requestId}`:''}`,'error');}
@@ -8094,7 +8099,29 @@
         try{const {data}=await mutationApiRequest(`/v1/reservations/${encodeURIComponent(id)}/room-change`,{body}),result=data?.result;if(!result)throw new ApiRequestError('room move result missing',{status:502,code:'INVALID_RESPONSE'});if(result.reservation)upsertLiveReservation(result.reservation);liveRoomMovePreview=null;closeModal();toast(`${liveRoomLabel(result.sourceRoomId)}에서 ${liveRoomLabel(result.targetRoomId)}로 객실을 변경했습니다.`);await Promise.allSettled([loadLiveReservations(),loadLiveRooms(),loadLiveReservationCalendar({quiet:true})]);}
         catch(error){liveAccountMutationButtonDisabled(false);toast(`${apiErrorCopy(error,'객실 변경을 확정하지 못했습니다.')}${error?.requestId?` · 문의 번호 ${error.requestId}`:''}`,'error');}
       }
-      function openLiveReservationCancelReview(id,expectedVersion,trigger=document.activeElement){const reservation=liveReservationById(id);if(!reservation)return;showModal({title:'예약을 취소할까요?',subtitle:`${esc(liveRoomLabel(reservation.roomId))} · ${esc(liveKstDateTimeLabel(reservation.checkInAt))} 체크인`,trigger,body:'<div class="notice notice-warning">예약은 삭제하지 않고 취소 상태와 감사 이력을 보존합니다. 이미 시작된 예약은 서버가 취소를 거부합니다.</div>',confirmLabel:'예약 취소',confirmAction:'confirm-live-reservation-cancel',confirmVariant:'danger'});const confirm=document.querySelector('[data-action="confirm-live-reservation-cancel"]');confirm?.setAttribute('data-id',id);confirm?.setAttribute('data-version',String(expectedVersion));}
+      function openLiveReservationCancelReview(id,expectedVersion,trigger=document.activeElement){
+        const reservation=liveReservationById(id);if(!reservation)return;
+        if(!liveReservationCanCancel(reservation)){toast('체크인 전 활성 예약만 취소할 수 있습니다. 최신 예약을 다시 확인해 주세요.','error');return;}
+        const period=`${liveKstDateTimeLabel(reservation.checkInAt)} → ${reservation.checkOutAt?liveKstDateTimeLabel(reservation.checkOutAt):'종료일 미정'}`;
+        showModal({title:'예약을 취소할까요?',subtitle:`${esc(liveRoomLabel(reservation.roomId))} · ${esc(period)}`,trigger,body:`<div class="info-grid"><div class="info-item"><span>대상 객실</span><strong>${esc(liveRoomLabel(reservation.roomId))}</strong></div><div class="info-item"><span>투숙 기간</span><strong>${esc(period)}</strong></div><div class="info-item"><span>취소 사유</span><strong>고객 요청</strong></div><div class="info-item"><span>현재 예약 버전</span><strong>${Number(expectedVersion)}</strong></div></div><div class="notice notice-warning" style="margin-top:14px">예약은 삭제하지 않고 취소 상태와 감사 이력을 보존합니다. 고객 이름은 확인 화면이나 로그에 남기지 않습니다.</div>`,confirmLabel:'예약 취소',confirmAction:'confirm-live-reservation-cancel',confirmVariant:'danger'});
+        const confirm=document.querySelector('[data-action="confirm-live-reservation-cancel"]');confirm?.setAttribute('data-id',id);confirm?.setAttribute('data-version',String(expectedVersion));
+      }
+      async function cancelLiveReservation(id,expectedVersion){
+        const generation=LIVE_RUNTIME.authGeneration,slice=state.remote.reservations,reservation=liveReservationById(id),previousPreview=slice.bookabilityPreview;
+        if(!reservation||!liveReservationCanCancel(reservation)){toast('체크인 전 활성 예약만 취소할 수 있습니다. 최신 예약을 다시 확인해 주세요.','error');return;}
+        slice.status='mutating';slice.mutationError=null;liveAccountMutationButtonDisabled(true);render();
+        try{
+          const {data,requestId}=await mutationApiRequest(`/v1/reservations/${encodeURIComponent(id)}/cancel`,{body:{expectedVersion:Number(expectedVersion),reasonCode:'GUEST_REQUEST'}});if(generation!==LIVE_RUNTIME.authGeneration)return null;
+          if(data?.reservation)upsertLiveReservation(data.reservation);slice.status='ready';slice.mutationError=null;slice.requestId=requestId;slice.lastSuccessAt=new Date().toISOString();slice.bookabilityPreview=null;slice.bookabilityStatus='idle';closeModal();render();toast('예약을 취소했습니다.');
+          await Promise.allSettled([loadLiveReservations(),loadLiveRooms(),loadLiveReservationCalendar({quiet:true})]);
+          if(previousPreview?.checkInAt)try{await loadLiveReservationBookability({reservationType:previousPreview.reservationType||'standard',checkInAt:previousPreview.checkInAt,checkOutAt:previousPreview.checkOutAt??null,excludeReservationId:null});}catch{}
+          return data;
+        }catch(error){
+          if(generation!==LIVE_RUNTIME.authGeneration)return null;slice.status='ready';slice.mutationError=error;closeModal();
+          if(error.status===409){try{const {data}=await apiRequest(`/v1/reservations/${encodeURIComponent(id)}`);if(data?.reservation)upsertLiveReservation(data.reservation);}catch{}await Promise.allSettled([loadLiveReservations(),loadLiveRooms(),loadLiveReservationCalendar({quiet:true})]);if(error.code==='CLEANING_WORKFLOW_CANCEL_CONFLICT'&&cleaningWorkflowEnabled())await refreshCleaningConflict();}
+          liveAccountMutationButtonDisabled(false);render();toast(`${apiErrorCopy(error,'예약을 취소하지 못했습니다.')}${error?.requestId?` · 문의 번호 ${error.requestId}`:''}`,'error');return null;
+        }
+      }
       function openLiveReservationCheckoutReview(id,expectedVersion,trigger=document.activeElement){const reservation=liveReservationById(id);if(!reservation)return;showModal({title:'지금 체크아웃 처리할까요?',subtitle:`${esc(liveRoomLabel(reservation.roomId))} · 예정 ${esc(liveKstDateTimeLabel(reservation.checkOutAt))}`,trigger,body:'<div class="notice notice-warning">실제 체크아웃 시각을 서버 시각으로 기록하고 객실의 청소 의무를 다시 계산합니다.</div>',confirmLabel:'수동 체크아웃',confirmAction:'confirm-live-reservation-checkout',confirmVariant:'danger'});const confirm=document.querySelector('[data-action="confirm-live-reservation-checkout"]');confirm?.setAttribute('data-id',id);confirm?.setAttribute('data-version',String(expectedVersion));}
       function openLiveCleaningRequest(roomId,trigger=document.activeElement){
         const room=liveRoomById(roomId),active=room?liveReservationsForRoom(room.id,{activeOnly:true}).filter(item=>!item.actualCheckoutAt):[];if(!room){toast('객실을 찾지 못했습니다.','error');return;}
@@ -8902,7 +8929,7 @@
         if(a==='preview-live-reservation-room-move'){if(liveMode()&&state.remote.auth.user?.role==='admin')void previewLiveReservationRoomMove(id,el.dataset.version,el.dataset.sourceVersion,el.dataset.during==='true');return;}
         if(a==='confirm-live-reservation-room-move'){if(liveMode()&&state.remote.auth.user?.role==='admin')void commitLiveReservationRoomMove(id);return;}
         if(a==='live-reservation-cancel-review'){if(liveMode()&&state.remote.auth.user?.role==='admin')openLiveReservationCancelReview(id,el.dataset.version,el);return;}
-        if(a==='confirm-live-reservation-cancel'){if(liveMode()&&state.remote.auth.user?.role==='admin')void runLiveReservationMutation({path:`/v1/reservations/${encodeURIComponent(id)}/cancel`,body:{expectedVersion:Number(el.dataset.version),reasonCode:'ADMIN_RESERVATION_CANCELLED'},successLabel:'예약을 취소했습니다.'});return;}
+        if(a==='confirm-live-reservation-cancel'){if(liveMode()&&state.remote.auth.user?.role==='admin')void cancelLiveReservation(id,el.dataset.version);return;}
         if(a==='live-reservation-checkout-review'){if(liveMode()&&state.remote.auth.user?.role==='admin')openLiveReservationCheckoutReview(id,el.dataset.version,el);return;}
         if(a==='confirm-live-reservation-checkout'){if(liveMode()&&state.remote.auth.user?.role==='admin')void runLiveReservationMutation({path:`/v1/reservations/${encodeURIComponent(id)}/manual-checkout`,body:{expectedVersion:Number(el.dataset.version),reasonCode:'ADMIN_MANUAL_CHECKOUT'},successLabel:'수동 체크아웃을 기록했습니다.'});return;}
         if(a==='open-live-cleaning-request'){if(liveMode()&&state.remote.auth.user?.role==='admin')openLiveCleaningRequest(el.dataset.room||'',el);return;}

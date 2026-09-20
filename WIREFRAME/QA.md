@@ -1772,3 +1772,46 @@ Browser 플러그인이 제공되지 않아 저장소의 Playwright 회귀와 �
 - Google Drive 사진 provider, Google Sheets PIN projection, Web Push/Cron의 hosted 동작은 OpenAPI endpoint 존재와 별개이며 이번 검수에서 성공으로 기록하지 않는다.
 - 관리자·메이드·개발자 역할별 기존 권한 회귀는 통과했지만 production 데이터의 동시성은 로컬 fixture로 대체하지 않았다.
 - 승인된 production 업무 계정이 없어 live 모드의 보호된 데이터 화면은 hosted 로그인으로 검증하지 않았다. 동일한 배포 파일의 live UI는 OpenAPI fixture E2E로, 배포 정적 파일과 전체 와이어프레임 화면은 demo-mode hosted smoke로 나누어 검증했다.
+
+## 2026-09-20 · 운영 API Vercel Preview와 예약 취소 보강
+
+프런트 `dev` 기준 별도 브랜치에서 production 배포 없이 Vercel Preview만 준비했다. Preview runtime은 운영 Supabase Edge API와 같은 project ref를 사용하되 세션 영속성은 `session`으로 제한하고, 로그인 전부터 `운영 API 연결 중 · Preview`를 표시한다. Browser 플러그인이 제공되지 않아 앱 번들 Playwright와 Chrome 153.0.8010.48을 사용했다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 공개 OpenAPI | 0.4.0 · 120 paths / 130 operations · 예약 취소 POST 존재 |
+| 생성 타입 | `openapi-typescript@7.13.0`으로 `src/api/generated/room-management-api.ts` 생성 |
+| 예약 취소 노출 | 서버 snapshot 시각이 체크인 전인 active 예약에만 버튼 표시, 투숙 중 예약에는 미표시 |
+| 확인 모달 | 객실·투숙 기간·고정 사유 `GUEST_REQUEST`·최신 version 표시, 고객명 미표시 |
+| 취소 command | 최신 `expectedVersion`, 사용자 동작별 `Idempotency-Key`, hard delete 없는 cancelled projection 확인 |
+| stale 처리 | 첫 `STALE_VERSION`에서 단건·목록·객실·달력을 다시 읽고 자동 재시도 없이 사용자가 재확인 |
+| 성공 후 갱신 | 예약 목록·객실 현황·29일 달력·동일 기간 bookability를 서버에서 재조회 |
+| 오류 분기 | `RESERVATION_CANCELLATION_NOT_ALLOWED`, `CLEANING_WORKFLOW_CANCEL_CONFLICT`를 message가 아닌 code로 안내 |
+| 반응형·콘솔 | 360/390/768/1440px 가로 넘침 0건, JavaScript error·console warning/error 0건 |
+| 운영 데이터 | 실제 로그인·`/v1/auth/me` 역할 projection·121개 객실 보호 조회·bookability preview·승인된 예약 1건 soft cancel 확인, 그 밖의 예약/청소/PIN mutation 미실행 |
+
+대표 PNG:
+
+- `QA/screenshots/openapi-v040-reservation-cancel-390.png`
+
+### Preview 배포 확인
+
+- 고정 Preview origin `https://room-management-system-prod-preview.vercel.app`은 Vercel deployment `target=preview`, `Ready`다. Production 승격은 실행하지 않았다.
+- 보호된 배포의 `runtime-config.json`을 Vercel 인증 요청으로 확인해 `mode=live`, 정본 API/project ref, publishable key 유형, `sessionPersistence=session`, `deploymentChannel=preview`와 금지된 secret key 이름 0건을 확인했다. 키 원문은 출력하지 않았다.
+- 2026-09-20 사용자가 고정 Preview origin 등록을 완료한 뒤 실제 preflight가 `204`를 반환하고 `access-control-allow-origin`이 정확한 origin을 echo하며 credentials와 `authorization, apikey, content-type, idempotency-key, x-request-id`, `GET, POST, PATCH, OPTIONS`를 허용함을 다시 확인했다. 이어 운영 health와 OpenAPI `0.4.0`의 120 paths / 130 operations가 모두 통과했다.
+- Vercel 보호를 통과한 읽기 전용 요청으로 배포된 `index.html`, `runtime-config.json`, `sw.js`, `app.webmanifest`를 내려받아 Preview 산출물과 바이트 단위로 일치함을 확인했다. 따라서 배포 문서와 동일한 산출물을 설치된 Chrome 153.0.8010.48에서 렌더링해 시각 검수했다.
+- Browser 플러그인이 제공되지 않아 저장소의 Playwright를 사용했다. 360·390·768·1440px 모두 가로 넘침 0px, 로그인 버튼 높이 44px, 로그인 필드 접근성 이름, 빈 제출 시 첫 필수 입력 포커스, Preview의 영구 로그인 비활성 상태를 확인했다. 페이지 예외·console warning/error·실패한 네트워크 요청은 0건이다.
+- 객실 상태·예약 달력·예약 생성/취소·객실 변경, 청소 배정/수행/검수, 주급·컴플레인·Web Push 회귀를 OpenAPI 0.4.0 로컬 fixture로 다시 실행해 각각 9·19·6·8개 검사를 통과했다. 모든 mutation은 fixture가 가로챘고 production 데이터는 읽거나 변경하지 않았다.
+- 사용자가 로그인해 둔 Chrome Preview에서 active business admin 역할과 보호된 121개 객실을 실제로 조회했다. 객실 필터는 전체 121개, 예약 있음 2개, 청소 필요 7개를 각각 분리했고 예약 있음 필터의 두 카드는 청소 필요 상태로 섞이지 않았다. 관리자 `오늘·객실·간편 예약·청소·메이드·더보기`를 순회해 빈 화면·stale loading·framework overlay·console warning/error가 없음을 확인했다.
+- 실제 예약 달력에서 135호의 기존 `2026-09-22 16:00 → 2026-09-23 11:00` 예약 다음 구간인 `2026-09-23 16:00 → 2026-09-24 11:00`을 선택했다. 서버 bookability preview는 비겹침 구간을 예약 가능으로 반환했고, 현재 청소·PIN 준비도는 별도 문구로 표시했다.
+- 같은 기존 예약의 상세와 취소 확인 모달을 열어 체크인 전 active 예약의 취소 버튼, 객실·전체 기간·사유 `고객 요청`·현재 version `1`, soft cancel·감사 이력 보존 안내와 고객명 미노출을 확인했다. 확인용 실제 화면에는 운영 계정 표시명이 포함되므로 저장소 스크린샷으로 남기지 않았다.
+- 사용자의 명시적 승인 뒤 위 135호 예약 한 건만 실제로 취소했다. `POST /v1/reservations/{reservationId}/cancel`은 Bearer 인증·`Idempotency-Key`, `expectedVersion: 1`, `reasonCode: GUEST_REQUEST`로 `200`을 반환했고 응답은 `status=cancelled`, version `2`, `cancelledAt` 존재를 확인했다. 같은 요청과 키를 브라우저 내부에서 한 번 재전송했을 때도 `200`, cancelled, version `2`로 유지돼 중복 side effect가 없었다.
+- 취소 성공 뒤 앱이 서버를 다시 조회해 29일 달력 요약이 예약 4→3건, 예약 객실 4→3개, 숙박 칸 5→4박으로 갱신됐고 135호의 기존 1박 셀은 빈 선택 가능 셀로 바뀌었다. 같은 `2026-09-22 16:00 → 2026-09-23 11:00` 구간의 preview 응답에서 135호 `intervalBookable=true`, `checkInReady=true`, room state version `3`, reason code 0건을 확인했다. 새 예약 모달의 서버 일정에는 기존 예약이 `취소` 상태로 남아 hard delete가 아님을 확인했다.
+- 취소 전후 객실 대표 상태 요약은 예약 있음 2개, 청소 필요 7개로 유지됐고 135호는 현재 배정 가능 상태였다. 미래 예약의 취소가 현재 객실을 청소 필요로 바꾸거나 `checkInReady`를 미래 구간 bookability로 대신 사용하지 않았다.
+
+대표 PNG:
+
+- `QA/screenshots/vercel-preview-login-390.png`
+- `QA/screenshots/vercel-preview-login-1440.png`
+
+승인된 135호 예약 취소 외 production 예약 생성·변경·객실 이동, 청소·PIN mutation은 실행하지 않았다. 실제 stale version과 취소 금지·청소 충돌 오류는 production 상태를 인위적으로 만들지 않고 OpenAPI 0.4.0 로컬 fixture 회귀로만 확인했다.

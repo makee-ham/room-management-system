@@ -423,6 +423,7 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 - 전용 origin의 개인 기기에서는 `local`, 공용 기기에서는 `session`을 사용한다. 공유 `makee-ham.github.io` origin에는 운영 로그인 대신 자격 증명이 없는 데모 확인본만 배포한다. 브라우저 종료 뒤에도 운영 로그인을 안전하게 유지하려면 앱 전용 custom domain이 필요하다.
 - PWA 설치와 브라우저 알림 권한, Web Push 공개키 조회·구독 등록/회전·폐기를 연결했다. endpoint와 브라우저 암호 키는 저장하지 않고 서버 safe projection의 ID/version/status만 저장한다. 앱 내부 알림은 `/v1/notifications`에서 별도로 읽는다.
 - 공통 배포 계약은 `DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md`, 청소 흐름과 endpoint 매핑은 `DOCS/23_CLEANING_API_INTEGRATION.md`를 따른다. `node scripts/check-api-integration.mjs`와 `node scripts/generate-cleaning-client.mjs --production --check`는 코드 생성 정본 OpenAPI `0.4.0`, 120 paths / 130 operations을 읽기 전용으로 확인한다.
+- 전체 OpenAPI TypeScript 정본은 `openapi-typescript@7.13.0`으로 `src/api/generated/room-management-api.ts`에 생성한다. 생성 파일은 직접 수정하지 않는다. Vercel Preview는 `RMS_DEPLOYMENT_CHANNEL=preview`를 포함한 Preview 전용 runtime 설정으로만 빌드하며 로그인 전부터 `운영 API 연결 중 · Preview` 표식을 노출한다.
 
 ### 예약 기간 가능성 방어
 
@@ -450,7 +451,7 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 
 로컬 서버와 Pages live 산출물의 `featureFlags.optionalCleaningWorkflow`는 true다. 운영 모드에서 API 실패 시 fixture로 전환하지 않는다. `WIREFRAME/cleaning-api.d.ts`는 코드 생성 정본 OpenAPI v0.4.0에서 생성하며 생성 파일을 직접 수정하지 않는다. 상세 endpoint·CAS·멱등·권한·오류 매핑은 `DOCS/23_CLEANING_API_INTEGRATION.md`를 따른다.
 
-검증은 `node scripts/check-workspace.mjs`, `node scripts/check-api-integration.mjs`, `node scripts/generate-cleaning-client.mjs --production --check`, Playwright가 설치된 Node 환경에서 `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-cleaning-workflow.mjs`, `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-operational-api.mjs`, `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-reservation-bookability.mjs`를 사용한다. 배포 뒤 정적 자산·전 화면 반응형 검수는 `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-deployed-visual.mjs`로 실행한다. 브라우저 회귀는 업무 요청을 로컬 fixture로 가로채거나 hosted runtime config만 demo로 대체하며 운영 mutation을 실행하지 않는다.
+검증은 `node scripts/check-workspace.mjs`, `node scripts/check-api-integration.mjs`, `node scripts/generate-cleaning-client.mjs --production --check`, Playwright가 설치된 Node 환경에서 `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-cleaning-workflow.mjs`, `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-operational-api.mjs`, `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-reservation-bookability.mjs`를 사용한다. 배포 뒤 정적 자산·전 화면 반응형 검수는 `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-deployed-visual.mjs`로 실행한다. 브라우저 회귀는 업무 요청을 로컬 fixture로 가로채거나 hosted runtime config만 demo로 대체하며 운영 mutation을 실행하지 않는다. 예약 취소 회귀는 체크인 전 버튼 노출, 체크인 후 버튼 미노출, `GUEST_REQUEST`·최신 version·Idempotency-Key, `STALE_VERSION` 재조회·재확인, soft cancel 뒤 예약·객실·달력·bookability 재조회를 함께 검증한다.
 
 운영 연결 뒤에도 UI 정본은 기존 와이어프레임이다. 관리자 오늘 화면의 네 상태 카드, 객실 목록의 열·PIN 관리·네 작업 버튼, 객실 상세, 청소의 다섯 탭과 단계형 배정 화면을 유지하고 API 객체를 그 자리에 투영한다. API에 없는 값은 fixture나 추정값으로 채우지 않고 `API 미제공` 또는 계약 부재 상태로 표시한다.
 

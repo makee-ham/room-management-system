@@ -70,6 +70,10 @@ const runtimeMode = value("RMS_RUNTIME_MODE", "live").toLowerCase();
 if (!["demo", "live"].includes(runtimeMode)) {
   throw new Error("Pages runtime mode must be demo or live.");
 }
+const deploymentChannel = value("RMS_DEPLOYMENT_CHANNEL", "production").toLowerCase();
+if (!["production", "preview"].includes(deploymentChannel)) {
+  throw new Error("Deployment channel must be production or preview.");
+}
 
 let config;
 let projectReference = null;
@@ -82,6 +86,7 @@ if (runtimeMode === "demo") {
     supabaseUrl: value("SUPABASE_URL").replace(/\/+$/u, ""),
     supabasePublishableKey: value("SUPABASE_PUBLISHABLE_KEY"),
     sessionPersistence: value("RMS_SESSION_PERSISTENCE", "session").toLowerCase(),
+    deploymentChannel,
     featureFlags: { optionalCleaningWorkflow: true },
   };
   const refs = [
