@@ -21,7 +21,7 @@
 
 | 검증 | 결과 | 범위 |
 |---|---|---|
-| `node scripts/check-candle-stepper.mjs` | PASS | 로컬 함수 실행으로 0→1 증가, 1→0 확인 모달, 미확인 요청 0건, 확인 후 감소 요청의 `physicallyVerified=true`, 이어지는 재증가와 최신 version 사용을 검사했다. 운영 API 호출은 mock으로 대체했다. |
+| `node scripts/check-candle-stepper.mjs` | PASS | 로컬 함수 실행으로 0→1→2 연속 증가, 2→1 확인 모달, 미확인 요청 0건, 확인 후 감소 요청의 `physicallyVerified=true`, 이어지는 재증가와 최신 version 사용을 검사했다. 운영 API 호출은 mock으로 대체했다. |
 | `node scripts/check-workspace.mjs` | PASS | 단일 HTML 구문·정본 해시·주요 화면의 정적 계약을 검사했다. |
 | 실제 운영 화면 352호 감소 | NOT RUN | 현장 회수 사실을 확인할 수 없으므로 운영 수량을 임의로 0으로 바꾸지 않았다. 프런트 배포 후 관리자가 실제 회수한 경우에만 확인한다. |
 

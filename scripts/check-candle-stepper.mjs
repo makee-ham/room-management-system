@@ -46,24 +46,29 @@ assert.equal(requests[0].body.count, 1);
 assert.equal(requests[0].body.physicallyVerified, false);
 assert.equal(room.stateVersion, 3);
 
+await changeLiveCandleCount(room.id, 1);
+assert.equal(requests.length, 2, 'second increment remains available');
+assert.equal(requests[1].body.count, 2);
+assert.equal(requests[1].body.expectedRoomVersion, 3);
+
 await changeLiveCandleCount(room.id, -1);
 assert.equal(forms.length, 1, 'decrement opens the existing verification form');
-assert.equal(elements['live-room-candle-count'].value, '0');
-assert.equal(requests.length, 1, 'decrement does not silently write');
+assert.equal(elements['live-room-candle-count'].value, '1');
+assert.equal(requests.length, 2, 'decrement does not silently write');
 
 await runLiveRoomOperation('candle', room.id);
-assert.equal(requests.length, 1, 'unverified decrement never reaches the API');
+assert.equal(requests.length, 2, 'unverified decrement never reaches the API');
 assert(messages.some(message => message.includes('현장에서 회수')));
 
 elements['live-room-candle-verified'].checked = true;
 await runLiveRoomOperation('candle', room.id);
-assert.equal(requests.length, 2, 'verified decrement writes once');
-assert.equal(requests[1].body.count, 0);
-assert.equal(requests[1].body.physicallyVerified, true);
-assert.equal(requests[1].body.expectedRoomVersion, 3);
-assert.equal(room.candleCount, 0);
+assert.equal(requests.length, 3, 'verified decrement writes once');
+assert.equal(requests[2].body.count, 1);
+assert.equal(requests[2].body.physicallyVerified, true);
+assert.equal(requests[2].body.expectedRoomVersion, 4);
+assert.equal(room.candleCount, 1);
 
 await changeLiveCandleCount(room.id, 1);
-assert.equal(requests.length, 3, 'the next increment is still available');
-assert.equal(requests[2].body.expectedRoomVersion, 4);
+assert.equal(requests.length, 4, 'the next increment is still available');
+assert.equal(requests[3].body.expectedRoomVersion, 5);
 console.log('Candle increment, verified decrement, and next operation: passed');
