@@ -492,6 +492,126 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/developer/room-catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 개발자 객실 기준정보 조회
+         * @description 비밀번호 변경을 완료한 active developer 전용입니다. 객실 유형 정원과 객실 번호·유형·활성 여부·CAS version만 반환하며 예약, 점유, 청소, PIN, 고객·메이드 정보는 포함하지 않습니다.
+         */
+        get: operations["getDeveloperRoomCatalog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/developer/room-types/{roomTypeId}/capacity/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 객실 유형 정원 변경 영향 확인
+         * @description active developer가 변경할 기준·최대 인원과 expectedVersion을 검증합니다. 현재·미래 active 예약 가운데 새 최대 인원을 초과할 건수를 PII 없이 계산하고 5분 TTL fingerprint를 반환하며 상태는 변경하지 않습니다.
+         */
+        post: operations["previewDeveloperRoomTypeCapacity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/developer/room-types/{roomTypeId}/capacity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * 객실 유형 정원 변경 확정
+         * @description active developer가 preview와 동일한 값·version·영향 fingerprint를 Idempotency-Key와 함께 확정합니다. 초과 active 예약이 있거나 영향이 변하면 409이며 기존 예약 인원은 소급 변경하지 않습니다.
+         */
+        patch: operations["changeDeveloperRoomTypeCapacity"];
+        trace?: never;
+    };
+    "/v1/developer/rooms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 객실 기준정보 추가
+         * @description active developer가 숫자 문자열 객실 번호와 active 객실 유형을 지정해 객실을 추가합니다. 객실 유형 version을 CAS로 확인하고 새 객실은 운영 준비 확인이 필요한 verification_required 상태로 시작합니다.
+         */
+        post: operations["createDeveloperRoom"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/developer/rooms/{roomId}/deactivation/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 객실 비활성화 영향 확인
+         * @description active developer가 객실 version을 CAS로 확인하고 현재 점유, active·future 예약, 진행 중 청소, PIN 변경 lease, 미해결 운영 건수를 PII 없이 조회합니다. 5분 TTL fingerprint만 만들며 이력이나 상태는 변경하지 않습니다.
+         */
+        post: operations["previewDeveloperRoomDeactivation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/developer/rooms/{roomId}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 객실 안전 비활성화
+         * @description active developer가 preview fingerprint와 expectedVersion을 Idempotency-Key로 확정합니다. blocker가 있으면 409이며 성공 시 hard delete 없이 inactive로 전환해 기존 예약·청소·PIN·감사 참조를 보존합니다.
+         */
+        post: operations["deactivateDeveloperRoom"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/developer/overview": {
         parameters: {
             query?: never;
@@ -702,8 +822,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 다음 주 가능일 제출
-         * @description 비밀번호 변경을 완료한 active maid만 일요일 12:00–23:59 KST에 다음 월요일 주차를 제출할 수 있습니다. expectedVersion CAS와 Idempotency-Key로 동시 수정·중복 제출을 막습니다. 빈 availableDates는 전일 불가능을 뜻합니다.
+         * 현재·다음 주 가능일 제출 또는 변경
+         * @description 비밀번호 변경을 완료한 active maid가 KST 기준 현재 주 또는 다음 주를 어느 요일이든 직접 제출·변경합니다. 현재 주의 지난 날짜는 기존 version에서 이미 available이었던 값만 보존할 수 있고 새로 available로 소급 변경할 수 없습니다. expectedVersion CAS와 Idempotency-Key로 동시 수정·중복 제출을 막습니다. 빈 availableDates는 전일 불가능을 뜻합니다.
          */
         post: operations["submitAvailability"];
         delete?: never;
@@ -726,8 +846,8 @@ export interface paths {
         get: operations["listAvailabilityChangeRequests"];
         put?: never;
         /**
-         * 마감 후 가능일 변경 요청
-         * @description 비밀번호 변경을 완료한 active maid가 제출 마감 후 현재 version의 변경을 요청합니다. 기존 가능일 원장은 보존되고 pending 요청이 append되며, 같은 주차에는 pending 요청 하나만 허용됩니다.
+         * 관리자 승인형 가능일 변경 요청
+         * @description 비밀번호 변경을 완료한 active maid가 대상 주 시작 후 현재 version의 관리자 승인형 변경을 요청합니다. 기존 가능일 원장은 보존되고 pending 요청이 append되며, 같은 주차에는 pending 요청 하나만 허용됩니다. 일반적인 현재·다음 주 수정은 submissions endpoint의 direct version 재제출을 사용합니다.
          */
         post: operations["requestAvailabilityChange"];
         delete?: never;
@@ -1246,8 +1366,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 동선 고려 랜덤 배정 초안 계산
-         * @description 비밀번호 변경을 완료한 active business admin 전용입니다. KST 오늘/내일만 허용합니다. 확정 duration policy가 없으면 ASSIGNMENT_PREVIEW_DURATION_POLICY_UNCONFIRMED(409)로 실패하며 데모 시간은 사용하지 않습니다. 성공 preview는 assignment/attempt/audit/receipt/알림을 만들지 않습니다. 기존 고정 workload를 보존하고 완료 객실 수 → 요금 격차/편차 → 구역/호수 → seed 동률 순서로 비교합니다. 저장과 통보는 기존 draft/commit API에서 CAS를 다시 검증해야 합니다.
+         * 배정 가능 수·요금 균형·동선 기반 배정 초안 계산
+         * @description 비밀번호 변경을 완료한 active business admin 전용이며 KST 오늘/내일만 허용합니다. 예상 시간 정책은 폐기되어 없어도 실행되며 template durationMinutes, 객실 타입 기본값, 임의 1분을 판단에 사용하지 않습니다. availableFrom/dueAt과 실제 예약 구간처럼 명시된 사실만 검증하고 가상 종료시각을 만들지 않습니다. 성공 preview는 assignment/attempt/audit/receipt/알림을 만들지 않습니다. 배정 가능 target 수 → 요금 격차/편차와 기존/reclean 제약 → 구역/호수 → 결정적 동률 순서로 비교합니다. previewSeed는 상관관계 호환 필드이며 동률 결정을 바꾸지 않습니다. 저장과 통보는 기존 draft/commit API에서 CAS를 다시 검증해야 합니다.
          */
         post: operations["previewAssignments"];
         delete?: never;
@@ -1264,14 +1384,16 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 현재 확정 청소시간 정책 조회
-         * @description active business admin 전용. 미확정 상태는 durationPolicy=null입니다. 데모 55/65/70/80분을 운영값으로 승격하지 않습니다.
+         * 폐기된 청소시간 정책의 과거 확정본 조회
+         * @deprecated
+         * @description active business admin 전용 과거 호환 read-only API입니다. 반환되는 정책은 신규 배정 preview 판단에 사용되지 않으며 미확정 이력은 durationPolicy=null입니다.
          */
         get: operations["getAssignmentDurationPolicy"];
         put?: never;
         /**
-         * 네 객실 타입의 청소시간 정책을 함께 확정
-         * @description active business admin 전용 별도 config command입니다. 4개 positive integer를 완전하게 입력하고 expectedVersion(최초 0), Idempotency-Key로 CAS/재시도를 검증합니다. 과거 정책을 보존하고 새 version과 안전한 감사 이벤트를 생성합니다. preview 계산에서는 호출하지 않습니다.
+         * 폐기된 청소시간 정책 확정 API
+         * @deprecated
+         * @description 예상 시간 정책 폐기로 더 이상 새 version을 생성하지 않습니다. 과거 client 호환을 위해 경로만 유지하고 active business admin 요청에 ASSIGNMENT_DURATION_POLICY_RETIRED(410)를 반환합니다. 기존 정책·감사·receipt 이력은 변경하지 않습니다.
          */
         post: operations["confirmAssignmentDurationPolicy"];
         delete?: never;
@@ -2240,6 +2362,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/rooms/{roomId}/occupancy-corrections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 객실 점유 상태 보정
+         * @description 예약·투숙 segment의 현재 점유 경계를 관리자 보정 이력으로 append합니다. UI 대표 status를 덮어쓰지 않으며 reasonCode, effectiveAt, room CAS, 멱등 receipt와 감사를 보존합니다. 비밀번호 변경을 완료한 active business admin만 실행할 수 있고, Idempotency-Key 재시도와 expected version CAS를 적용합니다.
+         */
+        post: operations["correctRoomOccupancy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/rooms/{roomId}/display-status-overrides": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 객실 표시 분류 강제 조정
+         * @description 표시/운영 분류만 append-only override로 조정하거나 null로 해제합니다. canonicalPrimaryDisplayStatus와 점유·예약·readiness·bookability 원장은 바뀌지 않습니다. BLOCKED 표시만으로 실제 배정을 막지 않으며 실제 차단에는 operation-block command를 사용해야 합니다. 비밀번호 변경을 완료한 active business admin만 실행할 수 있고, Idempotency-Key 재시도와 expected version CAS를 적용합니다.
+         */
+        post: operations["overrideRoomDisplayStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/rooms/{roomId}/candles": {
         parameters: {
             query?: never;
@@ -2376,7 +2538,7 @@ export interface paths {
         put?: never;
         /**
          * 물리 도어락 PIN 변경 준비
-         * @description 서버가 현재 roomNumber와 4~8자리 pinDigits를 결합해 암호화한 뒤 5분 이하 변경 lease를 만듭니다. 이 단계는 current PIN을 바꾸지 않고 즉시 mismatch로 전환하므로 실제 체크인과 모든 PIN reveal이 차단되지만 예약 등록은 차단하지 않습니다. maid는 본인의 현재 통보 assignment·in_progress attempt·현재 pinVersion의 unrevoked accessLeaseId를 모두 보내야 합니다. 응답 유실 시 같은 Idempotency-Key와 같은 PIN을 재전송하며, 다른 PIN은 IDEMPOTENCY_KEY_REUSED입니다.
+         * @description 서버가 현재 roomNumber와 4~8자리 pinDigits를 결합해 암호화한 뒤 5분 이하 변경 lease를 만듭니다. current PIN version이 0인 최초 등록에서 admin client가 일반 수정 사유 ADMIN_PHYSICAL_CHANGE를 보내도 서버가 ADMIN_INITIAL_PIN으로 정규화하며, request hash와 감사 사유도 정규화된 값을 사용합니다. 이 단계는 current PIN을 바꾸지 않고 즉시 mismatch로 전환하므로 실제 체크인과 모든 PIN reveal이 차단되지만 예약 등록은 차단하지 않습니다. maid는 본인의 현재 통보 assignment·in_progress attempt·현재 pinVersion의 unrevoked accessLeaseId를 모두 보내야 합니다. 응답 유실 시 같은 Idempotency-Key와 같은 PIN을 재전송하며, 다른 PIN은 IDEMPOTENCY_KEY_REUSED입니다.
          */
         post: operations["prepareRoomPinChange"];
         delete?: never;
@@ -2935,23 +3097,8 @@ export interface components {
              * @description KST 오늘 또는 내일
              */
             serviceDate: string;
-            /** @description 동일 snapshot+seed 결과 재현용. 생략하면 서버 UUID 생성, 개인정보 입력 금지 */
+            /** @description 응답 상관관계 호환 필드. 생략하면 서버 UUID 생성. 배정 판단이나 동률 결정에는 사용하지 않으며 개인정보 입력 금지 */
             previewSeed?: string;
-        };
-        AssignmentPreviewUnconfirmed: {
-            /** Format: date */
-            serviceDate: string;
-            previewSeed: string;
-            /** @constant */
-            decisionReady: false;
-            /** @constant */
-            durationPolicyStatus: "unconfirmed";
-            proposedAssignments: components["schemas"]["AssignmentPreviewRow"][];
-            error: {
-                /** @constant */
-                code: "ASSIGNMENT_PREVIEW_DURATION_POLICY_UNCONFIRMED";
-                message: string;
-            };
         };
         AssignmentDurationPolicyRequest: {
             expectedVersion: number;
@@ -2997,7 +3144,7 @@ export interface components {
             /** @constant */
             cleaningKind: "checkout";
             expectedVersion: number;
-            /** @description 선택적인 과거 호환 메타데이터입니다. 미입력/null이어도 예약을 차단하지 않으며 실제 청소시간은 attempt.startedAt부터 fieldCompletedAt까지 계산합니다. 배정 Preview는 별도 확정 duration policy를 사용합니다. */
+            /** @description 선택적인 과거 호환 메타데이터입니다. 미입력/null이어도 예약을 차단하지 않으며 실제 청소시간은 attempt.startedAt부터 fieldCompletedAt까지 계산합니다. 배정 Preview는 이 값을 사용하지 않습니다. */
             durationMinutes?: number | null;
             /** @description v8+ checkout 계약: standard/premium/oceanPremium/oceanFamily 순으로 정확히 9/10/12/14개, 필수는 8/9/11/13개입니다. required tv-on과 entry-storage는 각각 정확히 한 개, 마지막 extra-proof는 선택·maxPhotos 10이며 entry-number는 금지됩니다. 나머지 슬롯은 maxPhotos 1이고 displayOrder는 0부터 연속입니다. */
             slots: components["schemas"]["CheckoutCleaningTemplateV8Slot"][];
@@ -3056,8 +3203,8 @@ export interface components {
             expectedAssignmentVersion: number;
             expectedAvailabilityVersion: number | null;
             feeSnapshot: number;
-            /** @description 신규 제안은 확정 정책의 양수 시간. 고정 업무의 미지원 타입은 null이며 해당 메이드 신규 제안을 차단합니다. */
-            durationMinutes: number | null;
+            /** @description 과거 client 호환 필드이며 preview에서는 항상 null입니다. 예상 시간은 배정 판단에 사용하지 않습니다. */
+            durationMinutes: null;
             /** Format: date-time */
             availableFrom: string;
             /** Format: date-time */
@@ -3073,10 +3220,14 @@ export interface components {
             /** Format: date */
             serviceDate: string;
             previewSeed: string;
-            durationPolicy: components["schemas"]["AssignmentDurationPolicy"];
+            durationPolicy: null;
+            /** @constant */
+            durationPolicyStatus: "retired";
+            /** @constant */
+            durationPolicyRequired: false;
             /** @constant */
             decisionReady: true;
-            /** @description seed를 제외한 정렬된 정책 입력 snapshot SHA-256; 최종 DB CAS 대체 불가 */
+            /** @description 정렬된 현재 업무 snapshot SHA-256. 폐기된 duration policy와 previewSeed는 제외하며 최종 DB CAS를 대체하지 않음 */
             inputFingerprint: string;
             fixedAssignments: components["schemas"]["AssignmentPreviewRow"][];
             proposedAssignments: components["schemas"]["AssignmentPreviewRow"][];
@@ -3119,7 +3270,7 @@ export interface components {
          * @description 프론트 분기용 안정적 코드입니다. 사용자 표시 문구는 message가 아니라 이 코드 기준으로 관리합니다.
          * @enum {string}
          */
-        ErrorCode: "VALIDATION_ERROR" | "INVALID_PHONE" | "REQUEST_TOO_LARGE" | "MISSING_ACCESS_TOKEN" | "INVALID_ACCESS_TOKEN" | "PROFILE_NOT_FOUND" | "ACCOUNT_INACTIVE" | "ACCOUNT_EXECUTION_LIFECYCLE_REQUIRED" | "ATTEMPT_ACCESS_REQUIRED" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_VERSION_CONFLICT" | "ASSIGNMENT_NOT_NOTIFIED" | "ATTEMPT_INVALID_TRANSITION" | "MAID_ALREADY_IN_PROGRESS" | "ATTEMPT_COMMAND_FAILED" | "CAPABILITY_ACCESS_REQUIRED" | "PHOTO_RETENTION_DELETE_PREPARED" | "ACCOUNT_VERSION_CONFLICT" | "CLEANING_WINDOW_NOT_EXPIRED" | "ASSIGNMENT_SCHEDULE_INVALID" | "ROLLOVER_NOT_ALLOWED" | "INVALID_ATTEMPT_COMMAND" | "ATTEMPT_ACTIVATION_NOT_ALLOWED" | "CLEANING_SERVICE_DATE_NOT_DUE" | "CLEANING_SERVICE_DATE_EXPIRED" | "CLEANING_WINDOW_NOT_OPEN" | "CLEANING_WINDOW_EXPIRED" | "CHECKOUT_NOT_MATERIALIZED" | "RECLEAN_MAID_IMMUTABLE" | "PREVIOUS_ROOM_WORKFLOW_ACTIVE" | "SESSION_REVOKED" | "INVALID_CREDENTIALS" | "ACCOUNT_LOCKED" | "LOGIN_RATE_LIMITED" | "LOGIN_CLIENT_ID_UNAVAILABLE" | "LOGIN_RATE_LIMIT_UNAVAILABLE" | "ACTIVITY_LOG_UNAVAILABLE" | "AUTH_LOOKUP_FAILED" | "LOGIN_STATE_UPDATE_FAILED" | "INVALID_CURRENT_PASSWORD" | "AUTH_PASSWORD_CHANGE_FAILED" | "PASSWORD_STATE_INCONSISTENT" | "PASSWORD_STATE_UPDATE_FAILED" | "PASSWORD_CHANGE_RECEIPT_FAILED" | "PASSWORD_CHANGE_IN_PROGRESS" | "PASSWORD_CHANGE_SESSION_MISMATCH" | "PASSWORD_VERIFICATION_RATE_LIMITED" | "PASSWORD_VERIFICATION_RATE_LIMIT_UNAVAILABLE" | "PASSWORD_VERIFICATION_SESSION_REVOKE_FAILED" | "PASSWORD_RESET_STATE_UPDATE_FAILED" | "PASSWORD_CHANGE_REQUIRED" | "ACCOUNT_MANAGER_REQUIRED" | "ADMIN_REQUIRED" | "ASSIGNMENT_ACCESS_REQUIRED" | "DEVELOPER_REQUIRED" | "DEVELOPER_PROJECTION_FAILED" | "DATABASE_UNREACHABLE" | "MIGRATION_DRIFT" | "RLS_CONFIGURATION_INVALID" | "SCHEDULER_NOT_CONFIGURED" | "SCHEDULER_ACTOR_INVALID" | "SCHEDULER_DEGRADED" | "SCHEDULER_HEARTBEAT_FAILED" | "DIAGNOSTIC_TIMEOUT" | "DIAGNOSTICS_RATE_LIMITED" | "ACCOUNT_NOT_FOUND" | "DEVELOPER_ACCOUNT_PROTECTED" | "LAST_ACTIVE_ADMIN_REQUIRED" | "ACCOUNT_MUST_BE_INACTIVE" | "DEPARTED_ACCOUNT_IMMUTABLE" | "IDEMPOTENCY_KEY_REUSED" | "RESERVED_IDEMPOTENCY_KEY" | "DEACTIVATION_MUST_BE_FINISHED" | "PHONE_ALREADY_REGISTERED" | "LOGIN_ID_CONFLICT" | "PHONE_REQUIRED_FOR_RESET" | "AUTH_USER_CREATE_FAILED" | "AUTH_USER_UPDATE_FAILED" | "AUTH_PASSWORD_RESET_FAILED" | "ACCOUNT_AUTH_STATE_INCONSISTENT" | "ACCOUNT_COMMAND_FAILED" | "FORBIDDEN" | "MAID_REQUIRED" | "AVAILABILITY_ACCESS_REQUIRED" | "ACTIVE_MAID_REQUIRED" | "CLEANING_TARGET_NOT_FOUND" | "ASSIGNMENT_VERSION_CONFLICT" | "ASSIGNMENT_TARGET_STATE_INVALID" | "ASSIGNMENT_SEQUENCE_CONFLICT" | "ASSIGNMENT_NOT_FOUND" | "ASSIGNMENT_IMPACT_CHANGED" | "ASSIGNMENT_DRAFT_STALE_SCHEDULE" | "ASSIGNMENT_AVAILABILITY_REQUIRED" | "ASSIGNMENT_AVAILABILITY_STALE" | "ASSIGNMENT_MAID_UNAVAILABLE" | "ASSIGNMENT_WINDOW_EXPIRED" | "ASSIGNMENT_COMMIT_NOT_ALLOWED" | "ASSIGNMENT_COMMAND_FAILED" | "ASSIGNMENT_PREVIEW_DATE_NOT_ALLOWED" | "ASSIGNMENT_PREVIEW_DURATION_POLICY_UNCONFIRMED" | "ASSIGNMENT_PREVIEW_LIMIT_EXCEEDED" | "ASSIGNMENT_PREVIEW_FAILED" | "INVALID_ASSIGNMENT_DURATION_POLICY" | "ASSIGNMENT_DURATION_POLICY_VERSION_CONFLICT" | "ACTIVE_ADMIN_REQUIRED" | "OUTSIDE_AVAILABILITY_WINDOW" | "CHANGE_REQUEST_BEFORE_DEADLINE" | "STALE_VERSION" | "PENDING_CHANGE_REQUEST_EXISTS" | "INVALID_TRANSITION" | "AVAILABILITY_NOT_FOUND" | "CHANGE_REQUEST_NOT_FOUND" | "WEEK_START_MUST_BE_MONDAY" | "AVAILABILITY_DATES_MUST_BE_UNIQUE" | "AVAILABILITY_DATE_OUTSIDE_WEEK" | "AVAILABILITY_COMMAND_FAILED" | "INVALID_GUEST_NAME" | "INVALID_GUEST_COUNT" | "INVALID_RESERVATION_SCHEDULE" | "STANDARD_RESERVATION_REQUIRES_END" | "RESERVATION_TYPE_IMMUTABLE" | "RESERVATION_END_IMMUTABLE" | "BOOKABILITY_RANGE_TOO_LARGE" | "INVALID_ROOM_TYPE_FILTER" | "EXCLUDE_RESERVATION_NOT_FOUND" | "EXCLUDE_RESERVATION_NOT_ELIGIBLE" | "INVALID_RESERVATION_RANGE" | "RESERVATION_RANGE_TOO_LARGE" | "INVALID_RESERVATION_CURSOR" | "RESERVATION_CURSOR_NOT_CONFIGURED" | "INVALID_MOVE_EFFECTIVE_AT" | "RESERVATION_OVERLAP" | "TARGET_ROOM_OVERLAP" | "TARGET_ROOM_BLOCKED" | "TARGET_ROOM_NOT_READY" | "PIN_LEASE_ACTIVE" | "OPEN_ENDED_STAY_REQUIRES_END" | "ROOM_ALLOCATION_BLOCKED" | "RESERVATION_NOT_FOUND" | "CLEANING_REQUEST_NOT_FOUND" | "CLEANING_TEMPLATE_NOT_CONFIGURED" | "INVALID_CLEANING_TEMPLATE" | "INVALID_CLEANING_TEMPLATE_SLOTS" | "CLEANING_TEMPLATE_VERSION_CONFLICT" | "CLEANING_TEMPLATE_COMMAND_FAILED" | "INVALID_MANUAL_CLEANING_REQUEST" | "ACTIVE_STAY_RESERVATION_REQUIRED" | "STAYOVER_ACCESS_WINDOW_INVALID" | "VACANT_ROOM_REQUIRED" | "RESERVATION_ROOM_MISMATCH" | "NOT_MANUAL_CLEANING_REQUEST" | "REPLAN_REQUIRED" | "SCHEDULE_LOCKED" | "CONFLICT" | "RESERVATION_COMMAND_FAILED" | "RESERVATION_PII_KEY_INVALID" | "RESERVATION_PII_KEYRING_INVALID" | "RESERVATION_PII_DECRYPT_FAILED" | "COMPLAINT_ACCESS_REQUIRED" | "COMPLAINT_MAID_MISMATCH" | "COMPLAINT_NOT_FOUND" | "INVALID_COMPLAINT_CATEGORY" | "INVALID_COMPLAINT_FINDING" | "INVALID_COMPLAINT_PENALTY" | "INVALID_REWORK_DECISION" | "INVALID_COMPLAINT_RESPONSE" | "COMPLAINT_APPEAL_REASON_REQUIRED" | "COMPLAINT_APPEAL_REASON_FORBIDDEN" | "COMPLAINT_PERIOD_INVALID" | "COMPLAINT_PAGE_LIMIT_INVALID" | "INVALID_COMPLAINT_CURSOR" | "INVALID_COMPLAINT_REWORK" | "COMPLAINT_COMPENSATION_AMOUNT_INVALID" | "COMPLAINT_INTAKE_WINDOW_CLOSED" | "COMPLAINT_SOURCE_NOT_APPROVED" | "COMPLAINT_RESPONSE_WINDOW_CLOSED" | "COMPLAINT_RESPONSE_WINDOW_OPEN" | "COMPLAINT_APPEAL_UNRESOLVED" | "COMPLAINT_RESPONSE_ALREADY_RECORDED" | "COMPLAINT_DECISION_REQUIRED" | "COMPLAINT_REWORK_MAID_UNAVAILABLE" | "COMPLAINT_REWORK_WINDOW_UNAVAILABLE" | "COMPLAINT_REWORK_NOT_CONFIRMED" | "COMPLAINT_REWORK_ALREADY_MATERIALIZED" | "COMPLAINT_REWORK_DECISION_STALE" | "COMPLAINT_REWORK_PRESTART_FROZEN" | "RECLEAN_TEMPLATE_NOT_CONFIGURED" | "COMPLAINT_INVALID_TRANSITION" | "COMPLAINT_COMMAND_FAILED" | "NOTIFICATION_ACCESS_REQUIRED" | "NOTIFICATION_NOT_FOUND" | "INVALID_NOTIFICATION_CURSOR" | "NOTIFICATION_CURSOR_NOT_CONFIGURED" | "NOTIFICATION_RESPONSE_TOO_LARGE" | "NOTIFICATION_QUERY_FAILED" | "PAYROLL_ACCESS_REQUIRED" | "PAYROLL_MAID_NOT_FOUND" | "PAYROLL_WEEK_MUST_START_MONDAY" | "PAYROLL_PAGE_LIMIT_INVALID" | "PAYROLL_PAGE_KIND_INVALID" | "PAYROLL_CURSOR_INVALID" | "PAYROLL_CURSOR_NOT_CONFIGURED" | "PAYROLL_RESPONSE_TOO_LARGE" | "INVALID_EXPECTED_VERSION" | "PAYROLL_WEEK_NOT_CLOSED" | "PAYROLL_CYCLE_NOT_OPEN" | "NO_PAYROLL_AMOUNT" | "PAYROLL_NONPOSITIVE_REQUIRES_CARRY" | "PAYROLL_POSITIVE_REQUIRES_START" | "PAYROLL_CYCLE_ECONOMICALLY_FROZEN" | "PAYROLL_SOURCE_PAYMENT_UNCERTAIN" | "PAYROLL_SOURCE_ALREADY_REVERSED" | "PAYROLL_ROOT_ENTITLEMENT_NEGATIVE" | "STALE_ADJUSTMENT_VERSION" | "PAYROLL_LATE_EARNING_ALREADY_CARRIED" | "PAYROLL_EARNING_NOT_LATE" | "PAYROLL_LATE_CARRY_TARGET_FROZEN" | "PAYROLL_EARLIER_CARRY_PENDING" | "PAYROLL_PRIOR_LATE_EARNING_PENDING" | "PAYROLL_SOURCE_NOT_FOUND" | "PAYROLL_ADJUSTMENT_INVALID" | "PAYROLL_PAYMENT_ATTEMPT_NOT_FOUND" | "PAYROLL_PAYMENT_ATTEMPT_TERMINAL" | "PAYROLL_PAYMENT_TRANSITION_INVALID" | "PAYROLL_PAYMENT_REFERENCE_ALREADY_USED" | "PAYROLL_PAYMENT_REFERENCE_INVALID" | "PAYROLL_PAYMENT_METHOD_INVALID" | "PAYROLL_PAYMENT_REASON_INVALID" | "PAYROLL_PAYMENT_REOPEN_REASON_INVALID" | "PAYROLL_PAYMENT_RESULT_AMOUNT_MISMATCH" | "PAYROLL_COMMAND_FAILED" | "ROOM_NOT_FOUND" | "ROOM_OPERATION_NOT_FOUND" | "INVALID_ROOM_PIN" | "INVALID_PIN_BOOTSTRAP_LIMIT" | "INVALID_PIN_BOOTSTRAP" | "ROOM_PIN_BOOTSTRAP_CONFIG_INVALID" | "ROOM_PIN_BOOTSTRAP_FAILED" | "ROOM_PIN_KEY_UNAVAILABLE" | "ROOM_PIN_CRYPTO_CONFIG_INVALID" | "ROOM_PIN_DECRYPT_FAILED" | "ROOM_PIN_COMMAND_FAILED" | "STALE_PIN_VERSION" | "ROOM_NUMBER_CHANGED" | "ROOM_PIN_REISSUE_REQUIRED" | "ROOM_PIN_MISMATCH_UNRESOLVED" | "PIN_CHANGE_IN_PROGRESS_REQUIRED" | "PIN_CHANGE_IN_PROGRESS" | "PIN_CHANGE_LEASE_EXPIRED" | "PIN_CHANGE_LEASE_NOT_RESOLVABLE" | "PIN_REVEAL_AUTHORIZATION_CHANGED" | "GENERATED_PIN_REVEAL_NOT_ALLOWED" | "GENERATED_PIN_CONFIRMATION_NOT_ALLOWED" | "ROOM_PIN_UNCONFIGURED" | "ROOM_PIN_SHEET_OPERATOR_REQUIRED" | "ROOM_PIN_SHEET_NOT_CONFIGURED" | "ROOM_PIN_SHEET_OPERATION_FAILED" | "ROOM_PIN_SHEET_RESPONSE_TOO_LARGE" | "ROOM_PIN_SHEET_FULL_RESYNC_STALE" | "ROOM_PIN_SHEET_WORKER_BUSY" | "ROOM_PIN_SHEET_FULL_RESYNC_PENDING" | "ROOM_PIN_SHEET_ROOM_MASTER_INVALID" | "PIN_ACCESS_LEASE_REQUIRED" | "PIN_ENTITLEMENT_REQUIRED" | "PIN_ACCESS_REQUIRED" | "SENSITIVE_TEXT_NOT_ALLOWED" | "PIN_MATERIAL_NOT_ALLOWED" | "ROOM_COMMAND_FAILED" | "ORIGIN_NOT_ALLOWED" | "ROUTE_NOT_FOUND" | "RUNTIME_NOT_CONFIGURED" | "INTERNAL_SERVER_ERROR";
+        ErrorCode: "VALIDATION_ERROR" | "INVALID_PHONE" | "REQUEST_TOO_LARGE" | "MISSING_ACCESS_TOKEN" | "INVALID_ACCESS_TOKEN" | "PROFILE_NOT_FOUND" | "ACCOUNT_INACTIVE" | "ACCOUNT_EXECUTION_LIFECYCLE_REQUIRED" | "ATTEMPT_ACCESS_REQUIRED" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_VERSION_CONFLICT" | "ASSIGNMENT_NOT_NOTIFIED" | "ATTEMPT_INVALID_TRANSITION" | "MAID_ALREADY_IN_PROGRESS" | "ATTEMPT_COMMAND_FAILED" | "CAPABILITY_ACCESS_REQUIRED" | "PHOTO_RETENTION_DELETE_PREPARED" | "ACCOUNT_VERSION_CONFLICT" | "CLEANING_WINDOW_NOT_EXPIRED" | "ASSIGNMENT_SCHEDULE_INVALID" | "ROLLOVER_NOT_ALLOWED" | "INVALID_ATTEMPT_COMMAND" | "ATTEMPT_ACTIVATION_NOT_ALLOWED" | "CLEANING_SERVICE_DATE_NOT_DUE" | "CLEANING_SERVICE_DATE_EXPIRED" | "CLEANING_WINDOW_NOT_OPEN" | "CLEANING_WINDOW_EXPIRED" | "CHECKOUT_NOT_MATERIALIZED" | "RECLEAN_MAID_IMMUTABLE" | "PREVIOUS_ROOM_WORKFLOW_ACTIVE" | "SESSION_REVOKED" | "INVALID_CREDENTIALS" | "ACCOUNT_LOCKED" | "LOGIN_RATE_LIMITED" | "LOGIN_CLIENT_ID_UNAVAILABLE" | "LOGIN_RATE_LIMIT_UNAVAILABLE" | "ACTIVITY_LOG_UNAVAILABLE" | "AUTH_LOOKUP_FAILED" | "LOGIN_STATE_UPDATE_FAILED" | "INVALID_CURRENT_PASSWORD" | "AUTH_PASSWORD_CHANGE_FAILED" | "PASSWORD_STATE_INCONSISTENT" | "PASSWORD_STATE_UPDATE_FAILED" | "PASSWORD_CHANGE_RECEIPT_FAILED" | "PASSWORD_CHANGE_IN_PROGRESS" | "PASSWORD_CHANGE_SESSION_MISMATCH" | "PASSWORD_VERIFICATION_RATE_LIMITED" | "PASSWORD_VERIFICATION_RATE_LIMIT_UNAVAILABLE" | "PASSWORD_VERIFICATION_SESSION_REVOKE_FAILED" | "PASSWORD_RESET_STATE_UPDATE_FAILED" | "PASSWORD_CHANGE_REQUIRED" | "ACCOUNT_MANAGER_REQUIRED" | "ADMIN_REQUIRED" | "ASSIGNMENT_ACCESS_REQUIRED" | "DEVELOPER_REQUIRED" | "DEVELOPER_PROJECTION_FAILED" | "DATABASE_UNREACHABLE" | "MIGRATION_DRIFT" | "RLS_CONFIGURATION_INVALID" | "SCHEDULER_NOT_CONFIGURED" | "SCHEDULER_ACTOR_INVALID" | "SCHEDULER_DEGRADED" | "SCHEDULER_HEARTBEAT_FAILED" | "DIAGNOSTIC_TIMEOUT" | "DIAGNOSTICS_RATE_LIMITED" | "ACCOUNT_NOT_FOUND" | "DEVELOPER_ACCOUNT_PROTECTED" | "LAST_ACTIVE_ADMIN_REQUIRED" | "ACCOUNT_MUST_BE_INACTIVE" | "DEPARTED_ACCOUNT_IMMUTABLE" | "IDEMPOTENCY_KEY_REUSED" | "RESERVED_IDEMPOTENCY_KEY" | "DEACTIVATION_MUST_BE_FINISHED" | "PHONE_ALREADY_REGISTERED" | "LOGIN_ID_CONFLICT" | "PHONE_REQUIRED_FOR_RESET" | "AUTH_USER_CREATE_FAILED" | "AUTH_USER_UPDATE_FAILED" | "AUTH_PASSWORD_RESET_FAILED" | "ACCOUNT_AUTH_STATE_INCONSISTENT" | "ACCOUNT_COMMAND_FAILED" | "FORBIDDEN" | "MAID_REQUIRED" | "AVAILABILITY_ACCESS_REQUIRED" | "ACTIVE_MAID_REQUIRED" | "CLEANING_TARGET_NOT_FOUND" | "ASSIGNMENT_VERSION_CONFLICT" | "ASSIGNMENT_TARGET_STATE_INVALID" | "ASSIGNMENT_SEQUENCE_CONFLICT" | "ASSIGNMENT_NOT_FOUND" | "ASSIGNMENT_IMPACT_CHANGED" | "ASSIGNMENT_DRAFT_STALE_SCHEDULE" | "ASSIGNMENT_AVAILABILITY_REQUIRED" | "ASSIGNMENT_AVAILABILITY_STALE" | "ASSIGNMENT_MAID_UNAVAILABLE" | "ASSIGNMENT_WINDOW_EXPIRED" | "ASSIGNMENT_COMMIT_NOT_ALLOWED" | "ASSIGNMENT_COMMAND_FAILED" | "ASSIGNMENT_PREVIEW_DATE_NOT_ALLOWED" | "ASSIGNMENT_DURATION_POLICY_RETIRED" | "ASSIGNMENT_PREVIEW_LIMIT_EXCEEDED" | "ASSIGNMENT_PREVIEW_FAILED" | "INVALID_ASSIGNMENT_DURATION_POLICY" | "ASSIGNMENT_DURATION_POLICY_VERSION_CONFLICT" | "ACTIVE_ADMIN_REQUIRED" | "AVAILABILITY_WEEK_OUT_OF_RANGE" | "PAST_AVAILABILITY_DATE_NOT_ALLOWED" | "CHANGE_REQUEST_BEFORE_DEADLINE" | "STALE_VERSION" | "PENDING_CHANGE_REQUEST_EXISTS" | "INVALID_TRANSITION" | "AVAILABILITY_NOT_FOUND" | "CHANGE_REQUEST_NOT_FOUND" | "WEEK_START_MUST_BE_MONDAY" | "AVAILABILITY_DATES_MUST_BE_UNIQUE" | "AVAILABILITY_DATE_OUTSIDE_WEEK" | "AVAILABILITY_COMMAND_FAILED" | "INVALID_GUEST_NAME" | "INVALID_GUEST_COUNT" | "INVALID_RESERVATION_SCHEDULE" | "STANDARD_RESERVATION_REQUIRES_END" | "RESERVATION_TYPE_IMMUTABLE" | "RESERVATION_END_IMMUTABLE" | "BOOKABILITY_RANGE_TOO_LARGE" | "INVALID_ROOM_TYPE_FILTER" | "EXCLUDE_RESERVATION_NOT_FOUND" | "EXCLUDE_RESERVATION_NOT_ELIGIBLE" | "INVALID_RESERVATION_RANGE" | "RESERVATION_RANGE_TOO_LARGE" | "INVALID_RESERVATION_CURSOR" | "RESERVATION_CURSOR_NOT_CONFIGURED" | "INVALID_MOVE_EFFECTIVE_AT" | "RESERVATION_OVERLAP" | "TARGET_ROOM_OVERLAP" | "TARGET_ROOM_BLOCKED" | "TARGET_ROOM_NOT_READY" | "PIN_LEASE_ACTIVE" | "OPEN_ENDED_STAY_REQUIRES_END" | "ROOM_ALLOCATION_BLOCKED" | "RESERVATION_NOT_FOUND" | "CLEANING_REQUEST_NOT_FOUND" | "CLEANING_TEMPLATE_NOT_CONFIGURED" | "INVALID_CLEANING_TEMPLATE" | "INVALID_CLEANING_TEMPLATE_SLOTS" | "CLEANING_TEMPLATE_VERSION_CONFLICT" | "CLEANING_TEMPLATE_COMMAND_FAILED" | "INVALID_MANUAL_CLEANING_REQUEST" | "ACTIVE_STAY_RESERVATION_REQUIRED" | "STAYOVER_ACCESS_WINDOW_INVALID" | "VACANT_ROOM_REQUIRED" | "RESERVATION_ROOM_MISMATCH" | "NOT_MANUAL_CLEANING_REQUEST" | "REPLAN_REQUIRED" | "SCHEDULE_LOCKED" | "CONFLICT" | "RESERVATION_COMMAND_FAILED" | "RESERVATION_PII_KEY_INVALID" | "RESERVATION_PII_KEYRING_INVALID" | "RESERVATION_PII_DECRYPT_FAILED" | "COMPLAINT_ACCESS_REQUIRED" | "COMPLAINT_MAID_MISMATCH" | "COMPLAINT_NOT_FOUND" | "INVALID_COMPLAINT_CATEGORY" | "INVALID_COMPLAINT_FINDING" | "INVALID_COMPLAINT_PENALTY" | "INVALID_REWORK_DECISION" | "INVALID_COMPLAINT_RESPONSE" | "COMPLAINT_APPEAL_REASON_REQUIRED" | "COMPLAINT_APPEAL_REASON_FORBIDDEN" | "COMPLAINT_PERIOD_INVALID" | "COMPLAINT_PAGE_LIMIT_INVALID" | "INVALID_COMPLAINT_CURSOR" | "INVALID_COMPLAINT_REWORK" | "COMPLAINT_COMPENSATION_AMOUNT_INVALID" | "COMPLAINT_INTAKE_WINDOW_CLOSED" | "COMPLAINT_SOURCE_NOT_APPROVED" | "COMPLAINT_RESPONSE_WINDOW_CLOSED" | "COMPLAINT_RESPONSE_WINDOW_OPEN" | "COMPLAINT_APPEAL_UNRESOLVED" | "COMPLAINT_RESPONSE_ALREADY_RECORDED" | "COMPLAINT_DECISION_REQUIRED" | "COMPLAINT_REWORK_MAID_UNAVAILABLE" | "COMPLAINT_REWORK_WINDOW_UNAVAILABLE" | "COMPLAINT_REWORK_NOT_CONFIRMED" | "COMPLAINT_REWORK_ALREADY_MATERIALIZED" | "COMPLAINT_REWORK_DECISION_STALE" | "COMPLAINT_REWORK_PRESTART_FROZEN" | "RECLEAN_TEMPLATE_NOT_CONFIGURED" | "COMPLAINT_INVALID_TRANSITION" | "COMPLAINT_COMMAND_FAILED" | "NOTIFICATION_ACCESS_REQUIRED" | "NOTIFICATION_NOT_FOUND" | "INVALID_NOTIFICATION_CURSOR" | "NOTIFICATION_CURSOR_NOT_CONFIGURED" | "NOTIFICATION_RESPONSE_TOO_LARGE" | "NOTIFICATION_QUERY_FAILED" | "PAYROLL_ACCESS_REQUIRED" | "PAYROLL_MAID_NOT_FOUND" | "PAYROLL_WEEK_MUST_START_MONDAY" | "PAYROLL_PAGE_LIMIT_INVALID" | "PAYROLL_PAGE_KIND_INVALID" | "PAYROLL_CURSOR_INVALID" | "PAYROLL_CURSOR_NOT_CONFIGURED" | "PAYROLL_RESPONSE_TOO_LARGE" | "INVALID_EXPECTED_VERSION" | "PAYROLL_WEEK_NOT_CLOSED" | "PAYROLL_CYCLE_NOT_OPEN" | "NO_PAYROLL_AMOUNT" | "PAYROLL_NONPOSITIVE_REQUIRES_CARRY" | "PAYROLL_POSITIVE_REQUIRES_START" | "PAYROLL_CYCLE_ECONOMICALLY_FROZEN" | "PAYROLL_SOURCE_PAYMENT_UNCERTAIN" | "PAYROLL_SOURCE_ALREADY_REVERSED" | "PAYROLL_ROOT_ENTITLEMENT_NEGATIVE" | "STALE_ADJUSTMENT_VERSION" | "PAYROLL_LATE_EARNING_ALREADY_CARRIED" | "PAYROLL_EARNING_NOT_LATE" | "PAYROLL_LATE_CARRY_TARGET_FROZEN" | "PAYROLL_EARLIER_CARRY_PENDING" | "PAYROLL_PRIOR_LATE_EARNING_PENDING" | "PAYROLL_SOURCE_NOT_FOUND" | "PAYROLL_ADJUSTMENT_INVALID" | "PAYROLL_PAYMENT_ATTEMPT_NOT_FOUND" | "PAYROLL_PAYMENT_ATTEMPT_TERMINAL" | "PAYROLL_PAYMENT_TRANSITION_INVALID" | "PAYROLL_PAYMENT_REFERENCE_ALREADY_USED" | "PAYROLL_PAYMENT_REFERENCE_INVALID" | "PAYROLL_PAYMENT_METHOD_INVALID" | "PAYROLL_PAYMENT_REASON_INVALID" | "PAYROLL_PAYMENT_REOPEN_REASON_INVALID" | "PAYROLL_PAYMENT_RESULT_AMOUNT_MISMATCH" | "PAYROLL_COMMAND_FAILED" | "ROOM_NOT_FOUND" | "ROOM_TYPE_NOT_FOUND" | "ROOM_TYPE_CAPACITY_INVALID" | "ROOM_TYPE_CAPACITY_ACTIVE_RESERVATION_CONFLICT" | "ROOM_TYPE_CAPACITY_PREVIEW_STALE" | "ROOM_TYPE_VERSION_CONFLICT" | "ROOM_NUMBER_ALREADY_EXISTS" | "ROOM_TYPE_INACTIVE" | "ROOM_INACTIVE" | "ROOM_ALREADY_INACTIVE" | "ROOM_DEACTIVATION_BLOCKED" | "ROOM_DEACTIVATION_PREVIEW_STALE" | "ROOM_VERSION_CONFLICT" | "GUEST_COUNT_EXCEEDS_ROOM_TYPE_CAPACITY" | "ROOM_OPERATION_NOT_FOUND" | "INVALID_ROOM_PIN" | "INVALID_PIN_BOOTSTRAP_LIMIT" | "INVALID_PIN_BOOTSTRAP" | "ROOM_PIN_BOOTSTRAP_CONFIG_INVALID" | "ROOM_PIN_BOOTSTRAP_FAILED" | "ROOM_PIN_KEY_UNAVAILABLE" | "ROOM_PIN_CRYPTO_CONFIG_INVALID" | "ROOM_PIN_DECRYPT_FAILED" | "ROOM_PIN_COMMAND_FAILED" | "STALE_PIN_VERSION" | "ROOM_NUMBER_CHANGED" | "ROOM_PIN_REISSUE_REQUIRED" | "ROOM_PIN_MISMATCH_UNRESOLVED" | "INVALID_PIN_CHANGE_REASON" | "PIN_CHANGE_IN_PROGRESS_REQUIRED" | "PIN_CHANGE_IN_PROGRESS" | "PIN_CHANGE_LEASE_EXPIRED" | "PIN_CHANGE_LEASE_NOT_RESOLVABLE" | "PIN_REVEAL_AUTHORIZATION_CHANGED" | "GENERATED_PIN_REVEAL_NOT_ALLOWED" | "GENERATED_PIN_CONFIRMATION_NOT_ALLOWED" | "ROOM_PIN_UNCONFIGURED" | "ROOM_PIN_SHEET_OPERATOR_REQUIRED" | "ROOM_PIN_SHEET_NOT_CONFIGURED" | "ROOM_PIN_SHEET_OPERATION_FAILED" | "ROOM_PIN_SHEET_RESPONSE_TOO_LARGE" | "ROOM_PIN_SHEET_FULL_RESYNC_STALE" | "ROOM_PIN_SHEET_WORKER_BUSY" | "ROOM_PIN_SHEET_FULL_RESYNC_PENDING" | "ROOM_PIN_SHEET_ROOM_MASTER_INVALID" | "PIN_ACCESS_LEASE_REQUIRED" | "PIN_ENTITLEMENT_REQUIRED" | "PIN_ACCESS_REQUIRED" | "SENSITIVE_TEXT_NOT_ALLOWED" | "PIN_MATERIAL_NOT_ALLOWED" | "ROOM_COMMAND_FAILED" | "ORIGIN_NOT_ALLOWED" | "ROUTE_NOT_FOUND" | "RUNTIME_NOT_CONFIGURED" | "INTERNAL_SERVER_ERROR";
         RoomChangeConflict: {
             reloadResources: ("reservation" | "sourceRoom" | "targetRoom" | "roomMovePreview")[];
             latestVersions: {
@@ -3249,7 +3400,7 @@ export interface components {
          * @description 운영 콘솔에 노출할 수 있도록 서버에서 고정한 감사 이벤트 allowlist
          * @enum {string}
          */
-        DeveloperAuditEventType: "account.bootstrap_developer_created" | "account.bootstrap_admin_created" | "account.created" | "account.role_changed" | "account.status_changed" | "account.unlocked" | "account.password_reset_requested" | "account.password_changed" | "availability.submitted" | "availability.change_requested" | "availability.change_decided" | "assignment.draft_saved" | "assignment.notified" | "assignment.prestart_changed" | "assignment.prestart_unassigned" | "assignment.cancellation_requested" | "assignment.cancellation_decided" | "assignment.attempt_activated" | "assignment.rolled_over" | "assignment.duration_policy_confirmed" | "cleaning_template.published" | "cleaning.attempt_started" | "cleaning.field_completed" | "cleaning.finish_current_allowed" | "cleaning.upload_only_allowed" | "cleaning.interrupted_handover" | "cleaning.scheduled_expired" | "cleaning.offline_event_resolved" | "photo.upload_accepted" | "photo.collection_item_deleted" | "reservation.created" | "reservation.changed" | "reservation.room_moved" | "reservation.cancelled" | "reservation.manual_checkout" | "reservation.scheduled_check_in" | "reservation.scheduled_checkout" | "reservation.guest_name_retention_purged" | "checkout.presence_reported" | "checkout.presence_decided" | "cleaning.manual_request.created" | "cleaning.manual_request.cancelled" | "room.master_data_changed" | "room.create_block" | "room.release_block" | "room.set_candle_count" | "room.report_issue" | "room.resolve_issue" | "room.record_pin_sync" | "room.pin_change_prepared" | "room.pin_change_confirmed" | "room.pin_mismatch_resolved" | "room.pin_generated" | "room.generated_pin_confirmed" | "room_pin_sheet.full_resync_requested" | "room_pin_sheet.full_resync_succeeded" | "submission.bomb_reported" | "submission.created" | "inspection.bomb_decided" | "inspection.approved" | "inspection.rejected" | "complaint.rework_materialized" | "compensation.earned" | "payroll.adjustment_recorded" | "payroll.adjustment_reversed" | "payroll.offset_settled" | "payroll.late_earning_carried" | "payroll.payment_check_recorded" | "payroll.payment_paid" | "payroll.payment_reopened";
+        DeveloperAuditEventType: "account.bootstrap_developer_created" | "account.bootstrap_admin_created" | "account.created" | "account.role_changed" | "account.status_changed" | "account.unlocked" | "account.password_reset_requested" | "account.password_changed" | "availability.submitted" | "availability.change_requested" | "availability.change_decided" | "assignment.draft_saved" | "assignment.notified" | "assignment.prestart_changed" | "assignment.prestart_unassigned" | "assignment.cancellation_requested" | "assignment.cancellation_decided" | "assignment.attempt_activated" | "assignment.rolled_over" | "assignment.duration_policy_confirmed" | "cleaning_template.published" | "cleaning.attempt_started" | "cleaning.field_completed" | "cleaning.finish_current_allowed" | "cleaning.upload_only_allowed" | "cleaning.interrupted_handover" | "cleaning.scheduled_expired" | "cleaning.offline_event_resolved" | "photo.upload_accepted" | "photo.collection_item_deleted" | "reservation.created" | "reservation.changed" | "reservation.room_moved" | "reservation.cancelled" | "reservation.manual_checkout" | "reservation.scheduled_check_in" | "reservation.scheduled_checkout" | "reservation.guest_name_retention_purged" | "checkout.presence_reported" | "checkout.presence_decided" | "cleaning.manual_request.created" | "cleaning.manual_request.cancelled" | "room.master_data_changed" | "room.create_block" | "room.release_block" | "room.set_candle_count" | "room.report_issue" | "room.resolve_issue" | "room.record_pin_sync" | "room.occupancy_corrected" | "room.display_status_overridden" | "room.pin_change_prepared" | "room.pin_change_confirmed" | "room.pin_mismatch_resolved" | "room.pin_generated" | "room.generated_pin_confirmed" | "room_pin_sheet.full_resync_requested" | "room_pin_sheet.full_resync_succeeded" | "submission.bomb_reported" | "submission.created" | "inspection.bomb_decided" | "inspection.approved" | "inspection.rejected" | "complaint.rework_materialized" | "compensation.earned" | "payroll.adjustment_recorded" | "payroll.adjustment_reversed" | "payroll.offset_settled" | "payroll.late_earning_carried" | "payroll.payment_started" | "payroll.payment_check_recorded" | "payroll.payment_paid" | "payroll.payment_reopened";
         DeveloperRuntimeStatus: {
             /** @constant */
             adapter: "supabase-edge";
@@ -3733,6 +3884,10 @@ export interface components {
                 paymentAttemptNumber?: number;
                 /** @enum {string} */
                 paymentMethod?: "bank_transfer";
+                occupied?: boolean;
+                /** @description 표시 분류 override 값. null은 override 해제를 뜻하며 실제 점유·예약·readiness·bookability를 변경하지 않습니다. */
+                displayStatusOverride?: components["schemas"]["RoomPrimaryDisplayStatus"] | null;
+                roomStateVersion?: number;
             };
         };
         DeveloperAuditPage: {
@@ -4469,7 +4624,7 @@ export interface components {
         AvailabilitySubmissionRequest: {
             /**
              * Format: date
-             * @description 다음 주 월요일
+             * @description KST 기준 현재 주 또는 다음 주의 월요일
              */
             weekStart: string;
             /** @description 근무 가능한 날짜만 전달. 빈 배열은 전일 불가능 */
@@ -4596,7 +4751,7 @@ export interface components {
             serverTime: string;
         };
         /** @enum {string} */
-        ReservationBookabilityReasonCode: "RESERVATION_OVERLAP" | "OCCUPIED" | "RESERVATION_CURRENT" | "CLEANING_REQUIRED" | "CANDLE_PRESENT" | "OPERATION_BLOCKED" | "ROOM_ISSUE_BLOCKED" | "DATA_UNCONFIRMED" | "PIN_MISMATCH" | "PIN_UNCONFIGURED";
+        ReservationBookabilityReasonCode: "RESERVATION_OVERLAP" | "OCCUPIED" | "RESERVATION_CURRENT" | "CLEANING_REQUIRED" | "CANDLE_PRESENT" | "OPERATION_BLOCKED" | "ROOM_ISSUE_BLOCKED" | "DATA_UNCONFIRMED" | "PIN_MISMATCH" | "PIN_UNCONFIGURED" | "GUEST_COUNT_EXCEEDS_ROOM_TYPE_CAPACITY";
         ReservationBookabilityStandardPreviewRequest: {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -4613,6 +4768,8 @@ export interface components {
              * @description 예약 구간 종료(미포함). standard는 null을 허용하지 않음
              */
             checkOutAt: string;
+            /** @description 객실 유형 최대 인원 판정에 사용할 예약 총 인원 */
+            guestCount: number;
             /**
              * Format: uuid
              * @description 자기 예약 변경 preview에서만 사용하는 active·체크인 전 예약 ID
@@ -4637,6 +4794,8 @@ export interface components {
              * @description null이면 checkInAt 이후 미래 전체를 점유하는 preview
              */
             checkOutAt: string | null;
+            /** @description 객실 유형 최대 인원 판정에 사용할 예약 총 인원 */
+            guestCount: number;
             /**
              * Format: uuid
              * @description 자기 예약 변경 preview에서만 사용하는 active·체크인 전 예약 ID
@@ -4667,6 +4826,7 @@ export interface components {
             checkInAt: string;
             /** Format: date-time */
             checkOutAt: string | null;
+            guestCount: number;
             /** Format: uuid */
             excludeReservationId: string | null;
             /** Format: date-time */
@@ -4970,7 +5130,7 @@ export interface components {
          */
         RoomReadinessStatus: "READY" | "CLEANING_REQUIRED" | "CHECKIN_BLOCKED";
         /**
-         * @description BLOCKED → OCCUPIED → ARRIVAL_PENDING → RESERVATION_PRESENT → CLEANING_REQUIRED → READY 우선순위의 파생 표시값입니다. DB 원본 상태가 아닙니다.
+         * @description 카드의 표시/운영 분류입니다. 기본값은 BLOCKED → OCCUPIED → ARRIVAL_PENDING → RESERVATION_PRESENT → CLEANING_REQUIRED → READY 우선순위의 canonical projection이고, 관리자 display override가 있으면 표시값에만 우선 적용됩니다. 예약·점유·readiness·bookability 원본 상태가 아닙니다.
          * @enum {string}
          */
         RoomPrimaryDisplayStatus: "BLOCKED" | "OCCUPIED" | "ARRIVAL_PENDING" | "RESERVATION_PRESENT" | "CLEANING_REQUIRED" | "READY";
@@ -4993,6 +5153,10 @@ export interface components {
             displayName: string;
             /** @description 원 단위 기본 청소비 */
             baseCleaningFee: number;
+            /** @description 기준 인원. 이를 넘겨도 예약 가능하며 프런트 강조 기준으로만 사용합니다. */
+            baseOccupancy: number;
+            /** @description 이 객실 유형에 허용되는 예약 총 인원 상한입니다. */
+            maxOccupancy: number;
             /** @description 신규 객실 기준정보 선택 가능 여부 */
             active: boolean;
             /** @description 실제 객실 타입 변경 시 증가하는 버전 */
@@ -5002,6 +5166,123 @@ export interface components {
         };
         RoomTypeCatalogEnvelope: {
             items: components["schemas"]["RoomTypeCatalogItem"][];
+        };
+        DeveloperRoomCatalogSummary: {
+            total: number;
+            active: number;
+            inactive: number;
+        };
+        DeveloperRoomTypeCatalogItem: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            displayName: string;
+            baseOccupancy: number;
+            maxOccupancy: number;
+            active: boolean;
+            version: number;
+            roomCount: number;
+        };
+        DeveloperRoomCatalogItem: {
+            /** Format: uuid */
+            id: string;
+            roomNumber: string;
+            /** Format: uuid */
+            roomTypeId: string;
+            roomTypeCode: string;
+            active: boolean;
+            version: number;
+        };
+        DeveloperRoomCatalog: {
+            /** Format: date-time */
+            generatedAt: string;
+            summary: components["schemas"]["DeveloperRoomCatalogSummary"];
+            roomTypes: components["schemas"]["DeveloperRoomTypeCatalogItem"][];
+            rooms: components["schemas"]["DeveloperRoomCatalogItem"][];
+        };
+        /** @description baseOccupancy는 maxOccupancy 이하여야 합니다. */
+        DeveloperRoomTypeCapacityPreviewRequest: {
+            baseOccupancy: number;
+            maxOccupancy: number;
+            expectedVersion: number;
+        };
+        /** @description baseOccupancy는 maxOccupancy 이하여야 하며 preview와 모든 값이 같아야 합니다. */
+        DeveloperRoomTypeCapacityChangeRequest: {
+            baseOccupancy: number;
+            maxOccupancy: number;
+            expectedVersion: number;
+            impactFingerprint: string;
+            /** @constant */
+            reasonCode: "CAPACITY_POLICY_CHANGE";
+        };
+        DeveloperRoomTypeCapacityPreview: {
+            /** Format: uuid */
+            roomTypeId: string;
+            current: {
+                baseOccupancy: number;
+                maxOccupancy: number;
+                version: number;
+            };
+            proposed: {
+                baseOccupancy: number;
+                maxOccupancy: number;
+            };
+            roomCount: number;
+            activeReservationCount: number;
+            exceedingActiveReservationCount: number;
+            reasonCodes: "ROOM_TYPE_CAPACITY_ACTIVE_RESERVATION_CONFLICT"[];
+            impactFingerprint: string;
+            /** Format: date-time */
+            evaluatedAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        DeveloperRoomTypeCapacityChange: {
+            roomType: components["schemas"]["DeveloperRoomTypeCatalogItem"];
+            /** Format: date-time */
+            effectiveAt: string;
+        };
+        DeveloperRoomCreateRequest: {
+            roomNumber: string;
+            /** Format: uuid */
+            roomTypeId: string;
+            expectedRoomTypeVersion: number;
+            /** @constant */
+            reasonCode: "ROOM_CATALOG_ADD";
+        };
+        DeveloperRoomDeactivationPreviewRequest: {
+            expectedVersion: number;
+        };
+        DeveloperRoomDeactivationRequest: {
+            expectedVersion: number;
+            impactFingerprint: string;
+            /** @constant */
+            reasonCode: "ROOM_CATALOG_REMOVE";
+        };
+        DeveloperRoomDeactivationPreview: {
+            /** Format: uuid */
+            roomId: string;
+            currentlyOccupied: boolean;
+            activeFutureReservationCount: number;
+            activeCleaningTargetCount: number;
+            activeAssignmentCount: number;
+            activeAttemptCount: number;
+            activePinChangeLease: boolean;
+            unresolvedOperationCount: number;
+            canDeactivate: boolean;
+            reasonCodes: ("ROOM_CURRENTLY_OCCUPIED" | "ROOM_ACTIVE_OR_FUTURE_RESERVATION_EXISTS" | "ROOM_CLEANING_WORKFLOW_ACTIVE" | "ROOM_PIN_CHANGE_ACTIVE" | "ROOM_OPERATION_UNRESOLVED")[];
+            impactFingerprint: string;
+            /** Format: date-time */
+            evaluatedAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        DeveloperRoomMutationResult: {
+            room: components["schemas"]["DeveloperRoomCatalogItem"];
+            summary: components["schemas"]["DeveloperRoomCatalogSummary"];
+            roomType?: components["schemas"]["DeveloperRoomTypeCatalogItem"];
+            /** Format: date-time */
+            effectiveAt: string;
         };
         RoomProjection: {
             /**
@@ -5046,6 +5327,10 @@ export interface components {
             reservationLifecycle: components["schemas"]["RoomReservationLifecycle"];
             readinessStatus: components["schemas"]["RoomReadinessStatus"];
             primaryDisplayStatus: components["schemas"]["RoomPrimaryDisplayStatus"];
+            /** @description 점유·예약·운영 차단·readiness 원장으로 계산한 override 적용 전 표시 분류입니다. */
+            canonicalPrimaryDisplayStatus: components["schemas"]["RoomPrimaryDisplayStatus"];
+            /** @description 관리자가 강제 지정한 표시/운영 분류입니다. null이면 override가 없으며 실제 점유·예약·readiness·bookability를 변경하지 않습니다. */
+            displayStatusOverride: components["schemas"]["RoomPrimaryDisplayStatus"] | null;
             /**
              * Format: uuid
              * @description serverTime 뒤 가장 이른 future active 예약 ID. 현재 예약 자체는 포함하지 않습니다.
@@ -5059,7 +5344,7 @@ export interface components {
             blockingReasonCodes: components["schemas"]["RoomBlockingReasonCode"][];
             /** @description readinessStatus의 근거입니다. PIN 경고는 current check-in일 때만 여기에 나타납니다. */
             readinessReasonCodes: components["schemas"]["RoomReadinessReasonCode"][];
-            /** @description evaluatedAt 기준 현재 점유 여부 */
+            /** @description evaluatedAt이 canonical non-retired stay segment의 [startsAt,endsAt) 안에 있는지 여부. null end는 명시 종료 전까지 점유입니다. */
             occupied: boolean;
             /** @description evaluatedAt 기준 현재 활성화된 청소 의무 존재 여부. 미래 예약의 준비 의무만으로 true가 되지 않습니다. */
             cleaningRequired: boolean;
@@ -5070,9 +5355,9 @@ export interface components {
              * @enum {string}
              */
             pinSyncStatus: "verified" | "mismatch" | "unconfigured";
-            /** @description evaluatedAt 기준 하나 이상의 현재 고객 배정 차단 사유가 있는지 여부 */
+            /** @description 운영 차단·배정 차단 이슈·촛불·기준정보 오류 같은 객실 문제 사유 존재 여부. 점유와 청소만으로 true가 되지 않습니다. */
             allocationBlocked: boolean;
-            /** @description evaluatedAt 기준 현재 고객 배정 준비 조건을 모두 만족하는지 여부 */
+            /** @description 점유·청소·객실 문제와 current-check-in readiness 경고를 모두 통과했는지 여부 */
             allocationReady: boolean;
             /** @description allocationReady=false의 근거 목록. UI 대표 상태로 덮어쓰지 않습니다. */
             reasonCodes: components["schemas"]["RoomReasonCode"][];
@@ -5090,6 +5375,24 @@ export interface components {
             reasonCode: components["schemas"]["RoomCommandReasonCode"];
         };
         RoomOperationDecisionRequest: {
+            expectedRoomVersion: number;
+            reasonCode: components["schemas"]["RoomCommandReasonCode"];
+        };
+        RoomOccupancyCorrectionRequest: {
+            /** Format: uuid */
+            reservationId: string;
+            occupied: boolean;
+            /**
+             * Format: date-time
+             * @description 현재 또는 과거의 실제 점유 경계 시각
+             */
+            effectiveAt: string;
+            expectedRoomVersion: number;
+            reasonCode: components["schemas"]["RoomCommandReasonCode"];
+        };
+        RoomDisplayStatusOverrideRequest: {
+            /** @description 강제 표시 분류. null은 현재 override 해제입니다. */
+            targetStatus: components["schemas"]["RoomPrimaryDisplayStatus"] | null;
             expectedRoomVersion: number;
             reasonCode: components["schemas"]["RoomCommandReasonCode"];
         };
@@ -5242,7 +5545,10 @@ export interface components {
             /** @description 선행 0을 보존하는 숫자 문자열. roomNumber 접두사는 서버만 추가합니다. */
             pinDigits: string;
             expectedPinVersion: number;
-            /** @enum {string} */
+            /**
+             * @description 현재 PIN version 0에서 ADMIN_PHYSICAL_CHANGE는 서버가 ADMIN_INITIAL_PIN으로 정규화합니다. 그 밖의 사유와 maid/re-entry 계약은 그대로 검증합니다.
+             * @enum {string}
+             */
             reasonCode: "ADMIN_INITIAL_PIN" | "ADMIN_PHYSICAL_CHANGE" | "MAID_CLEANING_CHANGE" | "ACTUAL_PIN_REENTRY";
             /**
              * Format: uuid
@@ -5363,6 +5669,30 @@ export interface components {
             entityId: string;
             /** Format: uuid */
             roomId: string;
+            roomStateVersion: number;
+            /** Format: date-time */
+            recordedAt: string;
+        };
+        RoomOccupancyCorrection: {
+            /** Format: uuid */
+            correctionId: string;
+            /** Format: uuid */
+            roomId: string;
+            /** Format: uuid */
+            reservationId: string;
+            occupied: boolean;
+            /** Format: date-time */
+            effectiveAt: string;
+            roomStateVersion: number;
+            /** Format: date-time */
+            recordedAt: string;
+        };
+        RoomDisplayStatusOverride: {
+            /** Format: uuid */
+            overrideId: string;
+            /** Format: uuid */
+            roomId: string;
+            targetStatus: components["schemas"]["RoomPrimaryDisplayStatus"] | null;
             roomStateVersion: number;
             /** Format: date-time */
             recordedAt: string;
@@ -7982,6 +8312,520 @@ export interface operations {
             };
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    getDeveloperRoomCatalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 객실 기준정보 */
+            200: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        catalog: components["schemas"]["DeveloperRoomCatalog"];
+                    };
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    previewDeveloperRoomTypeCapacity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roomTypeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "baseOccupancy": 2,
+                 *       "maxOccupancy": 4,
+                 *       "expectedVersion": 3
+                 *     }
+                 */
+                "application/json": components["schemas"]["DeveloperRoomTypeCapacityPreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description 정원 변경 영향 */
+            200: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        preview: components["schemas"]["DeveloperRoomTypeCapacityPreview"];
+                    };
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    changeDeveloperRoomTypeCapacity: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description 사용자 동작 한 번마다 생성합니다. 네트워크 오류로 **같은 요청 본문을 재시도할 때만 같은 값**을 재사용하고, 다른 본문에는 새 값을 사용합니다. `crypto.randomUUID()`를 권장합니다. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                roomTypeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "baseOccupancy": 2,
+                 *       "maxOccupancy": 4,
+                 *       "expectedVersion": 3,
+                 *       "impactFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                 *       "reasonCode": "CAPACITY_POLICY_CHANGE"
+                 *     }
+                 */
+                "application/json": components["schemas"]["DeveloperRoomTypeCapacityChangeRequest"];
+            };
+        };
+        responses: {
+            /** @description 정원 변경 결과 */
+            200: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        change: components["schemas"]["DeveloperRoomTypeCapacityChange"];
+                    };
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    createDeveloperRoom: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description 사용자 동작 한 번마다 생성합니다. 네트워크 오류로 **같은 요청 본문을 재시도할 때만 같은 값**을 재사용하고, 다른 본문에는 새 값을 사용합니다. `crypto.randomUUID()`를 권장합니다. */
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "roomNumber": "516",
+                 *       "roomTypeId": "10000000-0000-4000-8000-000000000004",
+                 *       "expectedRoomTypeVersion": 3,
+                 *       "reasonCode": "ROOM_CATALOG_ADD"
+                 *     }
+                 */
+                "application/json": components["schemas"]["DeveloperRoomCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description 객실 추가 결과 */
+            201: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        creation: components["schemas"]["DeveloperRoomMutationResult"];
+                    };
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    previewDeveloperRoomDeactivation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roomId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "expectedVersion": 4
+                 *     }
+                 */
+                "application/json": components["schemas"]["DeveloperRoomDeactivationPreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description 객실 비활성화 영향 */
+            200: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        preview: components["schemas"]["DeveloperRoomDeactivationPreview"];
+                    };
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    deactivateDeveloperRoom: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description 사용자 동작 한 번마다 생성합니다. 네트워크 오류로 **같은 요청 본문을 재시도할 때만 같은 값**을 재사용하고, 다른 본문에는 새 값을 사용합니다. `crypto.randomUUID()`를 권장합니다. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                roomId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "expectedVersion": 4,
+                 *       "impactFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                 *       "reasonCode": "ROOM_CATALOG_REMOVE"
+                 *     }
+                 */
+                "application/json": components["schemas"]["DeveloperRoomDeactivationRequest"];
+            };
+        };
+        responses: {
+            /** @description 객실 비활성화 결과 */
+            200: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        deactivation: components["schemas"]["DeveloperRoomMutationResult"];
+                    };
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -10783,13 +11627,13 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
-            /** @description 청소시간 미확정: 결정 불가이며 제안은 항상 빈 배열 */
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AssignmentPreviewUnconfirmed"];
+                    "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
@@ -10871,10 +11715,7 @@ export interface operations {
     confirmAssignmentDurationPolicy: {
         parameters: {
             query?: never;
-            header: {
-                /** @description 사용자 동작 한 번마다 생성합니다. 네트워크 오류로 **같은 요청 본문을 재시도할 때만 같은 값**을 재사용하고, 다른 본문에는 새 값을 사용합니다. `crypto.randomUUID()`를 권장합니다. */
-                "Idempotency-Key": string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -10884,15 +11725,6 @@ export interface operations {
             };
         };
         responses: {
-            /** @description 확정 정책 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AssignmentDurationPolicyEnvelope"];
-                };
-            };
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             400: {
                 headers: {
@@ -10921,7 +11753,7 @@ export interface operations {
                 };
             };
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
-            409: {
+            410: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -13819,6 +14651,7 @@ export interface operations {
                  *       "reservationType": "standard",
                  *       "checkInAt": "2026-10-01T16:00:00+09:00",
                  *       "checkOutAt": "2026-10-02T11:00:00+09:00",
+                 *       "guestCount": 2,
                  *       "roomTypeIds": [],
                  *       "excludeReservationId": null
                  *     }
@@ -15208,6 +16041,182 @@ export interface operations {
                 content: {
                     "application/json": {
                         operation: components["schemas"]["RoomOperationResult"];
+                    };
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    correctRoomOccupancy: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description 사용자 동작 한 번마다 생성합니다. 네트워크 오류로 **같은 요청 본문을 재시도할 때만 같은 값**을 재사용하고, 다른 본문에는 새 값을 사용합니다. `crypto.randomUUID()`를 권장합니다. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                /** @description 불변 객실 ID */
+                roomId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoomOccupancyCorrectionRequest"];
+            };
+        };
+        responses: {
+            /** @description 객실 점유 상태 보정 완료 */
+            201: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        correction: components["schemas"]["RoomOccupancyCorrection"];
+                    };
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    overrideRoomDisplayStatus: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description 사용자 동작 한 번마다 생성합니다. 네트워크 오류로 **같은 요청 본문을 재시도할 때만 같은 값**을 재사용하고, 다른 본문에는 새 값을 사용합니다. `crypto.randomUUID()`를 권장합니다. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                /** @description 불변 객실 ID */
+                roomId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoomDisplayStatusOverrideRequest"];
+            };
+        };
+        responses: {
+            /** @description 객실 표시 분류 강제 조정 완료 */
+            201: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        statusOverride: components["schemas"]["RoomDisplayStatusOverride"];
                     };
                 };
             };

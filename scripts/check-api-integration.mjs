@@ -297,7 +297,7 @@ async function checkOpenApi(apiBaseUrl) {
   } catch {
     throw new Error("OpenAPI 응답이 JSON이 아닙니다.");
   }
-  assert(document?.info?.version === "0.4.0", "OpenAPI info.version이 0.4.0이 아닙니다.");
+  assert(document?.info?.version === "0.5.0", "OpenAPI info.version이 0.5.0이 아닙니다.");
   assert(/^3\.1(?:\.|$)/u.test(document?.openapi ?? ""), "OpenAPI 문서 버전이 3.1 계열이 아닙니다.");
   for (const [endpoint, methods] of REQUIRED_PATHS) {
     assert(document.paths?.[endpoint], `OpenAPI 필수 path가 없습니다: ${endpoint}`);
@@ -316,12 +316,16 @@ async function checkOpenApi(apiBaseUrl) {
   assert(requiredQuery("/v1/work-history", "weekStart"), "work-history의 필수 weekStart query가 없습니다.");
   assert(document.components?.schemas?.CleaningHistoryPage?.properties?.items, "CleaningHistoryPage.items가 없습니다.");
   assert(document.components?.schemas?.WorkHistoryPage?.properties?.summary, "WorkHistoryPage.summary가 없습니다.");
+  const availabilityDescription = document.paths?.["/v1/availability/submissions"]?.post?.description ?? "";
+  assert(availabilityDescription.includes("어느 요일이든 직접 제출·변경"), "가능일 상시 직접 제출 설명이 없습니다.");
+  assert(document.components?.schemas?.ErrorCode?.enum?.includes("AVAILABILITY_WEEK_OUT_OF_RANGE"), "가능일 주차 범위 오류 계약이 없습니다.");
+  assert(!document.components?.schemas?.ErrorCode?.enum?.includes("OUTSIDE_AVAILABILITY_WINDOW"), "폐기된 가능일 시간창 오류가 남아 있습니다.");
   const operationCount = Object.values(document.paths ?? {}).reduce(
     (count, item) => count + Object.keys(item).filter((key) => ["get", "post", "put", "patch", "delete", "head", "options"].includes(key)).length,
     0,
   );
-  assert(Object.keys(document.paths ?? {}).length === 120, "OpenAPI path 수가 v0.4.0의 120개와 다릅니다.");
-  assert(operationCount === 130, "OpenAPI operation 수가 v0.4.0의 130개와 다릅니다.");
+  assert(Object.keys(document.paths ?? {}).length === 128, "OpenAPI path 수가 v0.5.0의 128개와 다릅니다.");
+  assert(operationCount === 138, "OpenAPI operation 수가 v0.5.0의 138개와 다릅니다.");
 }
 
 async function checkCors(apiBaseUrl) {
@@ -366,7 +370,7 @@ async function main() {
     console.log("[ok] 운영 health 계약을 확인했습니다.");
 
     await checkOpenApi(apiBaseUrl);
-    console.log("[ok] OpenAPI 0.4.0의 120개 path와 130개 operation을 확인했습니다.");
+    console.log("[ok] OpenAPI 0.5.0의 128개 path와 138개 operation 및 가능일 상시 제출 계약을 확인했습니다.");
 
   } catch (error) {
     console.error(`[fail] ${error instanceof Error ? error.message : "API 계약 검사에 실패했습니다."}`);
