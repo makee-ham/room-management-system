@@ -8471,7 +8471,7 @@
       document.addEventListener('focusin',event=>{if(!event.target.closest?.('.info-tip'))closeInfoTips();},true);
       document.addEventListener('keydown',event=>{if(event.key!=='Escape'||document.querySelector('#modal-root .modal, .calendar-dialog'))return;if(closeInfoTips({restoreFocus:true})){event.preventDefault();event.stopImmediatePropagation();}},true);
 
-      // Legacy optional-duration helpers remain below; the production v0.5.0 integration overrides their live entry points later in this script.
+      // Legacy optional-duration helpers remain below; the production v0.5.1 integration overrides their live entry points later in this script.
       function cleaningWorkflowEnabled(){return liveMode()&&LIVE_RUNTIME.config?.featureFlags?.optionalCleaningWorkflow===true;}
       function cleaningActor(role=null){return cleaningWorkflowEnabled()&&state.remote.auth.status==='authenticated'&&(!role||state.remote.auth.user?.role===role)&&['admin','maid'].includes(state.remote.auth.user?.role);}
       function initialCleaningState(){return {status:'idle',assignments:[],attempts:new Map(),templates:[],incidents:new Map(),blockedTargets:new Set(),error:null,requestId:null,serviceDate:liveKstIsoDate(),pending:null,busy:false,loadRevision:0};}
@@ -8631,7 +8631,7 @@
       }
       document.addEventListener('change',event=>{if(event.target.id==='cleaning-service-date'&&cleaningActor()&&!cleaningState().pending&&!cleaningState().busy){cleaningState().serviceDate=event.target.value;void loadLiveCleaning();}});
 
-      // Production cleaning API contract: OpenAPI v0.5.0, 128 paths / 138 operations.
+      // Production cleaning API contract: OpenAPI v0.5.1, 128 paths / 138 operations.
       // The live surface below deliberately owns separate state from every demo fixture.
       const CLEANING_STATUS_LABELS=Object.freeze({scheduled:'시작 대기',in_progress:'청소 중',field_completed:'현장 완료 · 사진 제출 전',upload_pending:'사진 업로드 대기',submitted:'관리자 검수 대기',approved:'검수 승인',rejected:'반려 · 재청소 확인',interrupted:'관리자 중단',superseded:'이전 작업'});
       const CLEANING_CHANGE_STATUS_LABELS=Object.freeze({pending:'결정 대기',approved:'승인',rejected:'거절',superseded:'최신 배정으로 대체'});

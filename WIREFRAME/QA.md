@@ -1,7 +1,7 @@
 # 클릭형 와이어프레임 QA
 
 - 검증일: 2026-09-22
-- 문서 갱신일: 2026-09-22 · 운영 예약 상세·변경 모달 복구와 OpenAPI v0.5.0 인원 계약 연결
+- 문서 갱신일: 2026-09-22 · 예약 preview OpenAPI v0.5.1 선택형 인원 계약 연결
 - 대상: `WIREFRAME/index.html`
 - 정책: `DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md`, `DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md`, `DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md`
 - 객실·단가 정본: `DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md`
@@ -1933,7 +1933,7 @@ Browser 플러그인이 제공되지 않아 `scripts/check-developer-room-manage
 
 ## 2026-09-22 · 예약 가능 여부의 실제 투숙 인원 전달
 
-백엔드 OpenAPI v0.5의 optional `guestCount` 결정을 예약 생성·변경 UI에 반영했다. 모달을 열기 전 기간-only preview는 인원을 생략하고, 폼이 열린 뒤부터는 화면 stepper의 실제 값을 preview와 최종 명령에 함께 사용한다. production 배포와 운영 데이터 mutation은 실행하지 않았다.
+백엔드 OpenAPI v0.5.1의 optional `guestCount` 결정을 예약 생성·변경 UI에 반영했다. 모달을 열기 전 기간-only preview는 인원을 생략하고, 폼이 열린 뒤부터는 화면 stepper의 실제 값을 preview와 최종 명령에 함께 사용한다. 코드 생성 정본은 백엔드 `f7a3061fb9d40de201a97827359d5f9ea4f25f81`, full OpenAPI SHA-256 `0e828cac337545193d1832784b7614040601f1616079e400ef84b3cde9d7589e`이다. production 배포와 운영 데이터 mutation은 실행하지 않았다.
 
 | 실제 확인 범위 | 결과 |
 | --- | --- |
