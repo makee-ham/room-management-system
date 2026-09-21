@@ -43,7 +43,7 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 
 모바일에서는 데스크톱 화면을 축소하지 않고 작업 순서에 맞게 다시 배치합니다. 관리자 청소 상태 탭은 두 줄 안에 모두 표시하고, `이 페이지` 목차는 현재 위치만 보이는 접이식 바로가기로 제공해 메뉴 문구가 화면 밖에서 잘리지 않게 합니다. 메이드 청소 상세는 담당·출입을 2열 요약으로 압축하고 구역을 한 열 목록으로 고정합니다. 빈 사진의 큰 카메라 그림·반복 안내 박스·카드 안의 카드를 제거하고 `사진 필요 → 촬영 / 갤러리`만 남깁니다. 아직 누를 수 없는 `남은 인증 사진` 버튼과 맨 위 이동 버튼은 촬영 조작을 가리지 않으며, 필수 사진이 준비된 뒤에만 실제 완료 행동을 하단에 표시합니다. 이 모바일 단순화는 800px 이하에서 적용하고 데스크톱의 비교용 2열 사진 배치는 유지합니다.
 
-- `근무 일정`: 일요일 12:00–23:59에 다음 주 월–일 가능일 제출, 마감 전 수정, 마감 뒤 변경 요청. 수정 중에도 새 내용을 다시 제출하기 전까지 마지막 제출은 유지
+- `근무 일정`: 모든 요일·모든 시각에 다음 주 월–일 가능일 제출·수정·직접 재제출. 수정 중에도 새 내용을 다시 제출하기 전까지 마지막 제출은 유지
 - `내 업무`: 관리자 통보 완료 업무와 현재 주 행동, 배정 통보 순간부터 최종 검수 전까지 최신 객실 PIN 조회, 시작한 전일 미완료 업무 이어서 수행, 구역별 즉시 카메라/갤러리 촬영, 객실 특이사항 메모·다중 이미지 등록, 전체 제출 전 폭탄방 이미지 신고
 - `청소 내역`: 본인이 실제 수행한 과거 청소의 사진·제출 내용·검수 결과 조회. 사진은 승인 또는 반려 시점부터 7일간만 표시하고, 만료 뒤에는 제출·검수 텍스트 이력만 유지
 - `주급`: 본인 예상·확정·지급 이력과 폭탄방 기본요금·추가요금·해당 객실 총액
@@ -127,10 +127,10 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 
 ## 청소 운영 흐름
 
-일요일은 다음 주 가능일 제출·마감일이고, `내일 배정`은 일요일에만 여는 기능이 아닙니다. 청소대상이 있는 매일 전날 다음 날 근무 가능자를 기준으로 반복합니다. `오늘 배정`과 `내일 배정`은 청소대상 ID와 대상일을 키로 한 같은 원장을 날짜로 필터링하므로 탭을 오가거나 다시 열어도 작업·담당·순서·이력을 복제하지 않습니다.
+일요일은 다음 주 계획을 집중 확인할 수 있는 운영일이지만 가능일 제출 마감일은 아닙니다. `내일 배정`은 일요일에만 여는 기능이 아니며 청소대상이 있는 매일 전날 다음 날 근무 가능자를 기준으로 반복합니다. `오늘 배정`과 `내일 배정`은 청소대상 ID와 대상일을 키로 한 같은 원장을 날짜로 필터링하므로 탭을 오가거나 다시 열어도 작업·담당·순서·이력을 복제하지 않습니다.
 
-1. 일요일 12:00–23:59에 메이드가 다음 주 가능일을 제출합니다.
-2. 관리자는 전체 제출·미제출·변경 요청과 요일별 가능 인원을 확인합니다.
+1. 메이드는 모든 요일·모든 시각에 다음 주 가능일을 제출하고 기존 제출을 직접 수정·재제출합니다.
+2. 관리자는 전체 최신 제출·미제출 상태와 요일별 가능 인원을 확인합니다.
 3. 시스템은 선택한 대상일의 예정 체크아웃 객실, 관리자가 `지금 체크아웃`한 객실, 해당 날짜의 투숙 중 청소 신청 객실을 객실 목록 주 상태와 무관하게 `청소대상 객실`에 자동 포함합니다. 같은 예약의 수동·예정 체크아웃은 활성 퇴실 청소 한 건을 공유합니다.
 4. 관리자는 오늘·내일 배정의 `청소대상 직접 등록`에서 해당 대상일의 자동 대상 외 현장 요청을 추가할 수 있습니다. 검수 반려 재청소는 직접 등록하지 않고 최초 청소한 메이드에게 자동 귀속합니다. 같은 대상일·객실·청소 유형의 중복 등록은 차단됩니다.
 5. 내일 배정은 근무일 전날 밤, 오늘 배정은 당일 변경 시점에 `메이드 주간 근무표`에서 대상일의 근무 가능자를 먼저 확인합니다.
@@ -180,7 +180,7 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 
 상단 `데모 제어`에서 역할·시각·네트워크·시나리오를 바꾸고 초기화할 수 있습니다.
 
-1. 메이드: 일요일 다음 주 근무 가능일 제출
+1. 메이드: 다음 주 근무 가능일 상시 제출·수정
 2. 관리자: `오늘 배정 / 내일 배정` 전환 → 상단 목차 탐색 → 선택 대상일의 예정 체크아웃·수동 체크아웃·투숙 중 청소 신청 자동 대상 확인 → 현장 요청 직접 등록·중복 차단 → 메이드 주간 근무표 확인 → 총 청소요금 균형 우선·엘리베이터와 가까운 호수 차선의 동선 고려 랜덤 배정 초안 → 객실 타입·요금·특수 시각 확인과 객실별 담당 수정 → 메이드별 배정 요약 확인 → 부분 통보 · 미배정 대기
 3. 메이드: 지정 순서대로 통보된 내 업무 → 통보 즉시 PIN 확인 → 시간 게이트 → 청소 시작
 4. 구역별 바로 촬영/갤러리 선택 → 슬롯별 재촬영·교체 → 객실 특이사항 메모·여러 이미지 등록 → 폭탄방 이미지 1장 이상 신고 → 현장 완료 → 업로드 실패·재시도 → 전체 제출
@@ -415,14 +415,14 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 - 유효한 설정은 운영 모드로 실행하고, 설정이 없거나 잘못되면 데모로 우회하지 않고 로그인 화면에서 연결 오류를 표시한다.
 - 의도적인 로컬 데모 QA만 `RMS_RUNTIME_MODE=demo python3 scripts/serve.py --port 4174`로 실행한다.
 - 운영 대상은 Supabase project ref `aodikrxcczbogjpsjwjt`이며 다른 project ref와 섞인 URL·키는 거부한다.
-- 운영 모드는 기존 관리자·메이드 메인과 전체 역할별 내비게이션을 유지한다. 백엔드 `v0.4.0`의 계정·객실·예약·근무 가능일·청소·주급·컴플레인·알림·Web Push·개발자 상태 응답을 기존 카드와 목록에 표시하며 데모 값으로 대신하지 않는다.
+- 운영 모드는 기존 관리자·메이드 메인과 전체 역할별 내비게이션을 유지한다. 백엔드 `v0.5.0`의 계정·객실·예약·근무 가능일·청소·주급·컴플레인·알림·Web Push·개발자 상태 응답을 기존 카드와 목록에 표시하며 데모 값으로 대신하지 않는다.
 - 관리자는 예약 목록·등록·변경·취소·수동 체크아웃과 연박/추가 청소 요청, 객실 촛불·운영 차단·이슈·PIN 동기화 상태를 운영 API에 기록할 수 있다. 예약 고객명은 관리자 단건 조회에서만 현재 DOM에 두고 목록·URL·로그·웹 저장소에는 남기지 않는다. 객실 PIN은 명시적 `보기`에서 한 객실·최대 30초만 메모리에 표시하고, `수정`은 서버 prepare/confirm/rollback 흐름과 현재 pin version을 사용한다.
-- 운영 객실은 기존 카탈로그의 타입·객실 순서를 그대로 사용한다. 서버의 `primaryDisplayStatus`만 기존 큰 상태로 변환하며 `reservationLifecycle`·`readinessStatus`·`allocationReady`로 대표 상태를 다시 계산하지 않는다. 관리자 `메이드`도 계정 표가 아니라 기존 네 탭과 주간 근무표·메이드 카드 구성을 유지하며, 실제 메이드 계정과 다음 주 가능일을 표시하고 변경 요청을 승인·반려한다. 메이드는 일요일 제출 창에서 최초/재제출하고, 마감 뒤에는 관리자 변경 요청을 보낸다.
-- 개발자는 운영 상태에서 Edge runtime, migration·RLS, scheduler와 계정·객실 요약을 읽고 계정 화면을 함께 사용한다. 별도 `객실` 화면에서는 현재 등록 객실 수와 DB 객실 행을 비교하고, 네 객실 유형별 기준 인원·최대 인원 입력, 객실 유형 드롭다운, 추가·삭제 대상 호수 입력을 제공한다. OpenAPI v0.4.0에는 developer가 읽을 수 있는 객실 유형·인원·객실 목록과 유형별 인원 변경, 객실 생성·비활성화 명령이 없으므로 저장·추가·삭제 버튼은 `API 미제공`으로 비활성화하며 입력값을 서버나 브라우저 저장소에 남기지 않는다. 필요한 안전 projection·preview·CAS·멱등성 계약은 `DOCS/25_DEVELOPER_ROOM_CATALOG_CAPACITY_BACKEND_PROMPT.md`에 정리한다. 설정 비밀값은 표시하지 않고 설정 여부만 보여 준다.
+- 운영 객실은 기존 카탈로그의 타입·객실 순서를 그대로 사용한다. 서버의 `primaryDisplayStatus`만 기존 큰 상태로 변환하며 `reservationLifecycle`·`readinessStatus`·`allocationReady`로 대표 상태를 다시 계산하지 않는다. 관리자 `메이드`도 계정 표가 아니라 기존 네 탭과 주간 근무표·메이드 카드 구성을 유지하며, 실제 메이드 계정과 다음 주 최신 가능일을 표시한다. 메이드는 요일·시각 제한 없이 최초 제출과 직접 재제출을 같은 화면에서 수행한다.
+- 개발자는 운영 상태에서 Edge runtime, migration·RLS, scheduler와 계정·객실 요약을 읽고 계정 화면을 함께 사용한다. 별도 `객실` 화면에서는 현재 등록 객실 수와 DB 객실 행을 비교하고, 네 객실 유형별 기준 인원·최대 인원 입력, 객실 유형 드롭다운, 추가·삭제 대상 호수 입력을 제공한다. OpenAPI v0.5.0에는 developer용 객실 카탈로그와 변경 명령이 추가됐지만 이 화면의 adapter 연결은 별도 범위이므로, 연결 전까지 저장·추가·삭제 버튼은 `API 미제공`으로 비활성화하며 입력값을 서버나 브라우저 저장소에 남기지 않는다. 필요한 안전 projection·preview·CAS·멱등성 계약은 `DOCS/25_DEVELOPER_ROOM_CATALOG_CAPACITY_BACKEND_PROMPT.md`에 정리한다. 설정 비밀값은 표시하지 않고 설정 여부만 보여 준다.
 - 청소 배정·현장 수행·attempt별 사진 슬롯·immutable submission·관리자 검수·앱 내부 알림을 운영 API에 연결한다. 주급 조회·지급 상태·정정/상계와 컴플레인 접수·판정·응답·종결·재청소도 기존 화면에서 연결한다. 객실 PIN은 명시적 조회와 prepare/confirm/rollback 변경 흐름으로 연결한다. 객실 기준정보 변경은 안전한 `roomTypeId` 카탈로그 endpoint가 없어 ID를 추측하지 않고 잠근다.
 - 전용 origin의 개인 기기에서는 `local`, 공용 기기에서는 `session`을 사용한다. 공유 `makee-ham.github.io` origin에는 운영 로그인 대신 자격 증명이 없는 데모 확인본만 배포한다. 브라우저 종료 뒤에도 운영 로그인을 안전하게 유지하려면 앱 전용 custom domain이 필요하다.
 - PWA 설치와 브라우저 알림 권한, Web Push 공개키 조회·구독 등록/회전·폐기를 연결했다. endpoint와 브라우저 암호 키는 저장하지 않고 서버 safe projection의 ID/version/status만 저장한다. 앱 내부 알림은 `/v1/notifications`에서 별도로 읽는다.
-- 공통 배포 계약은 `DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md`, 청소 흐름과 endpoint 매핑은 `DOCS/23_CLEANING_API_INTEGRATION.md`를 따른다. `node scripts/check-api-integration.mjs`와 `node scripts/generate-cleaning-client.mjs --production --check`는 코드 생성 정본 OpenAPI `0.4.0`, 120 paths / 130 operations을 읽기 전용으로 확인한다.
+- 공통 배포 계약은 `DOCS/21_PRODUCTION_API_PWA_INTEGRATION.md`, 청소 흐름과 endpoint 매핑은 `DOCS/23_CLEANING_API_INTEGRATION.md`를 따른다. `node scripts/check-api-integration.mjs`와 `node scripts/generate-cleaning-client.mjs --production --check`는 코드 생성 정본 OpenAPI `0.5.0`, 128 paths / 138 operations을 읽기 전용으로 확인한다.
 - 전체 OpenAPI TypeScript 정본은 `openapi-typescript@7.13.0`으로 `src/api/generated/room-management-api.ts`에 생성한다. 생성 파일은 직접 수정하지 않는다. Vercel Preview는 `RMS_DEPLOYMENT_CHANNEL=preview`를 포함한 Preview 전용 runtime 설정으로만 빌드하며 로그인 전부터 `운영 API 연결 중 · Preview` 표식을 노출한다.
 
 ### 예약 기간 가능성 방어
@@ -453,7 +453,7 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 
 메이드 `청소 내역`과 관리자 청소 `완료`는 `GET /v1/cleaning-history`의 최근 7일 snapshot을 사용한다. 관리자 `메이드 → 근무 기록`은 `GET /v1/work-history`의 가능일 제출·담당 통보·실제 현장 완료 축을 서로 합치지 않고 표시한다. 두 endpoint의 opaque cursor는 응답값 그대로 이어 간다. OpenAPI에는 과거 청소의 사진 원본이나 제출 상세를 다시 여는 안전한 history detail endpoint가 없으므로 기존 상세 버튼 자리는 유지하되 `사진·제출 상세 · API 미제공`으로 비활성 표시한다.
 
-로컬 서버와 Pages live 산출물의 `featureFlags.optionalCleaningWorkflow`는 true다. 운영 모드에서 API 실패 시 fixture로 전환하지 않는다. `WIREFRAME/cleaning-api.d.ts`는 코드 생성 정본 OpenAPI v0.4.0에서 생성하며 생성 파일을 직접 수정하지 않는다. 상세 endpoint·CAS·멱등·권한·오류 매핑은 `DOCS/23_CLEANING_API_INTEGRATION.md`를 따른다.
+로컬 서버와 Pages live 산출물의 `featureFlags.optionalCleaningWorkflow`는 true다. 운영 모드에서 API 실패 시 fixture로 전환하지 않는다. `WIREFRAME/cleaning-api.d.ts`는 코드 생성 정본 OpenAPI v0.5.0에서 생성하며 생성 파일을 직접 수정하지 않는다. 상세 endpoint·CAS·멱등·권한·오류 매핑은 `DOCS/23_CLEANING_API_INTEGRATION.md`를 따른다.
 
 검증은 `node scripts/check-workspace.mjs`, `node scripts/check-api-integration.mjs`, `node scripts/generate-cleaning-client.mjs --production --check`, Playwright가 설치된 Node 환경에서 `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-cleaning-workflow.mjs`, `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-operational-api.mjs`, `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-reservation-bookability.mjs`를 사용한다. 배포 뒤 정적 자산·전 화면 반응형 검수는 `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-deployed-visual.mjs`로 실행한다. 브라우저 회귀는 업무 요청을 로컬 fixture로 가로채거나 hosted runtime config만 demo로 대체하며 운영 mutation을 실행하지 않는다. 예약 취소 회귀는 체크인 전 버튼 노출, 체크인 후 버튼 미노출, `GUEST_REQUEST`·최신 version·Idempotency-Key, `STALE_VERSION` 재조회·재확인, soft cancel 뒤 예약·객실·달력·bookability 재조회를 함께 검증한다.
 

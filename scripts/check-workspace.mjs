@@ -256,23 +256,27 @@ for (const contract of [
 if (html.includes('<span class="info-tip-mark" aria-hidden="true">!</span>')) {
   throw new Error('Legacy exclamation help glyph remains; use the ⓘ symbol.');
 }
-const availabilityPhaseStart = html.indexOf('function availabilitySubmissionPhase()');
-const availabilityPhaseSource = html.slice(availabilityPhaseStart, html.indexOf('function availabilityCell', availabilityPhaseStart));
-if (availabilityPhaseStart < 0) throw new Error('Maid availability submission phase source could not be resolved.');
 for (const contract of [
-  "AVAILABILITY_OPEN_TIME='12:00'",
-  "AVAILABILITY_CLOSE_TIME='23:59'",
-  'minutes<=closingMinutes',
-  '일요일 ${AVAILABILITY_OPEN_TIME}부터 ${AVAILABILITY_CLOSE_TIME}까지',
+  "function availabilitySubmissionWindowLabel() { return '모든 요일 · 모든 시각 제출 가능'; }",
+  '모든 요일 · 모든 시각 제출·수정 가능',
+  "mutationApiRequest('/v1/availability/submissions',{body})",
+  "submittedAt=`${Number(state.selectedDate.slice(5,7))}/${Number(state.selectedDate.slice(8))} ${state.time}`",
+]) {
+  if (!html.includes(contract)) throw new Error(`Maid availability anytime submission contract missing: ${contract}`);
+}
+for (const retired of [
+  'function availabilitySubmissionPhase()',
+  'liveAvailabilitySubmissionWindowOpen',
+  'submit-live-availability-change',
+  'request-availability-change',
+  'OUTSIDE_AVAILABILITY_WINDOW',
+  '일요일 12:00',
   '일요일 23:59 마감 후',
 ]) {
-  if (!html.includes(contract)) throw new Error(`Maid availability submission window contract missing: ${contract}`);
-}
-if (availabilityPhaseSource.includes("timeMinutes('22:00')") || /일요일[^\n]{0,40}22:00/.test(html)) {
-  throw new Error('Legacy Sunday 22:00 maid availability deadline remains.');
+  if (html.includes(retired)) throw new Error(`Legacy maid availability submission window remains: ${retired}`);
 }
 const availabilityEditStart = html.indexOf("if(a==='edit-week-availability')");
-const availabilityEditSource = html.slice(availabilityEditStart, html.indexOf("if(a==='request-availability-change')", availabilityEditStart));
+const availabilityEditSource = html.slice(availabilityEditStart, html.indexOf("if(a==='random-assignments')", availabilityEditStart));
 if (availabilityEditStart < 0) throw new Error('Maid availability edit handler source could not be resolved.');
 for (const contract of ['state.availabilityEditing=true', "state.availabilityDraft=[...(record?.days||[])]"]) {
   if (!availabilityEditSource.includes(contract)) throw new Error(`Maid availability edit-draft contract missing: ${contract}`);
@@ -1625,8 +1629,8 @@ for (const contract of ['추가 검증 · 관리자 설명 간소화와 도움�
 for (const contract of ['추가 검증 · 메이드 설명 간소화와 도움말', '시나리오 코치 0개', 'maid-copy-cleanup-390.png', 'maid-info-tooltip-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Maid copy/help QA documentation missing: ${contract}`);
 }
-for (const contract of ['추가 검증 · 메이드 근무 가능일 제출 시간', '일요일 12:00부터 23:59까지 제출 가능', '일요일 11:59', '12:00', '22:15', '23:59', '수정 중 마감', '관리자 집계도 9/9', 'maid-weekly-availability-390.png']) {
-  if (!qa.includes(contract)) throw new Error(`Maid availability submission window QA contract missing: ${contract}`);
+for (const contract of ['추가 검증 · 메이드 근무 가능일 상시 제출', '모든 요일 · 모든 시각 제출·수정 가능', '월요일 00:00', '토요일 23:59', '직접 재제출', '관리자 집계도 9/9', 'maid-weekly-availability-anytime-390.png']) {
+  if (!qa.includes(contract)) throw new Error(`Maid availability anytime submission QA contract missing: ${contract}`);
 }
 for (const contract of [
   '추가 검증 · 전일 미배정·미완료 청소 이월',
@@ -1970,7 +1974,7 @@ console.log('Admin copy/help static contracts: passed');
 console.log('Maid copy/help static contracts: passed');
 console.log('Maid photo-only workflow static contracts: passed');
 console.log('Required TV-on checkout photo static contracts: passed');
-console.log('Maid availability submission window static contracts: passed');
+console.log('Maid availability anytime submission static contracts: passed');
 console.log('Cleaning rollover static contracts: passed');
 console.log('Reservation guest-count static contracts: passed');
 console.log('Portable path scan: passed');
@@ -2514,7 +2518,7 @@ for(const contract of [
   'function loadLiveDeveloperStatus(){',
   "mutationApiRequest('/v1/reservations/cleaning-requests'",
   'pin-sync-events`',
-  "path=changeRequest?'/v1/availability/change-requests'",
+  "mutationApiRequest('/v1/availability/submissions',{body})",
   'function renderLivePendingView(view){',
   "if(view==='today')return renderLiveAdminToday();",
   "if(view==='quickReservation')return renderLiveReservations();",
