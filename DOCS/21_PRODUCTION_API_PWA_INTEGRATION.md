@@ -2,7 +2,7 @@
 
 작성일: 2026-08-31
 
-최종 갱신: 2026-09-21 · 백엔드 `v0.5.0` (128 paths / 138 operations)
+최종 갱신: 2026-09-22 · 예약 상세 모달 OpenAPI v0.5.0 인원 계약 복구 배포
 
 ## 연결 대상으로 확정한 프로젝트
 
@@ -72,6 +72,8 @@ Pages workflow는 `RMS_APP_ORIGIN`이 설정된 전용 origin에서는 정적 �
 2026-09-20에 OpenAPI v0.4.0 객실 상태·기간 예약 정합 산출물을 같은 project에 다시 배포했다. 배포된 `index.html` SHA-256은 로컬 정본과 동일했고, 전용 origin의 CORS·health·OpenAPI 0.4.0 120 paths / 130 operations 및 브라우저 안전 runtime config를 읽기 전용으로 재확인했다. 운영 업무 데이터에는 로그인하거나 mutation하지 않았고, 배포 정적 화면은 runtime config만 demo로 가로챈 hosted 브라우저 smoke로 관리자·메이드 전체 1차 내비게이션을 검수했다.
 
 2026-09-21에 근무 가능일 상시 제출과 OpenAPI v0.5.0 생성 타입을 반영한 운영 산출물을 같은 production project에 배포했다. 고정 origin의 `index.html` SHA-256 `45bb654c97c10da9f75245889d9635804b99a9617b789ac0e3638b99b65f4661`은 병합된 와이어프레임 정본과 일치했다. 운영 runtime config의 live·production·local 세션 정책, 전용 origin CORS, health, OpenAPI v0.5.0 128 paths / 138 operations과 가능일 상시 제출 계약을 읽기 전용으로 확인했다. hosted 브라우저 smoke는 runtime config만 demo로 가로채 관리자·메이드 전체 1차 내비게이션과 360/390/768/1440px 가로 넘침·console/page error 0건을 확인했으며, 운영 계정 로그인이나 mutation은 실행하지 않았다.
+
+2026-09-22에 예약 상세·변경 모달의 `guestCount` preview 계약, 객실별 예약 재조회, 객실 유형 기준·최대 인원 표시와 서비스 워커 `2026-09-22-1`을 반영한 운영 산출물을 production project에 배포했다. 고정 origin `https://room-management-system-prod.vercel.app`의 `index.html` SHA-256 `6fdac9419395ce4a74dd36325a90b541c8d1926507b37a3bdad65e3a2b3cb021`은 `dev` 병합 정본과 일치한다. runtime config는 live·production·local 세션·운영 project ref를 유지했고, production origin preflight는 204와 정확한 origin echo·credentials·GET/POST/PATCH/OPTIONS·필수 headers를 반환했다. hosted smoke는 runtime config만 demo로 가로채 관리자·메이드 전체 1차 내비게이션과 360/390/768/1440px 가로 넘침·console/page error 0건을 확인했다. 운영 계정 로그인이나 예약 mutation은 실행하지 않았다.
 
 Vercel Preview는 production deployment와 분리한다. Preview 범위에는 `RMS_RUNTIME_MODE`, `RMS_API_BASE_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `RMS_SESSION_PERSISTENCE`, `RMS_DEPLOYMENT_CHANNEL` 이름만 등록하고 `RMS_DEPLOYMENT_CHANNEL=preview`, `RMS_SESSION_PERSISTENCE=session`으로 빌드한다. 화면 상단에는 로그인 전부터 `운영 API 연결 중 · Preview`를 표시해 운영 데이터를 사용하는 사전 확인 환경임을 알린다. publishable key 원문은 코드·PR·문서·스크린샷에 남기지 않으며 Preview 산출물의 브라우저 공개 runtime config에만 포함한다. Preview 자동 검증은 health·OpenAPI·CORS와 로컬 계약 fixture만 사용하고 인증 업무 데이터나 mutation을 실행하지 않는다. 수동 검수용 고정 Preview origin은 운영 Edge Function의 `CORS_ORIGINS`에 정확히 추가한 뒤 preflight 204를 확인해야 하며, 임시 배포 URL 전체나 wildcard를 허용하지 않는다.
 
