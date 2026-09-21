@@ -427,9 +427,9 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 
 ### 예약 기간 가능성 방어
 
-- 미래 예약 가능 여부는 `POST /v1/reservations/bookability/preview`의 `intervalBookable`을 정본으로 판단한다. OpenAPI v0.5.0의 필수 `guestCount`를 항상 보내고 응답의 같은 값을 대조한다. 현재 `allocationReady`·`checkInReady`가 거짓이어도 미래 기간 option과 달력 행을 잠그지 않는다.
+- 미래 예약 가능 여부는 `POST /v1/reservations/bookability/preview`의 `intervalBookable`을 정본으로 판단한다. 모달을 열기 전에는 optional `guestCount`를 생략해 기간만 판정하고, 폼이 열린 뒤부터 화면의 실제 인원수를 보내 응답의 같은 값을 대조한다. 현재 `allocationReady`·`checkInReady`가 거짓이어도 미래 기간 option과 달력 행을 잠그지 않는다.
 - 간편 예약 달력은 `GET /v1/reservations?from=&to=&cursor=`를 사용해 표시 29일과 겹치는 예약만 읽고 opaque cursor를 그대로 이어 간다. 예약은 `[checkInAt, checkOutAt)`에만 표시하며 겹치지 않는 이후 날짜는 선택 가능하게 둔다.
-- 등록 모달 진입·기간 또는 예약 유형 변경·제출 직전에 같은 기간을 preview한다. 선택 후보가 `intervalBookable === true`일 때 그 후보의 `roomStateVersion`을 `expectedRoomVersion`으로 POST한다.
+- 폼의 stepper·기간·예약 유형을 바꾸거나 제출할 때마다 같은 실제 인원수로 preview한다. 생성·변경 명령의 `guestCount`는 계속 필수이며 마지막 preview와 일치해야 한다. 선택 후보가 `intervalBookable === true`일 때 그 후보의 `roomStateVersion`을 `expectedRoomVersion`으로 POST한다. `GUEST_COUNT_EXCEEDS_ROOM_TYPE_CAPACITY`는 선택 인원이 객실 유형 최대 인원을 넘었다는 예약 불가 사유로 표시하고 `checkInReady`와 섞지 않는다.
 - 객실 전체 상세는 `GET /v1/reservations?roomId=`를 함께 조회해 `예약 관리`가 오래된 전체 목록에 의존하지 않게 한다. 활성 예약 상세는 서버 단건 조회 뒤 기존 와이어프레임의 `예약 취소 / 다음 예약 등록 / 닫기 / 예약정보 수정 저장` 구조로 열고, 객실 유형 카탈로그의 `baseOccupancy`·`maxOccupancy`로 인원 기본값과 상한을 표시한다.
 - `checkInReady`는 현재 청소·PIN 준비 안내에만 사용한다. PIN 불일치·미설정은 미래 `intervalBookable`을 프런트에서 덮어쓰지 않는다.
 - 서버가 `ROOM_ALLOCATION_BLOCKED` 또는 `STALE_VERSION`을 반환하면 경쟁 상태로 보고 객실 목록을 다시 읽는다. 서버 내부 message가 아니라 `error.code`에 대응하는 안내와 최신 차단 사유, 문의용 `requestId`를 표시한다.
@@ -456,7 +456,7 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 
 로컬 서버와 Pages live 산출물의 `featureFlags.optionalCleaningWorkflow`는 true다. 운영 모드에서 API 실패 시 fixture로 전환하지 않는다. `WIREFRAME/cleaning-api.d.ts`는 코드 생성 정본 OpenAPI v0.5.0에서 생성하며 생성 파일을 직접 수정하지 않는다. 상세 endpoint·CAS·멱등·권한·오류 매핑은 `DOCS/23_CLEANING_API_INTEGRATION.md`를 따른다.
 
-검증은 `node scripts/check-workspace.mjs`, `node scripts/check-api-integration.mjs`, `node scripts/generate-cleaning-client.mjs --production --check`, Playwright가 설치된 Node 환경에서 `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-cleaning-workflow.mjs`, `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-operational-api.mjs`, `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-reservation-bookability.mjs`를 사용한다. 배포 뒤 정적 자산·전 화면 반응형 검수는 `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-deployed-visual.mjs`로 실행한다. 브라우저 회귀는 업무 요청을 로컬 fixture로 가로채거나 hosted runtime config만 demo로 대체하며 운영 mutation을 실행하지 않는다. 예약 취소 회귀는 체크인 전 버튼 노출, 체크인 후 버튼 미노출, `GUEST_REQUEST`·최신 version·Idempotency-Key, `STALE_VERSION` 재조회·재확인, soft cancel 뒤 예약·객실·달력·bookability 재조회를 함께 검증한다.
+검증은 `node scripts/check-workspace.mjs`, `node scripts/check-api-integration.mjs`, `node scripts/generate-cleaning-client.mjs --production --check`, Playwright가 설치된 Node 환경에서 `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-cleaning-workflow.mjs`, `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-operational-api.mjs`, `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-reservation-bookability.mjs`를 사용한다. 배포 뒤 정적 자산·전 화면 반응형 검수는 `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-deployed-visual.mjs`로 실행한다. 브라우저 회귀는 업무 요청을 로컬 fixture로 가로채거나 hosted runtime config만 demo로 대체하며 운영 mutation을 실행하지 않는다. 예약 회귀는 초기 optional bookability 요청의 `guestCount` 생략, 폼·stepper 실제 인원 preview, create payload 인원 일치와 체크인 전 취소, `GUEST_REQUEST`·최신 version·Idempotency-Key, `STALE_VERSION` 재조회·재확인, soft cancel 뒤 예약·객실·달력·bookability 재조회를 함께 검증한다.
 
 운영 연결 뒤에도 UI 정본은 기존 와이어프레임이다. 관리자 오늘 화면의 네 상태 카드, 객실 목록의 열·PIN 관리·네 작업 버튼, 객실 상세, 청소의 다섯 탭과 단계형 배정 화면을 유지하고 API 객체를 그 자리에 투영한다. API에 없는 값은 fixture나 추정값으로 채우지 않고 `API 미제공` 또는 계약 부재 상태로 표시한다.
 
