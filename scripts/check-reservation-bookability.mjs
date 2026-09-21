@@ -14,7 +14,7 @@ const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric
 const day=offset=>{const value=new Date(`${today}T00:00:00Z`);value.setUTCDate(value.getUTCDate()+offset);return value.toISOString().slice(0,10);};
 const at=(date,time)=>`${date}T${time}:00+09:00`,serverTime=at(today,'10:00'),existingIn=at(day(3),'16:00'),existingOut=at(day(4),'11:00'),currentIn=at(day(-1),'16:00'),currentOut=at(day(2),'11:00');
 const source=await readFile(resolve('WIREFRAME/index.html'),'utf8');
-const html=source.replace('\n      void bootApplication();',`window.__reservationQA={setup:async view=>{localStorage.clear();sessionStorage.clear();LIVE_RUNTIME.mode='live';LIVE_RUNTIME.status='ready';LIVE_RUNTIME.config=normalizeRuntimeConfig({apiBaseUrl:'${api}',supabaseUrl:'https://aodikrxcczbogjpsjwjt.supabase.co',supabasePublishableKey:'sb_publishable_abcdefghijklmnopqrstuvwxyz1234',sessionPersistence:'session',deploymentChannel:'preview',featureFlags:{optionalCleaningWorkflow:false}});state.remote=initialRemoteState();state.remote.auth={...state.remote.auth,status:'authenticated',user:{profileId:'${ids.admin}',displayName:'QA 관리자',role:'admin',mustChangePassword:false},session:{accessToken:'qa-access-token',refreshToken:'qa-refresh-token',expiresAt:Date.now()+3600000}};state.remote.accounts={...state.remote.accounts,status:'ready',items:[]};state.remote.rooms={...state.remote.rooms,status:'ready',items:window.__QA_ROOMS,lastSuccessAt:new Date().toISOString()};state.remote.roomTypes={...state.remote.roomTypes,status:'ready',items:window.__QA_ROOM_TYPES};state.remote.reservations={...state.remote.reservations,status:'ready',items:window.__QA_RESERVATIONS};state.remote.availability={...state.remote.availability,status:'ready',items:[],changeRequests:[]};state.role='admin';state.liveView=view;state.quickReservationAnchorDate='${today}';state.quickReservationFollowsToday=true;syncAuthState(state);render();if(view==='quickReservation')await loadLiveReservationCalendar();},view:async view=>{liveRoomDetail=null;state.liveView=view;render();if(view==='quickReservation')await loadLiveReservationCalendar();},today:async()=>{state.quickReservationAnchorDate='${today}';state.quickReservationFollowsToday=true;render();await loadLiveReservationCalendar();},get:()=>({view:state.liveView,rooms:state.remote.rooms,reservations:state.remote.reservations,currentRangeKey:liveReservationCalendarRange().key,quickReservationAnchorDate:state.quickReservationAnchorDate}),range:(room,start,end)=>createQuickReservationFromRange(room,start,end)};`);
+const html=source.replace('\n      void bootApplication();',`window.__reservationQA={setup:async view=>{localStorage.clear();sessionStorage.clear();LIVE_RUNTIME.mode='live';LIVE_RUNTIME.status='ready';LIVE_RUNTIME.config=normalizeRuntimeConfig({apiBaseUrl:'${api}',supabaseUrl:'https://aodikrxcczbogjpsjwjt.supabase.co',supabasePublishableKey:'sb_publishable_abcdefghijklmnopqrstuvwxyz1234',sessionPersistence:'session',deploymentChannel:'preview',featureFlags:{optionalCleaningWorkflow:false}});state.remote=initialRemoteState();state.remote.auth={...state.remote.auth,status:'authenticated',user:{profileId:'${ids.admin}',displayName:'QA 관리자',role:'admin',mustChangePassword:false},session:{accessToken:'qa-access-token',refreshToken:'qa-refresh-token',expiresAt:Date.now()+3600000}};state.remote.accounts={...state.remote.accounts,status:'ready',items:[]};state.remote.rooms={...state.remote.rooms,status:'ready',items:window.__QA_ROOMS,lastSuccessAt:new Date().toISOString()};state.remote.roomTypes={...state.remote.roomTypes,status:'ready',items:window.__QA_ROOM_TYPES};state.remote.reservations={...state.remote.reservations,status:'ready',items:window.__QA_RESERVATIONS};state.remote.availability={...state.remote.availability,status:'ready',items:[],changeRequests:[]};state.role='admin';state.liveView=view;state.quickReservationAnchorDate='${today}';state.quickReservationFollowsToday=true;syncAuthState(state);render();if(view==='quickReservation')await loadLiveReservationCalendar();},view:async view=>{liveRoomDetail=null;state.liveView=view;render();if(view==='quickReservation')await loadLiveReservationCalendar();},today:async()=>{state.quickReservationAnchorDate='${today}';state.quickReservationFollowsToday=true;render();await loadLiveReservationCalendar();},get:()=>({view:state.liveView,rooms:state.remote.rooms,reservations:state.remote.reservations,currentRangeKey:liveReservationCalendarRange().key,quickReservationAnchorDate:state.quickReservationAnchorDate}),range:(room,start,end)=>createQuickReservationFromRange(room,start,end),open:(room,checkInAt,checkOutAt)=>openLiveReservationCreate(room,document.activeElement,{checkInAt,checkOutAt})};`);
 
 const room=(id,roomNumber,primaryDisplayStatus,overrides={})=>({id,roomNumber,roomTypeCode:'standard',roomTypeName:'스탠다드',elevatorZone:'A',dataStatus:'verified',stateVersion:overrides.stateVersion||1,evaluatedAt:serverTime,reservationPhase:'none',serverTime,occupancyStatus:'VACANT',reservationLifecycle:'NONE',readinessStatus:'READY',primaryDisplayStatus,nextReservationId:null,nextCheckInAt:null,nextCheckOutAt:null,blockingReasonCodes:[],readinessReasonCodes:[],occupied:false,cleaningRequired:false,candleCount:0,pinSyncStatus:'verified',allocationBlocked:false,allocationReady:true,reasonCodes:[],...overrides});
 let rooms=[
@@ -27,8 +27,9 @@ let rooms=[
 ];
 const reservation=(id,roomId,checkInAt,checkOutAt,version=1)=>({id,roomId,reservationType:'standard',checkInAt,checkOutAt,guestCount:2,status:'active',preparationObligationId:'50000000-0000-4000-8000-000000000001',checkoutObligationId:'50000000-0000-4000-8000-000000000002',version,actualCheckInAt:null,actualCheckoutAt:null,cancelledAt:null,createdAt:serverTime,updatedAt:serverTime});
 let reservations=[reservation(ids.reservation,ids.reserved,existingIn,existingOut,3),reservation(ids.currentReservation,ids.occupied,currentIn,currentOut,5),{...reservation(ids.checkedOut,ids.reserved,at(day(-6),'16:00'),at(day(-4),'11:00'),4),status:'checked_out',actualCheckoutAt:at(day(-4),'11:00')},{...reservation(ids.cancelled,ids.reserved,at(day(-3),'16:00'),at(day(-2),'11:00'),2),status:'cancelled',cancelledAt:at(day(-5),'09:00')}];
+const reservationFixtures=[...reservations];
 const roomTypes=[{id:ids.standard,code:'standard',displayName:'스탠다드',baseCleaningFee:16000,baseOccupancy:2,maxOccupancy:3,active:true,version:1,roomCount:6},{id:ids.premium,code:'premium',displayName:'프리미어',baseCleaningFee:20000,baseOccupancy:2,maxOccupancy:3,active:true,version:1,roomCount:0}];
-const requests=[],receipts=new Map();let cancelAttempts=0;
+const requests=[],receipts=new Map();let cancelAttempts=0,forceCreateOverlap=false;
 const json=(route,value,status=200,headers={})=>route.fulfill({status,contentType:'application/json',headers:{'x-request-id':'qa-reservation-040',...headers},body:JSON.stringify(value)});
 const overlaps=(start,end,res)=>start<(res.checkOutAt||'9999-12-31T23:59:59+09:00')&&(end||'9999-12-31T23:59:59+09:00')>res.checkInAt;
 
@@ -56,7 +57,9 @@ await page.route(`${api}/**`,async route=>{
   }
   if(method==='PATCH'&&path.startsWith('/v1/reservations/')){assert(key,'Reservation update requires Idempotency-Key');const id=decodeURIComponent(path.split('/')[3]),current=reservations.find(item=>item.id===id);assert.equal(payload.expectedVersion,current.version);assert.equal(payload.guestCount,2);const updated={...current,checkInAt:payload.checkInAt,checkOutAt:payload.checkOutAt,guestCount:payload.guestCount,version:current.version+1,updatedAt:serverTime};reservations=reservations.map(item=>item.id===id?updated:item);return send({reservation:updated});}
   if(method==='POST'&&path==='/v1/reservations'){
-    assert(key,'Reservation create requires Idempotency-Key');assert.equal(payload.reservationType,'standard');assert.equal(payload.expectedRoomVersion,11);assert.equal(payload.guestCount,2);const created={...reservation(ids.created,payload.roomId,payload.checkInAt,payload.checkOutAt,1),guestCount:payload.guestCount};reservations.push(created);return send({reservation:created},201);
+    assert(key,'Reservation create requires Idempotency-Key');assert.equal(payload.reservationType,'standard');assert.equal(payload.expectedRoomVersion,rooms.find(item=>item.id===payload.roomId)?.stateVersion);assert.equal(payload.guestCount,2);
+    if(forceCreateOverlap){forceCreateOverlap=false;reservations.push(reservation('40000000-0000-4000-8000-000000000006',payload.roomId,payload.checkInAt,payload.checkOutAt));return json(route,{error:{code:'RESERVATION_OVERLAP',message:'overlapping reservation'},requestId:'qa-overlap-race'},409);}
+    const created={...reservation(ids.created,payload.roomId,payload.checkInAt,payload.checkOutAt,1),guestCount:payload.guestCount};reservations.push(created);return send({reservation:created},201);
   }
   if(method==='POST'&&path===`/v1/reservations/${ids.created}/cancel`){
     assert(key,'Reservation cancel requires Idempotency-Key');assert.equal(payload.reasonCode,'GUEST_REQUEST');const current=reservations.find(item=>item.id===ids.created);assert.equal(payload.expectedVersion,current.version);cancelAttempts+=1;
@@ -90,9 +93,60 @@ async function checkHistoricalReservations(){
   }
 }
 
+async function checkReservationOverlapModal(){
+  await setup('rooms');
+  await page.evaluate(({room,checkInAt,checkOutAt})=>window.__reservationQA.open(room,checkInAt,checkOutAt),{room:ids.reserved,checkInAt:`${day(3)}T16:00`,checkOutAt:`${day(4)}T11:00`});
+  await page.getByRole('alertdialog',{name:'예약 중복'}).waitFor();
+  assert.equal(await page.locator('#modal-title').textContent(),'350호 다음 예약 등록');
+  assert.equal(await page.locator('#live-reservation-room').inputValue(),ids.reserved);
+  assert.equal(await page.locator('#live-reservation-checkin').inputValue(),`${day(3)}T16:00`);
+  assert.equal(await page.locator('#live-reservation-checkout').inputValue(),`${day(4)}T11:00`);
+  assert.equal(await page.locator('#live-reservation-guests').inputValue(),'2');
+  assert.equal(await page.locator('[data-action="submit-live-reservation-create"]').isDisabled(),true);
+  await page.evaluate(()=>{window.__overlapForm=document.getElementById('live-reservation-form');});
+  await responsive('reservation overlap alert');
+  await page.screenshot({path:resolve('WIREFRAME/QA/screenshots/live-reservation-overlap-modal-390.png')});
+  await page.keyboard.press('Escape');
+  assert.equal(await page.getByRole('alertdialog',{name:'예약 중복'}).count(),0);
+  assert.equal(await page.evaluate(()=>window.__overlapForm===document.getElementById('live-reservation-form')),true);
+  assert.equal(await page.evaluate(()=>document.activeElement?.id),'live-reservation-room');
+  await page.locator('#live-reservation-guest-name').fill('테스트 고객');
+  await page.locator('#live-reservation-room').selectOption(ids.ready);
+  await page.getByText('211호 선택 기간 예약 가능',{exact:true}).waitFor();
+  assert.equal(await page.locator('#live-reservation-guest-name').inputValue(),'테스트 고객');
+  assert.equal(await page.locator('#live-reservation-checkin').inputValue(),`${day(3)}T16:00`);
+  assert.equal(await page.locator('#live-reservation-checkout').inputValue(),`${day(4)}T11:00`);
+  assert.equal(await page.locator('[data-action="submit-live-reservation-create"]').isEnabled(),true);
+  await page.getByRole('button',{name:'취소',exact:true}).last().click();
+
+  await page.evaluate(({room,checkInAt,checkOutAt})=>window.__reservationQA.open(room,checkInAt,checkOutAt),{room:ids.ready,checkInAt:`${day(8)}T16:00`,checkOutAt:`${day(9)}T11:00`});
+  await page.locator('#live-reservation-guest-name').fill('재시도 고객');
+  await page.evaluate(()=>{window.__raceForm=document.getElementById('live-reservation-form');});
+  forceCreateOverlap=true;
+  const attemptedBefore=requests.filter(item=>item.path==='/v1/reservations'&&item.method==='POST').length;
+  await page.locator('[data-action="submit-live-reservation-create"]').click();
+  await page.getByRole('alertdialog',{name:'예약 중복'}).waitFor();
+  assert.equal(requests.filter(item=>item.path==='/v1/reservations'&&item.method==='POST').length,attemptedBefore+1);
+  assert.equal(await page.evaluate(()=>window.__raceForm===document.getElementById('live-reservation-form')),true);
+  assert.equal(await page.locator('#live-reservation-guest-name').inputValue(),'재시도 고객');
+  assert.equal(await page.locator('#live-reservation-checkin').inputValue(),`${day(8)}T16:00`);
+  assert.equal(await page.locator('#live-reservation-checkout').inputValue(),`${day(9)}T11:00`);
+  assert.equal(await page.locator('[data-action="submit-live-reservation-create"]').isDisabled(),true);
+  await page.getByRole('button',{name:'다른 객실 선택'}).click();
+  await page.locator('#live-reservation-room').selectOption(ids.reserved);
+  await page.getByText('350호 선택 기간 예약 가능',{exact:true}).waitFor();
+  assert.equal(await page.locator('#live-reservation-guest-name').inputValue(),'재시도 고객');
+  await page.locator('[data-action="submit-live-reservation-create"]').click();
+  await page.waitForFunction(()=>!document.querySelector('.modal'));
+  assert.equal(reservations.find(item=>item.id===ids.created)?.roomId,ids.reserved);
+  assert.equal(requests.filter(item=>item.path==='/v1/reservations'&&item.method==='POST').length,attemptedBefore+2);
+  reservations=[...reservationFixtures];requests.length=0;receipts.clear();
+}
+
 const passed=[];
 try{
   await checkHistoricalReservations();passed.push('체크아웃 완료·취소 예약은 상세 GET만 사용하고 편집 preview·명령 없이 읽기 전용 표시');
+  await checkReservationOverlapModal();passed.push('사전 중복·생성 시점 409 모두 예약 모달과 입력값을 유지하고 객실만 바꿔 재시도');
   await mkdir(resolve('WIREFRAME/QA/screenshots'),{recursive:true});await setup('rooms');
   await page.locator('[data-live-room="211"]').getByText('배정 가능',{exact:true}).waitFor();assert(await page.locator('[data-live-room="350"]').getByText('예약 있음',{exact:true}).isVisible());assert(await page.locator('[data-live-room="516"]').getByText('청소 필요',{exact:true}).isVisible());assert(await page.locator('[data-live-room="528"]').getByText('투숙 중',{exact:true}).isVisible());assert(await page.locator('[data-live-room="536"]').getByText('입실 예정',{exact:true}).isVisible());assert(await page.locator('[data-live-room="540"]').getByText('배정 불가',{exact:true}).isVisible());passed.push('primaryDisplayStatus 여섯 상태를 레거시 플래그보다 우선 표시');
   await responsive('rooms');await page.setViewportSize({width:390,height:1000});await page.screenshot({path:resolve('WIREFRAME/QA/screenshots/openapi-v040-rooms-390.png'),fullPage:true});
