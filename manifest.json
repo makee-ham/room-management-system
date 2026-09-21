@@ -1,7 +1,7 @@
 {
   "package": "CASTLE THE ART room management wireframe",
-  "version": "2026-09-22-reservation-modal-api-v0.5.0",
-  "generated_at_kst": "2026-09-22T00:00:04+09:00",
+  "version": "2026-09-22-reservation-preview-guest-count-v0.5.1",
+  "generated_at_kst": "2026-09-22T00:10:51+09:00",
   "repository": "https://github.com/makee-ham/room-management-system",
   "entrypoint": "WIREFRAME/index.html",
   "policy_source": "DOCS/FINAL_UX_AUDIT.md",
@@ -17,8 +17,8 @@
   "developer_room_catalog_capacity_handoff": "DOCS/25_DEVELOPER_ROOM_CATALOG_CAPACITY_BACKEND_PROMPT.md",
   "sha256": {
     "DOCS/FINAL_UX_AUDIT.md": "e479e468c32c27ef606a311fd090ed7a4a8718590d363c9634da014960956c78",
-    "WIREFRAME/index.html": "6fdac9419395ce4a74dd36325a90b541c8d1926507b37a3bdad65e3a2b3cb021",
-    "DOCS/25_DEVELOPER_ROOM_CATALOG_CAPACITY_BACKEND_PROMPT.md": "5a35919cc2894597c2dec0d876097d7a4fd07dd07b6d3509fc4c6fb9aa1795ba",
+    "WIREFRAME/index.html": "2b9e880671d3fe03e5256cd4947a06f37d00ba77b07b3fbc4af14bd87fe897b3",
+    "DOCS/25_DEVELOPER_ROOM_CATALOG_CAPACITY_BACKEND_PROMPT.md": "51ae5e63183cf939d693fa5e0119ddd9f53ed1ad845d26b51eac8389a5f4fe98",
     "DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md": "eec820aabd2551083d782dc19531bd1c785c46d2cc85668a230fbf7e243cf97f"
   },
   "runtime": {
