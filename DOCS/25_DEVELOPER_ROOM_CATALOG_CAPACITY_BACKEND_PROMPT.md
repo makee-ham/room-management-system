@@ -193,9 +193,9 @@ preview와 값·version·영향이 달라졌으면 `409`로 거절한다. 최대
 
 ## 7. 예약 인원 계약 연결
 
-- `POST /v1/reservations/bookability/preview` 요청에 `guestCount`를 계약상 포함해 각 candidate가 해당 유형의 `maxOccupancy`를 초과하는지 서버에서 판단하게 한다.
+- `POST /v1/reservations/bookability/preview`의 `guestCount`는 선택 필드다. 모달을 열기 전처럼 값을 생략하면 capacity 필터 없이 기간 bookability만 판정하고, 실제 인원 값이 있으면 각 candidate가 해당 유형의 `maxOccupancy`를 초과하는지 함께 판단한다. 임의 기본값을 서버나 프런트에서 보충하지 않는다.
 - 초과 후보는 `intervalBookable=false`와 안정적인 `GUEST_COUNT_EXCEEDS_ROOM_TYPE_CAPACITY` reason code를 반환한다. 이 판정은 `checkInReady`와 섞지 않는다.
-- 예약 생성·변경에서도 동일한 maxOccupancy를 다시 검증한다. preview를 통과했더라도 최신 type version과 capacity를 기준으로 commit 시 재검증한다.
+- 예약 생성·변경의 `guestCount`는 계속 필수다. 동일한 maxOccupancy를 다시 검증하며 preview를 통과했더라도 최신 type version과 capacity를 기준으로 commit 시 재검증한다.
 - `baseOccupancy` 초과는 예약 불가 사유가 아니다. 프런트의 `N명` 강조와 `인원 추가` 필터 기준으로만 사용한다.
 - 인원 기준 변경은 기존 예약의 guestCount, 과거 정산·청소 snapshot을 소급 수정하지 않는다.
 

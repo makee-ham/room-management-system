@@ -2045,7 +2045,7 @@ export interface paths {
         put?: never;
         /**
          * 임의 기간 객실 예약 가능성 미리보기
-         * @description 비밀번호 변경을 완료한 active business admin 전용 read-only preview입니다. standard는 미래 [checkInAt,checkOutAt) 구간을, checkOutAt=null인 long_stay는 checkInAt 이후 무기한 점유 구간을 canonical stay-segment overlap과 create/change 운영 차단 축으로 계산합니다. PIN mismatch/unconfigured는 evaluatedAt에 실제 current check-in pending인 경우에만 checkInReady와 reasonCodes에 나타나며 intervalBookable을 바꾸지 않습니다. excludeReservationId 생략/null은 무제외이고, UUID는 존재하고 아직 체크인하지 않은 active 예약 하나만 정확히 제외합니다. 이 결과는 commit 성공 보장이 아니며 create/change transaction이 최종 overlap 권위입니다.
+         * @description 비밀번호 변경을 완료한 active business admin 전용 read-only preview입니다. standard는 미래 [checkInAt,checkOutAt) 구간을, checkOutAt=null인 long_stay는 checkInAt 이후 무기한 점유 구간을 canonical stay-segment overlap과 create/change 운영 차단 축으로 계산합니다. guestCount 생략/null은 임의 기본값 없이 인원 상한 필터를 적용하지 않고, 양의 정수일 때만 최신 객실 유형 최대 인원을 검사합니다. PIN mismatch/unconfigured는 evaluatedAt에 실제 current check-in pending인 경우에만 checkInReady와 reasonCodes에 나타나며 intervalBookable을 바꾸지 않습니다. excludeReservationId 생략/null은 무제외이고, UUID는 존재하고 아직 체크인하지 않은 active 예약 하나만 정확히 제외합니다. 이 결과는 commit 성공 보장이 아니며 create/change transaction이 최종 overlap·인원 상한 권위입니다.
          */
         post: operations["previewReservationBookability"];
         delete?: never;
@@ -4768,8 +4768,8 @@ export interface components {
              * @description 예약 구간 종료(미포함). standard는 null을 허용하지 않음
              */
             checkOutAt: string;
-            /** @description 객실 유형 최대 인원 판정에 사용할 예약 총 인원 */
-            guestCount: number;
+            /** @description 선택값. 생략/null이면 인원 상한을 적용하지 않고 기간 가용성만 판정하며, 양의 정수이면 객실 유형 최대 인원을 함께 검사함 */
+            guestCount?: number | null;
             /**
              * Format: uuid
              * @description 자기 예약 변경 preview에서만 사용하는 active·체크인 전 예약 ID
@@ -4794,8 +4794,8 @@ export interface components {
              * @description null이면 checkInAt 이후 미래 전체를 점유하는 preview
              */
             checkOutAt: string | null;
-            /** @description 객실 유형 최대 인원 판정에 사용할 예약 총 인원 */
-            guestCount: number;
+            /** @description 선택값. 생략/null이면 인원 상한을 적용하지 않고 기간 가용성만 판정하며, 양의 정수이면 객실 유형 최대 인원을 함께 검사함 */
+            guestCount?: number | null;
             /**
              * Format: uuid
              * @description 자기 예약 변경 preview에서만 사용하는 active·체크인 전 예약 ID
@@ -4826,7 +4826,8 @@ export interface components {
             checkInAt: string;
             /** Format: date-time */
             checkOutAt: string | null;
-            guestCount: number;
+            /** @description 요청에서 생략/null이면 null, 양의 정수이면 해당 인원 수 */
+            guestCount: number | null;
             /** Format: uuid */
             excludeReservationId: string | null;
             /** Format: date-time */
@@ -14651,7 +14652,6 @@ export interface operations {
                  *       "reservationType": "standard",
                  *       "checkInAt": "2026-10-01T16:00:00+09:00",
                  *       "checkOutAt": "2026-10-02T11:00:00+09:00",
-                 *       "guestCount": 2,
                  *       "roomTypeIds": [],
                  *       "excludeReservationId": null
                  *     }

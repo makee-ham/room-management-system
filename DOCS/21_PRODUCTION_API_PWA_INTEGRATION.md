@@ -2,7 +2,7 @@
 
 작성일: 2026-08-31
 
-최종 갱신: 2026-09-22 · 예약 상세 모달 OpenAPI v0.5.0 인원 계약 복구 배포
+최종 갱신: 2026-09-22 · 예약 preview OpenAPI v0.5.1 선택형 인원 계약 준비
 
 ## 연결 대상으로 확정한 프로젝트
 
@@ -17,7 +17,7 @@
 - `/v1/auth/login`, Supabase refresh token, `/v1/auth/me`를 연결했다.
 - 전용 origin의 개인 기기에서는 `로그인 유지`를 켤 수 있고, access token 만료 전에 refresh token으로 세션을 갱신한다.
 - 관리자에게 운영 객실 읽기와 계정 생성·역할·상태·잠금·비밀번호 초기화 기능을 연결했다.
-- 백엔드 `v0.5.0`의 기간 예약 목록·예약 가능성 preview·단건 고객명 조회·등록·변경·취소·수동 체크아웃·객실 변경 preview/commit과 연박/추가 청소 요청 생성·취소를 연결했다. 고객명은 관리자 단건 모달의 현재 DOM에만 두고 목록·URL·로그·`localStorage`·`sessionStorage`에 남기지 않는다.
+- 백엔드 `v0.5.1`의 기간 예약 목록·예약 가능성 preview·단건 고객명 조회·등록·변경·취소·수동 체크아웃·객실 변경 preview/commit과 연박/추가 청소 요청 생성·취소를 연결했다. 예약 가능성 preview의 `guestCount`는 생략·`null`일 때 기간만 판정하고, 양의 정수를 보내면 객실 유형 정원을 함께 판정한다. 고객명은 관리자 단건 모달의 현재 DOM에만 두고 목록·URL·로그·`localStorage`·`sessionStorage`에 남기지 않는다.
 - 메이드의 다음 주 가능일 최초 제출과 직접 재제출을 모든 요일·모든 시각에 연결했다. 모든 제출은 현재 version을 CAS 값으로 보내고 멱등 키를 사용하며, 수정 중에는 기존 제출이 계속 유효하고 성공 시 새 immutable version이 current가 된다.
 - 객실 단건 projection, 객실 유형 카탈로그·기준정보 변경, 촛불 수량, 운영 차단, 객실 이슈, PIN 동기화 상태 기록을 연결했다. v0.5.0의 명시적 PIN reveal과 prepare/confirm/rollback 변경 흐름도 기존 객실 카드의 `보기·수정` UI에 연결하며 원문은 한 객실·최대 30초 메모리에만 둔다.
 - 개발자 기본 화면에 runtime·database·scheduler·계정/객실 요약을 연결했다. 설정은 `configured` 여부만 표시하고 값·길이·해시는 표시하지 않는다.

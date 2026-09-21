@@ -36,6 +36,7 @@ const required = [
   'WIREFRAME/QA/screenshots/openapi-v040-rooms-390.png',
   'WIREFRAME/QA/screenshots/openapi-v040-calendar-1440.png',
   'WIREFRAME/QA/screenshots/openapi-v040-reservation-create-390.png',
+  'WIREFRAME/QA/screenshots/openapi-v050-reservation-create-guest-count-390.png',
   'WIREFRAME/QA/screenshots/deployed-v040-rooms-390.png',
   'WIREFRAME/QA/screenshots/deployed-v040-calendar-1440.png',
   'WIREFRAME/QA/screenshots/optional-duration-template-390.png',
@@ -101,6 +102,7 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-reservation-cancel-1440.png',
   'WIREFRAME/QA/screenshots/admin-reservation-cancel-390.png',
   'WIREFRAME/QA/screenshots/openapi-v040-reservation-cancel-390.png',
+  'WIREFRAME/QA/screenshots/openapi-v050-reservation-create-guest-count-390.png',
   'WIREFRAME/QA/screenshots/vercel-preview-login-390.png',
   'WIREFRAME/QA/screenshots/vercel-preview-login-1440.png',
   'WIREFRAME/QA/screenshots/admin-reservation-guests-1440.png',
@@ -2572,8 +2574,12 @@ for(const contract of [
   "candidate.checkInReady?'선택 기간 예약 가능':'선택 기간 예약 가능 · 현재 입실 준비 필요'",
   "${selectable?'':'disabled'}",
   "apiRequest('/v1/reservations/bookability/preview'",
-  'guestCount:normalizedGuestCount',
-  'Number(preview.guestCount)!==normalizedGuestCount',
+  "guestCount==null?undefined:Number(guestCount)",
+  "...(normalizedGuestCount===undefined?{}:{guestCount:normalizedGuestCount})",
+  "normalizedGuestCount===undefined?preview?.guestCount==null:Number(preview?.guestCount)===normalizedGuestCount",
+  "guestCount=Number(document.getElementById('live-reservation-guests')?.value)",
+  "guestCount:reservation.guestCount",
+  "void refreshLiveReservationRoomSelection()",
   "excludeReservationId=form?.dataset.reservationId||null",
   'function liveRoomGuestPolicy(room)',
   'GUEST_COUNT_EXCEEDS_ROOM_TYPE_CAPACITY',
@@ -2646,8 +2652,41 @@ await import('./check-pwa.mjs');
 
 const cleaningTypes=readFileSync(resolve(root,'WIREFRAME/cleaning-api.d.ts'),'utf8');
 const generatedTypes=readFileSync(resolve(root,'src/api/generated/room-management-api.ts'),'utf8');
+function schemaBlock(source,start,end){
+  const startIndex=source.indexOf(start);
+  const endIndex=source.indexOf(end,startIndex+start.length);
+  if(startIndex<0||endIndex<0)throw new Error(`Generated schema boundary missing: ${start} -> ${end}`);
+  return source.slice(startIndex,endIndex);
+}
 for(const contract of ['export interface paths {','"/v1/reservations/{reservationId}/cancel"','cancelReservation: {','ReservationMutationRequest: {']){
   if(!generatedTypes.includes(contract))throw new Error(`openapi-typescript 7.13.0 generated contract missing: ${contract}`);
+}
+for(const [label,source,start,end] of [
+  ['cleaning standard preview',cleaningTypes,'export type ReservationBookabilityStandardPreviewRequest =','export type ReservationBookabilityLongStayPreviewRequest ='],
+  ['cleaning long-stay preview',cleaningTypes,'export type ReservationBookabilityLongStayPreviewRequest =','export type ReservationBookabilityPreview ='],
+  ['full standard preview',generatedTypes,'ReservationBookabilityStandardPreviewRequest: {','ReservationBookabilityLongStayPreviewRequest: {'],
+  ['full long-stay preview',generatedTypes,'ReservationBookabilityLongStayPreviewRequest: {','ReservationBookabilityPreviewRequest:'],
+]){
+  if(!schemaBlock(source,start,end).includes('guestCount?: number | null;'))throw new Error(`${label} must keep preview guestCount optional and nullable.`);
+}
+for(const [label,source,start,end] of [
+  ['cleaning standard create',cleaningTypes,'export type ReservationStandardCreateRequest =','export type ReservationLongStayCreateRequest ='],
+  ['cleaning long-stay create',cleaningTypes,'export type ReservationLongStayCreateRequest =','export type ReservationChangeRequest ='],
+  ['cleaning standard change',cleaningTypes,'export type ReservationStandardChangeRequest =','export type ReservationLongStayChangeRequest ='],
+  ['cleaning long-stay change',cleaningTypes,'export type ReservationLongStayChangeRequest =','export type ReservationBookabilityReasonCode ='],
+  ['full standard create',generatedTypes,'ReservationStandardCreateRequest: {','ReservationLongStayCreateRequest: {'],
+  ['full long-stay create',generatedTypes,'ReservationLongStayCreateRequest: {','ReservationCreateRequest:'],
+  ['full standard change',generatedTypes,'ReservationStandardChangeRequest: {','ReservationLongStayChangeRequest: {'],
+  ['full long-stay change',generatedTypes,'ReservationLongStayChangeRequest: {','ReservationChangeRequest:'],
+]){
+  const block=schemaBlock(source,start,end);
+  if(!block.includes('guestCount: number;')||block.includes('guestCount?:'))throw new Error(`${label} must keep guestCount required.`);
+}
+for(const [label,source,start,end] of [
+  ['cleaning preview response',cleaningTypes,'export type ReservationBookabilityPreview =','export type ReservationBookabilityPreviewEnvelope ='],
+  ['full preview response',generatedTypes,'ReservationBookabilityPreview: {','ReservationBookabilityPreviewEnvelope: {'],
+]){
+  if(!schemaBlock(source,start,end).includes('guestCount: number | null;'))throw new Error(`${label} must expose the evaluated optional guestCount as nullable.`);
 }
 if(!cleaningTypes.includes('durationMinutes?: number | null | undefined;')||!cleaningTypes.includes('durationMinutes: number | null;'))throw new Error('Optional nullable cleaning duration client contract missing.');
 for(const contract of ['export type RoomProjection =','primaryDisplayStatus: RoomPrimaryDisplayStatus;','export type ReservationBookabilityCandidate =','intervalBookable: boolean;','checkInReady: boolean;','export type ReservationRangePageEnvelope =','nextCursor: string | null;','export type ReservationRoomMovePreviewRequest =','export type ReservationRoomMoveCommitRequest =']){

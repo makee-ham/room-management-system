@@ -1,7 +1,7 @@
 # 클릭형 와이어프레임 QA
 
 - 검증일: 2026-09-22
-- 문서 갱신일: 2026-09-22 · 운영 예약 상세·변경 모달 복구와 OpenAPI v0.5.0 인원 계약 연결
+- 문서 갱신일: 2026-09-22 · 예약 preview OpenAPI v0.5.1 선택형 인원 계약 연결
 - 대상: `WIREFRAME/index.html`
 - 정책: `DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md`, `DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md`, `DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md`
 - 객실·단가 정본: `DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md`
@@ -1930,3 +1930,32 @@ Browser 플러그인이 제공되지 않아 `scripts/check-developer-room-manage
 - `QA/screenshots/live-developer-room-management-390.png`
 - `QA/screenshots/live-developer-room-management-1440.png`
 - `QA/screenshots/live-developer-room-capacity-390.png`
+
+## 2026-09-22 · 예약 가능 여부의 실제 투숙 인원 전달
+
+백엔드 OpenAPI v0.5.1의 optional `guestCount` 결정을 예약 생성·변경 UI에 반영했다. 모달을 열기 전 기간-only preview는 인원을 생략하고, 폼이 열린 뒤부터는 화면 stepper의 실제 값을 preview와 최종 명령에 함께 사용한다. 코드 생성 정본은 백엔드 `f7a3061fb9d40de201a97827359d5f9ea4f25f81`, full OpenAPI SHA-256 `0e828cac337545193d1832784b7614040601f1616079e400ef84b3cde9d7589e`이다. production 배포와 운영 데이터 mutation은 실행하지 않았다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 초기 모달 진입 | 통과 · 첫 `POST /v1/reservations/bookability/preview`에 `guestCount`를 넣지 않고 기간만 판정 |
+| 폼 초기값 재검증 | 통과 · 객실 유형의 기준 인원인 2명을 폼에 표시하고 즉시 후속 preview 실행 |
+| stepper 변경 | 통과 · 3명 변경 직후 새 preview를 실행하고 완료 전 제출 버튼 비활성 |
+| 장기 투숙 | 통과 · `checkOutAt:null`과 실제 2명을 함께 전송 |
+| 생성 직전 일치 | 통과 · 마지막 preview와 create가 같은 `guestCount:2`, 후보 `roomStateVersion`을 사용 |
+| 입력 방어 | 통과 · 정수 1명 이상만 허용하고 객실 유형 카탈로그의 최대 인원에서 stepper 증가 차단 |
+| capacity 오류 | 통과 · 프런트 카탈로그보다 최신인 서버 상한 판정을 `GUEST_COUNT_EXCEEDS_ROOM_TYPE_CAPACITY` 안내로 표시 |
+| 반응형 | 통과 · 예약 모달 360/390/768/1440px 가로 넘침 0건 |
+| 브라우저 품질 | 통과 · Chrome 153.0.8010.48, page error·console warning/error 0건 |
+
+Browser 플러그인이 제공되지 않아 저장소 Playwright 회귀를 사용했다. 모든 예약·취소·객실 이동 요청은 OpenAPI v0.5 형태의 로컬 fixture가 가로챘다.
+
+대표 PNG:
+
+- `QA/screenshots/openapi-v050-reservation-create-guest-count-390.png`
+
+## 2026-09-22 · 종료된 예약 상세 조회 충돌 회귀 (#168)
+
+- 운영 352호의 `checked_out` 예약은 상세 GET이 가능하지만, 화면이 편집용 bookability preview에 종료된 예약 ID를 제외 대상으로 전달해 `409 EXCLUDE_RESERVATION_NOT_ELIGIBLE`이 발생했다.
+- `checked_out`와 `cancelled`는 상세 GET의 보존된 정보만 읽기 전용으로 표시한다. 수정·취소·객실 이동 컨트롤과 bookability preview 요청은 만들지 않는다. 활성 예약의 기존 편집 preview는 유지한다.
+- 로컬 fixture 브라우저에서 두 종료 상태의 상세 표시·preview 0건·변경 컨트롤 0건과 활성 예약 수정 흐름을 확인했다. 고객명은 상세 모달에만 표시하고 목록 메모리에는 저장하지 않는다.
+- `node scripts/check-workspace.mjs`, `node scripts/check-reservation-bookability.mjs`: PASS. 운영 데이터 변경이나 운영 프런트 배포는 수행하지 않았다.
