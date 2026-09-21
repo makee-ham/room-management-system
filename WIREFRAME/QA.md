@@ -1952,3 +1952,10 @@ Browser 플러그인이 제공되지 않아 저장소 Playwright 회귀를 사�
 대표 PNG:
 
 - `QA/screenshots/openapi-v050-reservation-create-guest-count-390.png`
+
+## 2026-09-22 · 종료된 예약 상세 조회 충돌 회귀 (#168)
+
+- 운영 352호의 `checked_out` 예약은 상세 GET이 가능하지만, 화면이 편집용 bookability preview에 종료된 예약 ID를 제외 대상으로 전달해 `409 EXCLUDE_RESERVATION_NOT_ELIGIBLE`이 발생했다.
+- `checked_out`와 `cancelled`는 상세 GET의 보존된 정보만 읽기 전용으로 표시한다. 수정·취소·객실 이동 컨트롤과 bookability preview 요청은 만들지 않는다. 활성 예약의 기존 편집 preview는 유지한다.
+- 로컬 fixture 브라우저에서 두 종료 상태의 상세 표시·preview 0건·변경 컨트롤 0건과 활성 예약 수정 흐름을 확인했다. 고객명은 상세 모달에만 표시하고 목록 메모리에는 저장하지 않는다.
+- `node scripts/check-workspace.mjs`, `node scripts/check-reservation-bookability.mjs`: PASS. 운영 데이터 변경이나 운영 프런트 배포는 수행하지 않았다.

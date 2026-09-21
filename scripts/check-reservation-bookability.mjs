@@ -9,7 +9,7 @@ import {resolve} from 'node:path';
 const require=createRequire(import.meta.url),{chromium}=require('playwright');
 const origin=process.env.RMS_QA_ORIGIN||'http://127.0.0.1:4180';
 const api='https://aodikrxcczbogjpsjwjt.supabase.co/functions/v1/api';
-const ids={admin:'10000000-0000-4000-8000-000000000001',standard:'20000000-0000-4000-8000-000000000001',premium:'20000000-0000-4000-8000-000000000002',ready:'30000000-0000-4000-8000-000000000001',reserved:'30000000-0000-4000-8000-000000000002',cleaning:'30000000-0000-4000-8000-000000000003',occupied:'30000000-0000-4000-8000-000000000004',arrival:'30000000-0000-4000-8000-000000000005',blocked:'30000000-0000-4000-8000-000000000006',reservation:'40000000-0000-4000-8000-000000000001',created:'40000000-0000-4000-8000-000000000002',currentReservation:'40000000-0000-4000-8000-000000000003'};
+const ids={admin:'10000000-0000-4000-8000-000000000001',standard:'20000000-0000-4000-8000-000000000001',premium:'20000000-0000-4000-8000-000000000002',ready:'30000000-0000-4000-8000-000000000001',reserved:'30000000-0000-4000-8000-000000000002',cleaning:'30000000-0000-4000-8000-000000000003',occupied:'30000000-0000-4000-8000-000000000004',arrival:'30000000-0000-4000-8000-000000000005',blocked:'30000000-0000-4000-8000-000000000006',reservation:'40000000-0000-4000-8000-000000000001',created:'40000000-0000-4000-8000-000000000002',currentReservation:'40000000-0000-4000-8000-000000000003',checkedOut:'40000000-0000-4000-8000-000000000004',cancelled:'40000000-0000-4000-8000-000000000005'};
 const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const day=offset=>{const value=new Date(`${today}T00:00:00Z`);value.setUTCDate(value.getUTCDate()+offset);return value.toISOString().slice(0,10);};
 const at=(date,time)=>`${date}T${time}:00+09:00`,serverTime=at(today,'10:00'),existingIn=at(day(3),'16:00'),existingOut=at(day(4),'11:00'),currentIn=at(day(-1),'16:00'),currentOut=at(day(2),'11:00');
@@ -26,7 +26,7 @@ let rooms=[
   room(ids.blocked,'540','BLOCKED',{stateVersion:16,allocationBlocked:true,allocationReady:false,blockingReasonCodes:['OPERATION_BLOCKED'],reasonCodes:['OPERATION_BLOCKED']}),
 ];
 const reservation=(id,roomId,checkInAt,checkOutAt,version=1)=>({id,roomId,reservationType:'standard',checkInAt,checkOutAt,guestCount:2,status:'active',preparationObligationId:'50000000-0000-4000-8000-000000000001',checkoutObligationId:'50000000-0000-4000-8000-000000000002',version,actualCheckInAt:null,actualCheckoutAt:null,cancelledAt:null,createdAt:serverTime,updatedAt:serverTime});
-let reservations=[reservation(ids.reservation,ids.reserved,existingIn,existingOut,3),reservation(ids.currentReservation,ids.occupied,currentIn,currentOut,5)];
+let reservations=[reservation(ids.reservation,ids.reserved,existingIn,existingOut,3),reservation(ids.currentReservation,ids.occupied,currentIn,currentOut,5),{...reservation(ids.checkedOut,ids.reserved,at(day(-6),'16:00'),at(day(-4),'11:00'),4),status:'checked_out',actualCheckoutAt:at(day(-4),'11:00')},{...reservation(ids.cancelled,ids.reserved,at(day(-3),'16:00'),at(day(-2),'11:00'),2),status:'cancelled',cancelledAt:at(day(-5),'09:00')}];
 const roomTypes=[{id:ids.standard,code:'standard',displayName:'스탠다드',baseCleaningFee:16000,baseOccupancy:2,maxOccupancy:3,active:true,version:1,roomCount:6},{id:ids.premium,code:'premium',displayName:'프리미어',baseCleaningFee:20000,baseOccupancy:2,maxOccupancy:3,active:true,version:1,roomCount:0}];
 const requests=[],receipts=new Map();let cancelAttempts=0;
 const json=(route,value,status=200,headers={})=>route.fulfill({status,contentType:'application/json',headers:{'x-request-id':'qa-reservation-040',...headers},body:JSON.stringify(value)});
@@ -49,8 +49,9 @@ await page.route(`${api}/**`,async route=>{
   if(method==='GET'&&path==='/v1/room-types')return json(route,{items:roomTypes});
   if(method==='GET'&&path==='/v1/reservations'&&url.searchParams.has('from'))return json(route,{reservations,nextCursor:null,serverTime});
   if(method==='GET'&&path==='/v1/reservations'){const roomId=url.searchParams.get('roomId');return json(route,{reservations:roomId?reservations.filter(item=>item.roomId===roomId):reservations});}
-  if(method==='GET'&&path.startsWith('/v1/reservations/')){const id=decodeURIComponent(path.split('/')[3]);return json(route,{reservation:reservations.find(item=>item.id===id)});}
+  if(method==='GET'&&path.startsWith('/v1/reservations/')){const id=decodeURIComponent(path.split('/')[3]),item=reservations.find(value=>value.id===id);return json(route,{reservation:id===ids.checkedOut?{...item,guestName:'기록 고객'}:item});}
   if(method==='POST'&&path==='/v1/reservations/bookability/preview'){
+    if(payload.excludeReservationId&&reservations.find(item=>item.id===payload.excludeReservationId)?.status!=='active')return json(route,{error:{code:'EXCLUDE_RESERVATION_NOT_ELIGIBLE',message:'closed reservations cannot be excluded'},requestId:'qa-history-preview-conflict'},409);
     assert(['standard','long_stay'].includes(payload.reservationType));const guestCount=payload.guestCount==null?null:Number(payload.guestCount);assert(guestCount===null||Number.isInteger(guestCount)&&guestCount>=1,'Bookability preview guestCount must be omitted/null or a positive integer');const candidates=rooms.map(item=>{const conflict=reservations.some(res=>res.id!==payload.excludeReservationId&&res.roomId===item.id&&res.status==='active'&&overlaps(payload.checkInAt,payload.checkOutAt,res)),hardBlocked=item.id===ids.blocked,overCapacity=guestCount!==null&&guestCount>2;const currentReady=item.allocationReady===true;return {roomId:item.id,roomNumber:item.roomNumber,roomTypeId:ids.standard,roomStateVersion:item.stateVersion,intervalBookable:!conflict&&!hardBlocked&&!overCapacity,checkInReady:currentReady,reasonCodes:overCapacity?['GUEST_COUNT_EXCEEDS_ROOM_TYPE_CAPACITY']:conflict?['RESERVATION_OVERLAP']:hardBlocked?['OPERATION_BLOCKED']:currentReady?[]:item.id===ids.ready?['PIN_MISMATCH']:item.readinessReasonCodes,evaluatedAt:serverTime};});return json(route,{preview:{reservationType:payload.reservationType,checkInAt:payload.checkInAt,checkOutAt:payload.checkOutAt,guestCount,excludeReservationId:payload.excludeReservationId,evaluatedAt:serverTime,candidates,commitAuthority:'CREATE_OR_CHANGE_REVALIDATES'}});
   }
   if(method==='PATCH'&&path.startsWith('/v1/reservations/')){assert(key,'Reservation update requires Idempotency-Key');const id=decodeURIComponent(path.split('/')[3]),current=reservations.find(item=>item.id===id);assert.equal(payload.expectedVersion,current.version);assert.equal(payload.guestCount,2);const updated={...current,checkInAt:payload.checkInAt,checkOutAt:payload.checkOutAt,guestCount:payload.guestCount,version:current.version+1,updatedAt:serverTime};reservations=reservations.map(item=>item.id===id?updated:item);return send({reservation:updated});}
@@ -74,8 +75,24 @@ async function setup(view){await page.goto(`${origin}/index.html`);await page.ev
 async function view(name){await page.evaluate(value=>window.__reservationQA.view(value),name);}
 async function responsive(label){for(const width of [360,390,768,1440]){await page.setViewportSize({width,height:960});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${label}: horizontal overflow at ${width}px`);}await page.setViewportSize({width:390,height:900});}
 
+async function checkHistoricalReservations(){
+  await setup('rooms');
+  for(const [id,status] of [[ids.checkedOut,'체크아웃 완료'],[ids.cancelled,'취소']]){
+    await page.locator('[data-live-room="350"] [data-action="open-live-room-reservation-status"]').click();
+    await page.locator(`[data-action="open-live-reservation-detail"][data-id="${id}"]`).click();
+    await page.getByText('350호 예약 기록',{exact:true}).waitFor();
+    assert(await page.getByText(status,{exact:true}).first().isVisible());
+    assert.equal(await page.locator('#live-reservation-form').count(),0);
+    assert.equal(await page.locator('[data-action="submit-live-reservation-update"], [data-action="live-reservation-cancel-review"], [data-action="open-live-reservation-room-move"]').count(),0);
+    assert.equal(requests.filter(item=>item.path==='/v1/reservations/bookability/preview'&&item.payload?.excludeReservationId===id).length,0);
+    assert.equal(await page.evaluate(reservationId=>Object.hasOwn(window.__reservationQA.get().reservations.items.find(item=>item.id===reservationId),'guestName'),id),false);
+    await page.getByRole('button',{name:'닫기',exact:true}).last().click();
+  }
+}
+
 const passed=[];
 try{
+  await checkHistoricalReservations();passed.push('체크아웃 완료·취소 예약은 상세 GET만 사용하고 편집 preview·명령 없이 읽기 전용 표시');
   await mkdir(resolve('WIREFRAME/QA/screenshots'),{recursive:true});await setup('rooms');
   await page.locator('[data-live-room="211"]').getByText('배정 가능',{exact:true}).waitFor();assert(await page.locator('[data-live-room="350"]').getByText('예약 있음',{exact:true}).isVisible());assert(await page.locator('[data-live-room="516"]').getByText('청소 필요',{exact:true}).isVisible());assert(await page.locator('[data-live-room="528"]').getByText('투숙 중',{exact:true}).isVisible());assert(await page.locator('[data-live-room="536"]').getByText('입실 예정',{exact:true}).isVisible());assert(await page.locator('[data-live-room="540"]').getByText('배정 불가',{exact:true}).isVisible());passed.push('primaryDisplayStatus 여섯 상태를 레거시 플래그보다 우선 표시');
   await responsive('rooms');await page.setViewportSize({width:390,height:1000});await page.screenshot({path:resolve('WIREFRAME/QA/screenshots/openapi-v040-rooms-390.png'),fullPage:true});
