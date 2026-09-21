@@ -2572,7 +2572,11 @@ for(const contract of [
   "candidate.checkInReady?'선택 기간 예약 가능':'선택 기간 예약 가능 · 현재 입실 준비 필요'",
   "${selectable?'':'disabled'}",
   "apiRequest('/v1/reservations/bookability/preview'",
+  'guestCount:normalizedGuestCount',
+  'Number(preview.guestCount)!==normalizedGuestCount',
   "excludeReservationId=form?.dataset.reservationId||null",
+  'function liveRoomGuestPolicy(room)',
+  'GUEST_COUNT_EXCEEDS_ROOM_TYPE_CAPACITY',
   'refreshLiveReservationRoomSelection(roomId)',
   'Number(roomSelect?.dataset.stateVersion)!==Number(candidate.roomStateVersion)',
   'expectedRoomVersion:Number(candidate.roomStateVersion)',
@@ -2589,6 +2593,8 @@ for(const contract of [
 }
 const liveReservationCreateSource=liveReservationGuardSource.slice(liveReservationGuardSource.indexOf('async function submitLiveReservationCreate'),liveReservationGuardSource.indexOf('async function submitLiveReservationUpdate'));
 if(liveReservationCreateSource.indexOf('refreshLiveReservationRoomSelection(roomId)')<0||liveReservationCreateSource.indexOf('refreshLiveReservationRoomSelection(roomId)')>liveReservationCreateSource.indexOf('runLiveReservationMutation'))throw new Error('Reservation create must refresh and validate the room before POST.');
+const liveReservationDetailSource=liveReservationGuardSource.slice(liveReservationGuardSource.indexOf('async function openLiveReservationDetail'),liveReservationGuardSource.indexOf('function liveReservationPayload'));
+for(const contract of ['guestCount:reservation.guestCount',"auxiliaryLabel:active?'다음 예약 등록':'" ,'upsertLiveReservation(safeReservation)'])if(!liveReservationDetailSource.includes(contract))throw new Error(`Reservation detail modal API contract missing: ${contract}`);
 for(const [code,copy] of [
   ['ROOM_ALLOCATION_BLOCKED','선택 기간에 이 객실을 예약할 수 없습니다. 서버 판정 사유를 확인해 주세요.'],
   ['STALE_VERSION','다른 변경이 먼저 반영됐습니다. 최신 객실 정보를 확인한 뒤 다시 시도하세요.'],
