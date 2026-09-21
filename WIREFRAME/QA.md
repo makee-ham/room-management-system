@@ -28,6 +28,7 @@
 | 상세·변경 행동 | 통과 | `예약 취소 / 다음 예약 등록 / 닫기 / 예약정보 수정 저장` 네 행동을 유지했다. 체크아웃을 1시간 늦춘 뒤 `PATCH /v1/reservations/{reservationId}`에 현재 version·멱등 키·운영 사유와 인원수를 보내고 모달이 닫히는 흐름을 확인했다. |
 | 개인정보 | 통과 | 단건 응답의 `guestName`은 열린 모달의 현재 DOM에서만 사용하고 전역 예약 projection에는 복사하지 않았다. URL·요청 기록·console에 고객명·PIN·비밀값이 남지 않음을 확인했다. |
 | 반응형·회귀 | 통과 | 360/390/768/1440px에서 모달의 가로 넘침이 없었고 기존 예약 등록·취소·객실 이동, 청소 배정·PIN·메이드 흐름의 브라우저 회귀도 통과했다. console warning/error와 page error는 0건이었다. |
+| 운영 배포 | 통과(읽기 전용) | Vercel production 고정 origin의 `index.html` SHA-256이 로컬 정본 `6fdac9419395ce4a74dd36325a90b541c8d1926507b37a3bdad65e3a2b3cb021`과 일치했다. live·production·local runtime, 서비스 워커 `2026-09-22-1`, production origin CORS 204를 확인했다. hosted smoke는 runtime config만 demo로 가로채 전체 1차 내비게이션·네 너비·console/page error 0건을 확인했고 운영 로그인·mutation은 실행하지 않았다. |
 | 대표 PNG | 통과 | `QA/screenshots/live-reservation-detail-api-modal-390.png`, `QA/screenshots/live-reservation-detail-api-modal-1440.png`에 API fixture로 열린 예약 상세·변경 모달을 저장하고 시각 확인했다. |
 
 ## 추가 검증 · 메이드 근무 가능일 상시 제출
