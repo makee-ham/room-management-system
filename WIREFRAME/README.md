@@ -427,9 +427,10 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 
 ### 예약 기간 가능성 방어
 
-- 미래 예약 가능 여부는 `POST /v1/reservations/bookability/preview`의 `intervalBookable`을 정본으로 판단한다. 현재 `allocationReady`·`checkInReady`가 거짓이어도 미래 기간 option과 달력 행을 잠그지 않는다.
+- 미래 예약 가능 여부는 `POST /v1/reservations/bookability/preview`의 `intervalBookable`을 정본으로 판단한다. OpenAPI v0.5.0의 필수 `guestCount`를 항상 보내고 응답의 같은 값을 대조한다. 현재 `allocationReady`·`checkInReady`가 거짓이어도 미래 기간 option과 달력 행을 잠그지 않는다.
 - 간편 예약 달력은 `GET /v1/reservations?from=&to=&cursor=`를 사용해 표시 29일과 겹치는 예약만 읽고 opaque cursor를 그대로 이어 간다. 예약은 `[checkInAt, checkOutAt)`에만 표시하며 겹치지 않는 이후 날짜는 선택 가능하게 둔다.
 - 등록 모달 진입·기간 또는 예약 유형 변경·제출 직전에 같은 기간을 preview한다. 선택 후보가 `intervalBookable === true`일 때 그 후보의 `roomStateVersion`을 `expectedRoomVersion`으로 POST한다.
+- 객실 전체 상세는 `GET /v1/reservations?roomId=`를 함께 조회해 `예약 관리`가 오래된 전체 목록에 의존하지 않게 한다. 활성 예약 상세는 서버 단건 조회 뒤 기존 와이어프레임의 `예약 취소 / 다음 예약 등록 / 닫기 / 예약정보 수정 저장` 구조로 열고, 객실 유형 카탈로그의 `baseOccupancy`·`maxOccupancy`로 인원 기본값과 상한을 표시한다.
 - `checkInReady`는 현재 청소·PIN 준비 안내에만 사용한다. PIN 불일치·미설정은 미래 `intervalBookable`을 프런트에서 덮어쓰지 않는다.
 - 서버가 `ROOM_ALLOCATION_BLOCKED` 또는 `STALE_VERSION`을 반환하면 경쟁 상태로 보고 객실 목록을 다시 읽는다. 서버 내부 message가 아니라 `error.code`에 대응하는 안내와 최신 차단 사유, 문의용 `requestId`를 표시한다.
 - 서비스 워커는 API와 모든 비 GET 요청에 응답하지 않는다. 특히 예약 생성 POST를 캐시·변형·재전송하지 않으며, navigation 네트워크 실패는 캐시된 앱 문서 또는 503 오프라인 안내로 완료한다.

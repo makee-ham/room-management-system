@@ -1,7 +1,7 @@
 # 클릭형 와이어프레임 QA
 
-- 검증일: 2026-09-21
-- 문서 갱신일: 2026-09-21 · 메이드 근무 가능일 모든 요일·모든 시각 직접 제출·수정 반영
+- 검증일: 2026-09-22
+- 문서 갱신일: 2026-09-22 · 운영 예약 상세·변경 모달 복구와 OpenAPI v0.5.0 인원 계약 연결
 - 대상: `WIREFRAME/index.html`
 - 정책: `DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md`, `DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md`, `DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md`
 - 객실·단가 정본: `DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md`
@@ -15,6 +15,20 @@
 > 2026-08-16 이후 타입별 기본 청소요금은 시트 값 `16,000 / 20,000 / 20,000 / 30,000원`이 운영 정본이다. 이전 임시 금액을 사용한 기록과 PNG는 현재 단가 검증 근거가 아니며, 아래 `재검증 예정` 기대값을 실제 브라우저에서 다시 확인한 뒤 새 증거로 교체해야 한다.
 
 > 아래 과거 절의 `전날 배정` 표기는 당시 화면명과 검증 기록이다. 현재 활성 UI에서는 같은 흐름을 `내일 배정`으로 표시하고 별도의 `오늘 배정`을 함께 제공한다.
+
+## 추가 검증 · 운영 예약 상세·변경 모달 복구
+
+> 2026-09-22 `RMS_RUNTIME_MODE=demo python3 scripts/serve.py --port 4180`으로 로컬 HTTP를 실행했다. Browser plugin을 사용할 수 없어 Google Chrome 153 headless + Playwright로 `객실 → 350호 전체 상세 → 예약 관리 → 예약 상세·변경`을 실제 조작했다. 배포 OpenAPI v0.5.0의 조회 계약은 읽기 전용으로 확인했고, 예약 변경·취소 등 쓰기 요청은 로컬 fixture에서만 가로챘다.
+
+| 항목 | 결과 | 실제 확인 내용 |
+|---|---|---|
+| 누락 원인 | 확인 | `POST /v1/reservations/bookability/preview`가 v0.5.0부터 필수로 받는 `guestCount`를 기존 프런트가 보내지 않았다. 상세 모달 렌더 전에 수행하는 preview가 400으로 중단되어 배포 화면에서 모달이 열리지 않는 경로를 확인했다. |
+| 객실 상세 진입 | 통과 | `GET /v1/rooms/{roomId}`와 `GET /v1/reservations?roomId={roomId}`를 함께 읽은 뒤 기존 객실 상세 카드의 `예약 관리` 버튼으로 같은 정보구조의 모달을 열었다. |
+| 인원 계약 | 통과 | 객실 유형 카탈로그의 `baseOccupancy`·`maxOccupancy`를 사용해 350호에 `기본 2명 · 최대 2명`을 표시했다. preview·PATCH에는 같은 `guestCount: 2`를 보냈고 최대 인원에서 `+` 버튼을 비활성화했다. |
+| 상세·변경 행동 | 통과 | `예약 취소 / 다음 예약 등록 / 닫기 / 예약정보 수정 저장` 네 행동을 유지했다. 체크아웃을 1시간 늦춘 뒤 `PATCH /v1/reservations/{reservationId}`에 현재 version·멱등 키·운영 사유와 인원수를 보내고 모달이 닫히는 흐름을 확인했다. |
+| 개인정보 | 통과 | 단건 응답의 `guestName`은 열린 모달의 현재 DOM에서만 사용하고 전역 예약 projection에는 복사하지 않았다. URL·요청 기록·console에 고객명·PIN·비밀값이 남지 않음을 확인했다. |
+| 반응형·회귀 | 통과 | 360/390/768/1440px에서 모달의 가로 넘침이 없었고 기존 예약 등록·취소·객실 이동, 청소 배정·PIN·메이드 흐름의 브라우저 회귀도 통과했다. console warning/error와 page error는 0건이었다. |
+| 대표 PNG | 통과 | `QA/screenshots/live-reservation-detail-api-modal-390.png`, `QA/screenshots/live-reservation-detail-api-modal-1440.png`에 API fixture로 열린 예약 상세·변경 모달을 저장하고 시각 확인했다. |
 
 ## 추가 검증 · 메이드 근무 가능일 상시 제출
 
