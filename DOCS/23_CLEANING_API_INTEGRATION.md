@@ -3,6 +3,7 @@
 기준일: 2026-09-23
 운영 계약: `CASTLE THE ART Room Management API` v0.5.1, 128 paths / 138 operations
 OpenAPI 코드 생성 정본: `https://wrongstory.github.io/room-management-system-backend/openapi.json`
+사진 전송 상태: PR #177의 슬롯별 즉시 업로드는 구현됨. 전역 메모리 큐·프런트 최적화·30초 idle·객실/날짜 Drive 폴더는 2026-09-23 확정 계약이며 구현·hosted 검증 대기
 
 이 문서는 청소관리 프런트의 현재 운영 연결 정본이다. 요청·응답 타입과 endpoint는 운영 `openapi.json`만을 기계 판독 정본으로 사용한다. 이전 `DOCS/22_OPTIONAL_CLEANING_DURATION_FRONTEND_RELEASE.md`의 운영 OFF 상태와 PR #166 임시 계약은 이 문서로 대체한다.
 
@@ -65,7 +66,11 @@ RMS_RUNTIME_MODE=live
 
 사진 UI는 attempt 응답의 슬롯 배열을 그대로 사용한다. 필수 목록을 프런트에서 만들지 않는다. 객실별 수행 영역은 독립적으로 접고 펼칠 수 있으며, `바로 촬영`은 지원 모바일의 후면 카메라 힌트, `갤러리`는 저장된 파일 선택으로 분리한다. 두 경로 모두 선택 직후 같은 slot revision CAS로 업로드하고, 성공 응답 뒤 슬롯을 다시 읽어 `verified`일 때만 충족으로 본다. 모든 필수 슬롯이 verified이고 수행 상태가 제출 가능할 때만 submission을 만든다. 제출 뒤에는 `관리자 검수 대기`로 표시한다.
 
-사진 업로드 입력 계약은 JPEG/WebP/HEIC/HEIF raw body 최대 5MiB다. 프런트는 브라우저가 제공한 실제 MIME을 그대로 보내고, 5MiB를 넘거나 MIME을 확인할 수 없는 원본은 API 호출 전에 안내한다. 서버는 권한·quota admission 뒤 방향 보정·메타데이터 제거·해상도/품질 조정을 수행하고 JPEG/WebP 300KiB 이하 저장본만 Drive와 DB 원장에 연결한다. 프런트는 원본을 브라우저 저장소·URL·로그에 남기지 않으며 성공 응답 뒤 슬롯을 다시 읽어 `verified`일 때만 완료로 본다.
+사진 업로드 입력 계약은 JPEG/WebP/HEIC/HEIF raw body 최대 5MiB이며 사진별 개별 요청만 사용한다. ZIP·batch 업로드는 폐기한다. 브라우저가 디코딩할 수 있는 사진은 선택 직후 방향 보정·메타데이터 제거 재인코딩과 긴 변 최대 1,920px·초기 품질 약 0.82의 최적화를 시도하고, 실제로 더 작아진 JPEG/WebP만 보낸다. HEIC/HEIF를 브라우저가 디코딩하지 못해도 실제 MIME이 확인되고 5MiB 이하이면 원본을 보낸다. 300KiB는 프런트 거부 기준이 아니다.
+
+사진은 현재 앱 문서의 전역 메모리 큐에서 한 장씩 순차 업로드한다. 내부 화면 전환과 객실 접기는 요청을 취소하지 않으므로 사용자는 업로드 중에도 같은 앱의 다른 업무를 계속할 수 있다. 다만 탭/설치 앱 종료나 운영체제 정지 뒤 자동 완료는 보장하지 않으며 원본을 IndexedDB, Cache Storage, 서비스 워커 background-sync 큐, URL, 로그에 영속화하지 않는다. 재진입 시 서버 슬롯을 읽어 `verified`만 복원하고 미전송 원본은 다시 선택하게 한다.
+
+서버는 권한·quota admission 뒤 방향 보정·메타데이터 제거·해상도/품질 조정을 다시 수행하고 JPEG/WebP 300KiB 이하 저장본만 Drive와 DB 원장에 연결한다. 고정 5초 전체 수신 제한은 제거하고, 바이트가 유입되는 동안에는 5초가 지나도 계속 읽는다. 5MiB 초과는 `413`, 30초간 새 바이트가 없는 idle 요청은 `408`로 중단한다. 서버는 권한 확인된 객실호수와 KST 업로드 날짜로 `객실호수_YYYY-MM-DD` 비공개 Drive 폴더를 만들고, 사진은 opaque 객체명으로 개별 저장한다. 폴더는 운영 정리용이고 수행 회차·슬롯·revision·보존기한의 정본은 DB다. 상세 정본은 `DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md`를 따른다.
 
 ## 오류·재시도·권한 상태
 

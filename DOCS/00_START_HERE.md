@@ -14,10 +14,13 @@
 ## 필독 순서와 정책 우선순위
 
 1. 현재 작업에서 사용자가 명시적으로 확정한 결정
-2. [`FINAL_UX_AUDIT.md`](FINAL_UX_AUDIT.md) — 최종 UX 감사 원문, 수정 금지
-3. [`14_CLICKABLE_WIREFRAME_HANDOFF.md`](14_CLICKABLE_WIREFRAME_HANDOFF.md) — 제작 인계서
-4. [`../WIREFRAME/README.md`](../WIREFRAME/README.md)와 [`../WIREFRAME/QA.md`](../WIREFRAME/QA.md)
-5. `01`~`13` 문서, `CURRENT/`, `HISTORY/` — 감사 근거와 시각 참고
+2. [`19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md`](19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md) — 객실 PIN·청소 사진 개별 업로드/저장/이력
+3. [`16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md`](16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md) — 청소 배정·근무 가능일
+4. [`17_ROOM_CATALOG_LONG_STAY_DECISIONS.md`](17_ROOM_CATALOG_LONG_STAY_DECISIONS.md) — 객실 기준정보·점유·카드 주 상태
+5. [`FINAL_UX_AUDIT.md`](FINAL_UX_AUDIT.md) — 그 밖의 최종 UX 감사 원문, 수정 금지
+6. [`14_CLICKABLE_WIREFRAME_HANDOFF.md`](14_CLICKABLE_WIREFRAME_HANDOFF.md) — 제작 인계서
+7. [`../WIREFRAME/README.md`](../WIREFRAME/README.md)와 [`../WIREFRAME/QA.md`](../WIREFRAME/QA.md)
+8. `01`~`13` 문서, `CURRENT/`, `HISTORY/` — 감사 근거와 시각 참고
 
 과거 문서와 현재 정본이 충돌하면 위 순서대로 판단합니다. 특히 608호 전용 규칙, 사진별 승인, 촛불 자동 해제, 예약 충돌이라는 단일 상태, 임의 실제 데이터는 현재 정책으로 되살리지 않습니다.
 
