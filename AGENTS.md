@@ -4,7 +4,7 @@
 
 ## 작업 전 필독 순서
 
-1. `DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md`를 끝까지 읽는다. 객실 PIN 시트·청소 사진 이력·담당 메이드 PIN 접근의 최신 정본이다.
+1. `DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md`를 끝까지 읽는다. 객실 PIN 시트·청소 사진 업로드/저장/이력·담당 메이드 PIN 접근의 최신 정본이다.
 2. `DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md`를 끝까지 읽는다. 청소 근무 가능일·담당 결정 방식의 최신 정본이다.
 3. `DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md`를 끝까지 읽는다. 객실 기준정보·점유·카드 주 상태·수동 체크아웃의 최신 정본이다.
 4. `DOCS/FINAL_UX_AUDIT.md`를 끝까지 읽는다. 이 파일은 그 밖의 최종 제품 정책 정본이며 사용자의 명시적 요청 없이는 수정하지 않는다.
@@ -12,7 +12,7 @@
 6. `WIREFRAME/README.md`와 `WIREFRAME/QA.md`를 읽어 현재 구현·검증 상태를 확인한다.
 7. `DOCS/WIREFRAME_TASK_PROMPT.md`의 실행 계약을 확인한다.
 
-충돌 시 `현재 사용자의 명시적 결정 → 19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS(객실 PIN·청소 사진 이력 범위) → 16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY(청소 배정 범위) → 17_ROOM_CATALOG_LONG_STAY_DECISIONS(객실 기준정보·점유·카드 주 상태 범위) → FINAL_UX_AUDIT → 14_CLICKABLE_WIREFRAME_HANDOFF → WIREFRAME README/QA → 이전 문서·시안` 순서로 따른다. `CURRENT/`, `HISTORY/`, `DOCS/01`~`DOCS/13`은 감사 근거와 시각 참고일 뿐 현재 제품 정책의 정본이 아니다.
+충돌 시 `현재 사용자의 명시적 결정 → 19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS(객실 PIN·청소 사진 업로드/저장/이력 범위) → 16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY(청소 배정 범위) → 17_ROOM_CATALOG_LONG_STAY_DECISIONS(객실 기준정보·점유·카드 주 상태 범위) → FINAL_UX_AUDIT → 14_CLICKABLE_WIREFRAME_HANDOFF → WIREFRAME README/QA → 이전 문서·시안` 순서로 따른다. `CURRENT/`, `HISTORY/`, `DOCS/01`~`DOCS/13`은 감사 근거와 시각 참고일 뿐 현재 제품 정책의 정본이 아니다.
 
 ## 구현 범위
 
@@ -46,6 +46,8 @@
 
 - 객실 PIN 원문은 명시적 조회 후 한 객실만 최대 30초 메모리에 둔다.
 - PIN·고객명·사진 원문을 URL, 로그, 알림, `localStorage`, `sessionStorage`, 브라우저 history state에 남기지 않는다.
+- 사진은 개별 슬롯 단위로만 업로드한다. ZIP·묶음 업로드·ZIP 보관 계약을 만들지 않는다.
+- 앱이 열린 동안의 사진 업로드 큐는 메모리에서만 유지한다. 원본을 IndexedDB·Cache Storage·서비스 워커 큐에 영속화해 앱 종료 뒤 전송한다고 표현하지 않는다.
 - 메이드는 본인 업무·주급·평가만 볼 수 있고 관리자 전용 상세와 액션은 URL 직접 진입에서도 차단한다.
 - 모든 금액·객실·인명·사진 fixture는 실제 데이터가 아닌 데모임을 화면과 문서에서 명시한다.
 

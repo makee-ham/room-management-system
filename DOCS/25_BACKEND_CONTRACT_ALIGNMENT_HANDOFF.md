@@ -20,19 +20,34 @@
 
 ### 기준 스냅샷
 
-- 프런트엔드 기준 저장소: `wrongstory/room-management-system`
-- 프런트엔드 기준 브랜치/커밋: `dev@165fed2` (`기능: 운영 API 연결을 완성하라`)
-- 백엔드 검토 기준: `main@a12595edf68644b94215c4792e0d3aadd64772c6`
-- 검토한 운영 OpenAPI: `v0.3.0`, 109 paths / 117 operations
-- 이 인계서 작성일: 2026-09-16 KST
+- 프런트엔드 기준 저장소: `makee-ham/room-management-system`
+- 프런트엔드 기준 브랜치/커밋: `dev@280ff34bc99ee8e2b6ba00a2d99d3ef87f12e3b8` (`기능: 메이드 객실 접기와 즉시 촬영 추가`)
+- 백엔드 최신 독립 검토 기준: PR #258 head `1fae325`, `dev` 병합 커밋 `40edb068`
+- 검토한 운영 OpenAPI: `v0.5.1`, 128 paths / 138 operations
+- 이 인계서 최종 갱신일: 2026-09-23 KST
 
 작업 시작 시 원격 브랜치를 다시 fetch하고 위 기준 이후 변경을 먼저 비교하라. 이미 해결된 항목은 중복 구현하지 말고, 커밋·OpenAPI·테스트 근거와 함께 `해결됨`으로 표시하라. 문서가 오래됐다는 이유로 최신 제품 정책을 되돌리지는 마라.
+
+### 2026-09-23 사진 업로드 최신 확정과 PR #258 독립 리뷰 후속
+
+아래 항목은 이 문서의 오래된 사진 전송 가정보다 우선한다.
+
+1. 사진은 슬롯별 개별 raw body 업로드만 사용한다. ZIP 생성·업로드·보관과 batch endpoint는 전부 폐기한다.
+2. PR #258의 고정 `5초 전체 수신 제한`을 제거한다. 바이트가 계속 유입되면 5초를 넘어도 읽고, 최대 5MiB는 유지한다. `30초 동안 새 바이트가 하나도 들어오지 않을 때`만 idle timeout `408`, 5MiB 초과는 `413`으로 종료한다.
+3. 수신 중단·취소·provider 실패 뒤 임시 객체와 metadata가 고아로 남지 않게 rollback/cleanup을 보장한다. 같은 슬롯 재시도는 기존 revision CAS와 idempotency 계약을 유지한다.
+4. 서버는 권한 확인된 `roomId`에서 객실호수를 조회하고, 업로드 시각의 KST 날짜로 `객실호수_YYYY-MM-DD` 비공개 Drive 폴더를 만든다. 클라이언트가 경로나 폴더명을 지정하지 않는다. 객체명은 opaque ID이며 DB가 attempt·slot·revision·hash·MIME·크기·보존기한을 정본으로 가진다.
+5. 같은 객실·날짜의 여러 수행 회차는 같은 폴더를 쓸 수 있지만 DB 원장과 opaque 객체 ID가 충돌 없이 구분해야 한다. 폴더명은 권한이나 도메인 식별의 근거가 아니다.
+6. 프런트는 앱이 열린 동안 메모리 큐에서 한 장씩 업로드하고, 디코딩 가능한 사진은 전송 전에 더 작은 JPEG/WebP로 최적화한다. 브라우저 영속 저장소나 서비스 워커에 원본을 남기지 않으므로 앱 종료 뒤 background upload를 백엔드가 전제하지 않는다.
+7. PR #258 독립 리뷰에서 12MP·HEIC 실부하의 Edge resource gate가 확인되지 않았다. 최소 12MP JPEG와 실제 HEIC/HEIF 표본으로 peak RSS·CPU·wall time·동시 업로드를 기록하고 Supabase 제한 안에서 실패가 격리되는지 검증한다. 4MP 단색 JPEG와 32px HEIF만으로 완료 처리하지 않는다.
+8. 위 public 동작 변경과 오류 응답을 OpenAPI에 반영하고 `0.5.1`을 그대로 유지하지 않는다. 배포 전 generated client/type 검증과 migration/release note를 함께 제공한다.
+
+필수 회귀는 다음을 포함한다: 5초를 넘지만 30초 안에 계속 진행되는 업로드 성공, 30초 무진행 `408`, 5MiB+1 `413`, 한 사진 실패 뒤 그 사진만 재시도, KST 자정 폴더명, 같은 방·날짜 복수 attempt, client-supplied path 무시, ZIP 관련 endpoint·객체 없음, provider 부분 실패 cleanup, 실제 12MP JPEG/HEIC의 Edge 부하 측정.
 
 ## 1. 반드시 읽을 정본과 충돌 우선순위
 
 백엔드 저장소의 `AGENTS.md`와 `docs/AI_BACKEND_PRODUCT_GUIDE.md`를 먼저 읽고, 아래 프런트엔드 정본을 순서대로 끝까지 읽어라.
 
-프런트엔드 저장소가 같은 작업공간에 없다면 `https://github.com/wrongstory/room-management-system`을 읽기 전용 임시 checkout으로 받아 위 기준 커밋을 확인하라. 백엔드 작업 브랜치 안으로 프런트 파일을 복사하거나 두 저장소의 변경을 한 PR에 섞지 마라. 저장소 접근이 불가능한 경우에도 아래에 필요한 계약을 자체 포함했으므로 구현 분석은 계속하되, 원문 대조를 하지 못한 사실과 범위를 완료 보고에 명시하라.
+프런트엔드 저장소가 같은 작업공간에 없다면 `https://github.com/makee-ham/room-management-system`을 읽기 전용 임시 checkout으로 받아 위 기준 커밋을 확인하라. 백엔드 작업 브랜치 안으로 프런트 파일을 복사하거나 두 저장소의 변경을 한 PR에 섞지 마라. 저장소 접근이 불가능한 경우에도 아래에 필요한 계약을 자체 포함했으므로 구현 분석은 계속하되, 원문 대조를 하지 못한 사실과 범위를 완료 보고에 명시하라.
 
 1. `DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md`
 2. `DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md`
@@ -568,7 +583,9 @@ DB의 여러 상태를 하나로 덮어쓰지 말고 읽기 projection으로 제
 ### 사진 저장소
 
 - Drive/OAuth 또는 현재 선택된 provider credential
-- upload/read 권한
+- 개별 사진 upload/read 권한과 `객실호수_YYYY-MM-DD` KST 폴더 생성
+- client path를 받지 않는 서버 파생 폴더명과 opaque 객체명
+- ZIP·batch 업로드·ZIP provider 객체 없음
 - content 조회 no-store
 - 도메인별 retention worker
 - purge Cron 양성 smoke
@@ -580,7 +597,7 @@ DB의 여러 상태를 하나로 덮어쓰지 말고 읽기 projection으로 제
 
 모든 public 변경은 구현과 같은 PR에서 OpenAPI를 갱신한다.
 
-- 현재 `0.3.0`에서 계약 의미와 nullable 범위가 바뀌므로 버전을 그대로 두지 않는다. 저장소 release 규칙에 맞는 다음 버전을 선택하고 migration note를 남긴다.
+- 현재 검토 기준 `0.5.1`에서 사진 수신 시간·오류·저장 구조의 public 의미가 바뀌므로 버전을 그대로 두지 않는다. 저장소 release 규칙에 맞는 다음 버전을 선택하고 migration note를 남긴다.
 - request/response example을 추가한다.
 - nullable, enum, money 단위, KST date 계산, RFC 3339 timestamp를 명시한다.
 - 각 endpoint의 역할과 소유권을 명시한다.
@@ -619,6 +636,8 @@ DB의 여러 상태를 하나로 덮어쓰지 말고 읽기 projection으로 제
 - KST 날짜 경계, DST에 의존하지 않는 계산 테스트
 - 민감정보가 URL·로그·알림·감사 metadata에 없는지 테스트
 - 사진·PIN·예약 겹침의 DB 수준 불변식 테스트
+- 실제 12MP JPEG와 HEIC/HEIF의 Edge peak RSS·CPU·wall time·동시 업로드 resource gate
+- 진행 중인 느린 stream, 30초 idle, 5MiB+1, client abort의 수신·cleanup 테스트
 
 프런트 UI 회귀 조건도 API acceptance test로 표현하라.
 
@@ -639,14 +658,15 @@ DB의 여러 상태를 하나로 덮어쓰지 말고 읽기 projection으로 제
 서로 독립 검토와 rollback이 가능하도록 최소 다음 단위로 나눈다.
 
 1. `문서: 백엔드 제품 정책 기준선을 갱신하라`
-2. `수정: 사진 보존 시점과 조회 권한을 바로잡아라`
-3. `수정: 담당 메이드 PIN 접근 수명주기를 바로잡아라`
-4. `기능: 객실 예약 상태와 기간 가용성 계약을 추가하라`
-5. `기능: 장기 투숙과 방 이동 계약을 구현하라`
-6. `기능: 객실 타입과 청소·근무 이력 조회를 추가하라`
-7. `기능: 객실 사건·급여·알림 조회 계약을 보강하라`
-8. `기능: 계정 비활성화와 이의 증빙 절차를 완성하라`
-9. `운영: 외부 provider 활성화 상태를 검증하라`
+2. `수정: 사진 개별 업로드 수신과 저장 계약을 바로잡아라`
+3. `수정: 사진 보존 시점과 조회 권한을 바로잡아라`
+4. `수정: 담당 메이드 PIN 접근 수명주기를 바로잡아라`
+5. `기능: 객실 예약 상태와 기간 가용성 계약을 추가하라`
+6. `기능: 장기 투숙과 방 이동 계약을 구현하라`
+7. `기능: 객실 타입과 청소·근무 이력 조회를 추가하라`
+8. `기능: 객실 사건·급여·알림 조회 계약을 보강하라`
+9. `기능: 계정 비활성화와 이의 증빙 절차를 완성하라`
+10. `운영: 외부 provider 활성화 상태를 검증하라`
 
 실제 코드 결합도에 따라 인접 PR을 조정할 수 있지만 사진/PIN 안전 수정은 거대한 기능 PR에 묶어 지연시키지 마라. 각 PR은 `dev` 기준이며, 필수 검사가 통과하고 리뷰/보호 규칙이 허용할 때만 병합한다.
 
