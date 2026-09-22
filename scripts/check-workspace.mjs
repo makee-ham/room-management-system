@@ -2613,6 +2613,15 @@ for(const [code,copy] of [
 ]){
   if(!html.includes(`${code}:'${copy}'`))throw new Error(`Room allocation reason copy missing: ${code}`);
 }
+for(const contract of [
+  "if(Number(delta)<0){openLiveRoomOperationForm('candle'",
+  'body.count<Number(room.candleCount)&&!body.physicallyVerified',
+  "if(kind==='candle'){closeModal();await loadLiveRooms();}",
+  "catch(error){state.remote.rooms.status='ready';render();await loadLiveRooms();toast",
+]){
+  if(!html.includes(contract))throw new Error(`Live candle confirmation/recovery contract missing: ${contract}`);
+}
+console.log('Live candle confirmation and latest-state recovery contracts: passed');
 for(const detail of ["room.pinSyncStatus==='unconfigured'", "room.pinSyncStatus==='mismatch'", "room.dataStatus!=='verified'", 'PIN 동기화 미설정', '객실 기준정보 미확인']){
   if(!html.includes(detail))throw new Error(`Detailed room allocation reason guard missing: ${detail}`);
 }
