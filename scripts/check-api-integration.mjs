@@ -297,7 +297,7 @@ async function checkOpenApi(apiBaseUrl) {
   } catch {
     throw new Error("OpenAPI 응답이 JSON이 아닙니다.");
   }
-  assert(document?.info?.version === "0.5.0", "OpenAPI info.version이 0.5.0이 아닙니다.");
+  assert(document?.info?.version === "0.5.1", "OpenAPI info.version이 0.5.1이 아닙니다.");
   assert(/^3\.1(?:\.|$)/u.test(document?.openapi ?? ""), "OpenAPI 문서 버전이 3.1 계열이 아닙니다.");
   for (const [endpoint, methods] of REQUIRED_PATHS) {
     assert(document.paths?.[endpoint], `OpenAPI 필수 path가 없습니다: ${endpoint}`);
@@ -324,8 +324,8 @@ async function checkOpenApi(apiBaseUrl) {
     (count, item) => count + Object.keys(item).filter((key) => ["get", "post", "put", "patch", "delete", "head", "options"].includes(key)).length,
     0,
   );
-  assert(Object.keys(document.paths ?? {}).length === 128, "OpenAPI path 수가 v0.5.0의 128개와 다릅니다.");
-  assert(operationCount === 138, "OpenAPI operation 수가 v0.5.0의 138개와 다릅니다.");
+  assert(Object.keys(document.paths ?? {}).length === 128, "OpenAPI path 수가 v0.5.1의 128개와 다릅니다.");
+  assert(operationCount === 138, "OpenAPI operation 수가 v0.5.1의 138개와 다릅니다.");
 }
 
 async function checkCors(apiBaseUrl) {
@@ -370,7 +370,7 @@ async function main() {
     console.log("[ok] 운영 health 계약을 확인했습니다.");
 
     await checkOpenApi(apiBaseUrl);
-    console.log("[ok] OpenAPI 0.5.0의 128개 path와 138개 operation 및 가능일 상시 제출 계약을 확인했습니다.");
+    console.log("[ok] OpenAPI 0.5.1의 128개 path와 138개 operation 및 가능일 상시 제출 계약을 확인했습니다.");
 
   } catch (error) {
     console.error(`[fail] ${error instanceof Error ? error.message : "API 계약 검사에 실패했습니다."}`);
