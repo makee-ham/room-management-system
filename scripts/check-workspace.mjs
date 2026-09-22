@@ -2685,6 +2685,13 @@ for(const contract of ['/v1/assignments/preview','/v1/assignments/commit-impact'
 for(const contract of ['runLiveCleaningMutation','expectedImpactFingerprint','expectedPhotoRevision','clientSubmissionId','responseType===\'blob\'','handleLiveNotificationAction']){
   if(!html.includes(contract))throw new Error(`Cleaning live implementation contract missing: ${contract}`);
 }
+for(const contract of ['commitImpactStatus:\'idle\'','draftSaveResults:new Map()','draftIdempotencyKeys:new Map()','data-cleaning-planning-impact','function saveLiveAssignmentDraftRows','cleaning-save-all-drafts','cleaning-manual-draft-review','await loadLiveCommitImpact({quiet:true,announce:false})','function liveAssignmentAllowsDirectChange','이미 시작된 작업은 직접 재배정하지 않습니다.']){
+  if(!html.includes(contract))throw new Error(`Continuous cleaning assignment contract missing: ${contract}`);
+}
+const assignmentContinuitySource=readFileSync(resolve(root,'scripts/check-cleaning-assignment-continuity.mjs'),'utf8');
+for(const contract of ['Preview 전 commit-impact 미배정 4개 객실 표시','일부 실패 뒤 성공 카드 유지','첫 확정 뒤 남은 2건 계속 배정 가능','진행 중 작업 직접 변경 차단']){
+  if(!assignmentContinuitySource.includes(contract))throw new Error(`Cleaning assignment continuity browser contract missing: ${contract}`);
+}
 for(const contract of ['function liveCleaningTabButton','function renderLiveAdminAssignmentDashboard','function renderLiveRandomAssignmentCard','class="assignment-page tab-panel"','오늘 배정','내일 배정','진행 중','검수 대상 목록','id="cleaning-section-random"','data-cleaning-assignments',"if(liveMode()){\n            state.cleaningTab=tab;"]){
   if(!html.includes(contract))throw new Error(`Cleaning wireframe fidelity contract missing: ${contract}`);
 }

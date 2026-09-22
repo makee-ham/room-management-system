@@ -2,7 +2,7 @@
 
 - 검증일: 2026-09-22
 - 추가 검증일: 2026-09-22 · 객실 촛불 감소 확인 흐름 (#172)
-- 문서 갱신일: 2026-09-22 · 운영 화면 전환·데이터 로딩 성능 최적화
+- 문서 갱신일: 2026-09-23 · 청소 배정 미배정·연속 확정 흐름
 - 대상: `WIREFRAME/index.html`
 - 정책: `DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md`, `DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md`, `DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md`
 - 객실·단가 정본: `DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md`
@@ -14,6 +14,23 @@
 > 8월 객실 마스터 반영 전의 회귀 기록과 PNG에 쓰인 데모 객실번호는 당시 fixture 식별자다. 현재 동일 시나리오는 `1208→117`, `201→350`, `202→332`, `203→528`, `301→536`, `302→639`, `401→142`, `402→211`, `412→352`로 실제 8월 객실에 매핑했다. 아래 기존 기록은 당시 실제 확인 근거로 보존하고, 현재 객실 마스터·위치 표시는 다음 절에서 별도로 재검증했다.
 
 > 2026-08-16 이후 타입별 기본 청소요금은 시트 값 `16,000 / 20,000 / 20,000 / 30,000원`이 운영 정본이다. 이전 임시 금액을 사용한 기록과 PNG는 현재 단가 검증 근거가 아니며, 아래 `재검증 예정` 기대값을 실제 브라우저에서 다시 확인한 뒤 새 증거로 교체해야 한다.
+
+## 추가 검증 · 청소 배정 미배정·연속 확정 흐름
+
+Browser plugin이 제공되지 않아 Chrome 153 + Playwright를 사용했다. 운영 모드 인증 상태와 OpenAPI v0.5.1 형태의 청소 배정 응답을 로컬에 주입하고 모든 protected API와 mutation을 fixture로 가로챘다. 운영 API는 `/health`와 `/openapi.json`만 읽기 전용으로 확인했으며 운영 로그인·protected GET·mutation·DB 변경은 실행하지 않았다.
+
+| 검증 | 결과 | 실제 확인 내용 |
+|---|---|---|
+| Preview 전 미배정 | PASS | 청소 배정 화면 진입 시 `/v1/assignments`와 `/v1/assignments/commit-impact`를 함께 조회했다. `remainingUnassignedTargets`의 350·516·629·762호 4건을 랜덤 배정 전부터 `담당 없음 · 청소 완료 아님`으로 표시하고 `committableDrafts`, `blockedDrafts`와 분리했다. |
+| Preview 구분 | PASS | `fixedAssignments` 1건, `proposedAssignments` 2건, `remainingUnassignedTargets` 2건, `blockedTargets` 2건을 랜덤 배정 카드 안에서 별도 그룹으로 표시했다. 제안 0건 응답에서는 미배정 762호와 `NO_ELIGIBLE_FOLLOW_UP_CANDIDATE`를 표시하고 프런트가 제안을 만들지 않았다. |
+| 제안 전체 초안 저장 | PASS | `POST /v1/assignments/drafts`를 제안 2건에 순차 호출했다. 각 요청은 target·maid·sequence·version payload와 제안별 안정적인 Idempotency-Key를 사용했다. 두 번째 요청에 mock 409를 반환해도 첫 성공 카드를 유지하고 실패 사유를 표시했으며, 실패 건만 같은 key로 재시도한 뒤 최신 배정·commit impact를 다시 읽었다. |
+| 연속 알림 확정 | PASS | 확정 버튼을 누를 때 commit impact를 즉시 재조회하고 최신 fingerprint·assignment/availability version으로 `/v1/assignments/commit`을 호출했다. 첫 확정 뒤 남은 2건을 다시 Preview했고, 두 번째 초안 저장·확정 뒤에도 남은 1건과 직접 지정 경로가 유지됐다. 날짜 전체를 완료나 잠금 상태로 만들지 않았다. |
+| 수동 지정·미시작 변경 | PASS | 미배정 762호에서 메이드와 순서를 직접 골라 대상 1건 초안을 저장했다. 통보됐지만 `scheduled`인 배정은 lifecycle impact 확인 뒤 기존 `/change`를 사용했고, 프런트에서 알림 endpoint를 추가 호출하지 않았다. |
+| 진행 중 변경 차단 | PASS | lifecycle impact가 `in_progress`이면 `/change` 요청을 보내지 않고 기존 `수행 상태·인계 관리`의 `현재 작업 중단·인계` 절차로 안내했다. |
+| 반응형·오류 | PASS | `scripts/check-cleaning-assignment-continuity.mjs`와 기존 `scripts/check-cleaning-workflow.mjs`가 통과했다. 360/390/768/1440px에서 가로 넘침, console warning/error, page error가 0건이었다. 대표 PNG는 `QA/screenshots/admin-cleaning-continuous-390.png`, `QA/screenshots/admin-cleaning-continuous-1440.png`이다. |
+| PWA 갱신 | PASS | 청소 배정 화면 변경이 기존 설치 앱에도 반영되도록 서비스 워커를 `2026-09-23-4`로 올렸다. 이 작업에서는 Production 배포를 실행하지 않는다. |
+| 운영 API 연결 | PASS(읽기 전용) | 2026-09-23 운영 `/health`는 `status: ok`, OpenAPI는 `0.5.1`이며 commit-impact/preview/drafts/commit operationId와 현재 request/response schema를 확인했다. 인증이 필요한 실제 배정 데이터와 mutation은 실행하지 않았다. |
+| 백엔드 PR #251 | OPEN · BLOCKED · 미반영 | 2026-09-23 재확인 head는 `3950ff5280db8c9e3db63ee01d90a61291d19cac`, base는 `dev`다. application check는 성공했지만 migration의 `db:test:concurrency`가 객실 PIN assignment entitlement 제약 위반으로 실패해 아직 병합되지 않았다. PR 설명과 두 커밋 모두 운영 배포 없음으로 기록돼 있다. 따라서 현재 운영 API의 제안 0건 가능성을 유지하고 진행 중 메이드의 후속 후보를 프런트에서 추측하지 않았다. |
 
 ## 추가 검증 · 운영 화면 전환과 데이터 로딩 성능
 
@@ -40,7 +57,7 @@ Browser plugin이 제공되지 않아 Chrome 153 + Playwright를 사용했다. �
 | 실패 후 최신 상태 | PASS | 확인된 감소 요청에 mock 409 `STALE_VERSION`을 반환하고 서버 수량·version을 앞서 변경했다. 화면은 성공으로 표시하거나 0으로 만들지 않고 `GET /v1/rooms`로 3개·v7을 다시 읽었으며, 다음 증가는 v7로 4개를 요청했다. |
 | 모바일·데스크톱 | PASS | 390×900과 1440×1000에서 감소 모달, 44px 이상 `−/+` 버튼, 가로 넘침 0px, Escape 닫기와 감소 버튼 초점 복귀, console warning/error와 page error 0건을 확인했다. 대표 PNG는 `QA/screenshots/live-room-candle-decrease-confirm-390.png`, `QA/screenshots/live-room-candle-decrease-confirm-1440.png`이다. |
 | PWA 캐시·운영 배포 | PASS | PR #173을 `dev`에 병합하고 Vercel production deployment `dpl_AKrVjfkwPw9p5AJavd8yxVzCUM9Z`로 배포했다. 고정 origin의 `index.html` SHA-256 `f5494dbadacd45e43a10b5a2b15fa1a5683d27f68359735320c82d7590cfed3f`은 병합 정본과 같고, 배포된 서비스 워커는 `SW_VERSION = 2026-09-22-2`와 `max-age=0, must-revalidate`를 반환했다. runtime config를 demo로 가로챈 hosted smoke에서 관리자·메이드 전체 1차 내비게이션, 360/390/768/1440px, console/page error 0건을 확인했다. |
-| 운영 API 계약 | PASS(읽기 전용) | 운영 OpenAPI의 현재 버전은 0.5.1이며 `POST /v1/rooms/{roomId}/candles`의 operationId, 필수 `expectedRoomVersion/reasonCode/count`, `physicallyVerified` 기본 false 계약은 기존 0.5.0과 동일했다. 운영 인증·촛불 mutation은 실행하지 않았다. 전체 API 검사기는 0.5.0 고정 assertion 때문에 별도 계약 갱신이 필요하지만 이번 촛불 endpoint 검증에는 영향이 없다. |
+| 운영 API 계약 | PASS(읽기 전용) | 운영 OpenAPI의 현재 버전은 0.5.1이며 `POST /v1/rooms/{roomId}/candles`의 operationId, 필수 `expectedRoomVersion/reasonCode/count`, `physicallyVerified` 기본 false 계약은 기존 0.5.0과 동일했다. 운영 인증·촛불 mutation은 실행하지 않았다. 전체 API 검사기의 버전 assertion도 0.5.1로 갱신해 128개 path·138개 operation을 확인했다. |
 | `node scripts/check-workspace.mjs` | PASS | 단일 HTML 구문·정본 해시·주요 화면의 정적 계약을 검사했다. |
 | 실제 운영 화면 352호 감소 | NOT RUN | 현장 회수 사실을 확인할 수 없으므로 운영 수량이나 이벤트를 변경하지 않았다. 프런트 배포 후 관리자가 실제 회수한 경우에만 확인한다. |
 
