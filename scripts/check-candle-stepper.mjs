@@ -74,12 +74,12 @@ try{
   await minus.click();await modalTitle().waitFor();await page.getByRole('checkbox',{name:/현장에서 직접 확인함/}).check();await page.locator('#toast-region').evaluate(node=>node.replaceChildren());failNextDecrement=true;await page.getByRole('button',{name:'서버에 기록',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('.modal'));await waitCount(3);assert.equal((await page.evaluate(()=>window.__candleQA.snapshot())).room.stateVersion,7,'failed mutation refreshes the latest room version');assert.equal(await page.locator('#toast-region').getByText(/최신 내용을 다시 확인해 주세요/).isVisible(),true,'failure is shown as an error');assert.equal((await page.locator('#toast-region').innerText()).includes('운영 상태를 기록했습니다.'),false,'failure is not shown as success');
   await plus.click();await waitCount(4);assert.equal(candlePosts().at(-1).payload.expectedRoomVersion,7,'operation after refresh uses the latest room version');assert.equal((await page.evaluate(()=>window.__candleQA.snapshot())).uncertain,false,'definitive 409 does not leave an uncertain mutation lock');
 
-  const serviceWorker=await readFile(resolve('WIREFRAME/sw.js'),'utf8');assert(serviceWorker.includes('const SW_VERSION = "2026-09-23-5";'),'PWA cache version is bumped');assert(source.includes("navigator.serviceWorker.register('./sw.js'"),'application registers the service worker');
+  const serviceWorker=await readFile(resolve('WIREFRAME/sw.js'),'utf8');assert(serviceWorker.includes('const SW_VERSION = "2026-09-23-6";'),'PWA cache version is bumped');assert(source.includes("navigator.serviceWorker.register('./sw.js'"),'application registers the service worker');
   assert.deepEqual(pageErrors,[]);assert.deepEqual(consoleProblems,[]);
   console.log('[ok] 0→1→2 연속 증가와 최신 room version');
   console.log('[ok] 감소 확인 모달·미확인 API 0건·확인 후 2→1 physicallyVerified=true');
   console.log('[ok] 재증가와 실패 뒤 최신 객실 재조회·오류 표시·후속 증가');
   console.log('[ok] 390/1440px 가로 넘침·44px 버튼·Escape 초점 복귀·console/page error 0건');
-  console.log('[ok] PWA cache 2026-09-23-5');
+  console.log('[ok] PWA cache 2026-09-23-6');
   console.log(`Environment: Chromium ${await browser.version()} via Playwright; Browser plugin unavailable. All API traffic was intercepted by local fixtures.`);
 }catch(error){console.error('page errors',pageErrors);console.error('console problems',consoleProblems);console.error('requests',requests);await page.screenshot({path:'/tmp/candle-stepper-qa-failure.png',fullPage:true});throw error;}finally{await browser.close();}

@@ -22,11 +22,11 @@ Browser plugin이 제공되지 않아 Chrome 153 + Playwright를 사용했다. �
 | 검증 | 결과 | 실제 확인 내용 |
 |---|---|---|
 | 객실별 접기 | PASS | `내 통보 업무`의 각 객실을 하나의 접이식 영역으로 묶었다. 진행 중·현장 완료·업로드 대기·반려 업무는 첫 조회에서 펼치고, 없으면 첫 객실만 펼친다. 토글은 `aria-expanded`·`aria-controls`를 가지며 클릭과 Enter로 본문을 접고 펼쳤다. 접기 동작은 전체 렌더 없이 해당 객실 DOM만 갱신한다. |
-| 촬영·갤러리 분리 | PASS | 각 서버 사진 슬롯에 `바로 촬영`과 `갤러리`를 분리했다. 카메라 입력은 `accept=image/jpeg,image/webp`, `capture=environment`, 갤러리 입력은 capture 없음으로 확인했다. 파일 선택 change 직후 별도 저장 버튼 없이 업로드가 시작됐다. |
+| 촬영·갤러리 분리 | PASS | 각 서버 사진 슬롯에 `바로 촬영`과 `갤러리`를 분리했다. 카메라 입력은 `accept=image/jpeg,image/webp,image/heic,image/heif`, `capture=environment`, 갤러리 입력은 capture 없음으로 확인했다. 파일 선택 change 직후 별도 저장 버튼 없이 업로드가 시작됐다. |
 | 업로드 상태·CAS | PASS | 카메라와 갤러리 모두 마지막 조회의 assignment ID/revision과 slot `currentRevision`을 전송했다. mock 415에서는 성공 상태를 만들지 않고 슬롯별 실패를 표시했으며, 재선택 뒤 서버 슬롯 재조회 결과가 `verified`일 때만 필수 충족으로 바뀌었다. |
-| 현재 300KB 계약 | BLOCKED(백엔드) | 운영 OpenAPI v0.5.1은 raw body 입력을 307,200바이트에서 차단하고 JPEG/WebP만 허용한다. 307,201바이트 fixture는 API 요청 0건으로 사전 차단했다. 스마트폰 원본을 서버에서 300KB 저장본으로 변환하는 목표는 백엔드 issue `wrongstory/room-management-system-backend#256`이 열려 있어 아직 운영 기능이 아니다. |
+| 스마트폰 원본 정규화 계약 | PASS(로컬 계약) | 프런트는 JPEG/WebP/HEIC/HEIF 원본을 최대 5MiB까지 전송하고 5MiB+1 fixture는 요청 0건으로 사전 차단했다. 기존 한계보다 큰 307,201바이트 JPEG와 HEIC fixture는 즉시 업로드 요청으로 전달했다. 서버는 방향·metadata·해상도/품질을 정리한 300KiB 이하 JPEG/WebP만 저장하는 계약이다. 운영 반영 여부는 배포 뒤 `/openapi.json`과 hosted smoke에서 별도 확인한다. |
 | 반응형·접근성 | PASS | 360/390/768/1440px에서 객실 토글과 사진 버튼 가로 넘침 0px, 보이는 주요 조작 44×44px 이상, console warning/error와 page error 0건을 확인했다. 대표 PNG는 `QA/screenshots/maid-room-collapse-camera-390.png`, `QA/screenshots/maid-room-collapse-camera-1440.png`이다. 물리 모바일 후면 카메라 실행은 데스크톱 자동화로 검증하지 않았다. |
-| PWA 갱신 | PASS | 변경된 메이드 업무 화면이 설치 앱에 반영되도록 서비스 워커를 `2026-09-23-5`로 올렸다. 이 작업에서는 Production 배포를 실행하지 않았다. |
+| PWA 갱신 | PASS | 스마트폰 원본 입력 계약이 설치 앱에 반영되도록 서비스 워커를 `2026-09-23-6`으로 올렸다. Production 배포 뒤 새 worker 활성화와 정적 자산 hash를 다시 확인한다. |
 
 ## 추가 검증 · 청소 배정 미배정·연속 확정 흐름
 
