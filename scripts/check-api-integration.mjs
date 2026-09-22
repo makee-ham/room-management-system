@@ -320,6 +320,12 @@ async function checkOpenApi(apiBaseUrl) {
   assert(availabilityDescription.includes("어느 요일이든 직접 제출·변경"), "가능일 상시 직접 제출 설명이 없습니다.");
   assert(document.components?.schemas?.ErrorCode?.enum?.includes("AVAILABILITY_WEEK_OUT_OF_RANGE"), "가능일 주차 범위 오류 계약이 없습니다.");
   assert(!document.components?.schemas?.ErrorCode?.enum?.includes("OUTSIDE_AVAILABILITY_WINDOW"), "폐기된 가능일 시간창 오류가 남아 있습니다.");
+  const photoUpload = document.paths?.["/v1/attempts/{attemptId}/photo-slots/{slotId}/upload"]?.post;
+  const photoContent = photoUpload?.requestBody?.content ?? {};
+  for (const mime of ["image/jpeg", "image/webp", "image/heic", "image/heif"]) {
+    assert(photoContent[mime]?.schema?.maxLength === 5242880, `사진 업로드 ${mime} 입력 상한이 5MiB가 아닙니다.`);
+  }
+  assert(photoUpload?.description?.includes("300KiB"), "사진 업로드의 300KiB 저장본 정규화 계약이 없습니다.");
   const operationCount = Object.values(document.paths ?? {}).reduce(
     (count, item) => count + Object.keys(item).filter((key) => ["get", "post", "put", "patch", "delete", "head", "options"].includes(key)).length,
     0,
