@@ -2,7 +2,7 @@
 
 - 검증일: 2026-09-22
 - 추가 검증일: 2026-09-22 · 객실 촛불 감소 확인 흐름 (#172)
-- 문서 갱신일: 2026-09-22 · 운영 예약 상세·변경 모달 복구와 OpenAPI v0.5.0 인원 계약 연결
+- 문서 갱신일: 2026-09-22 · 객실 촛불 감소 현장 확인·실패 복구 운영 배포
 - 대상: `WIREFRAME/index.html`
 - 정책: `DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md`, `DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md`, `DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md`
 - 객실·단가 정본: `DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md`
@@ -24,7 +24,7 @@
 | `node scripts/check-candle-stepper.mjs` | PASS | Chrome 153 + Playwright에서 실제 객실 상세 UI를 조작했다. 로컬 mock API로 0→1→2 연속 증가, 2→1 확인 모달, 미확인 요청 0건, 확인 후 감소 요청의 `physicallyVerified=true`, 이어지는 재증가와 매 요청의 최신 room version을 검사했다. |
 | 실패 후 최신 상태 | PASS | 확인된 감소 요청에 mock 409 `STALE_VERSION`을 반환하고 서버 수량·version을 앞서 변경했다. 화면은 성공으로 표시하거나 0으로 만들지 않고 `GET /v1/rooms`로 3개·v7을 다시 읽었으며, 다음 증가는 v7로 4개를 요청했다. |
 | 모바일·데스크톱 | PASS | 390×900과 1440×1000에서 감소 모달, 44px 이상 `−/+` 버튼, 가로 넘침 0px, Escape 닫기와 감소 버튼 초점 복귀, console warning/error와 page error 0건을 확인했다. 대표 PNG는 `QA/screenshots/live-room-candle-decrease-confirm-390.png`, `QA/screenshots/live-room-candle-decrease-confirm-1440.png`이다. |
-| PWA 캐시 | PASS | 서비스 워커 등록 경로와 `SW_VERSION = 2026-09-22-2`를 검사했다. 배포 뒤 고정 production origin에서도 같은 버전과 정본 해시를 다시 확인한다. |
+| PWA 캐시·운영 배포 | PASS | PR #173을 `dev`에 병합하고 Vercel production deployment `dpl_AKrVjfkwPw9p5AJavd8yxVzCUM9Z`로 배포했다. 고정 origin의 `index.html` SHA-256 `f5494dbadacd45e43a10b5a2b15fa1a5683d27f68359735320c82d7590cfed3f`은 병합 정본과 같고, 배포된 서비스 워커는 `SW_VERSION = 2026-09-22-2`와 `max-age=0, must-revalidate`를 반환했다. runtime config를 demo로 가로챈 hosted smoke에서 관리자·메이드 전체 1차 내비게이션, 360/390/768/1440px, console/page error 0건을 확인했다. |
 | 운영 API 계약 | PASS(읽기 전용) | 운영 OpenAPI의 현재 버전은 0.5.1이며 `POST /v1/rooms/{roomId}/candles`의 operationId, 필수 `expectedRoomVersion/reasonCode/count`, `physicallyVerified` 기본 false 계약은 기존 0.5.0과 동일했다. 운영 인증·촛불 mutation은 실행하지 않았다. 전체 API 검사기는 0.5.0 고정 assertion 때문에 별도 계약 갱신이 필요하지만 이번 촛불 endpoint 검증에는 영향이 없다. |
 | `node scripts/check-workspace.mjs` | PASS | 단일 HTML 구문·정본 해시·주요 화면의 정적 계약을 검사했다. |
 | 실제 운영 화면 352호 감소 | NOT RUN | 현장 회수 사실을 확인할 수 없으므로 운영 수량이나 이벤트를 변경하지 않았다. 프런트 배포 후 관리자가 실제 회수한 경우에만 확인한다. |
