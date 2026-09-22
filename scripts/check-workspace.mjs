@@ -2513,9 +2513,9 @@ for(const contract of [
   "button('객실 추가 · API 미제공','developer-room-create','primary','disabled aria-disabled=\"true\"')",
   "button('삭제 영향 확인 · API 미제공','developer-room-delete','outline','disabled aria-disabled=\"true\"')",
   "view==='rooms'?renderLiveDeveloperRooms()",
-  'function loadLiveReservations(){',
-  'function loadLiveAvailability(){',
-  'function loadLiveDeveloperStatus(){',
+  'function loadLiveReservations({quiet=false}={}){',
+  'function loadLiveAvailability({quiet=false}={}){',
+  'function loadLiveDeveloperStatus({quiet=false}={}){',
   "mutationApiRequest('/v1/reservations/cleaning-requests'",
   'pin-sync-events`',
   "mutationApiRequest('/v1/availability/submissions',{body})",
@@ -2616,12 +2616,27 @@ for(const [code,copy] of [
 for(const contract of [
   "if(Number(delta)<0){openLiveRoomOperationForm('candle'",
   'body.count<Number(room.candleCount)&&!body.physicallyVerified',
-  "if(kind==='candle'){closeModal();await loadLiveRooms();}",
-  "catch(error){state.remote.rooms.status='ready';render();await loadLiveRooms();toast",
+  "if(kind==='candle'){closeModal();await loadLiveRooms({quiet:true});",
+  "catch(error){state.remote.rooms.status='ready';await loadLiveRooms({quiet:true});",
 ]){
   if(!html.includes(contract))throw new Error(`Live candle confirmation/recovery contract missing: ${contract}`);
 }
 console.log('Live candle confirmation and latest-state recovery contracts: passed');
+for(const contract of [
+  'const LIVE_READ_FRESH_MS=30000',
+  'function coalesceLiveLoad(key,task)',
+  'async function loadLiveViewData(view=currentView()',
+  "if(view==='today'){add(liveLoaderTask('payroll'",
+  'function renderLiveSurface()',
+  'const verifyDurable=!liveMode()',
+  "showModal({title:'예약 상세 준비'",
+  "showModal({title:'예약 현황 준비'",
+  "await Promise.all(kinds.map(async kind=>",
+]){
+  if(!html.includes(contract))throw new Error(`Live performance contract missing: ${contract}`);
+}
+if(html.includes("if(role==='admin'){await Promise.allSettled([loadLiveAccounts(),loadLiveRooms()"))throw new Error('Live login still preloads every admin API slice.');
+console.log('Live data loading, request coalescing, and partial-render performance contracts: passed');
 for(const detail of ["room.pinSyncStatus==='unconfigured'", "room.pinSyncStatus==='mismatch'", "room.dataStatus!=='verified'", 'PIN 동기화 미설정', '객실 기준정보 미확인']){
   if(!html.includes(detail))throw new Error(`Detailed room allocation reason guard missing: ${detail}`);
 }
