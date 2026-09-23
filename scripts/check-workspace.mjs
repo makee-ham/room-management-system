@@ -21,6 +21,7 @@ const required = [
   'DOCS/23_CLEANING_API_INTEGRATION.md',
   'DOCS/24_RESERVATION_ARRIVAL_ROOM_MOVE_BACKEND_HANDOFF.md',
   'DOCS/WIREFRAME_TASK_PROMPT.md',
+  'WIREFRAME/privacy.html',
   'DOCS/22_OPTIONAL_CLEANING_DURATION_FRONTEND_RELEASE.md',
   'DOCS/24_RESERVATION_ARRIVAL_ROOM_MOVE_BACKEND_HANDOFF.md',
   'WIREFRAME/cleaning-api.d.ts',
@@ -226,11 +227,33 @@ if (nonPortable.length) {
 }
 
 const html = readFileSync(resolve(root, 'WIREFRAME/index.html'), 'utf8');
+const privacyHtml = readFileSync(resolve(root, 'WIREFRAME/privacy.html'), 'utf8');
 const inlineScripts = [...html.matchAll(/<script\b(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)].map((match) => match[1]);
 if (!inlineScripts.length) throw new Error('No inline application script found.');
 for (const script of inlineScripts) new Function(script);
 if (/<(?:script|link)\b[^>]*(?:src|href)=["']https?:\/\//i.test(html)) {
   throw new Error('External script or stylesheet dependency found in WIREFRAME/index.html.');
+}
+for (const contract of [
+  'function renderPublicAppInfo()',
+  'href="./privacy.html"',
+  '캐슬디아트 객실·청소 관리',
+  'yeosucastletheart@gmail.com',
+]) {
+  if (!html.includes(contract)) throw new Error(`Public OAuth homepage contract missing: ${contract}`);
+}
+for (const contract of [
+  '<h1>개인정보처리방침</h1>',
+  '운영자: 캐슬디아트',
+  '<code>drive.file</code>',
+  '공개 URL로 노출하지 않습니다',
+  '300KiB 이하의 JPEG 또는 WebP',
+  'yeosucastletheart@gmail.com',
+]) {
+  if (!privacyHtml.includes(contract)) throw new Error(`Google Drive privacy contract missing: ${contract}`);
+}
+if (/<(?:script|link)\b[^>]*(?:src|href)=["']https?:\/\//i.test(privacyHtml)) {
+  throw new Error('External script or stylesheet dependency found in WIREFRAME/privacy.html.');
 }
 for (const contract of [
   'function infoTip(id,label,text',
@@ -1757,22 +1780,26 @@ for (const contract of ['최근 7일 검수 완료 기록', '현장 완료 날�
 const audit = readFileSync(resolve(root, 'DOCS/FINAL_UX_AUDIT.md'));
 const auditHash = createHash('sha256').update(audit).digest('hex');
 const indexHash = createHash('sha256').update(readFileSync(resolve(root, 'WIREFRAME/index.html'))).digest('hex');
+const privacyHash = createHash('sha256').update(privacyHtml).digest('hex');
 const manifest = JSON.parse(readFileSync(resolve(root, 'manifest.json'), 'utf8'));
 const expectedAuditHash = manifest.sha256?.['DOCS/FINAL_UX_AUDIT.md'];
 const expectedIndexHash = manifest.sha256?.['WIREFRAME/index.html'];
+const expectedPrivacyHash = manifest.sha256?.['WIREFRAME/privacy.html'];
 const checksumLines = readFileSync(resolve(root, 'SHA256SUMS.txt'), 'utf8').trim().split(/\r?\n/);
 const checksums = Object.fromEntries(checksumLines.map((line) => {
   const match = line.match(/^([a-f0-9]{64})\s+\*?(.+)$/);
   if (!match) throw new Error(`Invalid SHA256SUMS entry: ${line}`);
   return [match[2], match[1]];
 }));
-if (auditHash !== expectedAuditHash || indexHash !== expectedIndexHash || checksums['DOCS/FINAL_UX_AUDIT.md'] !== auditHash || checksums['WIREFRAME/index.html'] !== indexHash) {
+if (auditHash !== expectedAuditHash || indexHash !== expectedIndexHash || privacyHash !== expectedPrivacyHash || checksums['DOCS/FINAL_UX_AUDIT.md'] !== auditHash || checksums['WIREFRAME/index.html'] !== indexHash || checksums['WIREFRAME/privacy.html'] !== privacyHash) {
   throw new Error([
     'Canonical file hash mismatch.',
     `Audit: ${auditHash} (expected ${expectedAuditHash})`,
     `Index: ${indexHash} (expected ${expectedIndexHash})`,
+    `Privacy: ${privacyHash} (expected ${expectedPrivacyHash})`,
     `SHA256SUMS audit: ${checksums['DOCS/FINAL_UX_AUDIT.md'] || 'missing'}`,
     `SHA256SUMS index: ${checksums['WIREFRAME/index.html'] || 'missing'}`,
+    `SHA256SUMS privacy: ${checksums['WIREFRAME/privacy.html'] || 'missing'}`,
   ].join('\n'));
 }
 
