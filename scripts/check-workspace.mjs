@@ -2582,6 +2582,10 @@ for(const contract of [
   "void refreshLiveReservationRoomSelection()",
   "excludeReservationId=form?.dataset.reservationId||null",
   'function liveRoomGuestPolicy(room)',
+  'async function ensureLiveRoomGuestPolicy(room)',
+  "coalesceLiveLoad('room-types',()=>loadLiveRoomTypes({quiet:true}))",
+  "ROOM_TYPE_CAPACITY_UNAVAILABLE:'객실 유형별 기본·최대 인원을 불러오지 못했습니다. 다시 시도해 주세요.'",
+  'base:available?base:null,max:available?max:null',
   'GUEST_COUNT_EXCEEDS_ROOM_TYPE_CAPACITY',
   'refreshLiveReservationRoomSelection(roomId)',
   'Number(roomSelect?.dataset.stateVersion)!==Number(candidate.roomStateVersion)',
@@ -2597,6 +2601,7 @@ for(const contract of [
 ]){
   if(!liveReservationGuardSource.includes(contract)&&!html.includes(contract))throw new Error(`Reservation interval bookability guard missing: ${contract}`);
 }
+if(html.includes('base:available?base:1'))throw new Error('Missing room-type capacity must not silently collapse the reservation guest count to one.');
 const liveReservationCreateSource=liveReservationGuardSource.slice(liveReservationGuardSource.indexOf('async function submitLiveReservationCreate'),liveReservationGuardSource.indexOf('async function submitLiveReservationUpdate'));
 if(liveReservationCreateSource.indexOf('refreshLiveReservationRoomSelection(roomId)')<0||liveReservationCreateSource.indexOf('refreshLiveReservationRoomSelection(roomId)')>liveReservationCreateSource.indexOf('runLiveReservationMutation'))throw new Error('Reservation create must refresh and validate the room before POST.');
 const liveReservationDetailSource=liveReservationGuardSource.slice(liveReservationGuardSource.indexOf('async function openLiveReservationDetail'),liveReservationGuardSource.indexOf('function liveReservationPayload'));

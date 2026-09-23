@@ -1996,3 +1996,18 @@ Browser 플러그인이 제공되지 않아 `scripts/check-developer-room-manage
 - `QA/screenshots/live-developer-room-management-390.png`
 - `QA/screenshots/live-developer-room-management-1440.png`
 - `QA/screenshots/live-developer-room-capacity-390.png`
+
+## 2026-09-23 · 새 예약 인원수 1명 고정 회귀
+
+새 예약 화면이 객실 유형 카탈로그를 아직 받지 못했을 때 `1명`을 임시 기본값으로 사용하는 경로를 제거했다. 브라우저 fixture는 처음에 room type 상태를 비워 두고, 예약 상세 또는 신규 등록 과정에서 서버 카탈로그를 다시 불러오는지 검증한다.
+
+| 실제 확인 범위 | 기대 결과 |
+| --- | --- |
+| 카탈로그 지연 | 예약 화면에서 `GET /v1/room-types`를 다시 호출하고 기본 2명·최대 3명을 표시 |
+| 카탈로그 실패 | 1명으로 조용히 고정하지 않고 `ROOM_TYPE_CAPACITY_UNAVAILABLE`로 입력 차단 |
+| 신규 등록 진입 | 첫 기간 preview에는 `guestCount`를 생략하고, 선택 객실 확정 뒤 기본 2명으로 다시 preview |
+| 인원 조절 | 2명에서 3명으로 증가 가능, 최대 3명에서 `+` 비활성, 다시 2명으로 감소 가능 |
+| 저장 | 제출 직전 preview와 예약 create가 동일한 실제 인원 사용 |
+| 회귀 명령 | `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-reservation-bookability.mjs` |
+
+이 검증의 API mutation은 로컬 fixture가 가로채며 production 예약 데이터는 변경하지 않는다.
