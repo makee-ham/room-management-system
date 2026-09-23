@@ -37,13 +37,17 @@ const REQUIRED_PATHS = new Map([
   ["/v1/availability/change-requests/{requestId}/decision", ["post"]],
   ["/v1/availability/candidates", ["get"]],
   ["/v1/reservations", ["get", "post"]],
+  ["/v1/reservations/bookability/preview", ["post"]],
   ["/v1/reservations/{reservationId}", ["get", "patch"]],
+  ["/v1/reservations/{reservationId}/room-change/preview", ["post"]],
+  ["/v1/reservations/{reservationId}/room-change", ["post"]],
   ["/v1/reservations/{reservationId}/cancel", ["post"]],
   ["/v1/reservations/{reservationId}/manual-checkout", ["post"]],
   ["/v1/reservations/cleaning-requests", ["post"]],
   ["/v1/reservations/cleaning-requests/{targetId}/cancel", ["post"]],
   ["/v1/reservations/transitions/process", ["post"]],
   ["/v1/rooms", ["get"]],
+  ["/v1/room-types", ["get"]],
   ["/v1/rooms/{roomId}", ["get"]],
   ["/v1/rooms/{roomId}/master-data", ["patch"]],
   ["/v1/rooms/{roomId}/operation-blocks", ["post"]],
@@ -74,8 +78,33 @@ const REQUIRED_PATHS = new Map([
   ["/v1/inspections/{submissionId}", ["get"]],
   ["/v1/inspections/{submissionId}/approve", ["post"]],
   ["/v1/inspections/{submissionId}/reject", ["post"]],
+  ["/v1/inspections/{submissionId}/bomb-room-decision", ["post"]],
   ["/v1/notifications", ["get"]],
   ["/v1/notifications/{notificationId}/read", ["post"]],
+  ["/v1/cleaning-history", ["get"]],
+  ["/v1/work-history", ["get"]],
+  ["/v1/payroll", ["get"]],
+  ["/v1/payroll/entries", ["get"]],
+  ["/v1/payroll/start", ["post"]],
+  ["/v1/payroll/carry-forward", ["post"]],
+  ["/v1/payroll/adjustments/corrections", ["post"]],
+  ["/v1/payroll/adjustments/reversals", ["post"]],
+  ["/v1/payroll/late-earnings/{earningId}/carry", ["post"]],
+  ["/v1/payroll/payment-attempts/{attemptId}/check", ["post"]],
+  ["/v1/payroll/payment-attempts/{attemptId}/paid", ["post"]],
+  ["/v1/payroll/payment-attempts/{attemptId}/reopen", ["post"]],
+  ["/v1/complaints", ["get", "post"]],
+  ["/v1/complaints/{complaintId}", ["get"]],
+  ["/v1/complaints/{complaintId}/history", ["get"]],
+  ["/v1/complaints/{complaintId}/review", ["post"]],
+  ["/v1/complaints/{complaintId}/decision", ["post"]],
+  ["/v1/complaints/{complaintId}/corrections", ["post"]],
+  ["/v1/complaints/{complaintId}/response", ["post"]],
+  ["/v1/complaints/{complaintId}/close", ["post"]],
+  ["/v1/complaints/{complaintId}/rework", ["post"]],
+  ["/v1/push-subscriptions/config", ["get"]],
+  ["/v1/push-subscriptions", ["post"]],
+  ["/v1/push-subscriptions/{subscriptionId}/retire", ["post"]],
 ]);
 
 function parseEnv(source) {
@@ -268,7 +297,7 @@ async function checkOpenApi(apiBaseUrl) {
   } catch {
     throw new Error("OpenAPI 응답이 JSON이 아닙니다.");
   }
-  assert(document?.info?.version === "0.3.0", "OpenAPI info.version이 0.3.0이 아닙니다.");
+  assert(document?.info?.version === "0.5.1", "OpenAPI info.version이 0.5.1이 아닙니다.");
   assert(/^3\.1(?:\.|$)/u.test(document?.openapi ?? ""), "OpenAPI 문서 버전이 3.1 계열이 아닙니다.");
   for (const [endpoint, methods] of REQUIRED_PATHS) {
     assert(document.paths?.[endpoint], `OpenAPI 필수 path가 없습니다: ${endpoint}`);
@@ -276,12 +305,33 @@ async function checkOpenApi(apiBaseUrl) {
       assert(document.paths[endpoint][method], `OpenAPI 필수 operation이 없습니다: ${method.toUpperCase()} ${endpoint}`);
     }
   }
+  const pinRevealRequest = document.components?.schemas?.RoomPinRevealRequest;
+  assert(pinRevealRequest?.properties?.assignmentId, "RoomPinRevealRequest.assignmentId가 없습니다.");
+  assert(pinRevealRequest?.properties?.attemptId?.deprecated === true, "RoomPinRevealRequest.attemptId가 deprecated가 아닙니다.");
+  assert(pinRevealRequest?.properties?.accessLeaseId?.deprecated === true, "RoomPinRevealRequest.accessLeaseId가 deprecated가 아닙니다.");
+  const requiredQuery = (endpoint, name) => document.paths[endpoint].get.parameters?.some(
+    (parameter) => parameter.in === "query" && parameter.name === name && parameter.required === true,
+  );
+  assert(requiredQuery("/v1/cleaning-history", "date"), "cleaning-history의 필수 date query가 없습니다.");
+  assert(requiredQuery("/v1/work-history", "weekStart"), "work-history의 필수 weekStart query가 없습니다.");
+  assert(document.components?.schemas?.CleaningHistoryPage?.properties?.items, "CleaningHistoryPage.items가 없습니다.");
+  assert(document.components?.schemas?.WorkHistoryPage?.properties?.summary, "WorkHistoryPage.summary가 없습니다.");
+  const availabilityDescription = document.paths?.["/v1/availability/submissions"]?.post?.description ?? "";
+  assert(availabilityDescription.includes("어느 요일이든 직접 제출·변경"), "가능일 상시 직접 제출 설명이 없습니다.");
+  assert(document.components?.schemas?.ErrorCode?.enum?.includes("AVAILABILITY_WEEK_OUT_OF_RANGE"), "가능일 주차 범위 오류 계약이 없습니다.");
+  assert(!document.components?.schemas?.ErrorCode?.enum?.includes("OUTSIDE_AVAILABILITY_WINDOW"), "폐기된 가능일 시간창 오류가 남아 있습니다.");
+  const photoUpload = document.paths?.["/v1/attempts/{attemptId}/photo-slots/{slotId}/upload"]?.post;
+  const photoContent = photoUpload?.requestBody?.content ?? {};
+  for (const mime of ["image/jpeg", "image/webp", "image/heic", "image/heif"]) {
+    assert(photoContent[mime]?.schema?.maxLength === 5242880, `사진 업로드 ${mime} 입력 상한이 5MiB가 아닙니다.`);
+  }
+  assert(photoUpload?.description?.includes("300KiB"), "사진 업로드의 300KiB 저장본 정규화 계약이 없습니다.");
   const operationCount = Object.values(document.paths ?? {}).reduce(
-    (count, item) => count + Object.keys(item).filter((key) => ["get", "post", "patch", "delete"].includes(key)).length,
+    (count, item) => count + Object.keys(item).filter((key) => ["get", "post", "put", "patch", "delete", "head", "options"].includes(key)).length,
     0,
   );
-  assert(Object.keys(document.paths ?? {}).length === 109, "OpenAPI path 수가 v0.3.0의 109개와 다릅니다.");
-  assert(operationCount === 117, "OpenAPI operation 수가 v0.3.0의 117개와 다릅니다.");
+  assert(Object.keys(document.paths ?? {}).length === 128, "OpenAPI path 수가 v0.5.1의 128개와 다릅니다.");
+  assert(operationCount === 138, "OpenAPI operation 수가 v0.5.1의 138개와 다릅니다.");
 }
 
 async function checkCors(apiBaseUrl) {
@@ -326,7 +376,7 @@ async function main() {
     console.log("[ok] 운영 health 계약을 확인했습니다.");
 
     await checkOpenApi(apiBaseUrl);
-    console.log("[ok] OpenAPI 0.3.0의 109개 path와 117개 operation을 확인했습니다.");
+    console.log("[ok] OpenAPI 0.5.1의 128개 path와 138개 operation 및 가능일 상시 제출 계약을 확인했습니다.");
 
   } catch (error) {
     console.error(`[fail] ${error instanceof Error ? error.message : "API 계약 검사에 실패했습니다."}`);
