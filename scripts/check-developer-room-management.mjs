@@ -8,7 +8,7 @@ import { resolve } from 'node:path';
 const require=createRequire(import.meta.url),{chromium}=require('playwright');
 const origin=process.env.RMS_QA_ORIGIN||'http://127.0.0.1:4175';
 const api='https://aodikrxcczbogjpsjwjt.supabase.co/functions/v1/api';
-const fixture={generatedAt:'2026-09-20T10:00:00+09:00',accounts:{total:12,active:11,byRole:{developer:1,admin:2,maid:9}},rooms:{total:121},auditEventsLast24Hours:28,runtime:{environment:'production',source:{apiVersion:'0.4.0'},projectRef:'aodikrxcczbogjpsjwjt',runtime:{name:'deno',version:'2'},configuration:{schedulerSecret:{configured:true}},checkedAt:'2026-09-20T10:00:00+09:00'},database:{databaseReachable:true,rlsValid:true,migrationDrift:'equal',rlsMissingCount:0,rowCounts:{profiles:12,rooms:121},checkedAt:'2026-09-20T10:00:00+09:00'},scheduler:{status:'healthy',cronConfigured:true,cronActive:true,cadence:'매 5분',schedulerActorValid:true,lastHeartbeat:{completedAt:'2026-09-20T10:00:00+09:00'}}};
+const fixture={generatedAt:'2026-09-20T10:00:00+09:00',accounts:{total:12,active:11,byRole:{developer:1,admin:2,maid:9}},rooms:{total:121},auditEventsLast24Hours:28,runtime:{environment:'production',source:{apiVersion:'0.5.1'},projectRef:'aodikrxcczbogjpsjwjt',runtime:{name:'deno',version:'2'},configuration:{schedulerSecret:{configured:true}},checkedAt:'2026-09-20T10:00:00+09:00'},database:{databaseReachable:true,rlsValid:true,migrationDrift:'equal',rlsMissingCount:0,rowCounts:{profiles:12,rooms:121},checkedAt:'2026-09-20T10:00:00+09:00'},scheduler:{status:'healthy',cronConfigured:true,cronActive:true,cadence:'매 5분',schedulerActorValid:true,lastHeartbeat:{completedAt:'2026-09-20T10:00:00+09:00'}}};
 const source=await readFile(resolve('WIREFRAME/index.html'),'utf8');
 const html=source.replace('\n      void bootApplication();',`LIVE_RUNTIME.mode='live';LIVE_RUNTIME.status='ready';LIVE_RUNTIME.config=normalizeRuntimeConfig({apiBaseUrl:'${api}',supabaseUrl:'https://aodikrxcczbogjpsjwjt.supabase.co',supabasePublishableKey:'sb_publishable_abcdefghijklmnopqrstuvwxyz1234',sessionPersistence:'session',deploymentChannel:'preview',featureFlags:{optionalCleaningWorkflow:true}});state.remote=initialRemoteState();state.remote.auth={...state.remote.auth,status:'authenticated',user:{profileId:'10000000-0000-4000-8000-000000000001',displayName:'QA 개발자',role:'developer',mustChangePassword:false},session:{accessToken:'qa-token-never-log',refreshToken:'qa-refresh-never-log',expiresAt:Date.now()+3600000}};state.remote.developer={...state.remote.developer,status:'ready',overview:${JSON.stringify(fixture)},runtime:${JSON.stringify(fixture.runtime)},database:${JSON.stringify(fixture.database)},scheduler:${JSON.stringify(fixture.scheduler)},lastSuccessAt:${JSON.stringify(fixture.generatedAt)}};state.role='developer';state.liveView='overview';syncAuthState(state);render();`);
 
@@ -33,7 +33,8 @@ async function assertResponsive(width){
 try{
   await mkdir(resolve('WIREFRAME/QA/screenshots'),{recursive:true});
   await page.goto(`${origin}/index.html`);
-  await page.getByText('백엔드 v0.4.0 운영 상태',{exact:true}).waitFor();
+  await page.getByRole('heading',{name:'백엔드 운영 상태',exact:true}).waitFor();
+  await page.getByText('0.5.1',{exact:true}).waitFor();
   const roomNav=page.locator('[data-action="nav"][data-view="rooms"]:visible').first();
   assert.equal(await roomNav.getAttribute('aria-label'),null);
   assert.match((await roomNav.innerText()).trim(),/객실/);
