@@ -96,6 +96,7 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-manual-checkout-390.png',
   'WIREFRAME/QA/screenshots/admin-quick-booking-1440.png',
   'WIREFRAME/QA/screenshots/admin-quick-booking-390.png',
+  'WIREFRAME/QA/screenshots/admin-quick-booking-optimistic-390.png',
   'WIREFRAME/QA/screenshots/admin-quick-booking-sticky-header-390.png',
   'WIREFRAME/QA/screenshots/admin-room-total-filter-1440.png',
   'WIREFRAME/QA/screenshots/admin-calendar-standard-1440.png',
@@ -2606,7 +2607,7 @@ for(const contract of [
   "normalizedGuestCount===undefined?preview?.guestCount==null:Number(preview?.guestCount)===normalizedGuestCount",
   "guestCount=Number(document.getElementById('live-reservation-guests')?.value)",
   "guestCount:reservation.guestCount",
-  "void refreshLiveReservationRoomSelection()",
+  "scheduleLiveReservationRoomSelection()",
   "excludeReservationId=form?.dataset.reservationId||null",
   'function liveRoomGuestPolicy(room)',
   'async function ensureLiveRoomGuestPolicy(room)',
@@ -2614,7 +2615,7 @@ for(const contract of [
   "ROOM_TYPE_CAPACITY_UNAVAILABLE:'객실 유형별 기본·최대 인원을 불러오지 못했습니다. 다시 시도해 주세요.'",
   'base:available?base:null,max:available?max:null',
   'GUEST_COUNT_EXCEEDS_ROOM_TYPE_CAPACITY',
-  'refreshLiveReservationRoomSelection(roomId)',
+  'refreshLiveReservationRoomSelection(roomId,{force:true})',
   'Number(roomSelect?.dataset.stateVersion)!==Number(candidate.roomStateVersion)',
   'expectedRoomVersion:Number(candidate.roomStateVersion)',
   "['ROOM_ALLOCATION_BLOCKED','STALE_VERSION'].includes(error?.code)",
@@ -2624,13 +2625,13 @@ for(const contract of [
   "reasonCode:'GUEST_REQUEST'",
   "RESERVATION_CANCELLATION_NOT_ALLOWED:'체크인 이후 또는 현재 예약 상태에서는 취소할 수 없습니다.'",
   "CLEANING_WORKFLOW_CANCEL_CONFLICT:'이미 진행 중인 청소 업무가 있어 예약을 취소할 수 없습니다.'",
-  'excludeReservationId:null',
+  'excludeReservationId:excludeReservationId||null',
 ]){
   if(!liveReservationGuardSource.includes(contract)&&!html.includes(contract))throw new Error(`Reservation interval bookability guard missing: ${contract}`);
 }
 if(html.includes('base:available?base:1'))throw new Error('Missing room-type capacity must not silently collapse the reservation guest count to one.');
 const liveReservationCreateSource=liveReservationGuardSource.slice(liveReservationGuardSource.indexOf('async function submitLiveReservationCreate'),liveReservationGuardSource.indexOf('async function submitLiveReservationUpdate'));
-if(liveReservationCreateSource.indexOf('refreshLiveReservationRoomSelection(roomId)')<0||liveReservationCreateSource.indexOf('refreshLiveReservationRoomSelection(roomId)')>liveReservationCreateSource.indexOf('runLiveReservationMutation'))throw new Error('Reservation create must refresh and validate the room before POST.');
+if(liveReservationCreateSource.indexOf('refreshLiveReservationRoomSelection(roomId,{force:true})')<0||liveReservationCreateSource.indexOf('refreshLiveReservationRoomSelection(roomId,{force:true})')>liveReservationCreateSource.indexOf('runLiveReservationMutation'))throw new Error('Reservation create must force-refresh and validate the room before POST.');
 const liveReservationDetailSource=liveReservationGuardSource.slice(liveReservationGuardSource.indexOf('async function openLiveReservationDetail'),liveReservationGuardSource.indexOf('function liveReservationPayload'));
 for(const contract of ['guestCount:reservation.guestCount',"auxiliaryLabel:active?'다음 예약 등록':'" ,'upsertLiveReservation(safeReservation)'])if(!liveReservationDetailSource.includes(contract))throw new Error(`Reservation detail modal API contract missing: ${contract}`);
 for(const [code,copy] of [
@@ -2662,7 +2663,13 @@ for(const contract of [
 console.log('Live candle confirmation and latest-state recovery contracts: passed');
 for(const contract of [
   'const LIVE_READ_FRESH_MS=30000',
+  'const LIVE_CALENDAR_CACHE_MS=120000',
+  'const LIVE_BOOKABILITY_CACHE_MS=10000',
   'function coalesceLiveLoad(key,task)',
+  'function liveReservationCalendarSnapshot(',
+  'function scheduleLiveReservationRoomSelection(',
+  "_syncState:'saving'",
+  '화면에 먼저 반영하고 서버에 저장하고 있습니다.',
   'async function loadLiveViewData(view=currentView()',
   "if(view==='today'){add(liveLoaderTask('payroll'",
   'function renderLiveSurface()',

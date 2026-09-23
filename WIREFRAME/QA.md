@@ -2011,3 +2011,31 @@ Browser 플러그인이 제공되지 않아 `scripts/check-developer-room-manage
 | 회귀 명령 | `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-reservation-bookability.mjs` |
 
 이 검증의 API mutation은 로컬 fixture가 가로채며 production 예약 데이터는 변경하지 않는다.
+
+## 2026-09-24 · 업무관리자 간편예약 응답성 최적화
+
+Browser 플러그인이 제공되지 않아 번들 Playwright Chromium 151.0.7922.34와 지연을 넣은 OpenAPI 로컬 fixture로 검증했다. production 업무 데이터와 mutation은 사용하지 않았다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 첫 진입 | 통과 · 객실·객실 유형·현재 29일 예약을 각각 1회 조회 |
+| 기간 이동 선렌더 | 통과 · 다음 7일 클릭 직후 기존 표 유지, 전체 로딩 화면 없음, 새 범위 GET 1회 |
+| 범위 캐시 | 통과 · 이미 본 이전 29일 범위 복귀 시 예약 GET 0건 |
+| 등록 폼 | 통과 · 지연 fixture 응답 전 폼 표시, 매번 객실 GET 제거, 초기 bookability 1회 |
+| 연속 조작 | 통과 · 인원 2→3→4 연속 클릭을 마지막 preview 1회로 합침 |
+| 동일 조건 | 통과 · 4→3→4 복귀 시 10초 메모리 캐시로 preview 0건 |
+| 서버 정본 | 통과 · 제출 직전 강제 preview와 `intervalBookable`·`roomStateVersion` 검증 유지 |
+| 낙관적 표시 | 통과 · create 응답 전 점선 `저장 중`, 성공 응답 뒤 서버 예약 ID·version projection으로 교체 |
+| 실패 복구 | 통과 · cancel `STALE_VERSION`에서 임시 상태를 되돌리고 단건·목록·객실·현재 범위를 재조회한 뒤 사용자 재확인 |
+| 보안 | 통과 · 고객명은 범위·bookability 캐시와 URL·로그·웹 저장소에 미포함 |
+| 반응형·콘솔 | 통과 · 390·1440px 가로 넘침 0건, page error·console warning/error 0건 |
+
+회귀 명령:
+
+- `node scripts/check-live-performance.mjs`
+- `node scripts/check-reservation-bookability.mjs`
+- `node scripts/check-cleaning-workflow.mjs`
+
+대표 PNG:
+
+- `QA/screenshots/admin-quick-booking-optimistic-390.png`
