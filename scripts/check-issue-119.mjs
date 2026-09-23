@@ -19,8 +19,8 @@ const required=[
   "const openAttr=phase==='open'?' open':''",
   'data-action="focus-assignment-room"',
   'id="assignment-room-${item.room}"',
-  'assignment-room-type-link',
-  "const maid={my:'내 업무',schedule:'다음 주 근무 가능일',pay:'내 주급',more:'더보기'}",
+  'assignment-room-number-link',
+  "const maid={my:'내 업무',schedule:'다음 주 근무 가능일',done:'청소 내역',pay:'내 주급',more:'더보기'}",
   'data-action="logout" aria-label="로그아웃"',
 ];
 for(const contract of required){if(!html.includes(contract))throw new Error(`Issue #119 contract missing: ${contract}`);}

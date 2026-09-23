@@ -1,7 +1,8 @@
 # 클릭형 와이어프레임 QA
 
-- 검증일: 2026-09-04
-- 문서 갱신일: 2026-09-04 · 관리자 완료 청소 최근 7일·날짜별 그룹·객실번호/수행자 검색 추가
+- 검증일: 2026-09-22
+- 추가 검증일: 2026-09-22 · 객실 촛불 감소 확인 흐름 (#172)
+- 문서 갱신일: 2026-09-23 · 사진 개별 업로드·메모리 큐·수신/저장 계약 확정
 - 대상: `WIREFRAME/index.html`
 - 정책: `DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md`, `DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md`, `DOCS/18_TYPE_PHOTO_TEMPLATE_POLICY.md`
 - 객실·단가 정본: `DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md`
@@ -14,7 +15,104 @@
 
 > 2026-08-16 이후 타입별 기본 청소요금은 시트 값 `16,000 / 20,000 / 20,000 / 30,000원`이 운영 정본이다. 이전 임시 금액을 사용한 기록과 PNG는 현재 단가 검증 근거가 아니며, 아래 `재검증 예정` 기대값을 실제 브라우저에서 다시 확인한 뒤 새 증거로 교체해야 한다.
 
+## 문서 계약 갱신 · 사진 개별 업로드와 ZIP 폐기
+
+2026-09-23 사용자 결정에 따라 ZIP 생성·업로드·보관을 전부 폐기하고 사진 슬롯별 개별 업로드만 정본으로 확정했다. 앱이 열린 동안의 한 장씩 처리하는 메모리 큐, 디코딩 가능한 사진의 선택 직후 최적화, 고정 5초 전체 수신 제한 제거, 30초 무진행 idle, 5MiB 바이트 상한, `객실호수_YYYY-MM-DD` KST 비공개 Drive 폴더와 opaque 객체명을 `DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md`와 연동 문서에 반영했다.
+
+이번 변경은 문서만 갱신했다. 프런트 메모리 큐·클라이언트 이미지 최적화와 백엔드 idle timeout·폴더 생성은 아직 구현·브라우저·실기기·hosted 환경에서 검증하지 않았으므로 PASS로 기록하지 않는다. 기존 `즉시 촬영 업로드` 절의 PASS는 PR #177 당시의 파일 선택→개별 요청·CAS·반응형 검증 범위만 의미하며, 새 큐·최적화·수신 시간·Drive 폴더 계약까지 통과했다는 뜻이 아니다.
+
+## 추가 검증 · 메이드 객실별 접기·즉시 촬영 업로드
+
+Browser plugin이 제공되지 않아 Chrome 153 + Playwright를 사용했다. 운영 모드 인증 상태와 메이드 배정·attempt·사진 슬롯 응답을 로컬에 주입하고 모든 protected API와 mutation을 fixture로 가로챘다. 운영 API는 `/openapi.json`만 읽기 전용으로 확인했으며 운영 로그인·사진 업로드·DB 변경은 실행하지 않았다.
+
+| 검증 | 결과 | 실제 확인 내용 |
+|---|---|---|
+| 객실별 접기 | PASS | `내 통보 업무`의 각 객실을 하나의 접이식 영역으로 묶었다. 진행 중·현장 완료·업로드 대기·반려 업무는 첫 조회에서 펼치고, 없으면 첫 객실만 펼친다. 토글은 `aria-expanded`·`aria-controls`를 가지며 클릭과 Enter로 본문을 접고 펼쳤다. 접기 동작은 전체 렌더 없이 해당 객실 DOM만 갱신한다. |
+| 촬영·갤러리 분리 | PASS | 각 서버 사진 슬롯에 `바로 촬영`과 `갤러리`를 분리했다. 카메라 입력은 `accept=image/jpeg,image/webp,image/heic,image/heif`, `capture=environment`, 갤러리 입력은 capture 없음으로 확인했다. 파일 선택 change 직후 별도 저장 버튼 없이 업로드가 시작됐다. |
+| 업로드 상태·CAS | PASS | 카메라와 갤러리 모두 마지막 조회의 assignment ID/revision과 slot `currentRevision`을 전송했다. mock 415에서는 성공 상태를 만들지 않고 슬롯별 실패를 표시했으며, 재선택 뒤 서버 슬롯 재조회 결과가 `verified`일 때만 필수 충족으로 바뀌었다. |
+| 스마트폰 원본 정규화 계약 | PASS(로컬 계약) | 프런트는 JPEG/WebP/HEIC/HEIF 원본을 최대 5MiB까지 전송하고 5MiB+1 fixture는 요청 0건으로 사전 차단했다. 기존 한계보다 큰 307,201바이트 JPEG와 HEIC fixture는 즉시 업로드 요청으로 전달했다. 서버는 방향·metadata·해상도/품질을 정리한 300KiB 이하 JPEG/WebP만 저장하는 계약이다. 운영 반영 여부는 배포 뒤 `/openapi.json`과 hosted smoke에서 별도 확인한다. |
+| 반응형·접근성 | PASS | 360/390/768/1440px에서 객실 토글과 사진 버튼 가로 넘침 0px, 보이는 주요 조작 44×44px 이상, console warning/error와 page error 0건을 확인했다. 대표 PNG는 `QA/screenshots/maid-room-collapse-camera-390.png`, `QA/screenshots/maid-room-collapse-camera-1440.png`이다. 물리 모바일 후면 카메라 실행은 데스크톱 자동화로 검증하지 않았다. |
+| PWA 갱신 | PASS | 스마트폰 원본 입력 계약이 설치 앱에 반영되도록 서비스 워커를 `2026-09-23-6`으로 올렸다. Production 배포 뒤 새 worker 활성화와 정적 자산 hash를 다시 확인한다. |
+
+## 추가 검증 · 청소 배정 미배정·연속 확정 흐름
+
+Browser plugin이 제공되지 않아 Chrome 153 + Playwright를 사용했다. 운영 모드 인증 상태와 OpenAPI v0.5.1 형태의 청소 배정 응답을 로컬에 주입하고 모든 protected API와 mutation을 fixture로 가로챘다. 운영 API는 `/health`와 `/openapi.json`만 읽기 전용으로 확인했으며 운영 로그인·protected GET·mutation·DB 변경은 실행하지 않았다.
+
+| 검증 | 결과 | 실제 확인 내용 |
+|---|---|---|
+| Preview 전 미배정 | PASS | 청소 배정 화면 진입 시 `/v1/assignments`와 `/v1/assignments/commit-impact`를 함께 조회했다. `remainingUnassignedTargets`의 350·516·629·762호 4건을 랜덤 배정 전부터 `담당 없음 · 청소 완료 아님`으로 표시하고 `committableDrafts`, `blockedDrafts`와 분리했다. |
+| Preview 구분 | PASS | `fixedAssignments` 1건, `proposedAssignments` 2건, `remainingUnassignedTargets` 2건, `blockedTargets` 2건을 랜덤 배정 카드 안에서 별도 그룹으로 표시했다. 제안 0건 응답에서는 미배정 762호와 `NO_ELIGIBLE_FOLLOW_UP_CANDIDATE`를 표시하고 프런트가 제안을 만들지 않았다. |
+| 제안 전체 초안 저장 | PASS | `POST /v1/assignments/drafts`를 제안 2건에 순차 호출했다. 각 요청은 target·maid·sequence·version payload와 제안별 안정적인 Idempotency-Key를 사용했다. 두 번째 요청에 mock 409를 반환해도 첫 성공 카드를 유지하고 실패 사유를 표시했으며, 실패 건만 같은 key로 재시도한 뒤 최신 배정·commit impact를 다시 읽었다. |
+| 연속 알림 확정 | PASS | 확정 버튼을 누를 때 commit impact를 즉시 재조회하고 최신 fingerprint·assignment/availability version으로 `/v1/assignments/commit`을 호출했다. 첫 확정 뒤 남은 2건을 다시 Preview했고, 두 번째 초안 저장·확정 뒤에도 남은 1건과 직접 지정 경로가 유지됐다. 날짜 전체를 완료나 잠금 상태로 만들지 않았다. |
+| 수동 지정·미시작 변경 | PASS | 미배정 762호에서 메이드와 순서를 직접 골라 대상 1건 초안을 저장했다. 통보됐지만 `scheduled`인 배정은 lifecycle impact 확인 뒤 기존 `/change`를 사용했고, 프런트에서 알림 endpoint를 추가 호출하지 않았다. |
+| 진행 중 변경 차단 | PASS | lifecycle impact가 `in_progress`이면 `/change` 요청을 보내지 않고 기존 `수행 상태·인계 관리`의 `현재 작업 중단·인계` 절차로 안내했다. |
+| 반응형·오류 | PASS | `scripts/check-cleaning-assignment-continuity.mjs`와 기존 `scripts/check-cleaning-workflow.mjs`가 통과했다. 360/390/768/1440px에서 가로 넘침, console warning/error, page error가 0건이었다. 대표 PNG는 `QA/screenshots/admin-cleaning-continuous-390.png`, `QA/screenshots/admin-cleaning-continuous-1440.png`이다. |
+| PWA 갱신 | PASS | 청소 배정 화면 변경이 기존 설치 앱에도 반영되도록 서비스 워커를 `2026-09-23-4`로 올렸다. 이 작업에서는 Production 배포를 실행하지 않는다. |
+| 운영 API 연결 | PASS(읽기 전용) | 2026-09-23 운영 `/health`는 `status: ok`, OpenAPI는 `0.5.1`이며 commit-impact/preview/drafts/commit operationId와 현재 request/response schema를 확인했다. 인증이 필요한 실제 배정 데이터와 mutation은 실행하지 않았다. |
+| 백엔드 PR #251 | OPEN · BLOCKED · 미반영 | 2026-09-23 재확인 head는 `3950ff5280db8c9e3db63ee01d90a61291d19cac`, base는 `dev`다. application check는 성공했지만 migration의 `db:test:concurrency`가 객실 PIN assignment entitlement 제약 위반으로 실패해 아직 병합되지 않았다. PR 설명과 두 커밋 모두 운영 배포 없음으로 기록돼 있다. 따라서 현재 운영 API의 제안 0건 가능성을 유지하고 진행 중 메이드의 후속 후보를 프런트에서 추측하지 않았다. |
+
+## 추가 검증 · 운영 화면 전환과 데이터 로딩 성능
+
+Browser plugin이 제공되지 않아 Chrome 153 + Playwright를 사용했다. 운영 모드의 인증 상태를 로컬에 주입하고 모든 API를 90~180ms 지연 fixture로 가로채 화면 전환, 상세 진입, 모달 표시와 동일 요청 병합을 실제 조작했다. 운영 계정 로그인·운영 데이터 조회·mutation은 실행하지 않았다.
+
+| 검증 | 결과 | 실제 확인 내용 |
+|---|---|---|
+| 현재 화면 우선 조회 | PASS | 관리자 첫 화면은 객실·주급·청소·알림에 필요한 6개 요청만 실행했다. 계정·객실 유형·예약·가능일·컴플레인·청소 이력·근무 이력 요청은 해당 화면에 들어가기 전에는 보내지 않았고 동일 URL 중복도 0건이었다. |
+| 읽기 캐시·요청 병합 | PASS | 화면별 성공 조회를 30초 동안 재사용하고 같은 화면 로드를 동시에 3회 요청해도 동일 URL은 한 번만 전송했다. 메이드 가능일은 최신 계정 목록을 먼저 받은 뒤 메이드별 조회를 실행했다. |
+| 화면 렌더 | PASS | 운영 내비게이션은 사이드바·상단·하단 shell을 유지하고 본문만 갱신했다. 객실 화면 전환 피드백은 최종 로컬 측정 30.2ms였고 앱 전체 렌더는 0회였다. 운영 모드에서는 데모 원장 불변성 검사를 반복 계산하지 않는다. |
+| 상세·모달 | PASS | 객실 상세는 목록 캐시를 즉시 표시한 뒤 객실 단건과 roomId 예약을 병렬 1회 조회했다. 예약 상세 모달은 응답 전에 `예약 상세 불러오는 중` 상태로 즉시 열리고, 단건 예약과 기간 판정 완료 뒤 기존 입력 화면으로 교체됐다. |
+| 쓰기 후 갱신 | PASS | 예약·객실 mutation 뒤 연관 목록은 조용히 병렬 재조회하고 현재 화면을 한 번만 갱신한다. 성공을 추측하거나 mutation을 자동 재시도하지 않으며 CAS·멱등 키·실패 후 최신 상태 확인 계약을 유지했다. |
+| 주급 상세 | PASS | `items / lateEarnings / adjustments` 세 종류의 첫 페이지를 직렬이 아닌 병렬로 조회하고 종류별 cursor 순서는 유지했다. |
+| 반응형·오류 | PASS | 390×900과 1440×1000에서 예약 모달 가로 넘침이 없고 page error와 console warning/error가 0건이었다. 대표 PNG는 `QA/screenshots/live-performance-modal-390.png`, `QA/screenshots/live-performance-modal-1440.png`이다. |
+| PWA 갱신 | PASS | 최적화된 HTML이 기존 설치 앱에도 반영되도록 서비스 워커를 `2026-09-22-3`으로 올렸다. |
+
+## 추가 검증 · 객실 촛불 감소 확인
+
+운영 DB는 읽기 전용으로 352호의 현재 촛불 수량 1개와 기록 1건을 확인했다. 운영 촛불 수량 변경이나 실제 현장 회수는 수행하지 않았다. 기존 스테퍼는 감소 시에도 `physicallyVerified=false`를 고정 전송하여 서버 제약을 위반했다. 수정 후 `−`는 기존 수량 기록 모달을 열어 변경 후 수량을 미리 채우고, 현장 확인 체크 전에는 API 요청을 보내지 않는다. `+`는 기존 즉시 기록을 유지한다. 변경된 HTML이 기존 설치 앱에 갱신되도록 서비스 워커 캐시 버전을 `2026-09-22-2`로 높였다.
+
+| 검증 | 결과 | 범위 |
+|---|---|---|
+| `node scripts/check-candle-stepper.mjs` | PASS | Chrome 153 + Playwright에서 실제 객실 상세 UI를 조작했다. 로컬 mock API로 0→1→2 연속 증가, 2→1 확인 모달, 미확인 요청 0건, 확인 후 감소 요청의 `physicallyVerified=true`, 이어지는 재증가와 매 요청의 최신 room version을 검사했다. |
+| 실패 후 최신 상태 | PASS | 확인된 감소 요청에 mock 409 `STALE_VERSION`을 반환하고 서버 수량·version을 앞서 변경했다. 화면은 성공으로 표시하거나 0으로 만들지 않고 `GET /v1/rooms`로 3개·v7을 다시 읽었으며, 다음 증가는 v7로 4개를 요청했다. |
+| 모바일·데스크톱 | PASS | 390×900과 1440×1000에서 감소 모달, 44px 이상 `−/+` 버튼, 가로 넘침 0px, Escape 닫기와 감소 버튼 초점 복귀, console warning/error와 page error 0건을 확인했다. 대표 PNG는 `QA/screenshots/live-room-candle-decrease-confirm-390.png`, `QA/screenshots/live-room-candle-decrease-confirm-1440.png`이다. |
+| PWA 캐시·운영 배포 | PASS | PR #173을 `dev`에 병합하고 Vercel production deployment `dpl_AKrVjfkwPw9p5AJavd8yxVzCUM9Z`로 배포했다. 고정 origin의 `index.html` SHA-256 `f5494dbadacd45e43a10b5a2b15fa1a5683d27f68359735320c82d7590cfed3f`은 병합 정본과 같고, 배포된 서비스 워커는 `SW_VERSION = 2026-09-22-2`와 `max-age=0, must-revalidate`를 반환했다. runtime config를 demo로 가로챈 hosted smoke에서 관리자·메이드 전체 1차 내비게이션, 360/390/768/1440px, console/page error 0건을 확인했다. |
+| 운영 API 계약 | PASS(읽기 전용) | 운영 OpenAPI의 현재 버전은 0.5.1이며 `POST /v1/rooms/{roomId}/candles`의 operationId, 필수 `expectedRoomVersion/reasonCode/count`, `physicallyVerified` 기본 false 계약은 기존 0.5.0과 동일했다. 운영 인증·촛불 mutation은 실행하지 않았다. 전체 API 검사기의 버전 assertion도 0.5.1로 갱신해 128개 path·138개 operation을 확인했다. |
+| `node scripts/check-workspace.mjs` | PASS | 단일 HTML 구문·정본 해시·주요 화면의 정적 계약을 검사했다. |
+| 실제 운영 화면 352호 감소 | NOT RUN | 현장 회수 사실을 확인할 수 없으므로 운영 수량이나 이벤트를 변경하지 않았다. 프런트 배포 후 관리자가 실제 회수한 경우에만 확인한다. |
+
 > 아래 과거 절의 `전날 배정` 표기는 당시 화면명과 검증 기록이다. 현재 활성 UI에서는 같은 흐름을 `내일 배정`으로 표시하고 별도의 `오늘 배정`을 함께 제공한다.
+
+## 추가 검증 · 운영 예약 상세·변경 모달 복구
+
+> 2026-09-22 `RMS_RUNTIME_MODE=demo python3 scripts/serve.py --port 4180`으로 로컬 HTTP를 실행했다. Browser plugin을 사용할 수 없어 Google Chrome 153 headless + Playwright로 `객실 → 350호 전체 상세 → 예약 관리 → 예약 상세·변경`을 실제 조작했다. 배포 OpenAPI v0.5.0의 조회 계약은 읽기 전용으로 확인했고, 예약 변경·취소 등 쓰기 요청은 로컬 fixture에서만 가로챘다.
+
+| 항목 | 결과 | 실제 확인 내용 |
+|---|---|---|
+| 누락 원인 | 확인 | `POST /v1/reservations/bookability/preview`가 v0.5.0부터 필수로 받는 `guestCount`를 기존 프런트가 보내지 않았다. 상세 모달 렌더 전에 수행하는 preview가 400으로 중단되어 배포 화면에서 모달이 열리지 않는 경로를 확인했다. |
+| 객실 상세 진입 | 통과 | `GET /v1/rooms/{roomId}`와 `GET /v1/reservations?roomId={roomId}`를 함께 읽은 뒤 기존 객실 상세 카드의 `예약 관리` 버튼으로 같은 정보구조의 모달을 열었다. |
+| 인원 계약 | 통과 | 객실 유형 카탈로그의 `baseOccupancy`·`maxOccupancy`를 사용해 350호에 `기본 2명 · 최대 2명`을 표시했다. preview·PATCH에는 같은 `guestCount: 2`를 보냈고 최대 인원에서 `+` 버튼을 비활성화했다. |
+| 상세·변경 행동 | 통과 | `예약 취소 / 다음 예약 등록 / 닫기 / 예약정보 수정 저장` 네 행동을 유지했다. 체크아웃을 1시간 늦춘 뒤 `PATCH /v1/reservations/{reservationId}`에 현재 version·멱등 키·운영 사유와 인원수를 보내고 모달이 닫히는 흐름을 확인했다. |
+| 개인정보 | 통과 | 단건 응답의 `guestName`은 열린 모달의 현재 DOM에서만 사용하고 전역 예약 projection에는 복사하지 않았다. URL·요청 기록·console에 고객명·PIN·비밀값이 남지 않음을 확인했다. |
+| 반응형·회귀 | 통과 | 360/390/768/1440px에서 모달의 가로 넘침이 없었고 기존 예약 등록·취소·객실 이동, 청소 배정·PIN·메이드 흐름의 브라우저 회귀도 통과했다. console warning/error와 page error는 0건이었다. |
+| 운영 배포 | 통과(읽기 전용) | Vercel production 고정 origin의 `index.html` SHA-256이 로컬 정본 `6fdac9419395ce4a74dd36325a90b541c8d1926507b37a3bdad65e3a2b3cb021`과 일치했다. live·production·local runtime, 서비스 워커 `2026-09-22-1`, production origin CORS 204를 확인했다. hosted smoke는 runtime config만 demo로 가로채 전체 1차 내비게이션·네 너비·console/page error 0건을 확인했고 운영 로그인·mutation은 실행하지 않았다. |
+| 대표 PNG | 통과 | `QA/screenshots/live-reservation-detail-api-modal-390.png`, `QA/screenshots/live-reservation-detail-api-modal-1440.png`에 API fixture로 열린 예약 상세·변경 모달을 저장하고 시각 확인했다. |
+
+## 추가 검증 · 메이드 근무 가능일 상시 제출
+
+> 2026-09-21 `RMS_RUNTIME_MODE=demo python3 scripts/serve.py --port 4174`로 로컬 HTTP를 실행했다. Browser plugin을 사용할 수 없어 Google Chrome 153 headless + Playwright로 메이드 제출·재제출과 관리자 집계·이력을 실제 조작했다. 운영 API는 읽기 전용으로 OpenAPI v0.5.0의 128개 path·138개 operation과 가능일 상시 제출 계약을 별도로 대조했으며, 운영 계정으로 쓰기 요청은 보내지 않았다.
+
+| 항목 | 결과 | 실제 확인 내용 |
+|---|---|---|
+| 제출 안내·잠금 제거 | 통과 | 메이드 근무 일정에 `모든 요일 · 모든 시각 제출·수정 가능`을 표시하고 일요일 시작·마감에 따른 잠금, 마감 뒤 변경 요청 분기를 제거했다. |
+| 월요일 00:00 | 통과 | 미제출 상태에서 7개 요일 버튼과 직접 제출 버튼이 모두 활성화됐고, 키보드 Enter로 요일 변경과 최초 제출을 완료했다. |
+| 토요일 23:59 | 통과 | 기존 제출의 `제출 내용 수정`을 키보드로 열자 7개 요일과 `수정 내용 다시 제출`이 모두 활성 상태였다. |
+| 직접 재제출 | 통과 | 최초 제출 뒤 별도 관리자 승인 없이 수정 화면을 열어 요일을 바꾸고 직접 재제출했다. 관리자 집계도 9/9 제출로 즉시 갱신됐다. |
+| 이전 버전 보존 | 통과(브라우저·정적) | 재제출 뒤 관리자 근무 기록의 최신 제출 시각이 `8/17 00:00`으로 바뀌었다. 제출 때마다 새 version을 이력 배열에 추가하고 `submissionVersions`로 개수를 유지하는 경로를 정적으로 확인했다. |
+| 운영 API 계약 | 통과(읽기 전용) | 배포 API OpenAPI v0.5.0에서 현재 주·다음 주를 어느 요일이든 직접 제출·변경하는 설명, `AVAILABILITY_WEEK_OUT_OF_RANGE`, `PAST_AVAILABILITY_DATE_NOT_ALLOWED`를 확인하고 폐기된 `OUTSIDE_AVAILABILITY_WINDOW`가 없음을 확인했다. |
+| 뒤로·앞으로·모달 | 통과 | 근무 일정↔내 업무를 뒤로·앞으로 이동해 상태를 복원했고, 관리자 근무 기록 주차 선택 모달은 선택 뒤 닫히고 배경 잠금이 해제됐다. |
+| 반응형·접근성 | 통과 | 360×800, 390×844, 768×900, 1440×900에서 가로 넘침 0px, 이름 없는 보이는 활성 컨트롤 0개, 근무 가능일 화면의 활성 버튼 44px 미만 0개였다. |
+| 콘솔 | 통과 | 제출·재제출·역할 전환·관리자 집계·뒤로/앞으로·네 너비 확인 뒤 console warning/error와 page error 0건이었다. |
+| 대표 PNG | 통과 | `QA/screenshots/maid-weekly-availability-anytime-390.png`에 모든 요일·모든 시각 안내와 7개 요일 수정 상태를 390×844 실제 브라우저 화면으로 저장하고 시각 확인했다. |
 
 ## 추가 검증 · Google Drive 객실 PIN 시트·청소 사진 이력
 
@@ -232,6 +330,8 @@
 | 콘솔 | 통과 | 최종 인앱 브라우저 warning/error 0건 |
 
 ## 추가 검증 · 메이드 근무 가능일 제출 시간
+
+> 이 절은 2026-09-21의 `메이드 근무 가능일 상시 제출` 정책으로 대체됐다. 아래 일요일 12:00–23:59 제한과 마감 뒤 변경 요청 기록은 이전 구현의 감사 근거일 뿐 현재 동작이 아니다.
 
 > 2026-08-18 로컬 HTTP의 인앱 브라우저에서 일요일 제출 시작·마감 경계와 메이드 모바일 화면을 확인했다.
 
@@ -1653,3 +1753,261 @@ Browser 플러그인이 제공되지 않아 앱 번들 Node 패키지와 설치�
 - `QA/screenshots/live-wireframe-cleaning-1440.png`
 
 승인된 운영 계정이 없어 protected production 예약·배정 데이터와 실제 mutation은 hosted 검증하지 않았다. 배포 뒤에는 운영 mutation 없이 새 정적 자산, 런타임 live 설정, 간편 예약 표와 청소 배정 화면의 읽기 렌더만 확인한다.
+
+## 2026-09-16 · 예약 있음·입실 예정·객실 변경
+
+Browser 플러그인이 제공되지 않아 앱 번들 Playwright와 설치된 Chrome 152.0.7977.83을 사용했다. `RMS_RUNTIME_MODE=demo` 로컬 서버에서만 상태와 mutation을 실행했으며 운영 API에는 요청하지 않았다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| D-1 `예약 있음` → D-day 시각 전 `입실 예정` → 시각 도달 `투숙 중` | 통과 |
+| D+2 이후 미래 예약이 현재 주 상태를 점유하지 않음 | 통과 |
+| 객실 목록·상태 필터·큰 상태와 청소/차단 보조 배지 | 통과 |
+| 체크인 전 객실 변경 시 예약 ID·일정 유지, 대상 전체 기간 겹침 재검증 | 통과 |
+| 투숙 중 방 이동 시 원 객실 구간 보존, 새 구간 생성, 원 객실 청소 필요, 새 객실 투숙 중 | 통과 |
+| 예약 상세 → 객실 변경 확인 모달, 키보드 Escape 닫기 | 통과 |
+| 360·390·768·1440px 문서 가로 넘침 0px, 보이는 주요 객실 버튼 44×44px 이상 | 통과 |
+| 앱 JavaScript error·console warning/error | 0건 |
+
+대표 PNG를 `view_image`로 확인했다.
+
+- `QA/screenshots/admin-room-arrival-status-390.png`
+- `QA/screenshots/admin-room-arrival-status-1440.png`
+- `QA/screenshots/admin-reservation-room-move-390.png`
+
+운영 API에는 예약 객실 변경·투숙 중 방 이동 endpoint와 예약 임박/readiness 분리 조회 필드가 아직 없다. 운영 모드는 성공을 흉내 내지 않고 `API 미제공`으로 잠그며, 구현 요구사항은 `DOCS/24_RESERVATION_ARRIVAL_ROOM_MOVE_BACKEND_HANDOFF.md`에 기록했다. 실제 운영 계정·DB 동시성·PIN lease 폐기·outbox 알림은 백엔드 구현 뒤 별도 검증해야 한다.
+
+## 2026-09-16 · 주급·컴플레인·Web Push 운영 연결
+
+Browser 플러그인이 제공되지 않아 저장소의 Playwright 회귀와 설치된 Chrome 152.0.7977.83을 사용했다. 운영 OpenAPI/health/CORS는 읽기 전용으로 확인했고, 인증이 필요한 모든 mutation은 로컬 fixture에서 가로채 운영 데이터는 변경하지 않았다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 운영 OpenAPI v0.3.0 | 109 paths / 117 operations, 주급 10·컴플레인 10·Web Push 3 operation 존재 확인 |
+| 관리자 주급 | 마감 주차 목록·kind별 상세 pagination·확정 수익 정정·지급 시작·외부 송금 완료 전이 통과 |
+| 메이드 주급 | 본인 주급 카드와 산출 상세만 표시, 관리자 지급 행동 미노출 통과 |
+| 컴플레인 | 관리자 접수→검토→판정, 메이드 본인 확인, 관리자 종결과 사건 history 재조회 통과 |
+| 주급 원칙 | 외부 송금 결과만 기록, 컴플레인 벌점 자동 차감 없음, 모든 POST idempotency key 확인 통과 |
+| Web Push | session-bound proof 조회, keyVersion 비전송, 브라우저 subscription 등록, safe projection 저장, retire·unsubscribe 통과 |
+| 객실 상태 | `입실 예정`·`예약 있음` 큰 상태와 두 필터, `CLEANING_REQUIRED`를 실제 운영 차단으로 오인하지 않는 fallback 통과 |
+| 반응형 | 주급·컴플레인·푸시 화면 360·390·768·1440px 문서 가로 넘침 0px |
+| 접근성·콘솔 | 의미 있는 버튼 이름 유지, 앱 JavaScript error·console warning/error 0건 |
+| 민감정보 | access token·푸시 endpoint/key를 URL·console·웹 저장소에 기록하지 않음. 웹 저장소는 safe subscription ID/version/status만 허용 |
+
+대표 PNG는 실제 브라우저 렌더를 `view_image`로 확인했다.
+
+- `QA/screenshots/live-admin-payroll-390.png`
+- `QA/screenshots/live-admin-complaint-1440.png`
+- `QA/screenshots/live-maid-payroll-390.png`
+- `QA/screenshots/live-push-settings-390.png`
+
+회귀 명령은 `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-operational-api.mjs`다. 이 환경에서는 앱 번들 Playwright 경로를 `NODE_PATH`로 제공했다. 기존 청소 회귀도 다시 실행해 객실 큰 상태 변경에 맞춘 `blocked` 예상값 3→1을 확인하고 전체 시나리오를 통과했다.
+
+### 확인된 백엔드 blocker
+
+- `PayrollAdjustmentEntry`에 후속 정정·취소 CAS용 `bookVersion`이 없어 기존 adjustment의 재정정·취소는 활성화하지 않았다.
+- 완료 청소 최근 7일 전용 목록, 객실 이동 preview/commit, 예약 구간 전체 bookability, 객실 유형 ID 카탈로그 endpoint가 없다.
+- 실제 외부 푸시 발송은 provider/worker 운영 설정이 필요하다. 프런트 구독 등록 성공과 외부 전달 성공을 같은 것으로 기록하지 않는다.
+- 승인된 운영 계정으로 protected 주급·컴플레인·푸시 데이터를 읽거나 실제 mutation/외부 푸시 수신을 실행하지 않았다. 배포 뒤에는 역할별 읽기 smoke와 별도 테스트 계정의 승인된 소액/비운영 대상 검증이 필요하다.
+
+## 2026-09-20 · OpenAPI v0.4.0 객실 상태·예약 기간 정합
+
+백엔드 `FRONTEND_CODEX_HANDOFF_V0.4.0.md` 전체와 운영 OpenAPI를 정본으로 다시 비교했다. 실제 공개 API에서 `0.4.0`, 120 paths / 130 operations, health, 공개키와 로컬 origin CORS를 읽기 전용으로 확인했다. Browser 플러그인이 제공되지 않아 앱 번들 Playwright와 설치된 Chrome 153.0.8010.48을 사용했다. 인증 업무 요청과 모든 mutation은 OpenAPI 0.4.0 형태의 로컬 fixture로 가로챘으며 production 데이터는 변경하지 않았다.
+
+### 조사 결과와 수정 영향
+
+| 화면 | 발견한 혼용 | 수정 결과 |
+| --- | --- | --- |
+| 객실 현황·상세 | `occupied`, `cleaningRequired`, `allocationReady`, 예약 lifecycle로 대표 상태를 다시 계산 | 서버 `primaryDisplayStatus` 여섯 값만 기존 큰 상태 UI로 변환. 나머지 축은 보조 안내로 분리 |
+| 간편 예약 달력 | 현재 `allocationReady`가 false인 객실의 미래 행·날짜까지 잠금 | 범위 GET의 예약 구간만 `[checkInAt, checkOutAt)`로 표시하고, 현재 준비 상태로 미래 칸을 잠그지 않음 |
+| 예약 생성·변경 | 객실 projection의 `allocationReady`를 미래 예약 가능성으로 사용 | `POST /v1/reservations/bookability/preview` 후보의 `intervalBookable`만 활성 조건으로 사용. `checkInReady`는 현재 청소·PIN 안내로만 표시 |
+| 예약 명령 | 현재 객실 version을 직접 사용하고 등록 후 일부 화면만 갱신 | 제출 직전 preview의 `roomStateVersion`을 보내고 성공 후 객실·예약·29일 달력을 모두 재조회 |
+| 객실 변경 | 운영 화면에서 preview/commit이 비활성 | 체크인 전·투숙 중 모두 preview의 TTL·fingerprint·세 version·effectiveAt을 그대로 commit에 전달 |
+| 객실 기준정보 | 타입 ID 카탈로그 부재 | `GET /v1/room-types`를 기존 상세 폼에 투영하고 `PATCH /v1/rooms/{roomId}/master-data` CAS에 연결 |
+
+### 인계 문서 브라우저 체크리스트
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| `primaryDisplayStatus`의 BLOCKED / OCCUPIED / ARRIVAL_PENDING / RESERVATION_PRESENT / CLEANING_REQUIRED / READY 표시 | 통과 |
+| 레거시 `cleaningRequired=true`, `allocationReady=false`와 충돌해도 대표 상태 READY 유지 | 통과 |
+| 미래 예약이 오늘 객실을 즉시 청소 필요로 바꾸지 않고 생성 성공 뒤 GET rooms 재조회 | 통과 · fixture |
+| 예약 하나의 실제 겹침 날짜만 기존 예약으로 표시하고 체크아웃 경계 이후 날짜 재선택 | 통과 |
+| PIN mismatch·현재 준비 미완료여도 `intervalBookable=true`인 미래 기간 선택·등록 | 통과 |
+| standard / long_stay discriminator, 장기 투숙 종료일 미정 `checkOutAt:null` preview | 통과 |
+| 생성 직전 preview, 후보 `roomStateVersion` → `expectedRoomVersion`, Idempotency-Key, 성공 뒤 객실·예약·달력 재조회 | 통과 · fixture |
+| BEFORE_CHECKIN 및 DURING_STAY 객실 이동 preview/commit과 TTL·fingerprint·세 version 전달 | 통과 · fixture |
+| 기존 예약 변경·취소·수동 체크아웃이 공통 성공 경로에서 객실·예약·달력을 재조회 | 통과 · 기존 운영 API 회귀 |
+| 관리자 청소 배정·검수·사진과 메이드 시작·완료, 응답 유실 동일 key/payload replay, 401/403/409 분리 | 통과 · 기존 청소 회귀 |
+| 360 / 390 / 768 / 1440px 객실·달력·예약 모달 가로 넘침 없음 | 통과 |
+| 앱 JavaScript error·console warning/error, token·PIN·고객명·service-role/provider secret의 URL·console 노출 | 0건 |
+| 생성 타입이 운영 OpenAPI 0.4.0, 120 paths / 130 operations와 일치 | 통과 |
+
+대표 PNG를 실제 렌더로 확인했다.
+
+- `QA/screenshots/openapi-v040-rooms-390.png`
+- `QA/screenshots/openapi-v040-calendar-1440.png`
+- `QA/screenshots/openapi-v040-reservation-create-390.png`
+- `QA/screenshots/live-wireframe-room-detail-390.png`
+- `QA/screenshots/live-wireframe-room-detail-1440.png`
+- `QA/screenshots/live-wireframe-quick-booking-390.png`
+- `QA/screenshots/live-wireframe-quick-booking-1440.png`
+
+### 전용 운영 origin 배포 검수
+
+- `https://room-management-system-prod.vercel.app`을 새 live 산출물로 재배포했다. 배포 뒤 `index.html` SHA-256은 로컬 정본과 같은 `c6a2cdc12d227313de2957a0165b7b4f6269a544661b6275cdb24fd74e71ad04`다.
+- 배포된 `runtime-config.json`은 `mode=live`, 정본 Supabase API, `sessionPersistence=local`, optional cleaning workflow 활성, 브라우저 publishable key만 포함한다. service-role/provider secret 이름은 없다.
+- 배포 origin을 요청 origin으로 실제 CORS preflight 204, health, OpenAPI 0.4.0 120 paths / 130 operations를 다시 확인했다.
+- production 업무 데이터를 읽거나 바꾸지 않도록 브라우저에서 runtime config만 demo로 가로채고, 배포된 정적 `index.html` 자체로 관리자 `오늘·객실·간편 예약·청소·메이드·더보기`와 메이드 `내 업무·근무 일정·주급·더보기`를 처음부터 끝까지 순회했다.
+- 전 화면을 360/390/768/1440px에서 확인해 가로 넘침, 페이지 예외, console warning/error가 0건임을 확인했다. 배포본 객실·달력 PNG를 `view_image`로 와이어프레임 기준 PNG와 나란히 검수했다.
+
+배포 증거:
+
+- `QA/screenshots/deployed-v040-rooms-390.png`
+- `QA/screenshots/deployed-v040-calendar-1440.png`
+
+### 한계
+
+- 승인된 운영 계정이 없어 protected production 객실·예약·청소 데이터를 읽거나 실제 예약·객실 이동 mutation을 실행하지 않았다.
+- Google Drive 사진 provider, Google Sheets PIN projection, Web Push/Cron의 hosted 동작은 OpenAPI endpoint 존재와 별개이며 이번 검수에서 성공으로 기록하지 않는다.
+- 관리자·메이드·개발자 역할별 기존 권한 회귀는 통과했지만 production 데이터의 동시성은 로컬 fixture로 대체하지 않았다.
+- 승인된 production 업무 계정이 없어 live 모드의 보호된 데이터 화면은 hosted 로그인으로 검증하지 않았다. 동일한 배포 파일의 live UI는 OpenAPI fixture E2E로, 배포 정적 파일과 전체 와이어프레임 화면은 demo-mode hosted smoke로 나누어 검증했다.
+
+## 2026-09-20 · 운영 API Vercel Preview와 예약 취소 보강
+
+프런트 `dev` 기준 별도 브랜치에서 production 배포 없이 Vercel Preview만 준비했다. Preview runtime은 운영 Supabase Edge API와 같은 project ref를 사용하되 세션 영속성은 `session`으로 제한하고, 로그인 전부터 `운영 API 연결 중 · Preview`를 표시한다. Browser 플러그인이 제공되지 않아 앱 번들 Playwright와 Chrome 153.0.8010.48을 사용했다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 공개 OpenAPI | 0.4.0 · 120 paths / 130 operations · 예약 취소 POST 존재 |
+| 생성 타입 | `openapi-typescript@7.13.0`으로 `src/api/generated/room-management-api.ts` 생성 |
+| 예약 취소 노출 | 서버 snapshot 시각이 체크인 전인 active 예약에만 버튼 표시, 투숙 중 예약에는 미표시 |
+| 확인 모달 | 객실·투숙 기간·고정 사유 `GUEST_REQUEST`·최신 version 표시, 고객명 미표시 |
+| 취소 command | 최신 `expectedVersion`, 사용자 동작별 `Idempotency-Key`, hard delete 없는 cancelled projection 확인 |
+| stale 처리 | 첫 `STALE_VERSION`에서 단건·목록·객실·달력을 다시 읽고 자동 재시도 없이 사용자가 재확인 |
+| 성공 후 갱신 | 예약 목록·객실 현황·29일 달력·동일 기간 bookability를 서버에서 재조회 |
+| 오류 분기 | `RESERVATION_CANCELLATION_NOT_ALLOWED`, `CLEANING_WORKFLOW_CANCEL_CONFLICT`를 message가 아닌 code로 안내 |
+| 반응형·콘솔 | 360/390/768/1440px 가로 넘침 0건, JavaScript error·console warning/error 0건 |
+| 운영 데이터 | 실제 로그인·`/v1/auth/me` 역할 projection·121개 객실 보호 조회·bookability preview·승인된 예약 1건 soft cancel 확인, 그 밖의 예약/청소/PIN mutation 미실행 |
+
+대표 PNG:
+
+- `QA/screenshots/openapi-v040-reservation-cancel-390.png`
+
+### Preview 배포 확인
+
+- 고정 Preview origin `https://room-management-system-prod-preview.vercel.app`은 Vercel deployment `target=preview`, `Ready`다. Production 승격은 실행하지 않았다.
+- 보호된 배포의 `runtime-config.json`을 Vercel 인증 요청으로 확인해 `mode=live`, 정본 API/project ref, publishable key 유형, `sessionPersistence=session`, `deploymentChannel=preview`와 금지된 secret key 이름 0건을 확인했다. 키 원문은 출력하지 않았다.
+- 2026-09-20 사용자가 고정 Preview origin 등록을 완료한 뒤 실제 preflight가 `204`를 반환하고 `access-control-allow-origin`이 정확한 origin을 echo하며 credentials와 `authorization, apikey, content-type, idempotency-key, x-request-id`, `GET, POST, PATCH, OPTIONS`를 허용함을 다시 확인했다. 이어 운영 health와 OpenAPI `0.4.0`의 120 paths / 130 operations가 모두 통과했다.
+- Vercel 보호를 통과한 읽기 전용 요청으로 배포된 `index.html`, `runtime-config.json`, `sw.js`, `app.webmanifest`를 내려받아 Preview 산출물과 바이트 단위로 일치함을 확인했다. 따라서 배포 문서와 동일한 산출물을 설치된 Chrome 153.0.8010.48에서 렌더링해 시각 검수했다.
+- Browser 플러그인이 제공되지 않아 저장소의 Playwright를 사용했다. 360·390·768·1440px 모두 가로 넘침 0px, 로그인 버튼 높이 44px, 로그인 필드 접근성 이름, 빈 제출 시 첫 필수 입력 포커스, Preview의 영구 로그인 비활성 상태를 확인했다. 페이지 예외·console warning/error·실패한 네트워크 요청은 0건이다.
+- 객실 상태·예약 달력·예약 생성/취소·객실 변경, 청소 배정/수행/검수, 주급·컴플레인·Web Push 회귀를 OpenAPI 0.4.0 로컬 fixture로 다시 실행해 각각 9·19·6·8개 검사를 통과했다. 모든 mutation은 fixture가 가로챘고 production 데이터는 읽거나 변경하지 않았다.
+- 사용자가 로그인해 둔 Chrome Preview에서 active business admin 역할과 보호된 121개 객실을 실제로 조회했다. 객실 필터는 전체 121개, 예약 있음 2개, 청소 필요 7개를 각각 분리했고 예약 있음 필터의 두 카드는 청소 필요 상태로 섞이지 않았다. 관리자 `오늘·객실·간편 예약·청소·메이드·더보기`를 순회해 빈 화면·stale loading·framework overlay·console warning/error가 없음을 확인했다.
+- 실제 예약 달력에서 135호의 기존 `2026-09-22 16:00 → 2026-09-23 11:00` 예약 다음 구간인 `2026-09-23 16:00 → 2026-09-24 11:00`을 선택했다. 서버 bookability preview는 비겹침 구간을 예약 가능으로 반환했고, 현재 청소·PIN 준비도는 별도 문구로 표시했다.
+- 같은 기존 예약의 상세와 취소 확인 모달을 열어 체크인 전 active 예약의 취소 버튼, 객실·전체 기간·사유 `고객 요청`·현재 version `1`, soft cancel·감사 이력 보존 안내와 고객명 미노출을 확인했다. 확인용 실제 화면에는 운영 계정 표시명이 포함되므로 저장소 스크린샷으로 남기지 않았다.
+- 사용자의 명시적 승인 뒤 위 135호 예약 한 건만 실제로 취소했다. `POST /v1/reservations/{reservationId}/cancel`은 Bearer 인증·`Idempotency-Key`, `expectedVersion: 1`, `reasonCode: GUEST_REQUEST`로 `200`을 반환했고 응답은 `status=cancelled`, version `2`, `cancelledAt` 존재를 확인했다. 같은 요청과 키를 브라우저 내부에서 한 번 재전송했을 때도 `200`, cancelled, version `2`로 유지돼 중복 side effect가 없었다.
+- 취소 성공 뒤 앱이 서버를 다시 조회해 29일 달력 요약이 예약 4→3건, 예약 객실 4→3개, 숙박 칸 5→4박으로 갱신됐고 135호의 기존 1박 셀은 빈 선택 가능 셀로 바뀌었다. 같은 `2026-09-22 16:00 → 2026-09-23 11:00` 구간의 preview 응답에서 135호 `intervalBookable=true`, `checkInReady=true`, room state version `3`, reason code 0건을 확인했다. 새 예약 모달의 서버 일정에는 기존 예약이 `취소` 상태로 남아 hard delete가 아님을 확인했다.
+- 취소 전후 객실 대표 상태 요약은 예약 있음 2개, 청소 필요 7개로 유지됐고 135호는 현재 배정 가능 상태였다. 미래 예약의 취소가 현재 객실을 청소 필요로 바꾸거나 `checkInReady`를 미래 구간 bookability로 대신 사용하지 않았다.
+
+대표 PNG:
+
+- `QA/screenshots/vercel-preview-login-390.png`
+- `QA/screenshots/vercel-preview-login-1440.png`
+
+승인된 135호 예약 취소 외 production 예약 생성·변경·객실 이동, 청소·PIN mutation은 실행하지 않았다. 실제 stale version과 취소 금지·청소 충돌 오류는 production 상태를 인위적으로 만들지 않고 OpenAPI 0.4.0 로컬 fixture 회귀로만 확인했다.
+
+## 2026-09-20 · 메이드 API 최신화와 잔여 화면 연결
+
+백엔드 인계 문서 전체와 공개 OpenAPI를 다시 읽고 메이드 화면에서 아직 연결되지 않았거나 이전 계약을 가정하던 부분을 조사했다. 공개 정본은 계속 `0.4.0`, 120 paths / 130 operations이며 전체 TypeScript 생성물은 기존 정본과 바이트 단위로 일치했다. 축약 청소 타입 생성 목록에는 이번 화면이 직접 사용하는 `RoomPinRevealRequest`, `CleaningHistoryPage`, `WorkHistoryPage` 계열을 추가했다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 메이드 PIN 요청 | 통과 · 현재 통보된 exact `assignmentId`만 전송, deprecated `attemptId`·`accessLeaseId` 0건 |
+| 관리자 PIN 요청 | 통과 · 같은 reveal endpoint에 빈 객체 전송 |
+| PIN 원문 수명 | 통과 · 최대 30초 현재 탭 메모리, 내비게이션 이동 즉시 제거, local/session storage·URL·console 노출 0건 |
+| PIN 권한 변경 | 통과 · 최신 청소 재조회에서 current/notified 배정이 아니면 즉시 제거 |
+| 메이드 청소 내역 | 통과 · `GET /v1/cleaning-history?date=&limit=100` 최근 7일, 본인 수행 기록만 기존 `청소 내역` 카드에 표시 |
+| 관리자 완료 청소 | 통과 · 같은 history endpoint를 기존 청소 `완료` 탭과 검색 UI에 표시 |
+| 과거 사진·제출 상세 | 계약 부재 · 기존 상세 버튼 위치를 유지하고 `사진·제출 상세 · API 미제공`으로 비활성 표시 |
+| 관리자 주간 근무 기록 | 통과 · `GET /v1/work-history?weekStart=&limit=100`, 가능 제출·담당 통보·실근무 완료를 독립 축으로 표시 |
+| pagination | 통과 · 두 이력 endpoint의 opaque `nextCursor`를 변형하지 않고 최대 100개씩 이어서 조회 |
+| 권한·오류 | 통과 · 다른 메이드 attempt 403, 401 세션 오류, 409 CAS 충돌을 fixture 성공 상태로 대체하지 않음 |
+| 반응형 | 통과 · 신규 청소 내역·주간 근무 기록 360/390/768/1440px 가로 넘침 0건 |
+| 브라우저 품질 | 통과 · Chromium 151.0.7922.34, page error·console warning/error·접근성 이름 없는 신규 버튼 0건 |
+
+Browser 플러그인이 제공되지 않아 번들 Playwright로 검증했다. 인증 업무 요청과 mutation은 OpenAPI 형태의 로컬 fixture에서 가로챘고 production 데이터를 읽거나 변경하지 않았다. 실제 운영 계정의 protected history 응답, production PIN 원문, provider 사진 원본, DB 동시성은 이번 통과 범위에 포함하지 않는다.
+
+대표 PNG:
+
+- `QA/screenshots/live-maid-cleaning-history-390.png`
+- `QA/screenshots/live-admin-work-history-1440.png`
+
+## 2026-09-20 · 객실별 예약 현황 버튼 통합
+
+객실 카드와 목록의 예약 행동을 `예약 현황`으로 통일했다. 운영 상태 버튼은 기존 위치·문구·기능을 그대로 유지했다. Browser 플러그인이 제공되지 않아 번들 Playwright의 Chromium 151.0.7922.34로 검증했다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 객실 예약 버튼 | 통과 · 예약 없음은 `예약 현황`, 활성 예약은 `예약 현황 · N건` |
+| 객실별 서버 조회 | 통과 · 클릭 시 `GET /v1/reservations?roomId={roomId}`, 고객명 없는 목록 projection 사용 |
+| 여러 예약 | 통과 · 현재·미래 활성 예약 2건을 한 목록에 표시하고 각 행에서 기존 예약 상세·변경으로 이동 |
+| 예약 없는 객실 | 통과 · 빈 상태를 표시하고 `새 예약 등록`에서 해당 객실을 선택한 기존 등록 화면으로 이동 |
+| 예약 가능성 축 | 통과 · 현황 목록은 기록 조회만 수행하고 새 예약은 기존 `intervalBookable` preview를 다시 사용 |
+| 운영 상태 버튼 | 통과 · 기존 `운영 상태` 문구·위치·운영 중지 모달 유지 |
+| 다른 객실 행동 | 통과 · 청소 상세·전체 상세·PIN 관리 회귀 통과 |
+| 반응형·접근성 | 통과 · 360/390/768/1440px 가로 넘침 0건, 주 버튼 최소 44px, Escape 닫기와 접근성 이름 유지 |
+| 브라우저 품질 | 통과 · page error·console warning/error·URL/console의 token·PIN·고객명 노출 0건 |
+
+대표 PNG:
+
+- `QA/screenshots/live-room-reservation-status-390.png`
+- `QA/screenshots/live-room-reservation-status-1440.png`
+
+예약·청소·주급·컴플레인·Web Push mutation은 모두 로컬 OpenAPI fixture에서 가로챘다. production mutation은 실행하지 않았다.
+
+### 고정 Preview 배포 확인
+
+- PR #158을 `dev`에 squash merge한 뒤 Vercel Preview deployment `dpl_ExVrGS9EK5GyWZCgBk7ykwTMKUqb`를 만들고 고정 origin `https://room-management-system-prod-preview.vercel.app`에 연결했다. Production 승격은 실행하지 않았다.
+- 배포된 HTML은 Vercel Toolbar 주입분을 제외하면 로컬 `WIREFRAME/index.html`과 바이트 단위로 일치하며 SHA-256은 `2b7e719b3c892dd54bfe4d48fc3bcdfa195b178560440f3daf9d01bbb50d3efd`다. runtime은 `mode=live`, `sessionPersistence=session`, `deploymentChannel=preview`, optional cleaning workflow 활성이고 브라우저 publishable key만 포함한다.
+- 사용자가 인증한 Chrome의 고정 Preview에서 보호된 객실 121개를 읽기 전용으로 확인했다. 350호 카드에 `예약 현황 · 1건`과 기존 `운영 상태`가 함께 표시됐고, 예약 현황을 열면 서버의 활성 예약 1건과 체크아웃 완료 기록 1건이 고객명 없이 표시됐다.
+- 같은 배포 화면을 기본 데스크톱과 390×900에서 확인했다. 390px 문서 `scrollWidth=innerWidth=390`, 모달·목록 잘림 없음, console warning/error 0건이며 닫기 뒤 원래 객실 화면으로 복귀했다.
+
+## 2026-09-20 · 개발자 객실 등록 관리 화면
+
+개발자 내비게이션에 `객실`을 추가하고, 현재 등록 객실 수와 DB 객실 행을 같은 요약에서 비교하도록 구성했다. 이어 네 객실 유형별 기준 인원·최대 인원 입력을 같은 화면에 추가했다. 기존 와이어프레임의 셸·요약 카드·폼·안내 색상과 반응형 규칙을 그대로 사용했다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 객실 수 현황 | 통과 · developer overview의 `rooms.total` 121실과 database `rowCounts.rooms` 121행 표시·일치 판정 |
+| 객실 유형 | 통과 · 스탠다드·프리미어·파셜 오션뷰·패밀리 투룸을 드롭다운으로 선택 |
+| 유형별 인원 입력 | 통과 · 네 유형마다 기준 인원·최대 인원 number input과 명시적 label 제공 |
+| 인원 규칙 안내 | 통과 · 기준 인원은 초과 인원 표시 기준, 최대 인원은 예약 허용 상한으로 분리 |
+| 객실 추가 입력 | 통과 · 숫자 키패드 힌트가 있는 호수 입력, 브라우저 저장소·서버 전송 없음 |
+| 객실 삭제 입력 | 통과 · 삭제 대상 호수 입력과 예약·청소·PIN 이력 영향 확인 안내 |
+| 변경 API 부재 | 통과 · OpenAPI v0.4.0에 developer용 유형·인원 조회와 인원 변경·객실 생성·비활성화 계약이 없어 세 변경 버튼을 `API 미제공`으로 비활성 표시 |
+| 네트워크 안전성 | 통과 · `/v1/room-types`, `/v1/rooms` POST·PUT·PATCH·DELETE 요청 0건, production 읽기·쓰기 0건 |
+| 반응형·접근성 | 통과 · 360/390/768/1440px 가로 넘침 0건, 신규 폼 컨트롤 최소 44px, label·키보드 포커스 순서 확인 |
+| 브라우저 품질 | 통과 · Chromium 151.0.7922.34, page error·console warning/error 0건 |
+
+Browser 플러그인이 제공되지 않아 `scripts/check-developer-room-management.mjs`를 번들 Playwright로 실행했다. 개발자 역할의 실제 보호된 응답을 사용할 자격 증명이 없어 OpenAPI 형태의 읽기 전용 fixture로 렌더링했으며, 인원 저장·객실 추가·비활성화 성공은 통과로 기록하지 않는다. 필요한 백엔드 endpoint·schema·권한·오류·검증은 `DOCS/25_DEVELOPER_ROOM_CATALOG_CAPACITY_BACKEND_PROMPT.md`에 정리했다.
+
+대표 PNG:
+
+- `QA/screenshots/live-developer-room-management-390.png`
+- `QA/screenshots/live-developer-room-management-1440.png`
+- `QA/screenshots/live-developer-room-capacity-390.png`
+
+## 2026-09-23 · 새 예약 인원수 1명 고정 회귀
+
+새 예약 화면이 객실 유형 카탈로그를 아직 받지 못했을 때 `1명`을 임시 기본값으로 사용하는 경로를 제거했다. 브라우저 fixture는 처음에 room type 상태를 비워 두고, 예약 상세 또는 신규 등록 과정에서 서버 카탈로그를 다시 불러오는지 검증한다.
+
+| 실제 확인 범위 | 기대 결과 |
+| --- | --- |
+| 카탈로그 지연 | 예약 화면에서 `GET /v1/room-types`를 다시 호출하고 기본 2명·최대 3명을 표시 |
+| 카탈로그 실패 | 1명으로 조용히 고정하지 않고 `ROOM_TYPE_CAPACITY_UNAVAILABLE`로 입력 차단 |
+| 신규 등록 진입 | 첫 기간 preview에는 `guestCount`를 생략하고, 선택 객실 확정 뒤 기본 2명으로 다시 preview |
+| 인원 조절 | 2명에서 3명으로 증가 가능, 최대 3명에서 `+` 비활성, 다시 2명으로 감소 가능 |
+| 저장 | 제출 직전 preview와 예약 create가 동일한 실제 인원 사용 |
+| 회귀 명령 | `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-reservation-bookability.mjs` |
+
+이 검증의 API mutation은 로컬 fixture가 가로채며 production 예약 데이터는 변경하지 않는다.

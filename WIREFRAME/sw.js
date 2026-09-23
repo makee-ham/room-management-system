@@ -1,6 +1,6 @@
 "use strict";
 
-const SW_VERSION = "2026-09-16-4";
+const SW_VERSION = "2026-09-23-6";
 const CACHE_PREFIX = "castle-the-art-shell-";
 const CACHE_NAME = `${CACHE_PREFIX}${SW_VERSION}`;
 const APP_DOCUMENT_URL = new URL("./index.html", self.location.href);
@@ -266,7 +266,7 @@ self.addEventListener("notificationclick", (event) => {
 });
 
 self.addEventListener("pushsubscriptionchange", (event) => {
-  // The backend does not expose a subscription endpoint yet. The page can
-  // request a fresh subscription after receiving this message in a later phase.
+  // The page obtains a fresh session-bound proof before rotating the browser
+  // subscription through the authenticated backend endpoint.
   event.waitUntil(notifyClients({ type: "PUSH_SUBSCRIPTION_CHANGE_REQUIRED" }));
 });
