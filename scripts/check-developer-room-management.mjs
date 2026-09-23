@@ -10,7 +10,7 @@ const origin=process.env.RMS_QA_ORIGIN||'http://127.0.0.1:4175';
 const api='https://aodikrxcczbogjpsjwjt.supabase.co/functions/v1/api';
 const fixture={generatedAt:'2026-09-20T10:00:00+09:00',accounts:{total:12,active:11,byRole:{developer:1,admin:2,maid:9}},rooms:{total:121},auditEventsLast24Hours:28,runtime:{environment:'production',source:{apiVersion:'0.5.1'},projectRef:'aodikrxcczbogjpsjwjt',runtime:{name:'deno',version:'2'},configuration:{schedulerSecret:{configured:true}},checkedAt:'2026-09-20T10:00:00+09:00'},database:{databaseReachable:true,rlsValid:true,migrationDrift:'equal',rlsMissingCount:0,rowCounts:{profiles:12,rooms:121},checkedAt:'2026-09-20T10:00:00+09:00'},scheduler:{status:'healthy',cronConfigured:true,cronActive:true,cadence:'매 5분',schedulerActorValid:true,lastHeartbeat:{completedAt:'2026-09-20T10:00:00+09:00'}}};
 const source=await readFile(resolve('WIREFRAME/index.html'),'utf8');
-const html=source.replace('\n      void bootApplication();',`LIVE_RUNTIME.mode='live';LIVE_RUNTIME.status='ready';LIVE_RUNTIME.config=normalizeRuntimeConfig({apiBaseUrl:'${api}',supabaseUrl:'https://aodikrxcczbogjpsjwjt.supabase.co',supabasePublishableKey:'sb_publishable_abcdefghijklmnopqrstuvwxyz1234',sessionPersistence:'session',deploymentChannel:'preview',featureFlags:{optionalCleaningWorkflow:true}});state.remote=initialRemoteState();state.remote.auth={...state.remote.auth,status:'authenticated',user:{profileId:'10000000-0000-4000-8000-000000000001',displayName:'QA 개발자',role:'developer',mustChangePassword:false},session:{accessToken:'qa-token-never-log',refreshToken:'qa-refresh-never-log',expiresAt:Date.now()+3600000}};state.remote.developer={...state.remote.developer,status:'ready',overview:${JSON.stringify(fixture)},runtime:${JSON.stringify(fixture.runtime)},database:${JSON.stringify(fixture.database)},scheduler:${JSON.stringify(fixture.scheduler)},lastSuccessAt:${JSON.stringify(fixture.generatedAt)}};state.role='developer';state.liveView='overview';syncAuthState(state);render();`);
+const html=source.replace('\n      void bootApplication();',`LIVE_RUNTIME.mode='live';LIVE_RUNTIME.status='ready';LIVE_RUNTIME.config=normalizeRuntimeConfig({apiBaseUrl:'${api}',supabaseUrl:'https://aodikrxcczbogjpsjwjt.supabase.co',supabasePublishableKey:'sb_publishable_abcdefghijklmnopqrstuvwxyz1234',sessionPersistence:'session',deploymentChannel:'preview',featureFlags:{optionalCleaningWorkflow:true}});state.remote=initialRemoteState();state.remote.auth={...state.remote.auth,status:'authenticated',user:{profileId:'10000000-0000-4000-8000-000000000001',displayName:'QA 개발자',role:'developer',mustChangePassword:false},session:{accessToken:'qa-token-never-log',refreshToken:'qa-refresh-never-log',expiresAt:Date.now()+3600000}};state.remote.developer={...state.remote.developer,status:'ready',overview:${JSON.stringify(fixture)},runtime:${JSON.stringify(fixture.runtime)},database:${JSON.stringify(fixture.database)},scheduler:${JSON.stringify(fixture.scheduler)},lastSuccessAt:new Date().toISOString()};state.role='developer';state.liveView='overview';syncAuthState(state);render();`);
 
 const browser=await chromium.launch({headless:true,...(process.env.RMS_QA_BROWSER_CHANNEL?{channel:process.env.RMS_QA_BROWSER_CHANNEL}:{})});
 const context=await browser.newContext({viewport:{width:390,height:900},serviceWorkers:'block'}),page=await context.newPage();
@@ -25,9 +25,12 @@ await page.route('**/index.html*',route=>route.fulfill({status:200,contentType:'
 async function assertResponsive(width){
   await page.setViewportSize({width,height:width>=768?1000:950});
   await page.waitForTimeout(50);
+  await page.locator('[data-live-developer-rooms]').waitFor({state:'visible'});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`horizontal overflow at ${width}px`);
   const controls=page.locator('[data-live-developer-rooms] .select-control, [data-live-developer-rooms] .input-control, [data-live-developer-rooms] .btn');
-  for(let index=0;index<await controls.count();index+=1){const box=await controls.nth(index).boundingBox();assert(box&&box.height>=44,`control ${index} is below 44px at ${width}px`);}
+  const heights=await controls.evaluateAll(elements=>elements.map(element=>element.getBoundingClientRect().height));
+  assert(heights.length>0,`developer room controls missing at ${width}px`);
+  heights.forEach((height,index)=>assert(height>=44,`control ${index} is below 44px at ${width}px`));
 }
 
 try{
