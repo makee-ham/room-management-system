@@ -42,6 +42,9 @@ export function verifyCleaningContract(doc){
   for(const [path] of idempotentPosts){const parameters=paths[path].post.parameters||[];assert(parameters.some(item=>item.name==='Idempotency-Key'&&item.in==='header'&&item.required===true),`Missing required Idempotency-Key on POST ${path}`);}
   assert(paths['/v1/attempts/{attemptId}/photo-slots/{slotId}/upload'].post.requestBody?.content?.['image/jpeg'],'Photo upload must accept image/jpeg bytes.');
   assert(paths['/v1/attempts/{attemptId}/photo-slots/{slotId}/upload'].post.requestBody?.content?.['image/webp'],'Photo upload must accept image/webp bytes.');
+  const photoContent=paths['/v1/attempts/{attemptId}/photo-slots/{slotId}/upload'].post.requestBody?.content||{};
+  for(const mime of ['image/jpeg','image/webp','image/heic','image/heif'])assert(photoContent[mime]?.schema?.maxLength===5242880,`Photo upload ${mime} input must allow exactly 5MiB.`);
+  assert(paths['/v1/attempts/{attemptId}/photo-slots/{slotId}/upload'].post.description?.includes('300KiB'),'Photo upload must document the 300KiB normalized stored output.');
   assert(paths['/v1/availability/submissions'].post.description?.includes('어느 요일이든 직접 제출·변경'),'Availability submission must be open on every day and time.');
   assert(schemas.ErrorCode?.enum?.includes('AVAILABILITY_WEEK_OUT_OF_RANGE'),'Availability week-range error must be present.');
   assert(!schemas.ErrorCode?.enum?.includes('OUTSIDE_AVAILABILITY_WINDOW'),'Retired availability submission window error remains.');

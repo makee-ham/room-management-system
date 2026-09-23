@@ -2515,9 +2515,9 @@ for(const contract of [
   "button('객실 추가 · API 미제공','developer-room-create','primary','disabled aria-disabled=\"true\"')",
   "button('삭제 영향 확인 · API 미제공','developer-room-delete','outline','disabled aria-disabled=\"true\"')",
   "view==='rooms'?renderLiveDeveloperRooms()",
-  'function loadLiveReservations(){',
-  'function loadLiveAvailability(){',
-  'function loadLiveDeveloperStatus(){',
+  'function loadLiveReservations({quiet=false}={}){',
+  'function loadLiveAvailability({quiet=false}={}){',
+  'function loadLiveDeveloperStatus({quiet=false}={}){',
   "mutationApiRequest('/v1/reservations/cleaning-requests'",
   'pin-sync-events`',
   "mutationApiRequest('/v1/availability/submissions',{body})",
@@ -2619,6 +2619,30 @@ for(const [code,copy] of [
 ]){
   if(!html.includes(`${code}:'${copy}'`))throw new Error(`Room allocation reason copy missing: ${code}`);
 }
+for(const contract of [
+  "if(Number(delta)<0){openLiveRoomOperationForm('candle'",
+  'body.count<Number(room.candleCount)&&!body.physicallyVerified',
+  "if(kind==='candle'){closeModal();await loadLiveRooms({quiet:true});",
+  "catch(error){state.remote.rooms.status='ready';await loadLiveRooms({quiet:true});",
+]){
+  if(!html.includes(contract))throw new Error(`Live candle confirmation/recovery contract missing: ${contract}`);
+}
+console.log('Live candle confirmation and latest-state recovery contracts: passed');
+for(const contract of [
+  'const LIVE_READ_FRESH_MS=30000',
+  'function coalesceLiveLoad(key,task)',
+  'async function loadLiveViewData(view=currentView()',
+  "if(view==='today'){add(liveLoaderTask('payroll'",
+  'function renderLiveSurface()',
+  'const verifyDurable=!liveMode()',
+  "showModal({title:'예약 상세 준비'",
+  "showModal({title:'예약 현황 준비'",
+  "await Promise.all(kinds.map(async kind=>",
+]){
+  if(!html.includes(contract))throw new Error(`Live performance contract missing: ${contract}`);
+}
+if(html.includes("if(role==='admin'){await Promise.allSettled([loadLiveAccounts(),loadLiveRooms()"))throw new Error('Live login still preloads every admin API slice.');
+console.log('Live data loading, request coalescing, and partial-render performance contracts: passed');
 for(const detail of ["room.pinSyncStatus==='unconfigured'", "room.pinSyncStatus==='mismatch'", "room.dataStatus!=='verified'", 'PIN 동기화 미설정', '객실 기준정보 미확인']){
   if(!html.includes(detail))throw new Error(`Detailed room allocation reason guard missing: ${detail}`);
 }
@@ -2699,6 +2723,13 @@ for(const contract of ['/v1/assignments/preview','/v1/assignments/commit-impact'
 }
 for(const contract of ['runLiveCleaningMutation','expectedImpactFingerprint','expectedPhotoRevision','clientSubmissionId','responseType===\'blob\'','handleLiveNotificationAction']){
   if(!html.includes(contract))throw new Error(`Cleaning live implementation contract missing: ${contract}`);
+}
+for(const contract of ['commitImpactStatus:\'idle\'','draftSaveResults:new Map()','draftIdempotencyKeys:new Map()','data-cleaning-planning-impact','function saveLiveAssignmentDraftRows','cleaning-save-all-drafts','cleaning-manual-draft-review','await loadLiveCommitImpact({quiet:true,announce:false})','function liveAssignmentAllowsDirectChange','이미 시작된 작업은 직접 재배정하지 않습니다.']){
+  if(!html.includes(contract))throw new Error(`Continuous cleaning assignment contract missing: ${contract}`);
+}
+const assignmentContinuitySource=readFileSync(resolve(root,'scripts/check-cleaning-assignment-continuity.mjs'),'utf8');
+for(const contract of ['Preview 전 commit-impact 미배정 4개 객실 표시','일부 실패 뒤 성공 카드 유지','첫 확정 뒤 남은 2건 계속 배정 가능','진행 중 작업 직접 변경 차단']){
+  if(!assignmentContinuitySource.includes(contract))throw new Error(`Cleaning assignment continuity browser contract missing: ${contract}`);
 }
 for(const contract of ['function liveCleaningTabButton','function renderLiveAdminAssignmentDashboard','function renderLiveRandomAssignmentCard','class="assignment-page tab-panel"','오늘 배정','내일 배정','진행 중','검수 대상 목록','id="cleaning-section-random"','data-cleaning-assignments',"if(liveMode()){\n            state.cleaningTab=tab;"]){
   if(!html.includes(contract))throw new Error(`Cleaning wireframe fidelity contract missing: ${contract}`);
