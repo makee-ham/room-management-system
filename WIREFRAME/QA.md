@@ -2063,3 +2063,25 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium 151.0.792
 - `QA/screenshots/live-maid-section-photos-390.png`
 
 현재 OpenAPI v0.5.1의 다중 업로드·삭제는 `extra-proof` 슬롯에만 허용되고 일반 구역은 `maxPhotos: 1`이다. 따라서 이번 프런트는 지원 슬롯에서 3장·삭제를 실제 연결하고, 일반 구역에는 성공을 가장하지 않고 API 미제공 상태를 노출한다. 다만 현재 운영 CORS가 `DELETE`를 허용하지 않으므로 로컬 fixture에서 개별 삭제 계약을 통과했어도 운영 브라우저 삭제는 백엔드 배포 전까지 차단 상태다. 모든 구역의 실제 3장·삭제 활성화는 백엔드 계약 변경 후 서버가 해당 슬롯을 컬렉션으로 내려주고 CORS에 `DELETE`를 포함할 때 완성된다. 백엔드 추적 이슈는 `wrongstory/room-management-system-backend#303`이다.
+
+## 2026-09-26 · 전체 제출 검수 사진 URL 수명주기
+
+관리자 청소 상세의 전체 제출 검수 사진이 깨진 원인은 사진 API가 아니라 프런트의 blob URL 조기 폐기였다. 검수 상세를 열면서 만든 URL을 일반 모달 정리 함수가 즉시 폐기하던 결합을 제거하고, 검수 상세 이탈·탭 이동·세션 종료 경계에서만 폐기하도록 수정했다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 사진 content 응답 | 통과 · 유효한 PNG fixture 2장을 `GET /v1/photos/{photoId}/content`로 로드 |
+| 실제 렌더 | 통과 · 두 이미지 모두 `complete=true`, `naturalWidth/naturalHeight > 0` |
+| 일반 모달 간섭 | 통과 · 검수 상세에서 알림함을 열고 닫아도 blob URL 2개 유지, content GET 추가 0건 |
+| 상세 이탈 정리 | 통과 · 기존 뒤로가기·청소 탭 이동 경계에서 inspection detail과 blob URL 정리 유지 |
+| 세션 정리 | 통과 · 로그아웃·인증 전환 경계에서 inspection blob URL 명시 폐기 |
+| 오류·민감정보 | 통과 · page error·console warning/error 0건, token·사진 원문 로그 노출 0건 |
+
+회귀 명령:
+
+- `node scripts/check-workspace.mjs`
+- `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-cleaning-workflow.mjs`
+
+대표 PNG:
+
+- `QA/screenshots/live-wireframe-inspection-detail-1440.png`
