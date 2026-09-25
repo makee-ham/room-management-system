@@ -73,6 +73,8 @@ const REQUIRED_PATHS = new Map([
   ["/v1/attempts/{attemptId}/complete-field-work", ["post"]],
   ["/v1/attempts/{attemptId}/photo-slots", ["get"]],
   ["/v1/attempts/{attemptId}/photo-slots/{slotId}/upload", ["post"]],
+  ["/v1/attempts/{attemptId}/photo-slots/{slotId}/photos/{photoItemId}/upload", ["post"]],
+  ["/v1/attempts/{attemptId}/photo-slots/{slotId}/photos/{photoItemId}", ["delete"]],
   ["/v1/attempts/{attemptId}/submissions", ["get", "post"]],
   ["/v1/inspections", ["get"]],
   ["/v1/inspections/{submissionId}", ["get"]],
@@ -326,6 +328,16 @@ async function checkOpenApi(apiBaseUrl) {
     assert(photoContent[mime]?.schema?.maxLength === 5242880, `사진 업로드 ${mime} 입력 상한이 5MiB가 아닙니다.`);
   }
   assert(photoUpload?.description?.includes("300KiB"), "사진 업로드의 300KiB 저장본 정규화 계약이 없습니다.");
+  const collectionUpload = document.paths?.["/v1/attempts/{attemptId}/photo-slots/{slotId}/photos/{photoItemId}/upload"]?.post;
+  const collectionContent = collectionUpload?.requestBody?.content ?? {};
+  for (const mime of ["image/jpeg", "image/webp", "image/heic", "image/heif"]) {
+    assert(collectionContent[mime]?.schema?.maxLength === 5242880, `사진 컬렉션 업로드 ${mime} 입력 상한이 5MiB가 아닙니다.`);
+  }
+  const collectionDelete = document.paths?.["/v1/attempts/{attemptId}/photo-slots/{slotId}/photos/{photoItemId}"]?.delete;
+  assert(collectionDelete?.parameters?.some((parameter) => parameter.in === "header" && parameter.name === "Idempotency-Key" && parameter.required === true), "사진 컬렉션 삭제 Idempotency-Key 계약이 없습니다.");
+  const photoSlotSchema = document.components?.schemas?.AttemptPhotoSlots?.properties?.slots?.items?.properties;
+  assert(photoSlotSchema?.maxPhotos?.enum?.includes(10), "사진 슬롯 maxPhotos 10 계약이 없습니다.");
+  assert(photoSlotSchema?.photos?.items?.$ref?.endsWith("/AttemptPhotoItem"), "사진 슬롯 컬렉션 items 계약이 없습니다.");
   const operationCount = Object.values(document.paths ?? {}).reduce(
     (count, item) => count + Object.keys(item).filter((key) => ["get", "post", "put", "patch", "delete", "head", "options"].includes(key)).length,
     0,
@@ -347,7 +359,7 @@ async function checkCors(apiBaseUrl) {
   assert(response.headers.get("access-control-allow-origin") === TEST_ORIGIN, "CORS 허용 origin이 요청 origin과 다릅니다.");
   assert(response.headers.get("access-control-allow-credentials") === "true", "CORS credentials 허용이 없습니다.");
   const allowedMethods = headerTokens(response.headers, "access-control-allow-methods");
-  for (const method of ["get", "post", "patch", "options"]) {
+  for (const method of ["get", "post", "patch", "delete", "options"]) {
     assert(allowedMethods.has(method), `CORS 허용 method가 없습니다: ${method.toUpperCase()}`);
   }
   const allowedHeaders = headerTokens(response.headers, "access-control-allow-headers");

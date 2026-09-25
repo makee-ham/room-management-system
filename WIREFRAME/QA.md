@@ -2039,3 +2039,27 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium 151.0.792
 대표 PNG:
 
 - `QA/screenshots/admin-quick-booking-optimistic-390.png`
+
+## 2026-09-26 · 운영 청소 구역 사진 UI 일치·3장 상한
+
+와이어프레임과 운영 메이드 청소 상세의 사진 구성을 `구역명 · N/3장 → 항목명·설명 → 썸네일·개별 삭제 → 촬영/갤러리`로 통일했다. 기존 10장 상한은 현재 사용자 결정에 따라 와이어프레임과 운영 화면 모두 3장으로 낮췄다. Browser 플러그인이 제공되지 않아 번들 Playwright Chromium 151.0.7922.34로 검증했으며 운영 mutation은 실행하지 않았다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 와이어프레임 상한 | 통과 · 공통 `MAID_ZONE_PHOTO_LIMIT=3`, 모든 현재 구역·기타·특이사항·폭탄방 선택 수가 같은 상한 사용 |
+| 운영 구역 구조 | 통과 · 서버 슬롯을 객실 유형의 기존 구역·항목 표시 모델에 투영하고 모든 구역 헤더에 `N/3장` 표시 |
+| 컬렉션 추가 | 통과 · 서버 `maxPhotos: 10` fixture에서 갤러리 4장 선택 시 POST 3회만 실행하고 네 번째 파일 제외 |
+| 사진 미리보기 | 통과 · 권한이 있는 현재 attempt 사진만 `GET /v1/photos/{photoId}/content`로 읽어 탭 메모리의 blob URL로 표시 |
+| 개별 삭제 | 통과 · 사진 항목별 DELETE에 assignment revision·collection revision·item revision·Idempotency-Key 사용, 성공 후 서버 슬롯 재조회 |
+| 삭제 후 재추가 | 통과 · 3/3에서 추가 버튼 잠김, 한 장 삭제 후 2/3과 버튼 활성 복원, 카메라 WebP 한 장 재추가 후 3/3 |
+| 모달 복귀 | 통과 · 사진 3장 표시 중 알림함을 열고 닫은 뒤 재렌더해도 기존 blob 미리보기를 재사용하고 중복 content GET을 생성하지 않음 |
+| 일반 슬롯 계약 부재 | 통과 · 현재 서버 `maxPhotos: 1` 슬롯은 기존 한 장 교체를 유지하고 `추가 촬영·사진 삭제 API 미제공` 표시 |
+| 반응형·접근성 | 통과 · 360/390/768/1440px 가로 넘침 0건, 촬영·갤러리·삭제 컨트롤 44px 이상, 파일 입력 접근성 이름 유지 |
+| 브라우저 품질 | 통과 · page error·console warning/error 0건, token·PIN·고객명 URL/console 노출 0건 |
+| 운영 CORS DELETE | 차단 · 운영 preflight의 `Access-Control-Allow-Methods` 에 `DELETE` 가 없어 실제 브라우저 개별 삭제는 아직 검수 통과로 표시할 수 없음 |
+
+대표 PNG:
+
+- `QA/screenshots/live-maid-section-photos-390.png`
+
+현재 OpenAPI v0.5.1의 다중 업로드·삭제는 `extra-proof` 슬롯에만 허용되고 일반 구역은 `maxPhotos: 1`이다. 따라서 이번 프런트는 지원 슬롯에서 3장·삭제를 실제 연결하고, 일반 구역에는 성공을 가장하지 않고 API 미제공 상태를 노출한다. 다만 현재 운영 CORS가 `DELETE`를 허용하지 않으므로 로컬 fixture에서 개별 삭제 계약을 통과했어도 운영 브라우저 삭제는 백엔드 배포 전까지 차단 상태다. 모든 구역의 실제 3장·삭제 활성화는 백엔드 계약 변경 후 서버가 해당 슬롯을 컬렉션으로 내려주고 CORS에 `DELETE`를 포함할 때 완성된다. 백엔드 추적 이슈는 `wrongstory/room-management-system-backend#303`이다.
