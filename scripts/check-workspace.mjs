@@ -356,7 +356,7 @@ for (const contract of [
   "requirementsMode:'photo-only-v1'",
   '구역별 촬영',
   '인증 항목 ${requiredUploads.length}개 · 각 구역 전체 최대 ${MAID_ZONE_PHOTO_LIMIT}장',
-  'const MAID_ZONE_PHOTO_LIMIT=10',
+  'const MAID_ZONE_PHOTO_LIMIT=3',
   'function taskUploadRemainingCapacity(task,upload)',
   '남은 인증 사진 ${photosLeft}장',
   'taskZoneGroups',
@@ -498,8 +498,8 @@ for (const [typeId, expected] of Object.entries(expectedCheckoutPhotoCounts)) {
   if (rules.some(rule => rule.zone !== '기타' && rule.required !== true)) {
     throw new Error(`${typeId} has a non-기타 slot that is not required.`);
   }
-  if (rules.some(rule => rule.zone === '기타' && (rule.required !== false || rule.maxPhotos !== 10))) {
-    throw new Error(`${typeId} 기타 slot must be optional with maxPhotos 10.`);
+  if (rules.some(rule => rule.zone === '기타' && (rule.required !== false || rule.maxPhotos !== 3))) {
+    throw new Error(`${typeId} 기타 slot must be optional with maxPhotos 3.`);
   }
 }
 for (const contract of [
@@ -1698,7 +1698,7 @@ for (const contract of ['관리자·메이드 모바일 UX 단순화', '접이�
 for (const contract of ['객실 호수 링크·배정 요약 담당 변경', '객실 타입 링크는 0개', '배정된 변경 1건 저장·통보', 'admin-assignment-room-link-1440.png', 'admin-assignment-summary-edit-1440.png', 'admin-assignment-summary-edit-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Editable assignment summary QA contract missing: ${contract}`);
 }
-for (const contract of ['객실·예약·청소 사용성 보완 (2026-09-01)', '이 페이지` 목차', '우선순위를 위·아래로 조정하는 컨트롤은 제공하지 않습니다', '한 구역에 속한 전체 항목의 사진 합계는 최대 10장', '원형 `ⓘ`']) {
+for (const contract of ['객실·예약·청소 사용성 보완 (2026-09-01)', '이 페이지` 목차', '우선순위를 위·아래로 조정하는 컨트롤은 제공하지 않습니다', '한 구역에 속한 전체 항목의 사진 합계는 최대 3장', '원형 `ⓘ`']) {
   if (!wireframeReadme.includes(contract)) throw new Error(`2026-09-01 usability README contract missing: ${contract}`);
 }
 if (html.includes('내일 청소·일정 주의 한눈에') || html.includes('assignmentAttentionItems()')) {
@@ -2099,7 +2099,7 @@ for (const contract of [
   '메이드 제출 기준 ${expectedItems.length}개 슬롯 · 관리자 검수 ${items.length}개 슬롯',
   'data-template-contract-match="${structureMatches?\'true\':\'false\'}"',
   "snapshot?.photos?.some(item=>item.id==='tv-on'||String(item.id).startsWith('tv-on-'))",
-  '일반 슬롯은 1장, 기타 슬롯은 최대 10장을 유지합니다.',
+  '일반 슬롯은 1장, 기타 슬롯은 최대 ${MAID_ZONE_PHOTO_LIMIT}장을 유지합니다.',
   'function enforceCleaningPhotoRequirementRules(items=[])',
   'data-template-max-photos="${photoUploadLimit(item)}"',
   'typeTemplateParity:(typeId,kind=\'퇴실 청소\')=>',
@@ -2127,7 +2127,7 @@ for(const stale of ["${esc(upload.label)} · ${upload.required?'필수':'선택'
   if(taskZoneCardSource.includes(stale))throw new Error(`Maid photo card still renders redundant slot copy: ${stale}`);
 }
 if(html.includes("{id:'entry-number',zone:'현관',label:'객실번호·현관'"))throw new Error('Current templates still contain the redundant room-number entrance slot.');
-if((html.match(/required:false,fixture:'supply',multiple:true,maxPhotos:10/g)||[]).length!==6)throw new Error('All six optional evidence slots must use maxPhotos 10.');
+if((html.match(/required:false,fixture:'supply',multiple:true,maxPhotos:3/g)||[]).length!==6)throw new Error('All six optional evidence slots must use maxPhotos 3.');
 if((html.match(/zone:'기타'/g)||[]).length<6||html.includes("zone:'선택 증빙'"))throw new Error('Optional evidence zone must be named 기타 everywhere.');
 for(const contract of [
   'function photoUploadLimit(upload)',
@@ -2591,7 +2591,7 @@ for(const contract of [
   '/pin-changes/prepare`,{body:{pinDigits,expectedPinVersion:',
   '/pin-changes/${encodeURIComponent(context.leaseId)}/${action}`',
   'clearLivePageSecretsForHide(){',
-  'clearLivePinReveal();document.querySelectorAll',
+  'clearLivePinReveal();clearActiveCleaningPhotoUrls();document.querySelectorAll',
 ]){
   if(!html.includes(contract))throw new Error(`Production room PIN contract missing: ${contract}`);
 }
@@ -2757,10 +2757,10 @@ for(const contract of ['export type RoomProjection =','primaryDisplayStatus: Roo
 }
 if(!serveSource.includes('"optionalCleaningWorkflow": True')||!pagesBuildSource.includes('optionalCleaningWorkflow: true'))throw new Error('Cleaning workflow live runtime gate must be enabled.');
 if(!html.includes("value.featureFlags?.optionalCleaningWorkflow===true"))throw new Error('Cleaning release gate must require an explicit boolean.');
-for(const contract of ['/v1/assignments/preview','/v1/assignments/commit-impact','/v1/attempts/{attemptId}/photo-slots','/v1/attempts/{attemptId}/submissions','/v1/inspections/{submissionId}/approve','/v1/notifications/{notificationId}/read']){
+for(const contract of ['/v1/assignments/preview','/v1/assignments/commit-impact','/v1/attempts/{attemptId}/photo-slots','/v1/attempts/{attemptId}/photo-slots/{slotId}/photos/{photoItemId}/upload','/v1/attempts/{attemptId}/photo-slots/{slotId}/photos/{photoItemId}','/v1/attempts/{attemptId}/submissions','/v1/inspections/{submissionId}/approve','/v1/notifications/{notificationId}/read']){
   if(!cleaningTypes.includes(contract.split('/').at(-1) || '')&&!readFileSync(resolve(root,'scripts/generate-cleaning-client.mjs'),'utf8').includes(contract))throw new Error(`Cleaning API generated contract missing: ${contract}`);
 }
-for(const contract of ['runLiveCleaningMutation','expectedImpactFingerprint','expectedPhotoRevision','clientSubmissionId','responseType===\'blob\'','handleLiveNotificationAction']){
+for(const contract of ['runLiveCleaningMutation','expectedImpactFingerprint','expectedPhotoRevision','expectedCollectionRevision','expectedItemRevision','cleaning-photo-delete','liveCleaningPhotoGroups','clientSubmissionId','responseType===\'blob\'','handleLiveNotificationAction']){
   if(!html.includes(contract))throw new Error(`Cleaning live implementation contract missing: ${contract}`);
 }
 for(const contract of ['commitImpactStatus:\'idle\'','draftSaveResults:new Map()','draftIdempotencyKeys:new Map()','data-cleaning-planning-impact','function saveLiveAssignmentDraftRows','cleaning-save-all-drafts','cleaning-manual-draft-review','await loadLiveCommitImpact({quiet:true,announce:false})','function liveAssignmentAllowsDirectChange','이미 시작된 작업은 직접 재배정하지 않습니다.']){

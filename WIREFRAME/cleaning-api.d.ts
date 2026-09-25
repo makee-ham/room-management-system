@@ -524,8 +524,31 @@ export type AttemptPhotoSlots = {
 }>;
 };
 
+export type AttemptPhotoItem = {
+  photoItemId: string | null;
+  itemRevision: number;
+  displayOrder: number;
+  photoId: string | null;
+  photoVersion: number;
+  uploadStatus: "verified" | "pending" | "failed" | "purged" | "expired" | "unavailable";
+  retentionPolicy: "cleaning_submission" | "room_issue" | "complaint" | "interruption" | "sync_conflict" | "mixed" | "orphan" | "legacy_upload";
+  retentionStartsAt: string | null;
+  expiresAt: string | null;
+  purgedAt: string | null;
+  mediaAvailability: "available" | "purged" | "unavailable";
+};
+
 export type PhotoUploadResponse = PhotoUploadOperation & {
 
+};
+
+export type PhotoCollectionDeleteResponse = {
+  attemptId: string;
+  targetSlotId: string;
+  photoItemId: string;
+  collectionRevision: number;
+  itemRevision: number;
+  deleted: true;
 };
 
 export type BombRoomReportRequest = {
@@ -1291,20 +1314,6 @@ export type CheckoutIncident = {
   resolvedAt?: string | null;
   currentDecisionId?: string | null;
   decision?: CheckoutIncidentDecision | null;
-};
-
-export type AttemptPhotoItem = {
-  photoItemId: string | null;
-  itemRevision: number;
-  displayOrder: number;
-  photoId: string | null;
-  photoVersion: number;
-  uploadStatus: "verified" | "pending" | "failed" | "purged" | "expired" | "unavailable";
-  retentionPolicy: "cleaning_submission" | "room_issue" | "complaint" | "interruption" | "sync_conflict" | "mixed" | "orphan" | "legacy_upload";
-  retentionStartsAt: string | null;
-  expiresAt: string | null;
-  purgedAt: string | null;
-  mediaAvailability: "available" | "purged" | "unavailable";
 };
 
 export type PhotoUploadOperation = {
