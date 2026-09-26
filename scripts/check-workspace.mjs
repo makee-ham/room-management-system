@@ -2510,6 +2510,9 @@ for(const contract of [
 ]){
   if(!html.includes(contract))throw new Error(`Production auth/PWA contract missing: ${contract}`);
 }
+const rawCloseModalSource=html.match(/function rawCloseModal\([^]*?\n\s*}\n\s*function dismissModal/)?.[0]||'';
+if(rawCloseModalSource.includes('clearCleaningPhotoUrls()'))throw new Error('Generic modal close must not revoke inspection photo URLs.');
+if(!html.includes('clearLivePinReveal();clearActiveCleaningPhotoUrls();clearCleaningPhotoUrls();'))throw new Error('Session cleanup must revoke inspection photo URLs.');
 for(const contract of [
   "function defaultLiveView(role){return role==='admin'?'today':role==='developer'?'overview':'my';}",
   'const liveAdminNav=adminNav;',

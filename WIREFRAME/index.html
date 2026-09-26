@@ -3183,7 +3183,7 @@
         const next={...session,user:safe,remember:!!remember};state.remote.auth={...state.remote.auth,status:'authenticated',user:safe,session:persistLiveSession(next,remember)||next,error:null,remember:!!remember,passwordMode:false};const pushProjection=readSafePushProjection(safe.profileId);if(pushProjection)state.remote.push={...state.remote.push,status:pushProjection.status==='active'?'active':'idle',subscription:pushProjection};state.role=safe.role;state.liveView=requestedLiveView(safe.role)||defaultLiveView(safe.role);syncLiveViewUrl(state.liveView);syncAuthState(state);scheduleLiveRefresh();return safe;
       }
       function clearLiveAuthSurface(){
-        LIVE_IDEMPOTENCY_KEYS.clear();clearAllPinModalSecrets();clearLivePinReveal();clearActiveCleaningPhotoUrls();livePinChangeContext=null;liveRoomDetail=null;liveRoomDetailReturnY=0;uncertainLiveMutation=null;try{sessionStorage.removeItem(cleaningIncidentStorageKey());}catch{}state.remote.cleaning=initialCleaningState();maskPin();protectedPinOverrides.clear();pendingPin=null;rawCloseModal();state.detail=null;
+        LIVE_IDEMPOTENCY_KEYS.clear();clearAllPinModalSecrets();clearLivePinReveal();clearActiveCleaningPhotoUrls();clearCleaningPhotoUrls();livePinChangeContext=null;liveRoomDetail=null;liveRoomDetailReturnY=0;uncertainLiveMutation=null;try{sessionStorage.removeItem(cleaningIncidentStorageKey());}catch{}state.remote.cleaning=initialCleaningState();maskPin();protectedPinOverrides.clear();pendingPin=null;rawCloseModal();state.detail=null;
         if(isWireframeHistory(history.state))history.replaceState(null,'',`${location.pathname}${location.search}`);
       }
       function clearLivePageSecretsForHide(){
@@ -4193,7 +4193,7 @@
       }
       function rawCloseModal({restoreFocus=false,restoreScroll=true}={}) {
         const root=document.getElementById('modal-root'),wasPin=!!root?.querySelector('.pin-sheet'),trigger=modalTrigger;
-        clearCleaningPhotoUrls();if(root)root.innerHTML='';restoreModalViewport({restore:restoreScroll});setModalBackgroundLocked(false);
+        if(root)root.innerHTML='';restoreModalViewport({restore:restoreScroll});setModalBackgroundLocked(false);
         if(restoreFocus)trigger?.focus?.({preventScroll:true});modalTrigger=null;if(wasPin){pinCardTrigger=null;activePinModalSessionId=null;}
       }
       function dismissModal() {
