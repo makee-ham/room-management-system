@@ -15,6 +15,17 @@
 
 > 2026-08-16 이후 타입별 기본 청소요금은 시트 값 `16,000 / 20,000 / 20,000 / 30,000원`이 운영 정본이다. 이전 임시 금액을 사용한 기록과 PNG는 현재 단가 검증 근거가 아니며, 아래 `재검증 예정` 기대값을 실제 브라우저에서 다시 확인한 뒤 새 증거로 교체해야 한다.
 
+## 추가 검증 · PR #192 검수 사진 URL 수명주기와 모바일 폭
+
+2026-09-26 PR #192를 최신 `dev`에 적용해 로컬 fixture와 Vercel Preview 운영 연결 화면을 함께 확인했다. 검수 사진 원문이나 URL은 저장·로그에 남기지 않았고 승인·반려 등 운영 mutation은 실행하지 않았다.
+
+| 검증 | 결과 | 실제 확인 내용 |
+|---|---|---|
+| 사진 URL 수명주기 | PASS | 관리자 검수 상세의 사진 Blob URL 11개가 실제 픽셀로 로드됐다. 운영 알림 모달을 열고 닫은 뒤에도 같은 URL과 픽셀이 유지됐고 사진 재조회도 발생하지 않았다. 검수 상세 이탈·세션 정리에서는 URL을 해제하는 로컬 회귀를 통과했다. |
+| 모바일 검수 상세 | PASS | 운영 데이터에서 `<figure>` 기본 좌우 여백 때문에 390px 문서가 11px 넘치던 원인을 확인하고 `.inspection-photo { margin: 0; }`으로 보정했다. 360/390/768/1440px 가로 넘침 0px를 회귀로 고정했다. |
+| 반응형·오류 | PASS | Chrome 153 + Playwright에서 검수 상세 네 너비와 사진 로드, 일반 모달 왕복, 승인·반려 fixture를 확인했다. console warning/error와 page error는 0건이었다. 대표 PNG는 `QA/screenshots/live-wireframe-inspection-detail-390.png`, `QA/screenshots/live-wireframe-inspection-detail-1440.png`이다. |
+| PWA 갱신 | PASS | 설치 앱의 새 HTML·스타일 반영을 위해 서비스 워커를 `2026-09-26-1`로 올렸다. Preview 재배포 뒤 고정 origin의 최신 worker와 화면을 다시 확인한다. |
+
 ## 문서 계약 갱신 · 사진 개별 업로드와 ZIP 폐기
 
 2026-09-23 사용자 결정에 따라 ZIP 생성·업로드·보관을 전부 폐기하고 사진 슬롯별 개별 업로드만 정본으로 확정했다. 앱이 열린 동안의 한 장씩 처리하는 메모리 큐, 디코딩 가능한 사진의 선택 직후 최적화, 고정 5초 전체 수신 제한 제거, 30초 무진행 idle, 5MiB 바이트 상한, `객실호수_YYYY-MM-DD` KST 비공개 Drive 폴더와 opaque 객체명을 `DOCS/19_ROOM_PIN_SHEET_CLEANING_HISTORY_DECISIONS.md`와 연동 문서에 반영했다.
