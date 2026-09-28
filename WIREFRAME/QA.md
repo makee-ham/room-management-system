@@ -1,5 +1,37 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-09-29 API 누락 연결 검증
+
+Browser plugin이 제공되지 않아 Chromium 151.0.7922.34 + Playwright로 검사했다. 보호 API와 업무 변경은 모두 로컬 fixture로 가로챘고, 실제 운영 API는 health/OpenAPI/CORS/publishable key만 읽기 전용으로 확인했다. 현재 연결 결과와 B01~B07 협의 항목은 [문서 28](../DOCS/28_FRONTEND_CONNECTION_BACKEND_MEETING.md)에 있다.
+
+| 검사 | 결과 | 확인 범위 |
+| --- | --- | --- |
+| `check-live-connections.mjs` | PASS · 6그룹 | 카탈로그/정원 preview·CAS·TTL·409·등록/비활성, 실제 객실 사건/중지/이슈·해제·표시 정정, CSV PIN 제외, PIN 시트 접수 fence, 관리자 계정 진입, 최초 3슬롯 템플릿 발행, 감사/활동/진단, 오프라인 격리 정정, 알림 페이지/정확한 날짜·요청·지급 주차, 메이드 과거 배정 이력, 수행 불가 CAS |
+| `check-cleaning-workflow.mjs` | PASS · 30그룹 | 배정·통보·검수·현장 완료·PIN·권한, 응답 유실 동일 키 재시도·409, 사진 0/1/20/21장·7+13/7+14·삭제/재추가·부분 실패, 폭탄방/특이사항 분리, 증빙 판정 전 전체 검수 잠금, 불인정 후 승인 해제, 7일 이력/확대/Back, 1920px 최적화, 두 객실 큐와 내부 화면 이동·동시 업로드 최대 1건, 실제 브라우저 offline→online 완료 전송 |
+| `check-cleaning-assignment-continuity.mjs` | PASS · 10그룹 | 미배정 대상·부분 실패·동일 키 재시도·연속 통보·후속 배정·날짜별 후보 조회·수동 지정·진행 중 직접 변경 차단 |
+| `check-live-navigation.mjs` | PASS · 5그룹 | 홈→검수/내일 배정·하위 탭 직접 링크·Back/Forward·모달·사진 Escape·권한·주차 stale 응답·검수 후 주급 갱신 |
+| `check-operational-api.mjs` | PASS · 8그룹 | 관리자/본인 주급·정정·지급 상태 기록, 컴플레인 원 청소 조회/접수/판정/이의 확인/종결, Push 구독·폐기 |
+| `check-reservation-bookability.mjs` | PASS · 10그룹 | 6개 카드 상태·예약 인원·구간/기간 경계·장기투숙·생성/취소·객실 이동 preview/CAS/TTL |
+| `check-reservation-arrival-room-move.mjs` | PASS · 6그룹 | 데모 정본의 입실 예정/예약 상태·예약 전/투숙 중 객실 이동·모달 Escape. 테스트 runtime을 demo로 명시해 운영 설정과 독립시킴 |
+| `check-live-performance.mjs` | PASS · 12그룹 | 즉시 화면/모달 표시·shell 유지·기간 캐시·중복 요청 합치기·낙관적 예약 표시. 날짜가 바뀌어도 같은 fixture를 검증하도록 시계 고정 |
+| `check-candle-stepper.mjs` | PASS · 5그룹 | 수량 증가·감소 확인·실패 후 version 갱신·포커스·PWA 버전 형식 검사. 과거 배포 버전 문자열 고정 검사는 제거 |
+| `check-pwa.mjs` | PASS | manifest/icon·정적 shell cache 경계·업데이트 메시지·민감 Push 데이터 차단 |
+| `check-api-integration.mjs` | PASS | 실제 production origin의 CORS, 운영 health 정상, OpenAPI 0.6.0 131 paths / 141 operations |
+| `check-workspace.mjs` / `build-pages-artifact.mjs` | PASS | 필수 파일 154개·inline script 문법·역할/액션/보안 정적 계약·정본 hash·배포 artifact 생성 |
+
+### UX/UI 확인
+
+- 360/390/768/1440px에서 주요 관리자/메이드 화면 가로 넘침, 빈 접근성 이름, 콘솔 warning/error와 page error를 검사했다. 사진·객실 조작의 44px 터치 영역, Enter/Escape·포커스 복귀·모달과 상세 Back/Forward를 확인했다.
+- 기존 와이어프레임의 객실 4개 주요 버튼과 청소의 근무표→랜덤 초안→담당 수정→메이드별 요약 순서를 유지한다. API 필드를 나열한 대체 대시보드로 바꾸지 않는다.
+- 대표 변경 PNG: `QA/screenshots/live-connections-catalog-{390,1440}.png`, `live-connections-room-{390,1440}.png`, `live-connections-accounts-{390,1440}.png`, `live-wireframe-cleaning-{390,1440}.png`, `live-flat-cleaning-photos-{390,1440}.png`, `live-admin-complaint-1440.png`, `live-admin-payroll-390.png`.
+- 전체 페이지 PNG의 고정 하단 내비게이션이 첫 viewport 하단에 보이는 것은 캡처 방식이다. 실제 viewport·스크롤·포커스·주요 버튼 이동을 별도로 검증했다.
+- 최종 정책 감사 원문은 변경하지 않았다. 서비스 워커 버전은 `2026-09-29-1`이다.
+- Production artifact의 실제 HTML hash·runtime·worker 확인 결과는 해당 배포 PR의 결과 기록에 남긴다. 브라우저 fixture 검사와 인증 후 운영 UAT를 구분한다.
+
+### 운영 미검증 범위
+
+실제 계정의 청소 배정/사진 업로드/승인·반려/주급 기록, 실제 Drive 정규화·원본 삭제, Push 전달, 여러 관리자 동시 변경, 제한 계정, Android/iOS 갤러리·카메라·설치 앱 물리 Back은 아직 UAT가 필요하다. 테스트용 메이드/객실을 지정받지 않았으므로 운영 기록을 임의로 만들거나 지급 상태를 변경하지 않았다. 아래 과거 PASS를 이 범위의 실운영 통과로 해석하지 않는다.
+
 - 검증일: 2026-09-22
 - 추가 검증일: 2026-09-22 · 객실 촛불 감소 확인 흐름 (#172)
 - 문서 갱신일: 2026-09-23 · 사진 개별 업로드·메모리 큐·수신/저장 계약 확정

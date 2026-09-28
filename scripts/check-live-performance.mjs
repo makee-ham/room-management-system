@@ -25,6 +25,7 @@ const sleep=ms=>new Promise(resolveDelay=>setTimeout(resolveDelay,ms));
 const json=(route,value,status=200)=>route.fulfill({status,contentType:'application/json',headers:{'x-request-id':'qa-performance'},body:JSON.stringify(value)});
 const browser=await chromium.launch({headless:true,...(process.env.RMS_QA_BROWSER_CHANNEL?{channel:process.env.RMS_QA_BROWSER_CHANNEL}:{})});
 const context=await browser.newContext({viewport:{width:390,height:900},serviceWorkers:'block'}),page=await context.newPage();
+await page.clock.setFixedTime(new Date('2026-09-24T10:00:00+09:00'));
 page.setDefaultTimeout(5000);const pageErrors=[],consoleProblems=[];
 page.on('pageerror',error=>pageErrors.push(error.message));
 page.on('console',message=>{if(['warning','error'].includes(message.type())&&!/^Failed to load resource:/.test(message.text()))consoleProblems.push(message.text());});

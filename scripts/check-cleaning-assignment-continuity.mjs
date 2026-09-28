@@ -26,6 +26,9 @@ const json=(route,value,status=200)=>route.fulfill({status,contentType:'applicat
 await page.route('**/favicon.ico',route=>route.fulfill({status:204,body:''}));await page.route('**/index.html*',route=>route.fulfill({status:200,contentType:'text/html',body:html}));
 await page.route(`${api}/**`,async route=>{const request=route.request(),url=new URL(request.url()),path=url.pathname.replace('/functions/v1/api',''),method=request.method(),key=request.headers()['idempotency-key']||null,payload=request.postData()?JSON.parse(request.postData()):null;requests.push({method,path,key,payload,at:performance.now()});
   if(method==='GET'&&path==='/v1/assignments')return json(route,{assignments});
+  if(method==='GET'&&path==='/v1/accounts')return json(route,{accounts:[{profileId:ids.maid1,displayName:maidName(ids.maid1),role:'maid',status:'active'},{profileId:ids.maid2,displayName:maidName(ids.maid2),role:'maid',status:'active'}]});
+  if(method==='GET'&&path==='/v1/availability')return json(route,{availability:[]});
+  if(method==='GET'&&path==='/v1/availability/candidates')return json(route,{candidates:[ids.maid1,ids.maid2].map(maidProfileId=>({maidProfileId,displayName:maidName(maidProfileId),workDate:url.searchParams.get('workDate'),availabilityVersion:7}))});
   if(method==='GET'&&path==='/v1/assignments/commit-impact')return json(route,{impact:impact()});
   if(method==='GET'&&path==='/v1/assignment-change-requests')return json(route,{requests:[],nextCursor:null});
   if(method==='GET'&&path==='/v1/inspections')return json(route,{submissions:[]});
