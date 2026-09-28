@@ -28,14 +28,15 @@ const context=await browser.newContext({viewport:{width:390,height:900},serviceW
 const testPhoto=Buffer.from(await page.evaluate(()=>{const canvas=document.createElement('canvas');canvas.width=640;canvas.height=400;const ctx=canvas.getContext('2d');ctx.fillStyle='#edf2f4';ctx.fillRect(0,0,640,400);['#167c65','#cf3445','#1d607f'].forEach((color,index)=>{ctx.fillStyle=color;ctx.fillRect(40+index*195,40,170,245);});ctx.fillStyle='#162b36';ctx.font='22px sans-serif';ctx.fillText('QA FIXTURE / NOT A ROOM PHOTO',40,345);return canvas.toDataURL('image/png').split(',')[1];}),'base64');
 page.setDefaultTimeout(10000);
 const errors=[],warnings=[],requests=[],missing=[];
-let delayedWeek=null,releaseDelay=null,invalidPayroll=false;
+let delayedWeek=null,releaseDelay=null,invalidPayroll=false,approved=false,inspectionPages=0;
 page.on('pageerror',error=>errors.push(error.message));page.on('console',message=>{if(['warning','error'].includes(message.type())&&!message.text().startsWith('Failed to load resource:'))warnings.push(message.text());});
 await page.route('**/index.html*',route=>route.fulfill({contentType:'text/html',body:html}));
 await page.route('**/favicon.ico',route=>route.fulfill({status:204,body:''}));
 await page.route(`${api}/**`,async route=>{
   const url=new URL(route.request().url()),path=url.pathname.replace('/functions/v1/api','');requests.push(path+url.search);
-  assert.equal(route.request().method(),'GET','Navigation must not perform mutations');
   const json=data=>route.fulfill({contentType:'application/json',body:JSON.stringify(data)});
+  if(path===`/v1/inspections/${submission.id}/approve`&&route.request().method()==='POST'){approved=true;return json({inspection:{submissionId:submission.id,decision:'approved'}});}
+  assert.equal(route.request().method(),'GET','Only the explicit fixture approval may mutate');
   if(path==='/v1/payroll'){const week=url.searchParams.get('weekStart');if(week===delayedWeek)await new Promise(resolve=>{releaseDelay=resolve;});return json({payroll:[{...cycle(week),...(invalidPayroll?{totalAmount:null}:{})}],nextCursor:null});}
   if(path==='/v1/payroll/entries')return json({entries:[],nextCursor:null});
   if(path==='/v1/notifications')return json({notifications:[],nextCursor:null});
@@ -47,13 +48,14 @@ await page.route(`${api}/**`,async route=>{
   if(path==='/v1/assignments')return json({assignments:[]});
   if(path==='/v1/assignment-change-requests')return json({requests:[],nextCursor:null});
   if(path==='/v1/assignments/commit-impact')return json({impact:{serviceDate:date,committableDrafts:[],blockedDrafts:[],remainingUnassignedTargets:[]}});
-  if(path==='/v1/inspections')return json({submissions:[submission]});
+  if(path==='/v1/inspections'){inspectionPages++;return json({submissions:approved||url.searchParams.has('cursor')?[]:[submission],nextCursor:approved||url.searchParams.has('cursor')?null:'QA-NEXT-PAGE'});}
   if(path===`/v1/inspections/${submission.id}`)return json({submission});
+  if(path===`/v1/cleaning-history/${submission.id}`)return json({submission:{...submission,status:'approved'}});
   if(path.startsWith('/v1/photos/'))return route.fulfill({contentType:'image/png',body:testPhoto});
   if(path.startsWith('/v1/availability'))return json({availabilities:[],availability:null,requests:[]});
   if(path==='/v1/work-history')return json({weekStart:monday,items:[],nextCursor:null});
   if(path==='/v1/complaints')return json({complaints:[],nextCursor:null});
-  if(path==='/v1/cleaning-history')return json({date,fromDate:date,toDate:date,items:[],nextCursor:null});
+  if(path==='/v1/cleaning-history')return json({date,fromDate:date,toDate:date,items:[{attemptId:id(5),submissionId:submission.id,performerProfileId:id(2),performerDisplayName:'QA 메이드',roomNumber:'211',roomTypeName:'스탠다드',cleaningKind:'checkout',fieldCompletedAt:`${date}T12:00:00+09:00`,serviceDate:date,inspectionStatus:'approved',mediaAvailability:'available',photoCount:2,baseFeeSnapshot:16000,earningTotalAmount:16000},{attemptId:id(50),submissionId:id(51),performerProfileId:id(52),performerDisplayName:'다른 QA 메이드',roomNumber:'999',cleaningKind:'checkout',fieldCompletedAt:`${date}T12:00:00+09:00`,serviceDate:date,inspectionStatus:'approved',mediaAvailability:'available'}],nextCursor:null});
   missing.push(path);return route.fulfill({status:404,contentType:'application/json',body:'{}'});
 });
 const click=action=>page.locator(`[data-action="${action}"]`).filter({visible:true}).first().click();
@@ -63,10 +65,12 @@ async function responsive(name){for(const width of [360,390,768,1440]){await pag
 try{
   await mkdir(resolve('WIREFRAME/QA/screenshots'),{recursive:true});
   await page.goto(`${origin}/index.html`);await page.evaluate(()=>window.__navQA.setup());
+  assert.deepEqual(await page.locator('[data-admin-home-section="cleaning-actions"] .accordion-toggle').evaluateAll(elements=>elements.map(el=>el.dataset.key)),['inspection','assignment']);
+  await responsive('home');await page.screenshot({path:resolve('WIREFRAME/QA/screenshots/live-home-tomorrow-390.png'),fullPage:true});
+  await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:resolve('WIREFRAME/QA/screenshots/live-home-tomorrow-1440.png'),fullPage:true});await page.setViewportSize({width:390,height:900});
   await click('go-inspection');await stateIs('cleaning','inspection');assert.match(page.url(),/tab=inspection/);
-  await page.goBack();await stateIs('today');await click('go-cleaning-assignment');await stateIs('cleaning','assignment-today');assert.match(page.url(),/tab=assignment-today/);
-  await page.goBack();await stateIs('today');await page.goForward();await stateIs('cleaning','assignment-today');
-  await page.locator('[data-action="cleaning-tab"][data-tab="assignment-tomorrow"]').click();await stateIs('cleaning','assignment-tomorrow');
+  await page.goBack();await stateIs('today');await click('go-cleaning-assignment');await stateIs('cleaning','assignment-tomorrow');assert.match(page.url(),/tab=assignment-tomorrow/);
+  await page.goBack();await stateIs('today');await page.goForward();await stateIs('cleaning','assignment-tomorrow');
   await page.locator('[data-action="cleaning-tab"][data-tab="assignment-today"]').click();await stateIs('cleaning','assignment-today');
   await page.goBack();await stateIs('cleaning','assignment-tomorrow');
   const tomorrow=new Date(new Date(`${date}T00:00:00Z`).getTime()+86400000).toISOString().slice(0,10);
@@ -85,6 +89,12 @@ try{
   assert.equal(requests.filter(path=>path.startsWith('/v1/photos/')).length,beforeImages,'Modal close preserves valid blob URLs');
   await click('back');await page.waitForFunction(()=>!window.__navQA.get().detail&&!window.__navQA.get().restoring);await stateIs('cleaning','inspection');
   await page.locator('[data-action="nav"][data-view="maids"]:visible').first().click();
+  await click('live-maid-detail');await page.locator('[data-live-cleaning-history]').waitFor();
+  assert.equal(await page.locator('[data-live-cleaning-history]').count(),1,'Maid detail never includes another performer');
+  await responsive('maid detail');await page.screenshot({path:resolve('WIREFRAME/QA/screenshots/live-maid-detail-history-390.png'),fullPage:true});
+  await click('live-cleaning-history-detail');await page.waitForFunction(()=>window.__navQA.get().detail);assert.equal(await page.locator('[data-action="cleaning-inspection-approve"]').count(),0);
+  await page.goBack();await page.locator('[data-action="live-maid-work-history"]').waitFor();
+  await page.goBack();await page.locator('[data-action="live-maid-detail"]').waitFor();
   await page.locator('[data-action="admin-maid-tab"][data-tab="pay"]').click();await ready();assert.equal(await page.evaluate(()=>window.__navQA.get().payroll.weekStart),monday);
   assert.match(await page.locator('.pay-hero').innerText(),/40,000/);assert.equal(await page.locator('[data-action="live-payroll-start-review"]').count(),0);
   await responsive('payroll');await page.screenshot({path:resolve('WIREFRAME/QA/screenshots/live-weekly-payroll-current-390.png'),fullPage:true});
@@ -102,6 +112,11 @@ try{
   await page.evaluate(()=>window.__navQA.modal());
   const stored=await page.evaluate(()=>JSON.stringify(history.state));assert(!/PRIVATE-MODAL|NAV-TOKEN|NAV-REFRESH|blob:|<img/.test(stored));
   await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'hidden'});
+  const payrollReadsBefore=requests.filter(path=>path.startsWith('/v1/payroll?')).length;
+  await page.locator('[data-action="nav"][data-view="today"]:visible').first().click();await click('go-inspection');await click('cleaning-inspection-open');await page.getByRole('button',{name:'전체 승인',exact:true}).click();await page.waitForFunction(()=>!window.__navQA.get().detail);
+  await page.locator('[data-action="nav"][data-view="maids"]:visible').first().click();await page.locator('[data-action="admin-maid-tab"][data-tab="pay"]').click();await ready();
+  assert(requests.filter(path=>path.startsWith('/v1/payroll?')).length>payrollReadsBefore,'Approval invalidates payroll cache');
+  assert(inspectionPages>1&&requests.some(path=>path.includes('cursor=QA-NEXT-PAGE')),'Inspection cursor pages are consumed');
   await page.goto(`${origin}/index.html?view=cleaning&tab=inspection`);await page.evaluate(()=>window.__navQA.setup());await stateIs('cleaning','inspection');
   await page.goto(`${origin}/index.html?view=cleaning&tab=inspection`);await page.evaluate(()=>window.__navQA.setup('maid'));await stateIs('my');assert.equal(await page.locator('[data-action="cleaning-inspection-open"]').count(),0);
   await page.locator('[data-action="nav"][data-view="pay"]:visible').first().click();await ready();assert.match(await page.locator('.pay-hero').innerText(),/40,000/);await responsive('maid payroll');await page.goBack();await stateIs('my');
@@ -109,6 +124,7 @@ try{
   console.log('[ok] Home exact destinations, tabs, page/modal Back and Forward, direct links and maid role guard');
   console.log('[ok] Current-week payroll, prior week, detail return, stale-response guard, missing estimate not fabricated');
   console.log('[ok] Image enlargement, next image, blob lifetime, safe history, keyboard Escape');
+  console.log('[ok] Maid detail scoped history and photo Back; inspection pagination; approval refreshes payroll');
   console.log('[ok] 360/390/768/1440px, no overflow or console/page errors');
   console.log(`Chromium ${await browser.version()}; all API traffic intercepted locally; no production writes.`);
 }catch(error){console.error({errors,warnings,missing});await page.screenshot({path:'/tmp/live-navigation-failure.png',fullPage:true});throw error;}

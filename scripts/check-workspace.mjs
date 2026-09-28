@@ -2155,7 +2155,7 @@ if (currentAdminTodayStart < 0 || currentAdminTodayEnd < 0) {
 }
 const currentAdminToday = html.slice(currentAdminTodayStart, currentAdminTodayEnd);
 for (const required of [
-  "renderAccordion('assignment','오늘 청소 배정'",
+  "renderAccordion('assignment','내일 청소 배정'",
   "renderAccordion('inspection','청소 검수'",
 ]) {
   if (!currentAdminToday.includes(required)) throw new Error(`Admin-home core item missing: ${required}`);

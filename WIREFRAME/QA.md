@@ -2185,3 +2185,18 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium으로 검
 - `QA/screenshots/deployed-20260928-login-1440.png`
 
 프런트 컨펌 뒤 남은 화면/API 차이를 기대 동작·재현 방법과 함께 백엔드 이슈로 등록한다. 현재는 이슈를 생성하지 않았다.
+
+## 2026-09-28 홈 내일 배정·API 연결 재점검
+
+검증 흐름: 관리자 홈 → 검수/내일 배정 → 정확한 하위 탭과 Back/Forward, 메이드 관리 → 상세·이력 → 해당 수행자 사진 → 직전 상세, 승인 → 주급 재조회.
+
+- `check-live-navigation.mjs` 통과: 검수/배정 DOM 순서, 내일 URL/serviceDate, 360/390/768/1440px, 키보드·모달 포커스·사진 확대·역할 가드, 검수 cursor, 메이드 상세의 타인 기록 제외, 승인 후 주급 캐시 무효화.
+- 주급 새로고침 버튼과 홈 예상액 `expectedAmount` 표시를 포함해 위 검사를 재실행했다.
+- `check-cleaning-workflow.mjs` 27그룹, `check-operational-api.mjs` 8그룹, `check-workspace.mjs` 통과. 일반 사진 1~20장, 다중 선택·부분 실패·이력 사진·검수 회귀 유지.
+- Browser plugin not available. 로컬 `http://127.0.0.1:4177`에서 bundled Playwright Chromium 151.0.7922.34 사용. 테스트 업무 API는 모두 fixture로 가로채 운영 쓰기 없음.
+- 페이지 식별/비어 있지 않은 화면/오류 overlay 없음/console warning·error 없음/overflow 없음/실제 버튼 전이 확인. 대표 PNG를 눈으로 확인했다.
+- 운영 읽기 전용 집계: 최근 7일 완료 1건, 검수 대기 0건, 이번 주 확정 수익 0건, 지난주 1건. 빈 검수/이번 주 0원을 API 미동작으로 단정하지 않는다.
+- 기존 대기 문구와 실제 API의 차이는 `DOCS/27_PRODUCT_API_IMPLEMENTATION_MATRIX.md`에 F01~F11/B01~B03으로 기록했다. 전부 고쳤다는 뜻이 아니며 프런트 컨펌 전 이슈는 만들지 않았다.
+- 실제 로그인 이후 업무 API 전체왕복, 실기기 갤러리/카메라/설치 앱 Back, 운영 승인/반려/송금 결과 기록은 미실행이다.
+
+대표 PNG: `QA/screenshots/live-home-tomorrow-390.png`, `QA/screenshots/live-home-tomorrow-1440.png`, `QA/screenshots/live-maid-detail-history-390.png`, `QA/screenshots/live-weekly-payroll-current-390.png`.
