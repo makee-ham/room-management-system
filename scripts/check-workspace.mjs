@@ -628,7 +628,7 @@ for (const contract of ['currentAttemptId(no)!==attemptId', 'currentAttemptId(id
 for (const removed of ['add-task-photo', 'add-task-photos', "'add-photo'", "'add-photos'", '파일 전송 없이 슬롯 상태만']) {
   if (html.includes(removed)) throw new Error(`Removed simulated photo completion contract remains: ${removed}`);
 }
-for (const contract of ['paymentRecords:{}', 'paymentAttemptHistory:[]', 'paymentRecordKey(weekStart,maidId)', 'data-action="toggle-payment" data-week=', 'data-maid=', 'taskFingerprint', "['OPEN','PAYING','CHECK']", 'confirm-finish-payment', 'mark-payment-check', 'confirm-payment-open-v2', 'resolutionReason']) {
+for (const contract of ['paymentRecords:{}', 'paymentAttemptHistory:[]', 'paymentRecordKey(weekStart,maidId)', 'data-action="toggle-payment" data-week=', 'data-maid=', 'taskFingerprint', "['OPEN','PAYING','CHECK','PAID']", 'saveLivePayrollToggle', 'live-payroll-toggle-save', 'resolutionReason', 'maidCanEditRoomOperations', 'data-post-submission-operations']) {
   if (!html.includes(contract)) throw new Error(`Per-maid payment contract missing: ${contract}`);
 }
 if (/cfg\.start==='2026-08-03'&&index===0/.test(html) || /state\.payment\s*=/.test(html)) {
@@ -1286,10 +1286,10 @@ if (!maidOrderItemSource.includes('assignmentSchedulePriorityBadges(item)') || !
 for (const removed of ['previous=ordered[index-1]', 'next=ordered[index+1]', 'data-action="move-assignment-order"']) {
   if (maidOrderItemSource.includes(removed)) throw new Error(`Removed manual maid priority control remains: ${removed}`);
 }
-for (const contract of ['assignment.order', 'maid-order-number', 'maid-order-copy', 'data-control="assignment-maid"', 'data-location="summary"', '${item.room}호</strong>']) {
+for (const contract of ['maid-order-copy', 'data-control="assignment-maid"', 'data-location="summary"', '${item.room}호</strong>']) {
   if (!maidOrderItemSource.includes(contract)) throw new Error(`Editable maid assignment summary contract missing: ${contract}`);
 }
-if (maidOrderItemSource.includes('${assignment.order}번째 · ${item.room}호')) {
+if (maidOrderItemSource.includes('maid-order-number') || maidOrderItemSource.includes('${assignment.order}번째')) {
   throw new Error('Maid assignment summary repeats the visible order ordinal before the room number.');
 }
 const assignmentRowsStart = html.indexOf('const rows=visibleTargets.map', assignmentDashboardStart);
@@ -2772,7 +2772,7 @@ for(const contract of ['commitImpactStatus:\'idle\'','draftSaveResults:new Map()
   if(!html.includes(contract))throw new Error(`Continuous cleaning assignment contract missing: ${contract}`);
 }
 const assignmentContinuitySource=readFileSync(resolve(root,'scripts/check-cleaning-assignment-continuity.mjs'),'utf8');
-for(const contract of ['Preview 전 commit-impact 미배정 4개 객실 표시','일부 실패 뒤 성공 카드 유지','첫 확정 뒤 남은 2건 계속 배정 가능','진행 중 작업 직접 변경 차단']){
+for(const contract of ['미배정 4개 객실','일부 초안 실패 시 성공 보존','남은 객실 추가 배정·통보','진행 중 작업 직접 변경 차단']){
   if(!assignmentContinuitySource.includes(contract))throw new Error(`Cleaning assignment continuity browser contract missing: ${contract}`);
 }
 for(const contract of ['function liveCleaningTabButton','function renderLiveAdminAssignmentDashboard','function renderLiveRandomAssignmentCard','class="assignment-page tab-panel"','오늘 배정','내일 배정','진행 중','검수 대상 목록','id="cleaning-section-random"','data-cleaning-assignments',"if(liveMode()){\n            state.cleaningTab=tab;"]){

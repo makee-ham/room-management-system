@@ -92,10 +92,10 @@ try{
   await page.evaluate(()=>__connectionQA.view('rooms'));await click('live-room-export');await page.getByRole('heading',{name:'객실 현황 내보내기·동기화',exact:true}).waitFor();const downloading=page.waitForEvent('download');await click('live-export-csv');const download=await downloading;assert(download.suggestedFilename().endsWith('.csv'));assert(!String(await readFile(await download.path(),'utf8')).includes('PIN'));
   await click('live-room-export');await click('live-pin-sheet-review');await confirmed();assert(requests.some(r=>r.path.endsWith('full-resync')&&r.key));
   await page.evaluate(()=>__connectionQA.view('more'));await click('live-accounts-open');await page.getByRole('heading',{name:'메이드·계정 관리',exact:true}).waitFor();await responsive('accounts');
-  await page.evaluate(()=>__connectionQA.view('more'));await click('cleaning-template-edit');await page.getByRole('heading',{name:'청소 템플릿',exact:true}).waitFor();await page.locator('#modal-root [data-action="cleaning-template-edit"][data-id="standard"]').click();await click('cleaning-template-publish');await confirmed();
+  await page.evaluate(()=>__connectionQA.view('more'));assert.equal(await page.locator('[data-action="cleaning-template-edit"]').count(),0);const templateReads=requests.filter(item=>item.path==='/v1/cleaning-templates').length;await page.evaluate(()=>{const b=document.createElement('button');b.dataset.action='cleaning-template-edit';document.body.append(b);b.click();b.remove();});assert.equal(requests.filter(item=>item.path==='/v1/cleaning-templates').length,templateReads);assert.equal(await page.getByRole('heading',{name:'청소 템플릿',exact:true}).count(),0);
   await page.evaluate(()=>__connectionQA.view('more'));await click('live-quarantines');await click('live-quarantine-open');await page.locator('[data-resolution="correction_link"]').click();await confirmed();assert.equal(resolution,'correction_link');
   notificationPages=0;await page.evaluate(()=>__connectionQA.notifications({quiet:true}));assert.equal(await page.evaluate(()=>__connectionQA.get().notifications.length),2);assert.equal(notificationPages,2);
-  await page.evaluate(assignment=>__connectionQA.seed(assignment),assignment);await click('cleaning-unavailable-review');await confirmed();
+  await page.evaluate(assignment=>__connectionQA.seed(assignment),assignment);await page.locator('.assignment-row-options summary').first().click();await click('cleaning-unavailable-review');await confirmed();
   await page.evaluate(entityId=>__connectionQA.notify({deepLink:{kind:'cleaningTarget',entityId}}),targetId);assert.equal(await page.evaluate(()=>__connectionQA.get().date),workDate);assert.equal(await page.evaluate(()=>__connectionQA.get().focus),roomId);
   await page.evaluate(entityId=>__connectionQA.notify({deepLink:{kind:'assignmentRequest',entityId}}),requestId);await page.getByRole('heading',{name:'담당 취소 요청',exact:true}).first().waitFor();assert(await page.locator(`#modal-root [data-id="${requestId}"]`).first().isVisible());await close();
   await page.evaluate(entityId=>__connectionQA.notify({deepLink:{kind:'payrollCycle',entityId}}),cycleId);assert.equal(await page.evaluate(()=>__connectionQA.get().week),'2026-09-21');await page.getByText('QA 메이드 · 주급 산출 내역',{exact:true}).waitFor();
@@ -104,7 +104,7 @@ try{
   assert.deepEqual(missing,[]);assert.deepEqual(errors,[]);assert.deepEqual(consoleProblems,[]);
   console.log('[ok] catalog: load, capacity preview/CAS/expiry/409, create, deactivate');
   console.log('[ok] room: persisted events/issues/blocks, resolution, display correction');
-  console.log('[ok] export CSV, PIN-sheet queued sync fence, admin accounts, first template publish');
+  console.log('[ok] export CSV, PIN-sheet queued sync fence, admin accounts, template feature removal');
   console.log('[ok] audit/activity/diagnostics, offline quarantine, notification pagination, role guard');
   console.log('[ok] unavailable cancel exact CAS, notification target/date/request/week, maid historical assignment');
   console.log('[ok] 360/390/768/1440px overflow, accessible button names, screenshots, console');
