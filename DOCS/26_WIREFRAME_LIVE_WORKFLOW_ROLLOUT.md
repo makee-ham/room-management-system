@@ -33,9 +33,21 @@
 - 폭탄방 `evidencePhotoIds` 조회와 별도 갤러리. 실제 제출 내용이 없는 가짜 타임라인·메모 제거.
 - 기능과 무관한 상단 설명 및 감사 구현 설명 축소. 실패·권한·필수 정보 유지.
 
-## 아직 끝나지 않은 API 계약
+## 운영 배포 확인 (2026-09-28)
 
-2026-09-28 확인한 공개 OpenAPI는 v0.5.1이다. 아래 작업은 프런트 성공 상태로 가장하지 않는다.
+- 운영 주소: https://room-management-system-prod.vercel.app
+- 프런트 소스: `30231a5f84be80b949cccfbc26476f9351ff3273`, 배포 HTML SHA-256 `a7ec94764499ba9a29dd96dbc3728285ddc74b234e9fd92423323f471160c767` 일치. Vercel production deployment `dpl_2k8p9Wcqya3c3etdAW4xWsgdtJfr`.
+- 백엔드: 기능 PR #313 -> dev, 릴리스 PR #314 -> main `5303fd505f18ed45fe9945d35239ccef25df2b13`, 운영 Git tag `v0.7.0`. application/migration 필수 CI 통과 후 적용. 외부 ECR 다운로드 한도 두 번 실패는 재시도로 해소했고 보호 검사/이미지를 변경하지 않았다.
+- 운영 migration 85개/head `20260928095656`. 미시작 target 17개 전환, published template 4개. 제출 1건/사진 version 11개와 보존 대상 16개 테이블 hash 불변을 같은 transaction에서 확인. 기존 migration 기록은 변경하지 않음.
+- 운영 API 및 Swagger Pages OpenAPI `0.6.0`, 131 paths / 141 operations. health, 실제 프런트 origin CORS DELETE, 토큰 없는 이력/주급 401와 no-store 통과.
+- 운영 DB의 현재 주 주급 projection 숫자 필드 확인. 새 이력/특이사항 RPC는 service_role 전용, 신규 private table RLS 확인. Security Advisor는 기존 leaked-password 보호 비활성 WARN 1건 외 추가 WARN/ERROR 없음.
+- 실제 배포 HTML에서 관리자 6개/메이드 4개 주 화면과 360/390/768/1440px 검사 통과. 이 화면 검사는 런타임을 데모로 가로채 운영 고객 데이터는 읽거나 쓰지 않았다.
+- 실제 live 로그인/서비스 워커 `2026-09-28-1`, 캐시 HTML hash와 정적 shell 5개만 캐시하는 경계를 별도 확인. 기존 탭 업데이트 자동검사는 worker 전환 중 테스트 코드가 중단되어 완료로 기록하지 않는다. 새 브라우저 검사는 통과.
+- 실기기 갤러리/카메라 및 설치 앱 물리 Back, 실제 운영 계정의 청소 제출/검수/지급은 미실행. 프런트 컨펌 뒤 남는 차이는 백엔드 이슈로 정리한다.
+
+## 1차 당시 API 계약 과제 (현재 해결)
+
+아래는 같은 날 1차 시점의 과거 기록이다. 당시 공개 OpenAPI는 v0.5.1이었으며 최신 상태는 위 운영 배포 확인을 따른다.
 
 | 범위 | 현재 계약과 필요한 변경 |
 | --- | --- |
@@ -46,7 +58,7 @@
 
 백엔드 저장소 `wrongstory/room-management-system-backend`의 `dev`를 읽기 전용으로 확인했다. 아직 해당 저장소의 코드 수정·PR·운영 DB migration·배포는 하지 않았다. 저장소 지침상 기능 PR은 dev로 병합하고, 운영 반영은 별도 release PR 및 로컬 DB 검증을 거쳐야 한다. 로컬 Docker daemon은 현재 실행 중이 아니므로 DB/RLS 검증을 통과했다고 기록하지 않는다.
 
-## 다음 단계
+## 1차 당시 계획 (과거 기록)
 
 1. 별도 백엔드 저장소의 직접 수정·릴리스까지 이번 작업에서 진행할지 사용자 확인.
 2. 서버 사진 컬렉션·제출·보존·상세 조회·주급 projection 변경과 실제 역할/RLS/경계값 테스트.
@@ -54,4 +66,4 @@
 4. 최근 7일 이력에서 사진 확대 조회. 본인/타인, 승인/반려, 만료 경계, 로그/저장소 유출 검증.
 5. 전체 화면의 와이어프레임 대조, 360/390/768/1440px 및 실제 모바일 설치 앱 검수, 배포 버전 확인.
 
-전체 개편 완료 또는 운영 검수 완료를 뜻하는 기록이 아니다. 1차 검증 근거는 `WIREFRAME/QA.md`에 구분해 남긴다.
+이 과거 계획 자체는 완료 근거가 아니다. 최신 배포와 실제 검증 범위는 위 운영 배포 확인 및 `WIREFRAME/QA.md`에 구분해 남긴다.
