@@ -2161,3 +2161,27 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium으로 검
 - `QA/screenshots/live-history-photos-1440.png`
 - `QA/screenshots/live-weekly-payroll-current-390.png`
 - `QA/screenshots/live-weekly-payroll-current-1440.png`
+
+## 2026-09-28 · 운영 배포 검증
+
+프런트 `30231a5`와 백엔드 main `5303fd5`/Git `v0.7.0`을 배포했다. 이 절은 앞선 1차의 미완료 API/CORS 상태를 대체하며, 합성 UI 검사와 운영 read-only 검사를 구분한다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 운영 HTML | 통과 · production alias의 SHA-256 `a7ec94764499ba9a29dd96dbc3728285ddc74b234e9fd92423323f471160c767`가 병합 소스와 일치 |
+| 운영 설정 | 통과 · live/production/cleaning enabled, `.env.local`와 사용자 미커밋 PNG는 404, 업로드 dry-run에서도 제외 확인 |
+| 운영 API | 통과 · publishable key, health, OpenAPI 0.6.0(131/141), production origin CORS DELETE, 토큰 없는 이력/주급 401/no-store |
+| 운영 DB | 통과 · 85번째 migration, 현재 주 payroll 숫자 projection, service-only RPC/private RLS. 미시작 17건 전환, 제출1/사진11 및 16개 테이블 보존 hash 동일 |
+| 보안 점검 | 기존 leaked-password 보호 설정 WARN 1건 유지. 이번 migration 관련 추가 WARN/ERROR 없음 |
+| 배포 UI | 통과 · 실제 배포 HTML의 관리자 6개/메이드 4개 주 화면, 360/390/768/1440px 가로 넘침·page error·console warning/error 0건. 런타임만 데모로 가로채 고객 업무를 조작하지 않음 |
+| live 로그인/PWA | 통과 · 실제 운영 설정의 4개 너비 로그인 화면, 새 브라우저 worker `2026-09-28-1`, 캐시 HTML hash 일치, shell 5개 외 API/사진/runtime config 캐시 없음 |
+| 기존 탭 업데이트 | 미완료 · worker 전환 중 자동검사 코드가 중단됨. 새 브라우저 검사를 기존 설치 앱 업데이트 성공으로 간주하지 않음 |
+| 실기기/업무 UAT | 미실행 · iOS/Android 갤러리·카메라·설치 앱 물리 Back, 실제 운영 계정의 청소 제출·검수·지급 |
+
+명령: production origin의 `check-api-integration.mjs`, `check-deployed-visual.mjs`; 별도 익명 live 로그인/PWA read-only 검사. 백엔드 feature/release의 application/migration 필수 CI 통과 후 운영 반영. 릴리스 CI의 외부 ECR 이미지 한도는 세 번째 실행에서 정상화됐고 검사 기준이나 고정 이미지는 변경하지 않았다.
+
+대표 PNG:
+- `QA/screenshots/deployed-20260928-login-390.png`
+- `QA/screenshots/deployed-20260928-login-1440.png`
+
+프런트 컨펌 뒤 남은 화면/API 차이를 기대 동작·재현 방법과 함께 백엔드 이슈로 등록한다. 현재는 이슈를 생성하지 않았다.

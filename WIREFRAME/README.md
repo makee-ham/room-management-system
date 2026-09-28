@@ -513,3 +513,9 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 - 관리자 검수 사진은 확대와 이전/다음 보기를 제공한다. 별도 폭탄방 증빙은 서버의 `evidencePhotoIds`로 조회한다.
 - 새 일반 사진 1~20장 입력, 미제출 작업 전환, 메이드 과거 사진 조회와 예상 주급 산출은 후속 백엔드 계약 변경이 필요하다. 전체 완료가 아니다. 상세 진행 기록은 `DOCS/26_WIREFRAME_LIVE_WORKFLOW_ROLLOUT.md`를 참조한다.
 - 추가 회귀: `node scripts/check-live-navigation.mjs` (Playwright 필요). 운영 쓰기 요청은 사용하지 않는다.
+
+## 운영 개편 배포 완료 (2026-09-28)
+
+위 1차의 후속 계약 과제는 OpenAPI 0.6.0/백엔드 v0.7.0과 함께 배포했다. 일반 사진 1~20장, 모바일 한 번에 20장 선택과 남은 한도 추가, 별도 폭탄방/특이사항 증빙, 최근 7일 사진 상세, 현재 주 확정/예상/검수 대기 주급을 연결했다. 부분 업로드 오류 후 최신 장수 조회와 특이사항 작성 메모 유지도 적용했다.
+
+운영 주소는 https://room-management-system-prod.vercel.app 이다. 기존 승인 제출/사진은 보존하고 미시작 작업 17건만 새 방식으로 전환했다. 실제 배포 HTML hash, health/OpenAPI/CORS, 현재 주 주급 DB 조회, 네 가지 화면 너비를 확인했다. 운영 고객 업무 mutation 및 iOS/Android 실기기 검수는 미실행이며, 상세 증거와 한계는 `QA.md` 및 `DOCS/26_WIREFRAME_LIVE_WORKFLOW_ROLLOUT.md`를 따른다. 프런트 컨펌 뒤 남는 API 차이를 백엔드 이슈로 등록한다.
