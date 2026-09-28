@@ -1268,7 +1268,7 @@ if (reservationModalSource.includes('퇴실 고객 체크아웃') || reservation
 
 const assignmentDashboardStart = html.indexOf('function renderAssignmentDashboard');
 const assignmentDashboardSource = html.slice(assignmentDashboardStart, html.indexOf('function cleaningTabButton', assignmentDashboardStart));
-const assignmentFlowContracts = ['메이드 주간 근무표', 'renderRandomAssignmentCard()', '객실별 담당 수정', 'renderMaidOrderBoardContent()'];
+const assignmentFlowContracts = ['메이드 주간 근무표', '${random}', '객실별 담당 수정', '${summary}'];
 let assignmentFlowIndex = -1;
 for (const contract of assignmentFlowContracts) {
   const nextIndex = assignmentDashboardSource.indexOf(contract);
@@ -2416,7 +2416,8 @@ for (const contract of [
   "title:'다음 주 가능일 전원 제출 완료'",
   "detail:'등록된 메이드 9명이 모두 근무 가능일을 제출했습니다.'",
   'return MAIDS.filter(maid=>maidCanReceiveNewAssignment(maid.id)&&availabilityForWorkDate(maid.id,state.assignmentDate)===\'available\');',
-  '<strong>${eligible.length}명</strong>',
+  'return renderAssignmentRandomView({eligibleCount:eligible.length,unassigned,summary,active,actions});',
+  '<strong>${eligibleCount}명</strong>',
 ]) {
   if (!html.includes(contract)) throw new Error(`All-maid random-assignment contract missing: ${contract}`);
 }
@@ -2775,7 +2776,7 @@ const assignmentContinuitySource=readFileSync(resolve(root,'scripts/check-cleani
 for(const contract of ['미배정 4개 객실','일부 초안 실패 시 성공 보존','남은 객실 추가 배정·통보','진행 중 작업 직접 변경 차단']){
   if(!assignmentContinuitySource.includes(contract))throw new Error(`Cleaning assignment continuity browser contract missing: ${contract}`);
 }
-for(const contract of ['function liveCleaningTabButton','function renderLiveAdminAssignmentDashboard','function renderLiveRandomAssignmentCard','class="assignment-page tab-panel"','오늘 배정','내일 배정','진행 중','검수 대상 목록','id="cleaning-section-random"','data-cleaning-assignments',"if(liveMode()){\n            state.cleaningTab=tab;"]){
+for(const contract of ['function liveCleaningTabButton','function renderLiveAdminAssignmentDashboard','function renderLiveRandomAssignmentCard','function renderAssignmentDashboardView','function renderAssignmentSummaryView','오늘 배정','내일 배정','진행 중','검수 대상 목록','id="cleaning-section-random"','data-assignment-target',"if(liveMode()){\n            state.cleaningTab=tab;"]){
   if(!html.includes(contract))throw new Error(`Cleaning wireframe fidelity contract missing: ${contract}`);
 }
 if(html.includes('<h3>배정 Preview·확정 영향</h3>'))throw new Error('API-shaped cleaning planning panel must not replace the canonical assignment wireframe.');

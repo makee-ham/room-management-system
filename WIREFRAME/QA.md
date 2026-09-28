@@ -1,5 +1,39 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-09-29 배포·프리뷰 와이어프레임 정합성
+
+- 청소의 데모/운영 배정 화면이 공통 레이아웃·랜덤 카드·요약 렌더러를 사용한다. 같은 관리자 역할의 390/1440px 정본과 운영 adapter 화면을 비교했다. 데이터는 합성 fixture이며 실제 운영 수량과 다르다.
+- 홈/객실 이전·다음·달력·오늘을 활성화하고 KST 예약 범위와 배정 날짜 조회를 연결했다. 날짜 Back/Forward와 늦은 이전 요청의 응답 차단, 선택일 유지 및 청소 탭 이동을 검사했다. 과거 운영 상태가 제공되는 것처럼 표시하지 않는다.
+- 상태 조건 아래 상세 조건 7개, 객실 운영 상태의 이슈 등록 팝업, 이슈 CAS/멱등성, 포커스 복귀를 확인했다. 송금 참조번호 팝업을 제거했다. **참조번호 없는 저장과 메이드 제출 후 수정은 API 미지원으로 비활성이며 완료가 아니다.**
+- 운영 OpenAPI 0.6.0과 백엔드 main/최신 dev를 다시 대조했다. 작업 중 PIN 수정 #316이 release #319/main 1780728로 배포됐으며 백엔드의 조회 smoke 성공 기록을 확인했다. 실제 PIN 변경 저장 테스트와 구분한다. 요청별 완료/제한과 이슈 초안은 [문서 30](../DOCS/30_DEPLOYED_WIREFRAME_API_PARITY.md)에 모았다.
+
+| 검사 | 결과 | 이번 확인 범위 |
+| --- | --- | --- |
+| `check-deployed-wireframe-parity.mjs` | PASS · 3그룹 | 상세 조건, 이슈 팝업/요청, 홈·객실 날짜/달력/Back/Forward/경합, 선택 날짜 청소 이동, 정본 6섹션/5열/단가/얼리·레이트, 4폭 |
+| `check-cleaning-workflow.mjs` | PASS · 30그룹 | 배정·검수·사진 0/1/20/21 및 일괄 추가, 별도 증빙, 최근 7일 사진 이력/확대, 권한/PIN 저장 계약, 사진 큐/부분 실패 |
+| `check-cleaning-assignment-continuity.mjs` | PASS · 9그룹 | 선택만으로 서버 변경하지 않음, 저장·통보, 부분 실패/재시도, 현재 작업 변경 차단, 미배정 후속 배정 |
+| `check-live-navigation.mjs` | PASS · 5그룹 | 홈 검수/내일 배정 목적지, 상세/모달 Back, 역할/주차 경합 |
+| `check-live-connections.mjs` | PASS · 6그룹 | 객실·계정·카탈로그·변경 권한/CAS, 진행 중 탭의 담당 불가 액션 |
+| `check-operational-api.mjs` | PASS · 8그룹 | 주급/이력 조회, 송금 미지원 상태에서 참조번호 폼/쓰기 없음, 컴플레인/Push fixture |
+
+Browser plugin 미제공으로 Playwright + Chromium 151.0.7922.34를 사용했다. 360/390/768/1440px 가로 넘침, 버튼 접근성 이름, 키보드/모달 포커스, 콘솔 warning/error와 page error를 확인했다. 쓰기는 모두 intercepted fixture다. 실제 운영 사진·배정·주급·PIN은 변경하지 않았다. 실제 iOS/Android 갤러리와 설치 앱 물리 뒤로가기는 미검증이다.
+
+대표 PNG: `QA/screenshots/parity-cleaning-{360,390,768,1440}.png`, `parity-filters-390.png`, `parity-room-issue-390.png`, `parity-home-date-390.png`. 전체 페이지 캡처의 고정 하단 내비게이션은 첫 viewport 위치에 나타나며 실제 스크롤/상호작용은 따로 검사했다. 서비스 워커는 `2026-09-29-5`이다.
+
+운영 읽기 검증 중 이슈/운영 중지 route가 문서에 있는 limit/cursor를 거부해 400을 반환하는 불일치를 발견했다. status만 허용하는 Edge route guard가 원인이며 status를 명시해도 limit을 보내면 실패했다. 프런트는 limit을 생략하고 서버 기본 page 크기를 사용한다. 회귀에서 status 값과 limit 생략을 강제하며 nextCursor 실패를 조회 성공으로 숨기지 않는다. 상세 코드 위치와 request ID는 문서 30 B07이다.
+
+### 최종 배포 확인
+
+- Production: `https://room-management-system-prod.vercel.app/`, deployment `dpl_DHxThkdKi25GnBtkssretFYp5k56` (`room-management-system-prod-cehei4c4o.vercel.app`). HTML 원본 byte 일치, live/production runtime, worker `2026-09-29-5` 확인.
+- Preview: `https://room-management-system-prod-preview.vercel.app/`, deployment `dpl_4tuBrjM6PMXzrKUeFwmrW2mboquA` (`room-management-system-prod-lxqn0kg5i.vercel.app`). 기존 보호 설정 유지. 인증된 Vercel CLI 응답은 로컬 HTML과 정확히 일치하며 끝에 해당 배포 ID의 Vercel feedback script 한 개만 추가됨을 별도 확인. runtime은 live/preview.
+- 두 배포의 앱 원본 SHA-256: `6f45a263cf9997e7a42db3a54d5e4cf14aa764a25acfe9e3995b4849f47836a3`.
+- `check-deployed-visual.mjs` PASS: 실제 Production HTML을 가져와 관리자 6개/메이드 4개 주요 뷰, 360/390/768/1440px를 확인했다. 이 자동 검사는 runtime만 demo로 가로채므로 운영 데이터 쓰기 통과를 뜻하지 않는다.
+- 기존 관리자 Chrome 세션의 읽기 전용 확인: Production 홈 날짜 이동과 내일 배정 목적지, 상세 필터 7개, 청소 공통 레이아웃과 API 기본 단가, 객실 운영 상태 정상 조회, 이슈 등록 팝업. Preview에서도 새 청소 레이아웃과 날짜 URL을 확인했다.
+- Production의 기존 객실 PIN 조회 성공 후 즉시 숨김을 직접 확인했다. PIN 원문은 결과·문서·이미지에 출력하지 않았으며 새 PIN 입력/실제 도어락 변경은 하지 않았다.
+- `check-workspace.mjs`, `check-pwa.mjs`, artifact 생성, `git diff --check` PASS. 배포 준비 중 중간 preview artifact 생성 경합이 1회 발생해 잘못 만들어진 임시 배포를 삭제했고 최종 파일·채널을 재검증해 다시 배포했다. 공개 alias는 정상 artifact 확인 후 교체했다.
+
+아래 과거 릴리즈의 송금 참조번호 입력/청소 순서/템플릿 메뉴 설명은 현재 UI가 아니다.
+
 ## 2026-09-29 청소 와이어프레임 복원·순서 제거
 
 - 청소 목차, 접는 근무표, 랜덤 배정, 객실별 담당 선택, 메이드별 요약, 저장·통보를 운영 API에 연결했다. 청소 순서 표시·입력은 제거했다.
