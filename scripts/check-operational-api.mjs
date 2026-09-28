@@ -45,6 +45,10 @@ await page.route(`${api}/**`,async route=>{
   requests.push({path,method,key,payload});
   if(method==='POST'){assert(key,`Missing Idempotency-Key for ${path}`);if(receipts.has(key))return json(route,receipts.get(key),200,{'idempotency-replayed':'true'});}
   const send=(value,status=200)=>{if(key)receipts.set(key,value);return json(route,value,status);};
+  if(method==='GET'&&path==='/v1/notifications')return json(route,{notifications:[],nextCursor:null});
+  if(method==='GET'&&path==='/v1/accounts')return json(route,{accounts:[{profileId:ids.admin,displayName:'QA 관리자',role:'admin',status:'active'},{profileId:ids.maid,displayName:'QA 메이드',role:'maid',status:'active'},{profileId:ids.maid2,displayName:'QA 대체 메이드',role:'maid',status:'active'}]});
+  if(method==='GET'&&path.startsWith('/v1/availability'))return json(route,{availabilities:[],availability:null,requests:[]});
+  if(method==='GET'&&path==='/v1/work-history')return json(route,{weekStart:monday,items:[],nextCursor:null});
   if(method==='GET'&&path==='/v1/payroll')return json(route,{payroll:[cycle],nextCursor:null});
   if(method==='GET'&&path==='/v1/payroll/entries'){const kind=url.searchParams.get('kind'),entries=kind==='items'?cycle.items:kind==='lateEarnings'?cycle.lateEarnings:adjustments;return json(route,{kind,entries,nextCursor:null});}
   if(method==='POST'&&path==='/v1/payroll/start'){assert.equal(payload.expectedVersion,cycle.version);cycle={...cycle,status:'paying',version:cycle.version+1,lockedAmount:cycle.payableAmount,paymentStartedAt:new Date().toISOString(),paymentAttemptId:ids.attempt,paymentAttemptNumber:1};return send({cycle},201);}
