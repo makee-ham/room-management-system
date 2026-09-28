@@ -1,5 +1,19 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-09-29 청소 와이어프레임 복원·순서 제거
+
+- 청소 목차, 접는 근무표, 랜덤 배정, 객실별 담당 선택, 메이드별 요약, 저장·통보를 운영 API에 연결했다. 청소 순서 표시·입력은 제거했다.
+- 더보기 청소 템플릿 메뉴와 직접 액션 진입을 차단했다. 서버 사진 슬롯 계약은 유지한다.
+- 주급은 송금 여부 스위치로 표시하고 현재 API의 start/paid를 한 번의 확인 흐름으로 연결했다. 실제 참조번호 입력은 API 필수이며 완료 해제는 지원되지 않아 비활성이다.
+- 메이드 제출 후 촛불·새 특이사항 변경은 데모에서 별도 객실 상태로 다룬다. 운영 모드에는 권한 있는 API가 없어 명시적 비활성 상태를 표시한다. 제출 사진/검수 결과를 수정하거나 관리자 API로 우회하지 않는다.
+- Playwright/Chromium 151.0.7922.34 사용: Browser plugin 미제공. 운영 쓰기는 모두 로컬 fixture로 차단했다.
+- PASS: 청소 30그룹, 연속 배정 9그룹, 운영 API 8그룹, 추가 API 연결 6그룹. 360/390/768/1440px 가로 넘침·주요 버튼·모달·사진 확대·역할·콘솔 오류를 검사했다.
+- 청소 전체 검사 첫 실행에서 증빙 버튼 대기 timeout 1회가 있었고 재실행 30그룹은 통과했다. 실제 모바일 갤러리 OS 선택창과 인증된 운영 쓰기 UAT는 수행하지 않았다.
+- 대표 PNG: `QA/screenshots/live-wireframe-cleaning-{390,1440}.png`, `admin-cleaning-continuous-{390,1440}.png`, `live-admin-payroll-390.png`, `cleaning-api-maid-390.png`.
+- 서비스 워커 `2026-09-29-2`. 아래 이전 릴리즈의 템플릿 발행/순서/지급 다단계 설명은 현재 UI가 아니다.
+
+백엔드 차이와 요청은 [문서 29](../DOCS/29_CLEANING_WIREFRAME_BACKEND_REQUESTS.md)에 정리한다. 최종 감사 원문은 변경하지 않는다.
+
 ## 2026-09-29 API 누락 연결 검증
 
 Browser plugin이 제공되지 않아 Chromium 151.0.7922.34 + Playwright로 검사했다. 보호 API와 업무 변경은 모두 로컬 fixture로 가로챘고, 실제 운영 API는 health/OpenAPI/CORS/publishable key만 읽기 전용으로 확인했다. 현재 연결 결과와 B01~B07 협의 항목은 [문서 28](../DOCS/28_FRONTEND_CONNECTION_BACKEND_MEETING.md)에 있다.
