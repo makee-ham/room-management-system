@@ -2132,3 +2132,30 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium으로 검
 - `QA/screenshots/live-inspection-photo-viewer-390.png`
 - `QA/screenshots/live-weekly-payroll-current-390.png`
 - `QA/screenshots/live-weekly-payroll-current-1440.png`
+
+## 2026-09-28 · 운영 개편 2차: 일반 사진·별도 증빙·이력·예상 주급
+
+앞선 1차의 미완료 사진/API 항목을 구현했다. 아래는 로컬 API fixture와 Chromium Playwright 검사이며 운영 계정 mutation 성공으로 간주하지 않는다. Browser 플러그인이 없어 Playwright를 사용했다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 사진 수 | 통과 · 0장 제출 차단, 1장 가능, 20장 상한, 21장 선택 거부, 삭제 후 추가 가능 |
+| 별도 증빙 | 통과 · 폭탄방은 bomb-proof만 전송, 특이사항은 issue-proof와 메모만 전송, 일반 필수 사진과 분리 |
+| 이력 | 통과 · 메이드 최근 목록에서 읽기 전용 상세, 사진/특이사항 메모, 확대 창 Back과 Escape |
+| 주급 | 통과 · 이번 주 확정 40,000원/예상 56,000원/대기 16,000원 fixture, 이전 주·산출 상세 복귀·응답 역전·누락 금액 비조작 |
+| 내비게이션 | 통과 · 홈 검수/배정의 목적 하위 탭, 직접 링크 권한, page/modal Back·Forward |
+| 기존 기능 | 통과 · 배정/업로드/검수·예약/객실/PIN·급여 명령·컴플레인·Web Push 로컬 회귀 |
+| 반응형 | 통과 · 360/390/768/1440px 가로 넘침 없음, 모달 키보드 포커스·접근성 이름·44px 주요 컨트롤 |
+| 정적/전체 화면 | 통과 · workspace/PWA/hash, 로컬 관리자 6개·메이드 4개 주 화면, console/page 오류 없음 |
+| 한계 | 실제 운영 청소 생성·촬영·검수·송금 및 iOS/Android 카메라/설치 앱 물리 Back은 미실행 |
+
+와이어프레임의 주급 탭/합계/주차/메이드 카드/산출 보기 위치를 유지했다. 일반 사진만 사용자 결정에 따라 구역 카드를 제거했고 폭탄방·특이사항은 별도 유지했다. 과거 제출 화면은 당시 구역 계약을 유지한다. fixture 사진에는 `QA FIXTURE / NOT A ROOM PHOTO`를 표시한다.
+
+검증: `check-workspace.mjs`, `check-cleaning-workflow.mjs`(27개 그룹), `check-live-navigation.mjs`, `check-operational-api.mjs`, 로컬 origin의 `check-deployed-visual.mjs`.
+
+대표 PNG:
+- `QA/screenshots/live-flat-cleaning-photos-390.png`
+- `QA/screenshots/live-flat-cleaning-photos-1440.png`
+- `QA/screenshots/live-history-photos-1440.png`
+- `QA/screenshots/live-weekly-payroll-current-390.png`
+- `QA/screenshots/live-weekly-payroll-current-1440.png`

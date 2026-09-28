@@ -84,6 +84,8 @@ const REQUIRED_PATHS = new Map([
   ["/v1/notifications", ["get"]],
   ["/v1/notifications/{notificationId}/read", ["post"]],
   ["/v1/cleaning-history", ["get"]],
+  ["/v1/cleaning-history/{submissionId}", ["get"]],
+  ["/v1/attempts/{attemptId}/room-issues", ["post"]],
   ["/v1/work-history", ["get"]],
   ["/v1/payroll", ["get"]],
   ["/v1/payroll/entries", ["get"]],
@@ -299,7 +301,7 @@ async function checkOpenApi(apiBaseUrl) {
   } catch {
     throw new Error("OpenAPI 응답이 JSON이 아닙니다.");
   }
-  assert(document?.info?.version === "0.5.1", "OpenAPI info.version이 0.5.1이 아닙니다.");
+  assert(document?.info?.version === "0.6.0", "OpenAPI info.version이 0.6.0이 아닙니다.");
   assert(/^3\.1(?:\.|$)/u.test(document?.openapi ?? ""), "OpenAPI 문서 버전이 3.1 계열이 아닙니다.");
   for (const [endpoint, methods] of REQUIRED_PATHS) {
     assert(document.paths?.[endpoint], `OpenAPI 필수 path가 없습니다: ${endpoint}`);
@@ -336,14 +338,14 @@ async function checkOpenApi(apiBaseUrl) {
   const collectionDelete = document.paths?.["/v1/attempts/{attemptId}/photo-slots/{slotId}/photos/{photoItemId}"]?.delete;
   assert(collectionDelete?.parameters?.some((parameter) => parameter.in === "header" && parameter.name === "Idempotency-Key" && parameter.required === true), "사진 컬렉션 삭제 Idempotency-Key 계약이 없습니다.");
   const photoSlotSchema = document.components?.schemas?.AttemptPhotoSlots?.properties?.slots?.items?.properties;
-  assert(photoSlotSchema?.maxPhotos?.enum?.includes(10), "사진 슬롯 maxPhotos 10 계약이 없습니다.");
+  assert(photoSlotSchema?.maxPhotos?.enum?.includes(20), "사진 슬롯 maxPhotos 20 계약이 없습니다.");
   assert(photoSlotSchema?.photos?.items?.$ref?.endsWith("/AttemptPhotoItem"), "사진 슬롯 컬렉션 items 계약이 없습니다.");
   const operationCount = Object.values(document.paths ?? {}).reduce(
     (count, item) => count + Object.keys(item).filter((key) => ["get", "post", "put", "patch", "delete", "head", "options"].includes(key)).length,
     0,
   );
-  assert(Object.keys(document.paths ?? {}).length === 128, "OpenAPI path 수가 v0.5.1의 128개와 다릅니다.");
-  assert(operationCount === 138, "OpenAPI operation 수가 v0.5.1의 138개와 다릅니다.");
+  assert(Object.keys(document.paths ?? {}).length === 131, "OpenAPI path 수가 v0.6.0의 131개와 다릅니다.");
+  assert(operationCount === 141, "OpenAPI operation 수가 v0.6.0의 141개와 다릅니다.");
 }
 
 async function checkCors(apiBaseUrl) {
@@ -388,7 +390,7 @@ async function main() {
     console.log("[ok] 운영 health 계약을 확인했습니다.");
 
     await checkOpenApi(apiBaseUrl);
-    console.log("[ok] OpenAPI 0.5.1의 128개 path와 138개 operation 및 가능일 상시 제출 계약을 확인했습니다.");
+    console.log("[ok] OpenAPI 0.6.0의 131개 path와 141개 operation 및 가능일 상시 제출 계약을 확인했습니다.");
 
   } catch (error) {
     console.error(`[fail] ${error instanceof Error ? error.message : "API 계약 검사에 실패했습니다."}`);

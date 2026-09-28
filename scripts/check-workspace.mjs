@@ -505,7 +505,7 @@ for (const [typeId, expected] of Object.entries(expectedCheckoutPhotoCounts)) {
 for (const contract of [
   "checkout:{name:'퇴실 청소',version:'v7'",
   'function legacyCheckoutTemplateSnapshotFor',
-  "version:'v6',photos:Object.freeze(current.photos.filter(item=>item.id!=='tv-on')",
+  "version:'v6',photos:Object.freeze(expandPhotoRules(roomNo,current.typeId,TYPE_PHOTO_GROUPS[current.typeId]).filter(item=>item.id!=='tv-on')",
   "if(exact)return {status:exact.status||'empty',upload:exact};",
   "draft.kind==='퇴실 청소'?legacyCheckoutTemplateSnapshotFor(draft.room)",
   "templateVersionSeed:'v7'",
