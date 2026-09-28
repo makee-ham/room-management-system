@@ -502,3 +502,12 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 - 새 예약 모달은 객실 목록을 매번 다시 읽지 않는다. 초기 projection이 없을 때만 객실을 조회하고, 기존 projection이 오래됐으면 폼을 막지 않은 채 백그라운드에서 갱신한다.
 - 예약 가능성은 10초 메모리 캐시와 220ms 디바운스를 적용하지만 미래 기간 판단은 계속 서버 `intervalBookable`만 사용한다. 제출 직전 preview, `roomStateVersion`, 멱등 키와 서버 transaction 재검증은 생략하지 않는다.
 - 생성·수정·취소는 화면에 `저장 중` 또는 `취소 중` 상태를 먼저 표시하고 API 응답으로 확정한다. 실패·409에서는 임시 projection을 되돌리고 최신 서버 projection을 다시 읽는다. 고객명은 캐시된 목록·URL·로그·브라우저 저장소에 넣지 않는다.
+
+## 운영 이동·주급·검수 1차 수정 (2026-09-28)
+
+- 홈 `검수 보기`는 `?view=cleaning&tab=inspection`, `오늘 청소 배정`은 `?view=cleaning&tab=assignment-today`로 이동한다. 이전 청소 탭 선택에 영향을 받지 않는다.
+- 운영 화면의 탭·상세·주차 이동에 브라우저 기록을 적용한다. 뒤로가기로 확대 창을 닫고 직전 상세·목록으로 돌아간다. history에는 사진/PIN/고객명/모달 HTML을 저장하지 않는다.
+- 주급은 이번 주 확정 금액부터 조회하고 메이드 관리의 주급 탭에서도 갱신한다. 현재 주차 지급 명령은 잠그고, 검수 대기 예상액은 API가 제공되기 전까지 추정하지 않는다.
+- 관리자 검수 사진은 확대와 이전/다음 보기를 제공한다. 별도 폭탄방 증빙은 서버의 `evidencePhotoIds`로 조회한다.
+- 새 일반 사진 1~20장 입력, 미제출 작업 전환, 메이드 과거 사진 조회와 예상 주급 산출은 후속 백엔드 계약 변경이 필요하다. 전체 완료가 아니다. 상세 진행 기록은 `DOCS/26_WIREFRAME_LIVE_WORKFLOW_ROLLOUT.md`를 참조한다.
+- 추가 회귀: `node scripts/check-live-navigation.mjs` (Playwright 필요). 운영 쓰기 요청은 사용하지 않는다.

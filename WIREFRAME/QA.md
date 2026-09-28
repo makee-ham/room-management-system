@@ -2096,3 +2096,39 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium 151.0.792
 대표 PNG:
 
 - `QA/screenshots/live-wireframe-inspection-detail-1440.png`
+
+## 2026-09-28 · 운영 개편 1차: 이동·확정 주급·사진 확대
+
+Browser 플러그인이 제공되지 않아 번들 Playwright Chromium으로 검증했다. 아래 API는 모두 로컬 fixture로 가로챘으며 실제 운영 계정·사진·지급·예약은 변경하지 않았다. 일반 사진 1~20장 입력과 최근 7일 과거 사진 조회의 완료 기록이 아니다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 홈 목적지 | 통과 · 이전에 내일 배정을 열었어도 검수 보기는 검수 탭, 청소 배정은 오늘 배정 탭으로 이동 |
+| 직접 링크 | 통과 · 화면·하위 탭 query 복원, 메이드의 관리자 검수 URL 직접 접근은 본인 업무로 제한 |
+| 브라우저 기록 | 통과 · 홈/청소 탭/주급 주차/주급 상세/검수 상세의 Back·Forward, 확대 창 Back·Escape |
+| 사진 | 통과 · 클릭 확대·다음 사진, 실제 img naturalWidth 확인, 일반 모달을 닫을 때 중복 content GET과 blob 조기 폐기 없음 |
+| 민감정보 | 통과 · live history에 모달 HTML·blob URL·인증 토큰 없음. PIN/고객명 URL·console 회귀 검사 유지 |
+| 주급 조회 | 통과 · 이번 주 40,000원/직전 주 28,000원 fixture, 현재 주차 지급 잠금, 늦게 도착한 이전 주 응답 무시, 금액 누락을 0원으로 위장하지 않음 |
+| 기존 운영 기능 | 통과 · 로컬 fixture의 지급 시작/외부 송금 결과/정정/컴플레인/배정/업로드/검수 승인·반려 회귀 |
+| 반응형·키보드 | 통과 · 360/390/768/1440px 가로 넘침 없음, 확대 모달 Tab 포커스 유지, 주차 버튼 44px 이상 |
+| 브라우저 품질 | 통과 · 신규 회귀에서 page error·console warning/error 0건 |
+| 실제 설치 앱 | 미검증 · iOS/Android 설치 앱의 물리 뒤로가기·OS 종료 동작은 실기기 검수 필요 |
+| 운영 API preflight | 차단 · `node scripts/check-api-integration.mjs`에서 운영 publishable key 검증은 통과했지만 `CORS 허용 method가 없습니다: DELETE`로 실패. 운영 삭제 검수 완료로 표시하지 않음 |
+| 새 업로드·과거 조회 | 미완료 · 일반 1~20장 입력/제출, 미제출 작업 전환, 메이드 과거 사진 상세는 백엔드 계약 변경 후 후속 구현 |
+
+비교 기준은 같은 관리자 주급 화면의 `admin-payroll-per-maid-toggle-390.png`와 새 운영 화면이다. 탭, 주급 합계, 주차 선택, 메이드별 카드, 산출 보기의 위치를 대조했다. fixture 날짜·금액은 다르며 예상/검수 대기 금액과 기존 지급 스위치까지 와이어프레임과 완전히 일치했다고 기록하지 않는다. 주급의 API 미제공 항목과 전체 UI 대조는 후속 범위에 남는다.
+
+회귀 명령:
+
+- `node scripts/check-live-navigation.mjs`
+- `node scripts/check-operational-api.mjs`
+- `node scripts/check-cleaning-workflow.mjs`
+- `node scripts/check-workspace.mjs`
+
+대표 PNG (검수 사진은 `QA FIXTURE / NOT A ROOM PHOTO`로 표시한 640×400px 테스트 패턴이며 실제 청소 사진이 아님):
+
+- `QA/screenshots/live-inspection-gallery-390.png`
+- `QA/screenshots/live-inspection-gallery-1440.png`
+- `QA/screenshots/live-inspection-photo-viewer-390.png`
+- `QA/screenshots/live-weekly-payroll-current-390.png`
+- `QA/screenshots/live-weekly-payroll-current-1440.png`

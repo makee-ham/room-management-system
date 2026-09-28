@@ -744,6 +744,8 @@
     .maid-pay-footnote { margin:0; padding:0 2px; color:var(--muted); font-size:12px; line-height:1.55; }
     .pay-week-toolbar { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
     .pay-week-toolbar h2 { margin:0; }
+    .payroll-live { display:grid; gap:18px; }
+    .payroll-live .pay-person-head > div:first-child { min-width:0; }
     .pay-week-toolbar p { margin:3px 0 0; color:var(--muted); font-size:12px; }
     .pay-week-picker { display:inline-flex; align-items:center; justify-content:space-between; gap:9px; min-height:48px; padding:9px 12px; border:1px solid var(--line-strong); border-radius:10px; color:var(--navy); background:#fff; font-size:13px; font-weight:850; text-align:left; }
     .pay-week-picker span { min-width:0; }
@@ -2806,7 +2808,77 @@
       function liveActorSession(actor=safeLiveActor(state?.remote?.auth?.user)){return actor?{id:actor.profileId,role:actor.role,name:actor.displayName,maidId:null}:null;}
       function defaultLiveView(role){return role==='admin'?'today':role==='developer'?'overview':'my';}
       function requestedLiveView(role){const requested=new URLSearchParams(location.search).get('view');const allowed=role==='admin'?liveAdminNav:role==='developer'?liveDeveloperNav:liveMaidNav;return allowed.some(item=>item.id===requested)?requested:null;}
-      function syncLiveViewUrl(view){try{const url=new URL(location.href);if(url.searchParams.get('view')===view&&!url.hash)return;url.searchParams.set('view',view);url.hash='';history.replaceState(null,'',`${url.pathname}${url.search}`);}catch{}}
+      function syncLiveViewUrl(){if(state.remote.auth.status==='authenticated')syncUrlState();}
+      function liveRouteSnapshot(scrollY=modalPageScrollY??window.scrollY){
+        const view=state.liveView||defaultLiveView(state.role),slice=cleaningState(),pay=state.remote.payroll;
+        return {live:true,actorId:state.remote.auth.user?.profileId,role:state.role,view,
+          tab:view==='cleaning'?state.cleaningTab:view==='maids'?state.adminMaidTab:null,
+          serviceDate:['cleaning','my'].includes(view)?slice.serviceDate:null,
+          week:view==='pay'||view==='maids'&&state.adminMaidTab==='pay'?pay.weekStart||weekStartIso(liveKstIsoDate()):null,
+          roomId:liveRoomDetail?.id||null,focusRoomId:view==='cleaning'?slice.focusRoomId||null:null,
+          submissionId:slice.inspectionDetail?.submission?.submissionId||slice.inspectionDetail?.submission?.id||null,
+          payrollMaidId:pay.detail?.cycle?.maidProfileId||null,complaintId:state.remote.complaints.detail?.item?.id||null,
+          complaintList:!!state.remote.complaints.showList,
+          context:view==='rooms'?{filter:state.remote.rooms.filter,typeFilter:state.remote.rooms.typeFilter,roomQuery:/^\d{0,8}$/.test(state.remote.rooms.query||'')?state.remote.rooms.query||'':''}:view==='quickReservation'?{anchor:state.quickReservationAnchorDate,followsToday:state.quickReservationFollowsToday,type:state.quickReservationType,left:state.quickGridScrollLeft,top:state.quickGridScrollTop}:null,
+          scrollY:Math.max(0,Math.round(Number(scrollY)||0))};
+      }
+      function liveRouteKey(route){const {scrollY,context,...identity}=route||{};return JSON.stringify(identity);}
+      function liveRouteUrl(route){
+        const params=new URLSearchParams({view:route.view});
+        if(route.tab)params.set('tab',route.tab);if(route.week)params.set('week',route.week);
+        return `${location.pathname}?${params}`;
+      }
+      function applyLiveLocationRoute(){
+        const params=new URLSearchParams(location.search),tab=params.get('tab'),week=params.get('week');
+        if(state.role==='admin'&&state.liveView==='cleaning'&&['assignment-today','assignment-tomorrow','progress','inspection','done'].includes(tab))state.cleaningTab=tab;
+        if(state.role==='admin'&&state.liveView==='maids'&&['workforce','history','pay','complaints'].includes(tab))state.adminMaidTab=tab;
+        if(/^\d{4}-\d{2}-\d{2}$/.test(week||'')&&weekStartIso(week)===week&&week<=weekStartIso(liveKstIsoDate()))state.remote.payroll.weekStart=week;
+        if(isCleaningAssignmentTab(state.cleaningTab))cleaningState().serviceDate=addIsoDays(liveKstIsoDate(),state.cleaningTab==='assignment-tomorrow'?1:0);
+      }
+      let liveHistoryRestoreSequence=0;
+      async function restoreLiveHistory(entry){
+        const sequence=++liveHistoryRestoreSequence,route=historyTraversalOverride||entry.route,actor=state.remote.auth.user;
+        historyTraversalOverride=null;historyTraversalPending=false;
+        if(!actor||route.actorId!==actor.profileId||route.role!==actor.role){rawCloseModal();syncLiveViewUrl();return;}
+        const allowed=currentNav().some(item=>item.id===route.view);if(!allowed)return;
+        const focus=historyReturnFocus||historyFocusDescriptor(modalTrigger);historyReturnFocus=null;
+        if(liveRouteKey(liveRouteSnapshot())===liveRouteKey(route)){
+          clearLivePinReveal();rawCloseModal();writePageHistory(liveRouteSnapshot(route.scrollY),'replace');render();
+          requestAnimationFrame(()=>{scheduleWindowScrollRestore(route.scrollY||0);(findHistoryFocusTarget(focus)||document.getElementById('main-content'))?.focus({preventScroll:true});});return;
+        }
+        clearLivePinReveal();clearCleaningPhotoUrls();clearActiveCleaningPhotoUrls();rawCloseModal({restoreScroll:false});
+        restoringHistory=true;state.liveView=route.view;state.detail=null;liveRoomDetail=null;
+        state.remote.payroll.detail=null;state.remote.complaints.detail=null;state.remote.complaints.showList=!!route.complaintList;
+        if(route.view==='rooms'&&route.context){
+          if(['all','vacant','available','blocked','cleaning','occupied','extra-guests','candle','issues','early','late','arrival','reservation'].includes(route.context.filter))state.remote.rooms.filter=route.context.filter;
+          if(['all',...LIVE_ROOM_TYPE_ORDER].includes(route.context.typeFilter))state.remote.rooms.typeFilter=route.context.typeFilter;
+          if(/^\d{0,8}$/.test(route.context.roomQuery||''))state.remote.rooms.query=route.context.roomQuery||'';
+        }
+        if(route.view==='quickReservation'&&route.context){
+          if(/^\d{4}-\d{2}-\d{2}$/.test(route.context.anchor||''))state.quickReservationAnchorDate=route.context.anchor;
+          state.quickReservationFollowsToday=route.context.followsToday!==false;
+          if(['all',...Object.keys(ROOM_TYPES)].includes(route.context.type))state.quickReservationType=route.context.type;
+          state.quickGridScrollLeft=Math.max(0,Number(route.context.left)||0);state.quickGridScrollTop=Math.max(0,Number(route.context.top)||0);
+        }
+        cleaningState().inspectionDetail=null;cleaningState().focusRoomId=route.focusRoomId||null;
+        if(/^\d{4}-\d{2}-\d{2}$/.test(route.serviceDate||'')&&route.serviceDate!==cleaningState().serviceDate){cleaningState().serviceDate=route.serviceDate;cleaningState().status='idle';}
+        if(route.view==='cleaning'&&['assignment-today','assignment-tomorrow','progress','inspection','done'].includes(route.tab))state.cleaningTab=route.tab;
+        if(route.view==='maids'&&['workforce','history','pay','complaints'].includes(route.tab))state.adminMaidTab=route.tab;
+        if(route.week&&route.week!==state.remote.payroll.weekStart){state.remote.payroll.weekStart=route.week;state.remote.payroll.status='idle';}
+        if(route.view==='cleaning'&&isCleaningAssignmentTab(state.cleaningTab)){
+          const slice=cleaningState();slice.serviceDate=addIsoDays(liveKstIsoDate(),state.cleaningTab==='assignment-tomorrow'?1:0);slice.status='idle';slice.preview=null;slice.commitImpact=null;slice.commitImpactStatus='idle';
+        }
+        try{
+          render();await loadLiveViewData(route.view);
+          if(sequence!==liveHistoryRestoreSequence||!sameLiveActorIdentity(actor,state.remote.auth.user))return;
+          if(route.roomId&&actor.role==='admin')await openLiveRoomDetailPage(route.roomId);
+          if(route.submissionId&&actor.role==='admin')await openLiveInspection(route.submissionId);
+          if(route.payrollMaidId&&(actor.role==='admin'||route.payrollMaidId===actor.profileId))await openLivePayrollDetail(route.payrollMaidId);
+          if(route.complaintId)await openLiveComplaintDetail(route.complaintId);
+        }finally{
+          if(sequence===liveHistoryRestoreSequence){restoringHistory=false;writePageHistory(liveRouteSnapshot(route.scrollY),'replace');render();requestAnimationFrame(()=>{scheduleWindowScrollRestore(route.scrollY||0);(findHistoryFocusTarget(focus)||document.getElementById('main-content'))?.focus({preventScroll:true});});}
+        }
+      }
       function isBrowserPublishableKey(value){
         if(/^sb_publishable_[A-Za-z0-9_-]{20,}$/.test(value))return true;
         if(!/^eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(value))return false;
@@ -3093,18 +3165,20 @@
       function liveComplaintRange(){const today=liveKstIsoDate();return {from:`${addIsoDays(today,-30)}T00:00:00+09:00`,to:`${addIsoDays(today,1)}T00:00:00+09:00`};}
       async function loadLivePayroll({weekStart=null,quiet=false}={}){
         if(!['admin','maid'].includes(state.remote.auth.user?.role))return;
-        const generation=LIVE_RUNTIME.authGeneration,slice=state.remote.payroll,selected=weekStart||slice.weekStart||liveClosedPayrollWeekStart();slice.status='loading';slice.weekStart=selected;slice.error=null;if(!quiet)render();
+        const generation=LIVE_RUNTIME.authGeneration,slice=state.remote.payroll,selected=weekStart||slice.weekStart||weekStartIso(liveKstIsoDate()),loadRevision=(slice.loadRevision||0)+1;slice.loadRevision=loadRevision;slice.status='loading';slice.weekStart=selected;slice.detail=null;slice.error=null;if(!quiet)render();
         try{
           const items=[];let cursor=null,requestId=null,pageCount=0;
-          do{const suffix=cursor?`&cursor=${encodeURIComponent(cursor)}`:'',{data,requestId:id}=await apiRequest(`/v1/payroll?weekStart=${encodeURIComponent(selected)}&limit=10${suffix}`);requestId=requestId||id;items.push(...(Array.isArray(data?.payroll)?data.payroll:[]));cursor=data?.nextCursor||null;pageCount+=1;}while(cursor&&pageCount<20);
-          if(generation!==LIVE_RUNTIME.authGeneration)return;
+          do{const suffix=cursor?`&cursor=${encodeURIComponent(cursor)}`:'',{data,requestId:id}=await apiRequest(`/v1/payroll?weekStart=${encodeURIComponent(selected)}&limit=10${suffix}`);if(!Array.isArray(data?.payroll))throw new ApiRequestError('payroll missing',{status:502,code:'INVALID_RESPONSE'});requestId=requestId||id;items.push(...data.payroll);cursor=data?.nextCursor||null;pageCount+=1;}while(cursor&&pageCount<20);
+          if(cursor)throw new ApiRequestError('payroll cursor overflow',{status:502,code:'INVALID_RESPONSE'});
+          if(items.some(item=>item.weekStart!==selected||!['totalAmount','payableAmount','adjustmentAmount','carryInAmount','lateEarningAmount','itemCount'].every(key=>Number.isSafeInteger(item[key]))||item.lockedAmount!=null&&!Number.isSafeInteger(item.lockedAmount)||state.role==='maid'&&item.maidProfileId!==state.remote.auth.user?.profileId))throw new ApiRequestError('payroll response invalid',{status:502,code:'INVALID_RESPONSE'});
+          if(generation!==LIVE_RUNTIME.authGeneration||state.remote.payroll.loadRevision!==loadRevision)return;
           state.remote.payroll={...slice,status:'ready',items,nextCursor:cursor,weekStart:selected,detail:null,error:null,mutationError:null,requestId,lastSuccessAt:new Date().toISOString(),busy:false};
-        }catch(error){if(generation!==LIVE_RUNTIME.authGeneration)return;state.remote.payroll={...slice,status:'error',weekStart:selected,error,requestId:error?.requestId||null,busy:false};}
+        }catch(error){if(generation!==LIVE_RUNTIME.authGeneration||state.remote.payroll.loadRevision!==loadRevision)return;state.remote.payroll={...slice,status:'error',weekStart:selected,error,requestId:error?.requestId||null,busy:false};}
         if(!quiet)render();
       }
       async function loadLivePayrollEntries(cycle){
         const kinds=['items','lateEarnings','adjustments'],result={};
-        await Promise.all(kinds.map(async kind=>{const entries=[];let cursor=null,pageCount=0;do{const suffix=cursor?`&cursor=${encodeURIComponent(cursor)}`:'',{data}=await apiRequest(`/v1/payroll/entries?weekStart=${encodeURIComponent(cycle.weekStart)}&maidProfileId=${encodeURIComponent(cycle.maidProfileId)}&kind=${encodeURIComponent(kind)}&limit=50${suffix}`);entries.push(...(Array.isArray(data?.entries)?data.entries:[]));cursor=data?.nextCursor||null;pageCount+=1;}while(cursor&&pageCount<20);result[kind]=entries;}));
+        await Promise.all(kinds.map(async kind=>{const entries=[];let cursor=null,pageCount=0;do{const suffix=cursor?`&cursor=${encodeURIComponent(cursor)}`:'',{data}=await apiRequest(`/v1/payroll/entries?weekStart=${encodeURIComponent(cycle.weekStart)}&maidProfileId=${encodeURIComponent(cycle.maidProfileId)}&kind=${encodeURIComponent(kind)}&limit=50${suffix}`);if(!Array.isArray(data?.entries))throw new ApiRequestError('payroll entries missing',{status:502,code:'INVALID_RESPONSE'});entries.push(...data.entries);cursor=data?.nextCursor||null;pageCount+=1;}while(cursor&&pageCount<20);if(cursor)throw new ApiRequestError('payroll entries overflow',{status:502,code:'INVALID_RESPONSE'});result[kind]=entries;}));
         return result;
       }
       async function loadLiveComplaints({quiet=false}={}){
@@ -3156,10 +3230,13 @@
             const range=liveReservationCalendarRange();add(liveLoaderTask(`reservation-calendar:${range.key}`,state.remote.reservations,loadLiveReservationCalendar,{force,fresh:()=>{const cached=state.remote.reservations.calendarCache instanceof Map?state.remote.reservations.calendarCache.get(range.key):null;return !force&&!!cached&&Date.now()-Number(cached.cachedAt)<LIVE_CALENDAR_CACHE_MS;}}));
           }
           if(view==='cleaning'){add(liveLoaderTask('accounts',state.remote.accounts,loadLiveAccounts,{force}));if(cleaningWorkflowEnabled())add(liveLoaderTask('cleaning',state.remote.cleaning,loadLiveCleaning,{force}));}
+          if(view==='cleaning'&&state.cleaningTab==='done')add(liveLoaderTask('cleaning-history',state.remote.cleaningHistory,loadLiveCleaningHistory,{force}));
           if(view==='maids'){
             const accountsTask=liveLoaderTask('accounts',state.remote.accounts,loadLiveAccounts,{force});add(accountsTask);
             if(force||!liveSliceFresh(state.remote.availability))add(coalesceLiveLoad('availability',async()=>{if(accountsTask)await accountsTask;return loadLiveAvailability({quiet:true});}));
             add(liveLoaderTask('work-history',state.remote.workHistory,loadLiveWorkHistory,{force}));
+            if(state.adminMaidTab==='pay'||state.adminMaidTab==='complaints')add(liveLoaderTask(`payroll:${state.remote.payroll.weekStart||'current'}`,state.remote.payroll,loadLivePayroll,{force}));
+            if(state.adminMaidTab==='complaints')add(liveLoaderTask('complaints',state.remote.complaints,loadLiveComplaints,{force}));
           }
           if(view==='more')add(liveLoaderTask('complaints',state.remote.complaints,loadLiveComplaints,{force}));
         }else if(role==='maid'){
@@ -3180,9 +3257,10 @@
       }
       function establishLiveActor(actor,session,remember){
         const safe=safeLiveActor(actor);if(!safe)throw new ApiRequestError('actor invalid',{status:502,code:'INVALID_RESPONSE'});
-        const next={...session,user:safe,remember:!!remember};state.remote.auth={...state.remote.auth,status:'authenticated',user:safe,session:persistLiveSession(next,remember)||next,error:null,remember:!!remember,passwordMode:false};const pushProjection=readSafePushProjection(safe.profileId);if(pushProjection)state.remote.push={...state.remote.push,status:pushProjection.status==='active'?'active':'idle',subscription:pushProjection};state.role=safe.role;state.liveView=requestedLiveView(safe.role)||defaultLiveView(safe.role);syncLiveViewUrl(state.liveView);syncAuthState(state);scheduleLiveRefresh();return safe;
+        const next={...session,user:safe,remember:!!remember};state.remote.auth={...state.remote.auth,status:'authenticated',user:safe,session:persistLiveSession(next,remember)||next,error:null,remember:!!remember,passwordMode:false};const pushProjection=readSafePushProjection(safe.profileId);if(pushProjection)state.remote.push={...state.remote.push,status:pushProjection.status==='active'?'active':'idle',subscription:pushProjection};state.role=safe.role;state.liveView=requestedLiveView(safe.role)||defaultLiveView(safe.role);applyLiveLocationRoute();syncLiveViewUrl();syncAuthState(state);scheduleLiveRefresh();return safe;
       }
       function clearLiveAuthSurface(){
+        liveHistoryRestoreSequence+=1;restoringHistory=false;
         LIVE_IDEMPOTENCY_KEYS.clear();clearAllPinModalSecrets();clearLivePinReveal();clearActiveCleaningPhotoUrls();clearCleaningPhotoUrls();livePinChangeContext=null;liveRoomDetail=null;liveRoomDetailReturnY=0;uncertainLiveMutation=null;try{sessionStorage.removeItem(cleaningIncidentStorageKey());}catch{}state.remote.cleaning=initialCleaningState();maskPin();protectedPinOverrides.clear();pendingPin=null;rawCloseModal();state.detail=null;
         if(isWireframeHistory(history.state))history.replaceState(null,'',`${location.pathname}${location.search}`);
       }
@@ -3679,13 +3757,26 @@
         const today=liveTodayParts(),label=`${today.month}월 ${today.day}일 (${today.weekday})`;
         return `<div class="date-tools calendar-anchor" aria-label="오늘 운영일"><button class="icon-btn" type="button" aria-label="이전 날짜 API 준비 중" disabled>${icon('chevronLeft')}</button><button class="date-current" type="button" disabled>${icon('calendar','icon-sm')}<span>${esc(label)}</span></button><button class="icon-btn" type="button" aria-label="다음 날짜 API 준비 중" disabled>${icon('chevronRight')}</button><button class="btn btn-outline" type="button" disabled>오늘</button></div>`;
       }
+      function navigateLiveCleaning(tab){
+        if(state.remote.auth.user?.role!=='admin')return;
+        rememberCurrentHistoryRoute();clearLivePinReveal();rawCloseModal();clearCleaningPhotoUrls();
+        liveRoomDetail=null;state.detail=null;state.remote.payroll.detail=null;state.remote.complaints.detail=null;
+        const slice=cleaningState();slice.inspectionDetail=null;slice.focusRoomId=null;
+        state.liveView='cleaning';state.cleaningTab=tab;
+        if(isCleaningAssignmentTab(tab)){
+          const nextDate=addIsoDays(liveKstIsoDate(),tab==='assignment-tomorrow'?1:0);
+          if(slice.serviceDate!==nextDate){slice.serviceDate=nextDate;slice.preview=null;slice.commitImpact=null;slice.commitImpactStatus='idle';slice.draftSaveResults.clear();slice.draftIdempotencyKeys.clear();}
+        }
+        render();requestAnimationFrame(()=>{window.scrollTo(0,0);document.getElementById('main-content')?.focus({preventScroll:true});});
+        void loadLiveViewData('cleaning',{force:true});
+      }
       function renderLiveAdminToday(){
         const slice=state.remote.rooms,stateMarkup=renderLiveRemoteState(slice,{label:'객실 현황',retryAction:'refresh-live-rooms'});
         if(stateMarkup)return `<div class="view-stack">${renderLiveDateTools()}<section aria-labelledby="live-summary-title"><div class="mobile-section-title"><div><h2 id="live-summary-title">오늘 객실 요약</h2></div></div>${stateMarkup}</section></div>`;
         const items=slice.items||[],primaryCounts=items.map(liveRoomPrimary),counts={occupied:primaryCounts.filter(item=>item.key==='occupied').length,cleaning:primaryCounts.filter(item=>item.key==='cleaning').length,ready:primaryCounts.filter(item=>item.key==='ready').length,blocked:primaryCounts.filter(item=>item.key==='blocked').length};
         const cleaningSlice=cleaningState(),assignmentCount=cleaningWorkflowEnabled()&&cleaningSlice.status==='ready'?cleaningSlice.assignments.length:0,inspectionCount=cleaningWorkflowEnabled()&&cleaningSlice.status==='ready'?cleaningSlice.inspections.length:0;
-        const assignmentBody=`<div class="rail-row"><strong>청소 필요 객실 ${counts.cleaning}실 · 서버 배정 ${assignmentCount}건</strong><span>Preview, 초안, 확정 영향과 통보 배정을 청소 관리에서 확인합니다.</span></div><div style="margin-top:10px">${button('청소 관리 열기','nav','outline','data-view="cleaning"')}</div>`;
-        const inspectionBody=`<div class="rail-row"><strong>검수 대기 ${inspectionCount}건</strong><span>서버의 current 제출과 사진을 확인해 승인·반려합니다.</span></div><div style="margin-top:10px">${button('검수 열기','nav','outline','data-view="cleaning"')}</div>`;
+        const assignmentBody=`<div class="rail-row"><strong>청소 필요 ${counts.cleaning}실 · 배정 ${assignmentCount}건</strong></div><div style="margin-top:10px">${button('청소 배정','go-cleaning-assignment','outline','data-day="today"')}</div>`;
+        const inspectionBody=`<div class="rail-row"><strong>검수 대기 ${inspectionCount}건</strong></div><div style="margin-top:10px">${button('검수 보기','go-inspection','outline')}</div>`;
         const payrollSlice=state.remote.payroll,payrollTotal=(payrollSlice.items||[]).reduce((sum,item)=>sum+Math.max(0,Number(item.lockedAmount??item.payableAmount)||0),0),payrollReady=payrollSlice.status==='ready',payrollCopy=payrollReady?`${weekRangeLabel(payrollSlice.weekStart,true)} · ${money(payrollTotal)}`:payrollSlice.status==='error'?'주급 서버 확인 필요':'주급 원장 불러오는 중',costSection=`<section aria-label="청소비 예상 지출"><button class="card cleaning-cost-shortcut" type="button" data-action="go-payroll" data-week="${esc(payrollSlice.weekStart||liveClosedPayrollWeekStart())}" ${payrollReady?'':'disabled'} aria-label="${esc(payrollCopy)}. 주급 정산 화면 열기"><span class="cleaning-cost-shortcut-main">${icon('wallet')}<span><strong>청소비 예상 지출</strong><small>${esc(payrollCopy)}</small></span></span><span class="cleaning-cost-shortcut-cta">주급 정산${icon('chevronRight','icon-sm')}</span></button></section>`;
         return `<div class="view-stack">${renderLiveDateTools()}<section aria-labelledby="live-summary-title" data-admin-home-section="room-summary"><div class="mobile-section-title"><div><h2 id="live-summary-title">오늘 객실 요약</h2></div></div><div class="today-summary"><button class="card metric-card neutral" type="button" data-action="filter-rooms" data-filter="occupied" aria-label="투숙 중 객실 ${counts.occupied}개 목록 보기"><span>투숙 중</span><strong>${counts.occupied}</strong></button><button class="card metric-card amber" type="button" data-action="filter-rooms" data-filter="cleaning" aria-label="청소 필요 객실 ${counts.cleaning}개 목록 보기"><span>청소 필요</span><strong>${counts.cleaning}</strong></button><button class="card metric-card green" type="button" data-action="filter-rooms" data-filter="available" aria-label="배정 가능 객실 ${counts.ready}개 목록 보기"><span>배정 가능</span><strong>${counts.ready}</strong></button><button class="card metric-card red" type="button" data-action="filter-rooms" data-filter="blocked" aria-label="배정 불가 객실 ${counts.blocked}개 목록 보기"><span>배정 불가</span><strong>${counts.blocked}</strong></button></div></section><div class="accordion-list" data-admin-home-section="cleaning-actions">${renderAccordion('assignment','오늘 청소 배정',cleaningSlice.status==='ready'?`${assignmentCount}건`:'조회 중',assignmentBody,true)}${renderAccordion('inspection','청소 검수',cleaningSlice.status==='ready'?`${inspectionCount}건`:'조회 중',inspectionBody)}</div><div data-admin-home-section="cleaning-cost">${costSection}</div></div>`;
       }
@@ -3818,9 +3909,11 @@
       const LIVE_COMPLAINT_FINDING_LABELS={confirmed:'확인됨',unverifiable:'확인 불가',false:'사실 아님'};
       function liveAccountDisplayName(profileId){const actor=state.remote.auth.user;if(actor?.profileId===profileId)return actor.displayName||'내 계정';return (state.remote.accounts.items||[]).find(item=>(item.profileId||item.id)===profileId)?.displayName||'메이드 확인 필요';}
       function livePayrollCycleByMaid(maidProfileId){return (state.remote.payroll.items||[]).find(item=>item.maidProfileId===maidProfileId)||null;}
-      function livePayrollStatusMeta(cycle){const status=cycle?.status||'open';return {label:LIVE_PAYROLL_STATUS_LABELS[status]||status,tone:LIVE_PAYROLL_STATUS_TONES[status]||'neutral'};}
+      function livePayrollStatusMeta(cycle){const status=cycle?.status||'open';if(status==='open'&&cycle?.weekStart>=weekStartIso(liveKstIsoDate()))return {label:'집계 중',tone:'blue'};return {label:LIVE_PAYROLL_STATUS_LABELS[status]||status,tone:LIVE_PAYROLL_STATUS_TONES[status]||'neutral'};}
       function livePayrollAction(cycle){
         if(state.role!=='admin'||!cycle)return '';
+        if(cycle.weekStart>=weekStartIso(liveKstIsoDate()))return statusBadge('집계 중','blue');
+        if(cycle.status==='open'&&Number(cycle.payableAmount)===0&&!Number(cycle.totalAmount)&&!Number(cycle.adjustmentAmount)&&!Number(cycle.carryInAmount))return '';
         if(cycle.status==='open'&&cycle.offsetSettled)return statusBadge('상계 완료','neutral');
         if(cycle.status==='open'&&Number(cycle.payableAmount)>0)return button('지급 진행 시작','live-payroll-start-review','primary',`data-maid="${esc(cycle.maidProfileId)}"`);
         if(cycle.status==='open'&&Number(cycle.payableAmount)<=0)return button('다음 주 상계','live-payroll-carry-review','outline',`data-maid="${esc(cycle.maidProfileId)}"`);
@@ -3829,13 +3922,13 @@
         return '';
       }
       function renderLivePayrollCycleCard(cycle){
-        const meta=livePayrollStatusMeta(cycle),name=liveAccountDisplayName(cycle.maidProfileId),locked=cycle.lockedAmount??cycle.payableAmount,late=Number(cycle.lateEarningAmount)||0;
-        return `<article class="card pay-person"><div class="pay-person-head"><div><h3>${esc(name)}</h3><p>${esc(weekRangeLabel(cycle.weekStart))} · 서버 지급 기록</p></div><div class="amount">${money(Number(locked)||0)}</div></div><div class="badge-row" style="margin-top:8px">${statusBadge(meta.label,meta.tone)}${cycle.offsetSettled?statusBadge('상계 완료','neutral'):''}${late?statusBadge(`늦은 확정 ${money(late)}`,'amber'):''}</div><div class="pay-stats"><div class="pay-stat"><span>확정 청소비</span><strong>${money(Number(cycle.totalAmount)||0)}</strong></div><div class="pay-stat"><span>조정·이월</span><strong>${money((Number(cycle.adjustmentAmount)||0)+(Number(cycle.carryInAmount)||0))}</strong></div><div class="pay-stat"><span>지급 대상</span><strong>${money(Number(cycle.payableAmount)||0)}</strong></div></div><div class="job-actions">${button(`청소 내역 ${Number(cycle.itemCount)||0}건 · 산출 보기`,'live-payroll-detail','outline',`data-maid="${esc(cycle.maidProfileId)}"`)}${livePayrollAction(cycle)}</div></article>`;
+        const meta=livePayrollStatusMeta(cycle),name=liveAccountDisplayName(cycle.maidProfileId),locked=cycle.lockedAmount??cycle.payableAmount,late=cycle.lateEarningAmount;
+        return '<article class="card pay-person"><div class="pay-person-head"><div><h3>'+esc(name)+'</h3><p>'+esc(weekRangeLabel(cycle.weekStart))+'</p></div><div class="amount">'+money(locked)+'</div></div><div class="badge-row" style="margin-top:8px">'+statusBadge(meta.label,meta.tone)+(cycle.offsetSettled?statusBadge('상계 완료','neutral'):'')+(late?statusBadge('늦은 확정 '+money(late),'amber'):'')+'</div><div class="pay-stats"><div class="pay-stat"><span>확정 청소비</span><strong>'+money(cycle.totalAmount)+'</strong></div><div class="pay-stat"><span>조정·이월</span><strong>'+money(cycle.adjustmentAmount+cycle.carryInAmount)+'</strong></div><div class="pay-stat"><span>'+(cycle.weekStart>=weekStartIso(liveKstIsoDate())?'현재 확정액':'지급 대상')+'</span><strong>'+money(cycle.payableAmount)+'</strong></div></div><div class="job-actions">'+button('청소 내역 '+cycle.itemCount+'건 · 산출 보기','live-payroll-detail','outline','data-maid="'+esc(cycle.maidProfileId)+'"')+livePayrollAction(cycle)+'</div></article>';
       }
       function renderLivePayroll(){
         const slice=state.remote.payroll,stateMarkup=renderLiveRemoteState(slice,{label:'주급 정산',retryAction:'refresh-live-payroll'});if(stateMarkup)return stateMarkup;
-        const items=slice.items||[],total=items.reduce((sum,item)=>sum+Math.max(0,Number(item.lockedAmount??item.payableAmount)||0),0),admin=state.role==='admin';
-        return `<div class="payroll-live"><section class="card pay-hero"><span>${esc(weekRangeLabel(slice.weekStart))} · 운영 API</span><strong>${money(total)}</strong><div class="pay-hero-grid"><div><span>${admin?'메이드':'내'} 지급 기록</span><b>${items.length}건</b></div><div><span>확인 필요</span><b>${items.filter(item=>item.status==='check').length}건</b></div></div></section><div class="notice notice-warning">${icon('wallet')}<div><strong>앱은 송금하지 않고 외부 송금 결과만 기록합니다.</strong><br>컴플레인 벌점은 주급에서 자동 차감되지 않습니다.</div></div><div class="pay-week-toolbar"><div><h2>주별 지급 이력</h2><p>월요일–일요일 마감 주차를 서버 원장으로 조회합니다.</p></div><div class="actions">${button('이전 주','live-payroll-week-shift','outline','data-offset="-7"')}${statusBadge(weekRangeLabel(slice.weekStart,true),'blue')}${button('다음 주','live-payroll-week-shift','outline','data-offset="7"')}</div></div><div class="tab-panel">${items.map(renderLivePayrollCycleCard).join('')||'<section class="inline-empty"><h3>이 주차의 지급 기록이 없습니다</h3><p>확정된 청소 수익이 생기면 서버 원장에 표시됩니다.</p></section>'}</div></div>`;
+        const items=slice.items||[],total=items.reduce((sum,item)=>sum+item.totalAmount,0),current=slice.weekStart===weekStartIso(liveKstIsoDate());
+        return `<div class="payroll-live"><section class="pay-hero"><span>${current?'이번 주':'선택 주차'} · ${esc(weekRangeLabel(slice.weekStart))} · 확정액</span><strong>${money(total)}</strong><div class="pay-hero-grid"><div><span>검수 전 예상 포함</span><b>API 미제공</b></div><div><span>검수 대기</span><b>API 미제공</b></div></div></section><div class="pay-week-toolbar"><div><h2>주별 지급 이력</h2></div><div class="actions"><button class="icon-btn" type="button" data-action="live-payroll-week-shift" data-offset="-7" aria-label="이전 주">${icon('chevronLeft')}</button>${statusBadge(weekRangeLabel(slice.weekStart,true),'blue')}<button class="icon-btn" type="button" data-action="live-payroll-week-shift" data-offset="7" aria-label="다음 주" ${current?'disabled':''}>${icon('chevronRight')}</button>${button('이번 주','live-payroll-week-shift','outline',`data-offset="0" ${current?'disabled':''}`)}</div></div><div class="tab-panel">${items.map(renderLivePayrollCycleCard).join('')||'<section class="inline-empty"><h3>확정된 청소비가 없습니다</h3></section>'}</div></div>`;
       }
       function renderLivePayrollDetail(detail){
         const cycle=detail.cycle,entries=detail.entries||{},meta=livePayrollStatusMeta(cycle),admin=state.role==='admin',name=liveAccountDisplayName(cycle.maidProfileId);
@@ -3978,10 +4071,10 @@
         if(!liveMode()||!state.loggedIn||state.remote.auth.user?.mustChangePassword||state.remote.auth.passwordMode)return false;
         syncAuthState(state);const app=document.getElementById('app'),main=document.getElementById('main-content'),topbar=app?.querySelector('.topbar');
         if(!app||!main||!topbar||app.dataset.liveShellRole!==state.role)return false;
-        main.innerHTML=renderMain();topbar.outerHTML=renderTopbar();
+        main.innerHTML=renderMain();topbar.outerHTML=renderTopbar();applyLiveCopyPolicy(main);
         app.querySelectorAll('[data-action="nav"][data-view]').forEach(item=>{if(item.dataset.view===currentView()&&!state.detail)item.setAttribute('aria-current','page');else item.removeAttribute('aria-current');});
         document.body.classList.toggle('quick-booking-fullscreen',!!(quickReservationViewActive()&&state.quickReservationFullscreen));
-        document.title=`${titleForView()} · CASTLE THE ART`;if(quickReservationViewActive())restoreQuickGridViewport();return true;
+        document.title=`${titleForView()} · CASTLE THE ART`;syncUrlState();if(quickReservationViewActive())restoreQuickGridViewport();return true;
       }
 
       function render() {
@@ -4005,16 +4098,17 @@
           </div>` : renderLogin()}
         `;
         if(liveMode()&&state.loggedIn&&!passwordGate)app.dataset.liveShellRole=state.role;else delete app.dataset.liveShellRole;
-        if(!liveMode())applyAdminCopyPolicy(app);
+        if(liveMode())applyLiveCopyPolicy(app);else applyAdminCopyPolicy(app);
         document.body.classList.toggle('quick-booking-fullscreen',!!(state.loggedIn&&quickReservationViewActive()&&state.quickReservationFullscreen));
         document.documentElement.style.setProperty('--nav-count', nav.length);
         document.title=`${titleForView()} · CASTLE THE ART${liveMode()?'':' 데모'}`;
-        if(!liveMode())syncUrlState();
+        syncUrlState();
         if(state.loggedIn&&quickReservationViewActive())restoreQuickGridViewport();
         if(verifyDurable){const durableAfter=durableLedgerFingerprint(state);if(durableRenderSameState&&durableAfter!==durableBefore)throw new Error('렌더링 중 예약·청소 제출·급여·지급 원장이 변경되었습니다.');durableRenderStateRef=state;assertNoDuplicateDurableRecords(state);}
       }
 
       function historyRouteSnapshot(scrollY=modalPageScrollY??window.scrollY) {
+        if(liveMode())return liveRouteSnapshot(scrollY);
         return {
           scenario:Number(state.scenario),role:state.role,currentMaidId:signedInMaidId(),view:currentView(),
           detail:state.detail?{type:String(state.detail.type),id:String(state.detail.id),...(state.detail.mode?{mode:String(state.detail.mode)}:{})}:null,
@@ -4028,6 +4122,7 @@
         };
       }
       function historyRouteUrl(route) {
+        if(route.live)return liveRouteUrl(route);
         const params=new URLSearchParams({scenario:String(route.scenario),role:route.role,view:route.view,date:route.date,filter:route.filter,type:route.typeFilter,q:route.q});
         if(route.assignmentTypeFilter&&route.assignmentTypeFilter!=='all')params.set('assignmentType',route.assignmentTypeFilter);
         if(route.cleaningTab==='assignment-today')params.set('cleaningDay','today');
@@ -4095,6 +4190,14 @@
       }
       function syncUrlState() {
         if(restoringHistory)return;
+        if(liveMode()){
+          if(state.remote.auth.status!=='authenticated')return;
+          const current=history.state,route=liveRouteSnapshot(),sameActor=current?.route?.live&&current.route.actorId===route.actorId&&current.route.role===route.role;
+          if(sameActor&&current.layer==='modal'&&document.getElementById('modal-root')?.hasChildNodes())return;
+          if(sameActor&&current.layer==='modal'&&historyIndex()>0){if(!historyTraversalPending){historyTraversalOverride=route;historyTraversalPending=true;history.back();}return;}
+          const mode=sameActor&&current.layer==='page'&&liveRouteKey(current.route)!==liveRouteKey(route)?'push':'replace';
+          writePageHistory(route,mode);return;
+        }
         const route=historyRouteSnapshot(),mode=historyWriteMode;historyWriteMode='replace';
         const current=history.state;
         if(mode==='push'){writePageHistory(route,'push');return;}
@@ -4106,6 +4209,7 @@
       }
       function rememberCurrentHistoryRoute() {
         if(restoringHistory||historyTraversalPending||history.state?.layer==='modal')return;
+        if(liveMode()&&state.remote.auth.status!=='authenticated')return;
         writePageHistory(historyRouteSnapshot(),'replace');
       }
       function pushHistoryOnNextRender() { if(!restoringHistory)historyWriteMode='push'; }
@@ -4162,6 +4266,7 @@
         if(state.cleaningTab==='assignment-today')activateNotifiedAssignmentsForDate(state.selectedDate);
       }
       function captureCurrentModalHistory() {
+        if(liveMode())return;
         const current=history.state,root=document.getElementById('modal-root');
         if(!isWireframeHistory(current)||current.layer!=='modal'||!root?.hasChildNodes())return;
         if(isPinHistoryKind(current.modalKind)){
@@ -4179,6 +4284,11 @@
       }
       function registerModalHistory({stack=false,kind=null,payload=undefined}={}) {
         if(restoringHistory)return history.state;
+        if(liveMode()){
+          const current=history.state,route=liveRouteSnapshot(),modalSessionId=newModalSessionId();
+          const entry={wireframe:true,wireframeVersion:2,index:historyIndex(current)+(current?.layer==='modal'?0:1),layer:'modal',route,modalDepth:1,modalSessionId,modalEntryId:modalSessionId};
+          history[current?.layer==='modal'?'replaceState':'pushState'](entry,'',historyRouteUrl(route));return entry;
+        }
         const root=document.getElementById('modal-root'),modalHtml=root?.innerHTML||'';if(!modalHtml)return;
         const current=history.state,route=historyRouteSnapshot(),trigger=historyFocusDescriptor(modalTrigger);
         if(isWireframeHistory(current)&&current.layer==='page')history.replaceState({...current,route},'',historyRouteUrl(route));
@@ -4195,6 +4305,14 @@
         const root=document.getElementById('modal-root'),wasPin=!!root?.querySelector('.pin-sheet'),trigger=modalTrigger;
         if(root)root.innerHTML='';restoreModalViewport({restore:restoreScroll});setModalBackgroundLocked(false);
         if(restoreFocus)trigger?.focus?.({preventScroll:true});modalTrigger=null;if(wasPin){pinCardTrigger=null;activePinModalSessionId=null;}
+      }
+      async function closeLiveModalBeforeReload(){
+        rawCloseModal();
+        if(!liveMode()||history.state?.layer!=='modal'||historyIndex()<1)return;
+        await new Promise(resolve=>{
+          const done=()=>{clearTimeout(timer);window.removeEventListener('popstate',done);resolve();},timer=setTimeout(done,1500);
+          window.addEventListener('popstate',done,{once:true});syncUrlState();
+        });
       }
       function dismissModal() {
         const root=document.getElementById('modal-root');if(!root?.hasChildNodes())return;
@@ -4242,6 +4360,7 @@
       }
       function handleHistoryNavigation(event) {
         const entry=event.state;historyTraversalPending=false;
+        if(liveMode()){if(entry?.route?.live)void restoreLiveHistory(entry);else{historyTraversalOverride=null;rawCloseModal();}return;}
         if(!isWireframeHistory(entry)){historyTraversalOverride=null;return;}
         maskPin();
         const departingPinSession=activePinModalSessionId,preservePinSession=departingPinSession&&entry.layer==='modal'&&entry.modalSessionId===departingPinSession&&isPinHistoryKind(entry.modalKind);
@@ -4266,7 +4385,7 @@
 
       function renderLiveStrip(){
         const actor=state.remote.auth.user,roleLabel=actor?.role==='developer'?'개발자':actor?.role==='admin'?'관리자':actor?.role==='maid'?'메이드':'로그인 전',preview=runtimeDeploymentChannel()==='preview';
-        return `<section class="live-strip ${preview?'preview':''}" aria-label="운영 API 연결 상태"><div class="live-strip-inner"><strong><span class="live-signal"></span>${preview?'운영 API 연결 중 · Preview':`운영 연결 · ${esc(roleLabel)}`}</strong><p>${preview?'운영 데이터를 사용하는 사전 확인 환경 · 승인한 대상만 변경하세요':'기존 화면 유지 · 연결된 데이터는 실시간 · 준비 중 기능은 명확히 구분'}</p></div></section>`;
+        return `<section class="live-strip ${preview?'preview':''}" aria-label="운영 API 연결 상태"><div class="live-strip-inner"><strong><span class="live-signal"></span>${preview?'운영 API 연결 중 · Preview':`운영 연결 · ${esc(roleLabel)}`}</strong>${preview?'<p>운영 데이터 사용 · 승인한 대상만 변경하세요</p>':''}</div></section>`;
       }
 
       function renderSidebar(nav) {
@@ -4346,6 +4465,10 @@
         nodes.forEach(node=>{if(node.parentElement?.closest('.demo-strip'))return;let value=node.nodeValue;for(const [from,to] of replacements)value=value.split(from).join(to);value=value.replace(/\b(?:ATT|SUB|REPORT|PAY|LEASE|work|target)-[A-Za-z0-9-]+\b/gi,'').replace(/\s*·\s*v\d+(?:\.\d+)?\b/gi,'').replace(/\s*·\s*데모(?:\s+(?:기록|지급 이력|금액))?/g,'').replace(/\(데모\)/g,'').replace(/\s{2,}/g,' ');node.nodeValue=value;});
       }
 
+      function applyLiveCopyPolicy(root){
+        root.querySelectorAll('.tab-header p,.mobile-section-title p,.pay-week-toolbar p,.work-history-hero p,.work-history-unit-note,.work-history-contract,.assignment-foot p').forEach(element=>element.remove());
+        root.querySelectorAll('.audit-note').forEach(element=>{if(!element.closest('[role="alert"],.notice-danger')&&!/API 미제공|만료|필수|확인 필요/.test(element.textContent))element.remove();});
+      }
       function applyAdminCopyPolicy(root) {
         if(state.role==='maid'){applyMaidCopyPolicy(root);return;}
         if(state.role!=='admin')return;
@@ -8458,10 +8581,16 @@
         try{const {data}=await mutationApiRequest(`/v1/rooms/${encodeURIComponent(roomId)}/master-data`,{method:'PATCH',body:{roomTypeId,elevatorZone,dataStatus,dataStatusReason:dataStatus==='verification_required'?dataStatusReason:null,expectedVersion:Number(expectedVersion),reasonCode:'ADMIN_MASTER_DATA_UPDATED'}});const room=data?.room;if(room){const index=state.remote.rooms.items.findIndex(item=>item.id===room.id);if(index>=0)state.remote.rooms.items.splice(index,1,room);liveRoomDetail=room;}closeModal();if(!renderLiveSurface())render();toast('객실 기준정보를 저장했습니다.');await Promise.allSettled([loadLiveRooms({quiet:true}),loadLiveRoomTypes({quiet:true})]);if(!renderLiveSurface())render();}catch(error){toast(`${apiErrorCopy(error,'객실 기준정보를 저장하지 못했습니다.')}${error?.requestId?` · 문의 번호 ${error.requestId}`:''}`,'error');}
       }
       async function openLiveRoomDetailPage(roomId){
-        const cached=liveRoomById(roomId);liveRoomDetailReturnY=window.scrollY;clearLivePinReveal();
+        if(state.remote.auth.user?.role!=='admin')return;
+        const cached=liveRoomById(roomId),generation=LIVE_RUNTIME.authGeneration,navigation=liveHistoryRestoreSequence;liveRoomDetailReturnY=window.scrollY;clearLivePinReveal();
         if(cached){liveRoomDetail=cached;if(!renderLiveSurface())render();requestAnimationFrame(()=>{window.scrollTo(0,0);document.getElementById('main-content')?.focus({preventScroll:true});});}
-        try{const [{data}]=await Promise.all([coalesceLiveLoad(`room-detail:${roomId}`,()=>apiRequest(`/v1/rooms/${encodeURIComponent(roomId)}`)),coalesceLiveLoad(`room-reservations:${roomId}`,()=>loadLiveRoomReservations(roomId))]),room=data?.room;if(!room)throw new ApiRequestError('room missing',{status:502,code:'INVALID_RESPONSE'});const index=state.remote.rooms.items.findIndex(item=>item.id===room.id);if(index>=0)state.remote.rooms.items.splice(index,1,room);liveRoomDetail=room;if(!renderLiveSurface())render();if(!cached)requestAnimationFrame(()=>{window.scrollTo(0,0);document.getElementById('main-content')?.focus({preventScroll:true});});}
-        catch(error){if(!cached)liveRoomDetail=null;toast(`${apiErrorCopy(error,'객실 상세를 불러오지 못했습니다.')}${error?.requestId?` · 문의 번호 ${error.requestId}`:''}`,'error');}
+        try{
+          const [{data}]=await Promise.all([coalesceLiveLoad('room-detail:'+roomId,()=>apiRequest('/v1/rooms/'+encodeURIComponent(roomId))),coalesceLiveLoad('room-reservations:'+roomId,()=>loadLiveRoomReservations(roomId))]);
+          if(generation!==LIVE_RUNTIME.authGeneration||navigation!==liveHistoryRestoreSequence)return;
+          const room=data?.room;if(!room)throw new ApiRequestError('room missing',{status:502,code:'INVALID_RESPONSE'});
+          const index=state.remote.rooms.items.findIndex(item=>item.id===room.id);if(index>=0)state.remote.rooms.items.splice(index,1,room);
+          liveRoomDetail=room;if(!renderLiveSurface())render();if(!cached)requestAnimationFrame(()=>{window.scrollTo(0,0);document.getElementById('main-content')?.focus({preventScroll:true});});
+        }catch(error){if(generation!==LIVE_RUNTIME.authGeneration||navigation!==liveHistoryRestoreSequence)return;if(!cached)liveRoomDetail=null;toast(apiErrorCopy(error,'객실 상세를 불러오지 못했습니다.')+(error?.requestId?' · 문의 번호 '+error.requestId:''),'error');}
       }
       function openLiveRoomOperations(roomId,trigger=document.activeElement){
         const room=liveRoomById(roomId);if(!room)return;
@@ -8968,9 +9097,26 @@
         const action=inspection?button('전체 제출 검수','cleaning-inspection-open','primary',`data-id="${esc(inspection.id)}" ${slice.busy?'disabled':''}`):'';
         return `${detailHeader(`${esc(room.roomNumber)}호 청소 상태`,`${esc(LIVE_ROOM_TYPE_LABELS[room.roomTypeCode]||room.roomTypeName)} · 운영 API 최신 청소 데이터`)}<div class="detail-grid"><div class="detail-stack"><section class="card card-pad"><div class="section-head"><h3>퇴실 청소 · 제출 요약</h3><div class="badge-row">${statusBadge(status,tone)}${inspection?statusBadge(`제출 v${Number(inspection.version)}`,'green'):''}</div></div><div class="summary-strip"><span>${icon('clock','icon-sm')}시작 <strong>${attempt?.startedAt?esc(liveKstDateTimeLabel(attempt.startedAt)):'—'}</strong></span><span>${icon('check','icon-sm')}현장 완료 <strong>${attempt?.fieldCompletedAt?esc(liveKstDateTimeLabel(attempt.fieldCompletedAt)):'—'}</strong></span><span>담당 <strong>${esc(assignment?.maidDisplayName||'미배정')}</strong></span></div><div class="photo-template-banner"><div><strong>${esc(LIVE_ROOM_TYPE_LABELS[room.roomTypeCode]||room.roomTypeName)} · 퇴실 청소</strong><span>사진 슬롯과 제출 내용은 attempt별 서버 계약을 사용합니다.</span></div><div class="badge-row">${statusBadge(inspection?`사진 ${Number(inspection.photoCount)||0}장`:'제출 전',inspection?'blue':'neutral')}</div></div>${action?`<div style="margin-top:12px">${action}</div>`:''}</section><section class="card card-pad"><div class="section-head"><div><h3>메이드 청소 템플릿 기준 검수</h3><span class="meta">서버 사진 슬롯 기준</span></div>${statusBadge(inspection?'제출 확인 가능':'제출 대기',inspection?'green':'neutral')}</div>${inspection?`<div class="notice notice-info"><div><strong>제출 v${Number(inspection.version)} · 사진 ${Number(inspection.photoCount)||0}장</strong><br>사진 원문은 검수 상세 진입 시 권한을 다시 확인해 불러옵니다.</div></div>`:'<div class="inline-empty"><h3>검수할 제출이 없습니다</h3><p>현장 완료만으로 검수 완료나 정산 상태를 만들지 않습니다.</p></div>'}</section><section class="card card-pad"><div class="section-head"><div><h3>특이 객실 신고·요금 결정</h3><span class="meta">증빙과 서버 결정 상태를 함께 확인</span></div></div><div class="notice notice-info"><div><strong>${inspection?.bombReportId?'특이 객실 신고 있음':'신고 없음'}</strong><br>신고가 있으면 검수 상세에서 증빙을 확인하고 별도 결정합니다.</div></div></section><section class="card card-pad"><div class="rail-row"><strong>기본 제출 메모</strong><span>${inspection?'제출 상세에서 확인':'등록된 제출 없음'} ${icon('chevronRight','icon-sm')}</span></div><div class="rail-row"><strong>촛불</strong><span>현재 객실 ${Number(room.candleCount)||0}개 ${icon('chevronRight','icon-sm')}</span></div></section><section class="card card-pad"><div class="section-head"><div><h3>객실 특이사항</h3><span class="meta">메이드 등록 · 관리자 조회</span></div>${statusBadge('0건','neutral')}</div><div class="inline-empty"><h3>등록된 특이사항이 없습니다</h3><p>메이드가 현장에서 등록한 메모와 사진이 여기에 표시됩니다.</p></div></section></div><aside class="detail-stack"><section class="card card-pad"><h3>검수 원칙</h3><p class="audit-note">구역별 청소 사진 전체를 함께 확인해 승인하거나 반려합니다. 특이 객실 추가 요금은 이미지 증빙을 보고 별도로 결정합니다.</p></section><section class="card card-pad"><h3>검수 타임라인</h3><ol class="timeline"><li><strong>담당 확정</strong><span>${assignment?.notifiedAt?esc(liveKstDateTimeLabel(assignment.notifiedAt)):'—'}</span></li><li style="opacity:${attempt?.startedAt?1:.45}"><strong>청소 시작</strong><span>${attempt?.startedAt?esc(liveKstDateTimeLabel(attempt.startedAt)):'—'}</span></li><li style="opacity:${attempt?.fieldCompletedAt?1:.45}"><strong>현장 완료</strong><span>${attempt?.fieldCompletedAt?esc(liveKstDateTimeLabel(attempt.fieldCompletedAt)):'—'}</span></li><li style="opacity:${inspection?1:.45}"><strong>전체 제출</strong><span>${inspection?esc(liveKstDateTimeLabel(inspection.submittedAt)):'—'}</span></li><li style="opacity:.45"><strong>관리자 검수</strong><span>대기</span></li></ol></section></aside></div>${action?`<div class="sticky-command">${action}</div>`:''}`;
       }
+      function renderLiveInspectionGallery(photos){
+        return '<div class="inspection-gallery">'+photos.map((photo,index)=>photo.url
+          ?'<button class="inspection-photo" type="button" data-action="live-inspection-photo" data-id="'+esc(photo.photoId)+'" aria-label="사진 '+(index+1)+' 크게 보기"><img src="'+esc(photo.url)+'" alt="청소 사진 '+(index+1)+'"><span class="inspection-photo-copy"><strong>사진 '+(index+1)+'</strong>'+icon('search','icon-sm')+'</span></button>'
+          :'<div class="inspection-photo"><span class="inspection-photo-copy"><strong>사진 '+(index+1)+'</strong><small>사진 조회 실패'+(photo.error?.requestId?' · 문의 번호 '+esc(photo.error.requestId):'')+'</small></span></div>').join('')+'</div>';
+      }
+      function openLiveInspectionPhoto(photoId,trigger=document.activeElement){
+        const detail=cleaningState().inspectionDetail,photos=detail?.photos||[],index=photos.findIndex(item=>item.photoId===photoId),photo=photos[index];
+        if(!cleaningActor('admin')||!photo?.url)return;
+        const adjacent=offset=>{const item=photos[index+offset];return '<button class="icon-btn" type="button" data-action="live-inspection-photo" data-id="'+esc(item?.photoId||'')+'" aria-label="'+(offset<0?'이전 사진':'다음 사진')+'" '+(item?.url?'':'disabled')+'>'+icon(offset<0?'chevronLeft':'chevronRight')+'</button>';};
+        showModal({title:'사진 '+(index+1)+' / '+photos.length,large:true,trigger,closeLabel:'닫기',historyKind:'photo-viewer',body:'<div class="photo-viewer-visual"><img src="'+esc(photo.url)+'" alt="확대된 청소 사진 '+(index+1)+'"></div><div class="actions" style="justify-content:center;margin-top:12px">'+adjacent(-1)+adjacent(1)+'</div>'});
+      }
       function renderLiveInspectionDetailPage(detail){
-        const slice=cleaningState(),submission=detail.submission||{},photos=detail.photos||[],roomNo=submission.reviewContext?.roomNumber||'객실',bomb=submission.bombReport,statusLabel=CLEANING_SUBMISSION_STATUS_LABELS[submission.status]||submission.status||'검수 대기',decisionLocked=slice.busy||submission.status!=='submitted';
-        return `${detailHeader(`${esc(roomNo)}호 전체 제출 검수`,`제출 v${Number(submission.version)} · current revision ${Number(submission.currentRevision)} · 특이 객실 신고는 별도 결정`)}<div class="detail-grid"><div class="detail-stack"><section class="card card-pad"><div class="section-head"><h3>퇴실 청소 · 제출 요약</h3><div class="badge-row">${statusBadge(statusLabel,'amber')}${statusBadge('제출 연결 정상','green')}</div></div><div class="summary-strip"><span>${icon('clock','icon-sm')}제출 <strong>${esc(liveKstDateTimeLabel(submission.submittedAt))}</strong></span><span>제출자 <strong>${esc(submission.reviewContext?.maidDisplayName||'서버 제출자')}</strong></span></div><div class="photo-template-banner"><div><strong>${esc(submission.reviewContext?.cleaningKind==='stayover'?'연박 청소':'퇴실 청소')} · 제출 v${Number(submission.version)}</strong><span>인증 사진 슬롯 ${photos.filter(photo=>photo.required).length}개</span></div><div class="badge-row">${statusBadge('사진 전용','blue')}</div></div><div class="summary-strip"><span>유형 사진 <strong>${photos.length}/${Number(submission.photoCount)||photos.length}장</strong></span><span>특이 객실 증빙 <strong>${bomb?.evidenceCount||0}장</strong></span><span>촛불 <strong>${Number(submission.candleCount)||0}개</strong></span></div></section><section class="card card-pad"><div class="section-head"><div><h3>메이드 청소 템플릿 기준 검수</h3><span class="meta">제출 당시 서버 슬롯</span></div>${statusBadge(`${photos.length}/${Number(submission.photoCount)||photos.length} 사진 확인`,photos.every(photo=>photo.url)?'green':'amber')}</div><div class="inspection-gallery">${photos.map(photo=>photo.url?`<figure class="inspection-photo"><img src="${esc(photo.url)}" alt="${esc(photo.label)} 검수 사진"><figcaption class="inspection-photo-copy"><strong>${esc(photo.label)}</strong><small>${photo.required?'필수':'선택'} · photo v${photo.photoVersion}</small></figcaption></figure>`:`<div class="inspection-photo"><span class="inspection-photo-copy"><strong>${esc(photo.label)}</strong><small>사진을 불러오지 못했습니다${photo.error?.requestId?` · 문의 번호 ${esc(photo.error.requestId)}`:''}</small></span></div>`).join('')}</div></section><section class="card card-pad"><div class="section-head"><div><h3>특이 객실 신고·요금 결정</h3><span class="meta">이미지 증빙과 결정 상태</span></div></div>${bomb?`<div class="notice notice-warning"><div><strong>특이 객실 신고</strong><br>${esc(bomb.memo)} · 증빙 ${Number(bomb.evidenceCount)||0}장</div></div><div class="live-operation-grid" style="margin-top:12px">${!submission.bombDecision?button('특이 객실 인정','cleaning-inspection-bomb-approve','outline',`data-id="${esc(submission.id)}" ${slice.busy?'disabled':''}`):''}${!submission.bombDecision?button('특이 객실 불인정','cleaning-inspection-bomb-reject','outline',`data-id="${esc(submission.id)}" ${slice.busy?'disabled':''}`):''}</div>`:'<div class="notice notice-info"><div><strong>특이 객실 신고 없음</strong><br>일반 청소 범위를 크게 넘는 상태를 별도 신고하지 않았습니다.</div></div>'}</section><section class="card card-pad"><div class="rail-row"><strong>기본 제출 메모</strong><span>등록된 기본 제출 메모 없음</span></div><div class="rail-row"><strong>촛불</strong><span>제출 ${Number(submission.candleCount)||0}개 ${icon('chevronRight','icon-sm')}</span></div></section><div class="notice notice-warning">${icon('alert')}<div>전체 승인 후에도 촛불·운영 상태·현재 점유 등 다른 입실 조건을 다시 확인합니다.</div></div></div><aside class="detail-stack"><section class="card card-pad"><h3>검수 원칙</h3><p class="audit-note">구역별 청소 사진 전체를 함께 확인해 승인하거나 반려합니다. 특이 객실 추가 요금은 이미지 증빙을 보고 별도로 결정합니다.</p></section><section class="card card-pad"><h3>검수 타임라인</h3><ol class="timeline"><li><strong>담당 확정</strong><span>서버 이력</span></li><li><strong>객실 PIN 조회</strong><span>권한 확인</span></li><li><strong>청소 시작</strong><span>서버 이력</span></li><li><strong>현장 완료</strong><span>서버 이력</span></li><li><strong>전체 제출</strong><span>${esc(liveKstDateTimeLabel(submission.submittedAt))}</span></li><li style="opacity:.45"><strong>관리자 검수</strong><span>대기</span></li></ol></section></aside></div><div class="sticky-command inspection-decision"><div class="job-actions">${button('전체 반려','cleaning-inspection-reject-review','danger',`data-id="${esc(submission.id)}" ${decisionLocked?'disabled':''}`)}${button('전체 승인','cleaning-inspection-approve','success',`data-id="${esc(submission.id)}" ${decisionLocked?'disabled':''}`)}</div></div>`;
+        const slice=cleaningState(),submission=detail.submission||{},photos=(detail.photos||[]).filter(photo=>!photo.evidenceOnly),roomNo=submission.reviewContext?.roomNumber||'객실',bomb=submission.bombReport,statusLabel=CLEANING_SUBMISSION_STATUS_LABELS[submission.status]||'상태 확인',decisionLocked=slice.busy||submission.status!=='submitted',photosReady=photos.length>=1&&photos.every(photo=>photo.url),evidencePhotos=(detail.photos||[]).filter(photo=>(bomb?.evidencePhotoIds||[]).includes(photo.photoId));
+        const summary=detailHeader(esc(roomNo)+'호 전체 제출 검수',esc(submission.reviewContext?.maidDisplayName||'제출자 확인 필요'))+
+          '<section><div class="section-head"><h3>제출 요약</h3>'+statusBadge(statusLabel,submission.status==='approved'?'green':'amber')+'</div><div class="summary-strip"><span>제출 <strong>'+esc(liveKstDateTimeLabel(submission.submittedAt))+'</strong></span><span>사진 <strong>'+photos.length+'장</strong></span><span>촛불 <strong>'+Number(submission.candleCount||0)+'개</strong></span></div></section>';
+        const gallery='<section><div class="section-head"><h3>청소 사진</h3>'+statusBadge(photos.length+'장',photosReady?'green':'amber')+'</div>'+renderLiveInspectionGallery(photos)+(photosReady?'':'<div class="notice notice-warning">사진을 모두 불러온 뒤 승인할 수 있습니다.</div>')+'</section>';
+        const bombActions=bomb&&!submission.bombDecision?'<div class="job-actions">'+button('폭탄방 인정','cleaning-inspection-bomb-approve','outline','data-id="'+esc(submission.id)+'" '+(decisionLocked?'disabled':''))+button('폭탄방 불인정','cleaning-inspection-bomb-reject','outline','data-id="'+esc(submission.id)+'" '+(decisionLocked?'disabled':''))+'</div>':'';
+        const evidence='<section><div class="section-head"><h3>폭탄방 신고</h3>'+(submission.bombDecision?statusBadge(submission.bombDecision==='approved'?'인정':'불인정',submission.bombDecision==='approved'?'green':'neutral'):'')+'</div>'+(bomb?'<p>'+esc(bomb.memo||'메모 없음')+'</p>'+renderLiveInspectionGallery(evidencePhotos)+bombActions:'<p class="meta">신고 없음</p>')+'</section>';
+        const actions='<div class="sticky-command inspection-decision"><div class="job-actions">'+button('전체 반려','cleaning-inspection-reject-review','danger','data-id="'+esc(submission.id)+'" '+(decisionLocked?'disabled':''))+button('전체 승인','cleaning-inspection-approve','success','data-id="'+esc(submission.id)+'" '+(decisionLocked||!photosReady?'disabled':''))+'</div></div>';
+        return '<div class="view-stack">'+summary+gallery+evidence+'</div>'+actions;
       }
       function renderLiveAdminCleaningTab(){
         const slice=cleaningState();
@@ -9092,24 +9238,49 @@
         await runLiveCleaningMutation({path:`/v1/attempts/${encodeURIComponent(attempt.attemptId)}/lifecycle`,body:{expectedExecutionVersion:attempt.executionVersion,expectedAssignmentId:attempt.assignmentId,expectedAssignmentRevision:attempt.assignmentRevision,expectedProfileVersion:impact.profileVersion,action,payload,reasonCode},label:'수행 수명주기 처리'});
       }
       async function openLiveInspection(submissionId,trigger=document.activeElement){
-        if(!cleaningActor('admin')||cleaningState().busy)return;const slice=cleaningState(),generation=LIVE_RUNTIME.authGeneration;slice.busy=true;slice.operation='검수 상세 조회';slice.error=null;render();
-        try{const {data}=await apiRequest(`/v1/inspections/${encodeURIComponent(submissionId)}`),submission=data?.submission;if(!submission)throw new ApiRequestError('submission missing',{status:502,code:'INVALID_RESPONSE'});clearCleaningPhotoUrls();const photos=await Promise.all((submission.photos||[]).map(async photo=>{try{const response=await apiRequest(`/v1/photos/${encodeURIComponent(photo.photoId)}/content`,{responseType:'blob'});const url=URL.createObjectURL(response.data);LIVE_CLEANING_PHOTO_URLS.add(url);return {...photo,url};}catch(error){return {...photo,url:null,error};}}));if(generation!==LIVE_RUNTIME.authGeneration)return;slice.focusRoomId=null;slice.inspectionDetail={submission,photos};liveRoomDetail=null;state.liveView='cleaning';syncLiveViewUrl('cleaning');rawCloseModal();window.scrollTo(0,0);}
-        catch(error){if(generation!==LIVE_RUNTIME.authGeneration)return;slice.error=error;toast(`${apiErrorCopy(error)}${error.requestId?` · 문의 번호 ${error.requestId}`:''}`,'error');}
+        if(!cleaningActor('admin')||cleaningState().busy)return;
+        const slice=cleaningState(),generation=LIVE_RUNTIME.authGeneration,navigation=liveHistoryRestoreSequence,urls=[];slice.busy=true;slice.operation='검수 상세 조회';slice.error=null;render();
+        try{
+          const {data}=await apiRequest('/v1/inspections/'+encodeURIComponent(submissionId)),submission=data?.submission;
+          if(!submission)throw new ApiRequestError('submission missing',{status:502,code:'INVALID_RESPONSE'});
+          const items=[...(submission.photos||[])],known=new Set(items.map(photo=>photo.photoId));
+          for(const photoId of submission.bombReport?.evidencePhotoIds||[])if(!known.has(photoId)){items.push({photoId,evidenceOnly:true,label:'폭탄방 증빙'});known.add(photoId);}
+          const photos=await Promise.all(items.map(async photo=>{
+            try{const response=await apiRequest('/v1/photos/'+encodeURIComponent(photo.photoId)+'/content',{responseType:'blob'}),url=URL.createObjectURL(response.data);urls.push(url);return {...photo,url};}
+            catch(error){return {...photo,url:null,error};}
+          }));
+          if(generation!==LIVE_RUNTIME.authGeneration||navigation!==liveHistoryRestoreSequence){urls.forEach(url=>URL.revokeObjectURL(url));return;}
+          clearCleaningPhotoUrls();urls.forEach(url=>LIVE_CLEANING_PHOTO_URLS.add(url));
+          slice.focusRoomId=null;slice.inspectionDetail={submission,photos};liveRoomDetail=null;state.liveView='cleaning';syncLiveViewUrl();rawCloseModal();window.scrollTo(0,0);
+        }catch(error){urls.forEach(url=>URL.revokeObjectURL(url));if(generation!==LIVE_RUNTIME.authGeneration||navigation!==liveHistoryRestoreSequence)return;slice.error=error;toast(apiErrorCopy(error)+(error.requestId?' · 문의 번호 '+error.requestId:''),'error');}
         finally{if(generation===LIVE_RUNTIME.authGeneration){slice.busy=false;slice.operation=null;render();}}
       }
       async function decideLiveInspection(submissionId,decision,reasonCode){const result=await runLiveCleaningMutation({path:`/v1/inspections/${encodeURIComponent(submissionId)}/${decision}`,body:{reasonCode},label:decision==='approve'?'검수 승인':'검수 반려·재청소'});if(result){clearCleaningPhotoUrls();cleaningState().inspectionDetail=null;render();}}
       function reviewLiveInspectionReject(submissionId,trigger=document.activeElement){showModal({title:'전체 제출을 반려할까요?',subtitle:'서버가 current 제출 여부를 다시 확인하고 재청소 결과를 반환합니다.',trigger,body:'<div class="field"><label for="cleaning-inspection-reason">반려 사유</label><select id="cleaning-inspection-reason" class="select-control"><option value="QUALITY_REWORK">품질 재작업</option><option value="EVIDENCE_INCOMPLETE">증빙 불충분</option><option value="CLEANING_INCOMPLETE">청소 미완료</option></select></div>',confirmLabel:'반려·재청소 결정',confirmAction:'cleaning-inspection-reject',confirmVariant:'danger',confirmExtra:`data-id="${esc(submissionId)}"`});}
       async function decideLiveBombInspection(submissionId,approved){const result=await runLiveCleaningMutation({path:`/v1/inspections/${encodeURIComponent(submissionId)}/bomb-room-decision`,body:{decision:approved?'approved':'rejected',reasonCode:approved?'BOMB_CONFIRMED':'BOMB_NOT_CONFIRMED'},label:approved?'특이 객실 인정':'특이 객실 불인정'});if(result){clearCleaningPhotoUrls();cleaningState().inspectionDetail=null;render();}}
       async function openLivePayrollDetail(maidProfileId){
-        const slice=state.remote.payroll,cycle=livePayrollCycleByMaid(maidProfileId);if(!cycle||slice.busy)return;slice.busy=true;slice.error=null;render();
-        try{const entries=await loadLivePayrollEntries(cycle);slice.detail={cycle,entries};render();requestAnimationFrame(()=>{window.scrollTo(0,0);document.getElementById('main-content')?.focus({preventScroll:true});});}
-        catch(error){slice.error=error;toast(`${apiErrorCopy(error,'주급 산출 내역을 불러오지 못했습니다.')}${error.requestId?` · 문의 번호 ${error.requestId}`:''}`,'error');render();}
+        const slice=state.remote.payroll,cycle=livePayrollCycleByMaid(maidProfileId),actor=state.remote.auth.user,navigation=liveHistoryRestoreSequence,generation=LIVE_RUNTIME.authGeneration;
+        if(!cycle||slice.busy||!['admin','maid'].includes(actor?.role)||actor.role==='maid'&&maidProfileId!==actor.profileId)return;
+        slice.busy=true;slice.error=null;render();
+        try{const entries=await loadLivePayrollEntries(cycle);if(generation!==LIVE_RUNTIME.authGeneration||navigation!==liveHistoryRestoreSequence||state.remote.payroll!==slice)return;slice.detail={cycle,entries};render();requestAnimationFrame(()=>{window.scrollTo(0,0);document.getElementById('main-content')?.focus({preventScroll:true});});}
+        catch(error){if(generation!==LIVE_RUNTIME.authGeneration||navigation!==liveHistoryRestoreSequence)return;slice.error=error;toast(apiErrorCopy(error,'주급 산출 내역을 불러오지 못했습니다.')+(error.requestId?' · 문의 번호 '+error.requestId:''),'error');render();}
         finally{slice.busy=false;}
       }
       async function runLivePayrollMutation({path,body,label,keepDetail=true}){
-        const slice=state.remote.payroll;if(slice.busy)return null;const selectedMaid=keepDetail?slice.detail?.cycle?.maidProfileId:null;slice.busy=true;slice.mutationError=null;render();
-        try{const result=await mutationApiRequest(path,{body});rawCloseModal();toast(label);await loadLivePayroll({weekStart:slice.weekStart,quiet:true});if(selectedMaid&&livePayrollCycleByMaid(selectedMaid))await openLivePayrollDetail(selectedMaid);else render();return result.data;}
-        catch(error){slice.mutationError=error;rawCloseModal();render();toast(`${apiErrorCopy(error,'주급 기록을 변경하지 못했습니다.')}${error.requestId?` · 문의 번호 ${error.requestId}`:''}`,'error');return null;}
+        const slice=state.remote.payroll;if(slice.busy)return null;
+        const selectedMaid=keepDetail?slice.detail?.cycle?.maidProfileId:null,generation=LIVE_RUNTIME.authGeneration,view=state.liveView;
+        slice.busy=true;slice.mutationError=null;render();
+        try{
+          const result=await mutationApiRequest(path,{body});if(generation!==LIVE_RUNTIME.authGeneration)return null;
+          await closeLiveModalBeforeReload();const navigation=liveHistoryRestoreSequence;
+          toast(label);restoringHistory=true;
+          try{
+            await loadLivePayroll({weekStart:slice.weekStart,quiet:true});
+            if(generation!==LIVE_RUNTIME.authGeneration||navigation!==liveHistoryRestoreSequence||view!==state.liveView)return result.data;
+            if(selectedMaid&&livePayrollCycleByMaid(selectedMaid))await openLivePayrollDetail(selectedMaid);else render();
+          }finally{if(navigation===liveHistoryRestoreSequence){restoringHistory=false;writePageHistory(liveRouteSnapshot(),'replace');render();}}
+          return result.data;
+        }catch(error){if(generation!==LIVE_RUNTIME.authGeneration)return null;state.remote.payroll.mutationError=error;await closeLiveModalBeforeReload();render();toast(apiErrorCopy(error,'주급 기록을 변경하지 못했습니다.')+(error.requestId?' · 문의 번호 '+error.requestId:''),'error');return null;}
         finally{slice.busy=false;}
       }
       function livePayrollCycleForAction(maidProfileId){const cycle=livePayrollCycleByMaid(maidProfileId);if(!cycle)toast('서버의 최신 지급 주차를 다시 불러와 주세요.','error');return cycle;}
@@ -9183,7 +9354,7 @@
         const id=el.dataset.id,maidProfileId=el.dataset.maid,cycle=maidProfileId?livePayrollCycleForAction(maidProfileId):null;
         if(action==='refresh-live-payroll'){void loadLivePayroll();return;}
         if(action==='refresh-live-complaints'){void loadLiveComplaints();return;}
-        if(action==='live-payroll-week-shift'){const offset=Number(el.dataset.offset);if([-7,7].includes(offset))void loadLivePayroll({weekStart:addIsoDays(state.remote.payroll.weekStart||liveClosedPayrollWeekStart(),offset)});return;}
+        if(action==='live-payroll-week-shift'){const offset=Number(el.dataset.offset),weekStart=offset===0?weekStartIso(liveKstIsoDate()):addIsoDays(state.remote.payroll.weekStart||weekStartIso(liveKstIsoDate()),offset);if([-7,0,7].includes(offset)&&weekStart<=weekStartIso(liveKstIsoDate()))void loadLivePayroll({weekStart});return;}
         if(action==='live-payroll-detail'){void openLivePayrollDetail(maidProfileId);return;}
         if(action==='live-payroll-start-review'){reviewLivePayrollStart(maidProfileId,el);return;}
         if(action==='live-payroll-carry-review'){reviewLivePayrollCarry(maidProfileId,el);return;}
@@ -9233,6 +9404,7 @@
       livePayrollComplaintActions.forEach(action=>rebuiltActions.add(action));
       ['live-payroll-start','live-payroll-carry','live-payroll-result','live-payroll-correction','live-payroll-reversal','live-payroll-late-carry','live-complaint-review','live-complaint-decision','live-complaint-response','live-complaint-appeal','live-complaint-close','live-complaint-rework','retire-live-push'].forEach(action=>mutationActions.add(action));
       rebuiltActions.add('retire-live-push');
+      rebuiltActions.add('live-inspection-photo');
 
       document.addEventListener('click', e => {
         const el=e.target.closest('[data-action]');if(!el||!rebuiltActions.has(el.dataset.action))return;
@@ -9240,8 +9412,15 @@
         if(a==='backdrop-close'&&e.target!==el)return;
         if(a==='calendar-backdrop'&&e.target!==el)return;
         e.preventDefault();e.stopImmediatePropagation();
+        if(a==='back'&&liveMode()){
+          clearLivePinReveal();
+          if(isWireframeHistory()&&history.state.route.live&&historyIndex()>0){historyTraversalPending=true;history.back();}
+          else{liveRoomDetail=null;state.detail=null;state.remote.payroll.detail=null;state.remote.complaints.detail=null;state.remote.complaints.showList=false;clearCleaningPhotoUrls();cleaningState().inspectionDetail=null;cleaningState().focusRoomId=null;render();}
+          return;
+        }
         const mutationKey=mutationActions.has(a)?[a,id||'',el.dataset.room||'',el.dataset.reservation||'',el.dataset.submission||'',el.dataset.week||'',el.dataset.maid||''].join(':'):'';if(mutationKey&&mutationActionLocks.has(mutationKey))return;if(mutationKey){mutationActionLocks.add(mutationKey);queueMicrotask(()=>mutationActionLocks.delete(mutationKey));}
         if(a==='confirm-uncertain-live-mutation'){if(liveMode())void confirmUncertainLiveMutation();return;}
+        if(a==='live-inspection-photo'){if(liveMode())openLiveInspectionPhoto(id,el);return;}
         if(a.startsWith('cleaning-')&&productionCleaningActions.has(a)){handleCleaningAction(a,el);return;}
         if(liveMode()&&livePayrollComplaintActions.has(a)){handleLivePayrollComplaintAction(a,el);return;}
         if(deprecatedStateActions.has(a)){closeModal();render();toast('오래된 화면의 확정 동작은 차단했습니다. 최신 청소 상세에서 다시 진행해 주세요.','error');return;}
@@ -9753,7 +9932,7 @@
           if(state.role!=='admin'||!['all',...Object.keys(ROOM_TYPES)].includes(type))return;
           state.assignmentTypeFilter=type;render();requestAnimationFrame(()=>document.querySelector(`[data-action="assignment-type-filter"][data-type="${type}"]`)?.focus());return;
         }
-        if(a==='admin-maid-tab'){const tab=el.dataset.tab;state.adminMaidTab=tab;render();requestAnimationFrame(()=>document.querySelector(`[data-action="admin-maid-tab"][data-tab="${tab}"]`)?.focus());if(liveMode()&&tab==='history')void loadLiveWorkHistory();if(liveMode()&&tab==='pay'&&state.remote.payroll.status!=='ready')void loadLivePayroll();if(liveMode()&&tab==='complaints'&&state.remote.complaints.status!=='ready')void loadLiveComplaints();return;}
+        if(a==='admin-maid-tab'){const tab=el.dataset.tab;if(!['workforce','history','pay','complaints'].includes(tab))return;state.adminMaidTab=tab;render();requestAnimationFrame(()=>document.querySelector(`[data-action="admin-maid-tab"][data-tab="${tab}"]`)?.focus());if(liveMode())void loadLiveViewData('maids');return;}
         if(a==='admin-pay-week'){
           if(!/^\d{4}-\d{2}-\d{2}$/.test(el.dataset.week||''))return;
           state.adminPayWeek=el.dataset.week;
@@ -9766,8 +9945,8 @@
         if(a==='go-work-history'){if(liveMode()){state.liveView='maids';state.adminMaidTab='history';syncLiveViewUrl('maids');render();void loadLiveWorkHistory();return;}pushPageTransition(()=>{state.detail=null;state.adminView='maids';state.adminMaidTab='history';});return;}
         if(a==='go-payroll'){if(liveMode()){state.remote.payroll.detail=null;state.liveView=state.role==='admin'?'maids':'pay';if(state.role==='admin')state.adminMaidTab='pay';syncLiveViewUrl(state.liveView);render();void loadLivePayroll({weekStart:/^\d{4}-\d{2}-\d{2}$/.test(el.dataset.week||'')?el.dataset.week:state.remote.payroll.weekStart||liveClosedPayrollWeekStart()});return;}const week=/^\d{4}-\d{2}-\d{2}$/.test(el.dataset.week||'')&&adminPayWeeks().some(item=>item.start===el.dataset.week)?el.dataset.week:null;pushPageTransition(()=>{state.detail=null;state.adminView='maids';state.adminMaidTab='pay';if(week)state.adminPayWeek=week;});return;}
         if(a==='go-complaints'){if(liveMode()){state.remote.complaints.detail=null;if(state.role==='admin'){state.liveView='maids';state.adminMaidTab='complaints';}else{state.liveView='more';state.remote.complaints.showList=true;}syncLiveViewUrl(state.liveView);render();if(state.remote.complaints.status!=='ready')void loadLiveComplaints();return;}pushPageTransition(()=>{state.detail=null;state.adminView='maids';state.adminMaidTab='complaints';});return;}
-        if(a==='go-cleaning-drafts'||a==='go-cleaning-assignment'){const day=el.dataset.day==='today'?'today':'tomorrow';pushPageTransition(()=>{state.detail=null;state.adminView='cleaning';state.cleaningTab=`assignment-${day}`;syncAssignmentDateForCleaningTab(state);});return;}
-        if(a==='go-inspection'){pushPageTransition(()=>{state.detail=null;state.adminView='cleaning';state.cleaningTab='inspection';});return;}
+        if(a==='go-cleaning-drafts'||a==='go-cleaning-assignment'){const day=el.dataset.day==='today'?'today':'tomorrow';if(liveMode()){navigateLiveCleaning(`assignment-${day}`);return;}pushPageTransition(()=>{state.detail=null;state.adminView='cleaning';state.cleaningTab=`assignment-${day}`;syncAssignmentDateForCleaningTab(state);});return;}
+        if(a==='go-inspection'){if(liveMode()){navigateLiveCleaning('inspection');return;}pushPageTransition(()=>{state.detail=null;state.adminView='cleaning';state.cleaningTab='inspection';});return;}
         if(a==='go-open'){pushPageTransition(()=>{state.detail=null;state.maidView='schedule';});toast('메이드는 객실을 선택할 수 없습니다. 다음 주 가능일을 제출해 주세요.');return;}
         if(a==='go-schedule'){pushPageTransition(()=>{state.detail=null;state.maidView='schedule';});return;}
         if(a==='go-my'){pushPageTransition(()=>{state.detail=null;state.maidView='my';});return;}
@@ -10440,6 +10619,7 @@
         clearTimeout(LIVE_RUNTIME.storageTimer);LIVE_RUNTIME.storageTimer=setTimeout(()=>{const stored=readStoredLiveSession();if(stored){void restoreLiveSession();return;}endLiveSession();render();},50);
       });
       document.addEventListener('visibilitychange',()=>{if(document.hidden){maskPin();clearLivePageSecretsForHide();return;}if(liveMode()&&state.remote.auth.status==='authenticated')void refreshLiveActor();});
+      document.addEventListener('click',event=>{if(liveMode()&&event.target.closest('[data-action]')){rememberCurrentHistoryRoute();liveHistoryRestoreSequence+=1;restoringHistory=false;}},true);
       window.addEventListener('popstate',handleHistoryNavigation);
       window.addEventListener('hashchange',()=>{
         if(liveMode())return;
