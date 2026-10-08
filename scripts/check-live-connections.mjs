@@ -61,6 +61,10 @@ await page.route('**/*',async route=>{
   if(path===`/v1/payroll/${cycleId}`)return fixture(route,{cycle});
   if(path==='/v1/payroll')return fixture(route,{payroll:[cycle],nextCursor:null});
   if(path==='/v1/payroll/entries')return fixture(route,{entries:[],nextCursor:null});
+  if(path==='/v1/payroll/remittance-marker')return fixture(route,{maidProfileId:maidId,weekStart:url.searchParams.get('weekStart'),marked:false,version:0,basisFingerprint:'a'.repeat(64),canSet:false,canClear:false,canReconfirm:false,needsReconfirmation:false,setBlockedReason:'NO_PAYROLL_AMOUNT'});
+  if(path==='/v1/payroll/work-details')return fixture(route,{maidProfileId:maidId,weekStart:url.searchParams.get('weekStart'),kind:url.searchParams.get('kind'),summary:{},entries:[],nextCursor:null});
+  if(path===`/v1/rooms/${roomId}/reports`)return fixture(route,{roomId,items:[],nextCursor:null});
+  if(path==='/v1/checkout-incidents')return fixture(route,{items:[],nextCursor:null});
   if(path==='/v1/inspections')return fixture(route,{submissions:[],nextCursor:null});
   if(path.startsWith('/v1/developer/')&&path.endsWith('-events'))return fixture(route,{events:[{id:id(10),eventType:'room.master_data_changed',actorDisplayName:'QA 개발자',actorRole:'developer',occurredAt:now(),effectiveAt:now(),reasonCode:'QA_CHANGE',outcome:'success',summary:{}}],nextCursor:null});
   if(path==='/v1/developer/diagnostics')return fixture(route,{diagnostics:{status:'passed',checks:[{id:'database',status:'passed'}],checkedAt:now()}});

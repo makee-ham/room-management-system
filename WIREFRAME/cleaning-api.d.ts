@@ -1,4 +1,4 @@
-// Generated from an explicitly supplied OpenAPI v0.6.0 source.
+// Generated from the canonical OpenAPI v0.6.0.
 // Do not edit generated types directly.
 export type CleaningHistorySubmission = {
   id: string;
@@ -32,7 +32,7 @@ export type RoomIssueReportEnvelope = {
 };
 };
 
-export type ErrorCode = "VALIDATION_ERROR" | "INVALID_ROOM_ISSUE_REPORT" | "ROOM_ISSUE_EVIDENCE_INVALID" | "ROOM_ISSUE_REPORT_ACCESS_REQUIRED" | "INVALID_PHONE" | "REQUEST_TOO_LARGE" | "MISSING_ACCESS_TOKEN" | "INVALID_ACCESS_TOKEN" | "PROFILE_NOT_FOUND" | "ACCOUNT_INACTIVE" | "ACCOUNT_EXECUTION_LIFECYCLE_REQUIRED" | "ATTEMPT_ACCESS_REQUIRED" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_VERSION_CONFLICT" | "ASSIGNMENT_NOT_NOTIFIED" | "ATTEMPT_INVALID_TRANSITION" | "MAID_ALREADY_IN_PROGRESS" | "ATTEMPT_COMMAND_FAILED" | "CAPABILITY_ACCESS_REQUIRED" | "PHOTO_RETENTION_DELETE_PREPARED" | "ACCOUNT_VERSION_CONFLICT" | "CLEANING_WINDOW_NOT_EXPIRED" | "ASSIGNMENT_SCHEDULE_INVALID" | "ROLLOVER_NOT_ALLOWED" | "INVALID_ATTEMPT_COMMAND" | "ATTEMPT_ACTIVATION_NOT_ALLOWED" | "CLEANING_SERVICE_DATE_NOT_DUE" | "CLEANING_SERVICE_DATE_EXPIRED" | "CLEANING_WINDOW_NOT_OPEN" | "CLEANING_WINDOW_EXPIRED" | "CHECKOUT_NOT_MATERIALIZED" | "RECLEAN_MAID_IMMUTABLE" | "PREVIOUS_ROOM_WORKFLOW_ACTIVE" | "SESSION_REVOKED" | "INVALID_CREDENTIALS" | "ACCOUNT_LOCKED" | "LOGIN_RATE_LIMITED" | "LOGIN_CLIENT_ID_UNAVAILABLE" | "LOGIN_RATE_LIMIT_UNAVAILABLE" | "ACTIVITY_LOG_UNAVAILABLE" | "AUTH_LOOKUP_FAILED" | "LOGIN_STATE_UPDATE_FAILED" | "INVALID_CURRENT_PASSWORD" | "AUTH_PASSWORD_CHANGE_FAILED" | "PASSWORD_STATE_INCONSISTENT" | "PASSWORD_STATE_UPDATE_FAILED" | "PASSWORD_CHANGE_RECEIPT_FAILED" | "PASSWORD_CHANGE_IN_PROGRESS" | "PASSWORD_CHANGE_SESSION_MISMATCH" | "PASSWORD_VERIFICATION_RATE_LIMITED" | "PASSWORD_VERIFICATION_RATE_LIMIT_UNAVAILABLE" | "PASSWORD_VERIFICATION_SESSION_REVOKE_FAILED" | "PASSWORD_RESET_STATE_UPDATE_FAILED" | "PASSWORD_CHANGE_REQUIRED" | "ACCOUNT_MANAGER_REQUIRED" | "ADMIN_REQUIRED" | "ASSIGNMENT_ACCESS_REQUIRED" | "DEVELOPER_REQUIRED" | "DEVELOPER_PROJECTION_FAILED" | "DATABASE_UNREACHABLE" | "MIGRATION_DRIFT" | "RLS_CONFIGURATION_INVALID" | "SCHEDULER_NOT_CONFIGURED" | "SCHEDULER_ACTOR_INVALID" | "SCHEDULER_DEGRADED" | "SCHEDULER_HEARTBEAT_FAILED" | "DIAGNOSTIC_TIMEOUT" | "DIAGNOSTICS_RATE_LIMITED" | "ACCOUNT_NOT_FOUND" | "DEVELOPER_ACCOUNT_PROTECTED" | "LAST_ACTIVE_ADMIN_REQUIRED" | "ACCOUNT_MUST_BE_INACTIVE" | "DEPARTED_ACCOUNT_IMMUTABLE" | "IDEMPOTENCY_KEY_REUSED" | "RESERVED_IDEMPOTENCY_KEY" | "DEACTIVATION_MUST_BE_FINISHED" | "PHONE_ALREADY_REGISTERED" | "LOGIN_ID_CONFLICT" | "PHONE_REQUIRED_FOR_RESET" | "AUTH_USER_CREATE_FAILED" | "AUTH_USER_UPDATE_FAILED" | "AUTH_PASSWORD_RESET_FAILED" | "ACCOUNT_AUTH_STATE_INCONSISTENT" | "ACCOUNT_COMMAND_FAILED" | "FORBIDDEN" | "MAID_REQUIRED" | "AVAILABILITY_ACCESS_REQUIRED" | "ACTIVE_MAID_REQUIRED" | "CLEANING_TARGET_NOT_FOUND" | "ASSIGNMENT_VERSION_CONFLICT" | "ASSIGNMENT_TARGET_STATE_INVALID" | "ASSIGNMENT_SEQUENCE_CONFLICT" | "ASSIGNMENT_NOT_FOUND" | "ASSIGNMENT_IMPACT_CHANGED" | "ASSIGNMENT_DRAFT_STALE_SCHEDULE" | "ASSIGNMENT_AVAILABILITY_REQUIRED" | "ASSIGNMENT_AVAILABILITY_STALE" | "ASSIGNMENT_MAID_UNAVAILABLE" | "ASSIGNMENT_WINDOW_EXPIRED" | "ASSIGNMENT_COMMIT_NOT_ALLOWED" | "ASSIGNMENT_COMMAND_FAILED" | "ASSIGNMENT_PREVIEW_DATE_NOT_ALLOWED" | "ASSIGNMENT_DURATION_POLICY_RETIRED" | "ASSIGNMENT_PREVIEW_LIMIT_EXCEEDED" | "ASSIGNMENT_PREVIEW_FAILED" | "INVALID_ASSIGNMENT_DURATION_POLICY" | "ASSIGNMENT_DURATION_POLICY_VERSION_CONFLICT" | "ACTIVE_ADMIN_REQUIRED" | "AVAILABILITY_WEEK_OUT_OF_RANGE" | "PAST_AVAILABILITY_DATE_NOT_ALLOWED" | "CHANGE_REQUEST_BEFORE_DEADLINE" | "STALE_VERSION" | "PENDING_CHANGE_REQUEST_EXISTS" | "INVALID_TRANSITION" | "AVAILABILITY_NOT_FOUND" | "CHANGE_REQUEST_NOT_FOUND" | "WEEK_START_MUST_BE_MONDAY" | "AVAILABILITY_DATES_MUST_BE_UNIQUE" | "AVAILABILITY_DATE_OUTSIDE_WEEK" | "AVAILABILITY_COMMAND_FAILED" | "INVALID_GUEST_NAME" | "INVALID_GUEST_COUNT" | "INVALID_RESERVATION_SCHEDULE" | "STANDARD_RESERVATION_REQUIRES_END" | "RESERVATION_TYPE_IMMUTABLE" | "RESERVATION_END_IMMUTABLE" | "BOOKABILITY_RANGE_TOO_LARGE" | "INVALID_ROOM_TYPE_FILTER" | "EXCLUDE_RESERVATION_NOT_FOUND" | "EXCLUDE_RESERVATION_NOT_ELIGIBLE" | "INVALID_RESERVATION_RANGE" | "RESERVATION_RANGE_TOO_LARGE" | "INVALID_RESERVATION_CURSOR" | "RESERVATION_CURSOR_NOT_CONFIGURED" | "INVALID_MOVE_EFFECTIVE_AT" | "RESERVATION_OVERLAP" | "TARGET_ROOM_OVERLAP" | "TARGET_ROOM_BLOCKED" | "TARGET_ROOM_NOT_READY" | "PIN_LEASE_ACTIVE" | "OPEN_ENDED_STAY_REQUIRES_END" | "ROOM_ALLOCATION_BLOCKED" | "RESERVATION_NOT_FOUND" | "CLEANING_REQUEST_NOT_FOUND" | "CLEANING_TEMPLATE_NOT_CONFIGURED" | "INVALID_CLEANING_TEMPLATE" | "INVALID_CLEANING_TEMPLATE_SLOTS" | "CLEANING_TEMPLATE_VERSION_CONFLICT" | "CLEANING_TEMPLATE_COMMAND_FAILED" | "INVALID_MANUAL_CLEANING_REQUEST" | "ACTIVE_STAY_RESERVATION_REQUIRED" | "STAYOVER_ACCESS_WINDOW_INVALID" | "VACANT_ROOM_REQUIRED" | "RESERVATION_ROOM_MISMATCH" | "NOT_MANUAL_CLEANING_REQUEST" | "REPLAN_REQUIRED" | "SCHEDULE_LOCKED" | "CONFLICT" | "RESERVATION_COMMAND_FAILED" | "RESERVATION_PII_KEY_INVALID" | "RESERVATION_PII_KEYRING_INVALID" | "RESERVATION_PII_DECRYPT_FAILED" | "COMPLAINT_ACCESS_REQUIRED" | "COMPLAINT_MAID_MISMATCH" | "COMPLAINT_NOT_FOUND" | "INVALID_COMPLAINT_CATEGORY" | "INVALID_COMPLAINT_FINDING" | "INVALID_COMPLAINT_PENALTY" | "INVALID_REWORK_DECISION" | "INVALID_COMPLAINT_RESPONSE" | "COMPLAINT_APPEAL_REASON_REQUIRED" | "COMPLAINT_APPEAL_REASON_FORBIDDEN" | "COMPLAINT_PERIOD_INVALID" | "COMPLAINT_PAGE_LIMIT_INVALID" | "INVALID_COMPLAINT_CURSOR" | "INVALID_COMPLAINT_REWORK" | "COMPLAINT_COMPENSATION_AMOUNT_INVALID" | "COMPLAINT_SOURCE_NOT_APPROVED" | "COMPLAINT_RESPONSE_REQUIRED" | "COMPLAINT_APPEAL_UNRESOLVED" | "COMPLAINT_RESPONSE_ALREADY_RECORDED" | "COMPLAINT_DECISION_REQUIRED" | "COMPLAINT_REWORK_MAID_UNAVAILABLE" | "COMPLAINT_REWORK_WINDOW_UNAVAILABLE" | "COMPLAINT_REWORK_NOT_CONFIRMED" | "COMPLAINT_REWORK_ALREADY_MATERIALIZED" | "COMPLAINT_REWORK_DECISION_STALE" | "COMPLAINT_REWORK_PRESTART_FROZEN" | "RECLEAN_TEMPLATE_NOT_CONFIGURED" | "COMPLAINT_INVALID_TRANSITION" | "COMPLAINT_COMMAND_FAILED" | "INVALID_INSPECTION_CURSOR" | "INSPECTION_CURSOR_NOT_CONFIGURED" | "INSPECTION_PAGE_LIMIT_INVALID" | "INSPECTION_RESPONSE_TOO_LARGE" | "INVALID_WORK_HISTORY_QUERY" | "INVALID_WORK_HISTORY_CURSOR" | "WORK_HISTORY_ACCESS_REQUIRED" | "WORK_HISTORY_MAID_SCOPE_REQUIRED" | "WORK_HISTORY_MAID_NOT_FOUND" | "WORK_HISTORY_QUERY_FAILED" | "INVALID_ROOM_OPERATION_QUERY" | "INVALID_ROOM_OPERATION_CURSOR" | "ROOM_OPERATION_CURSOR_NOT_CONFIGURED" | "ROOM_OPERATION_PAGE_LIMIT_INVALID" | "ROOM_OPERATION_RESPONSE_TOO_LARGE" | "NOTIFICATION_ACCESS_REQUIRED" | "NOTIFICATION_NOT_FOUND" | "INVALID_NOTIFICATION_CURSOR" | "NOTIFICATION_CURSOR_NOT_CONFIGURED" | "NOTIFICATION_RESPONSE_TOO_LARGE" | "NOTIFICATION_QUERY_FAILED" | "PAYROLL_ACCESS_REQUIRED" | "PAYROLL_MAID_NOT_FOUND" | "PAYROLL_WEEK_MUST_START_MONDAY" | "PAYROLL_PAGE_LIMIT_INVALID" | "PAYROLL_PAGE_KIND_INVALID" | "PAYROLL_CURSOR_INVALID" | "PAYROLL_CURSOR_NOT_CONFIGURED" | "PAYROLL_RESPONSE_TOO_LARGE" | "INVALID_EXPECTED_VERSION" | "PAYROLL_WEEK_NOT_CLOSED" | "PAYROLL_CYCLE_NOT_OPEN" | "NO_PAYROLL_AMOUNT" | "PAYROLL_NONPOSITIVE_REQUIRES_CARRY" | "PAYROLL_POSITIVE_REQUIRES_START" | "PAYROLL_CYCLE_ECONOMICALLY_FROZEN" | "PAYROLL_SOURCE_PAYMENT_UNCERTAIN" | "PAYROLL_SOURCE_ALREADY_REVERSED" | "PAYROLL_ROOT_ENTITLEMENT_NEGATIVE" | "STALE_ADJUSTMENT_VERSION" | "PAYROLL_LATE_EARNING_ALREADY_CARRIED" | "PAYROLL_EARNING_NOT_LATE" | "PAYROLL_LATE_CARRY_TARGET_FROZEN" | "PAYROLL_EARLIER_CARRY_PENDING" | "PAYROLL_PRIOR_LATE_EARNING_PENDING" | "PAYROLL_SOURCE_NOT_FOUND" | "PAYROLL_ADJUSTMENT_INVALID" | "PAYROLL_PAYMENT_ATTEMPT_NOT_FOUND" | "PAYROLL_PAYMENT_ATTEMPT_TERMINAL" | "PAYROLL_PAYMENT_TRANSITION_INVALID" | "PAYROLL_PAYMENT_REFERENCE_ALREADY_USED" | "PAYROLL_PAYMENT_REFERENCE_INVALID" | "PAYROLL_PAYMENT_METHOD_INVALID" | "PAYROLL_PAYMENT_REASON_INVALID" | "PAYROLL_PAYMENT_REOPEN_REASON_INVALID" | "PAYROLL_PAYMENT_RESULT_AMOUNT_MISMATCH" | "PAYROLL_COMMAND_FAILED" | "ROOM_NOT_FOUND" | "ROOM_TYPE_NOT_FOUND" | "ROOM_TYPE_CAPACITY_INVALID" | "ROOM_TYPE_CAPACITY_ACTIVE_RESERVATION_CONFLICT" | "ROOM_TYPE_CAPACITY_PREVIEW_STALE" | "ROOM_TYPE_VERSION_CONFLICT" | "ROOM_NUMBER_ALREADY_EXISTS" | "ROOM_TYPE_INACTIVE" | "ROOM_INACTIVE" | "ROOM_ALREADY_INACTIVE" | "ROOM_DEACTIVATION_BLOCKED" | "ROOM_DEACTIVATION_PREVIEW_STALE" | "ROOM_VERSION_CONFLICT" | "GUEST_COUNT_EXCEEDS_ROOM_TYPE_CAPACITY" | "ROOM_OPERATION_NOT_FOUND" | "INVALID_ROOM_PIN" | "INVALID_PIN_BOOTSTRAP_LIMIT" | "INVALID_PIN_BOOTSTRAP" | "ROOM_PIN_BOOTSTRAP_CONFIG_INVALID" | "ROOM_PIN_BOOTSTRAP_FAILED" | "ROOM_PIN_KEY_UNAVAILABLE" | "ROOM_PIN_CRYPTO_CONFIG_INVALID" | "ROOM_PIN_DECRYPT_FAILED" | "ROOM_PIN_COMMAND_FAILED" | "STALE_PIN_VERSION" | "ROOM_NUMBER_CHANGED" | "ROOM_PIN_REISSUE_REQUIRED" | "ROOM_PIN_MISMATCH_UNRESOLVED" | "INVALID_PIN_CHANGE_REASON" | "PIN_CHANGE_IN_PROGRESS_REQUIRED" | "PIN_CHANGE_IN_PROGRESS" | "PIN_CHANGE_LEASE_EXPIRED" | "PIN_CHANGE_LEASE_NOT_RESOLVABLE" | "PIN_REVEAL_AUTHORIZATION_CHANGED" | "GENERATED_PIN_REVEAL_NOT_ALLOWED" | "GENERATED_PIN_CONFIRMATION_NOT_ALLOWED" | "ROOM_PIN_UNCONFIGURED" | "ROOM_PIN_SHEET_OPERATOR_REQUIRED" | "ROOM_PIN_SHEET_NOT_CONFIGURED" | "ROOM_PIN_SHEET_OPERATION_FAILED" | "ROOM_PIN_SHEET_RESPONSE_TOO_LARGE" | "ROOM_PIN_SHEET_FULL_RESYNC_STALE" | "ROOM_PIN_SHEET_WORKER_BUSY" | "ROOM_PIN_SHEET_FULL_RESYNC_PENDING" | "ROOM_PIN_SHEET_ROOM_MASTER_INVALID" | "PIN_ACCESS_LEASE_REQUIRED" | "PIN_ENTITLEMENT_REQUIRED" | "PIN_ACCESS_REQUIRED" | "SENSITIVE_TEXT_NOT_ALLOWED" | "PIN_MATERIAL_NOT_ALLOWED" | "ROOM_COMMAND_FAILED" | "ORIGIN_NOT_ALLOWED" | "ROUTE_NOT_FOUND" | "RUNTIME_NOT_CONFIGURED" | "INTERNAL_SERVER_ERROR";
+export type ErrorCode = "VALIDATION_ERROR" | "INVALID_ROOM_ISSUE_REPORT" | "ROOM_ISSUE_EVIDENCE_INVALID" | "ROOM_ISSUE_REPORT_ACCESS_REQUIRED" | "INVALID_PHONE" | "REQUEST_TOO_LARGE" | "MISSING_ACCESS_TOKEN" | "INVALID_ACCESS_TOKEN" | "PROFILE_NOT_FOUND" | "ACCOUNT_INACTIVE" | "ACCOUNT_EXECUTION_LIFECYCLE_REQUIRED" | "ATTEMPT_ACCESS_REQUIRED" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_VERSION_CONFLICT" | "ASSIGNMENT_NOT_NOTIFIED" | "ATTEMPT_INVALID_TRANSITION" | "MAID_ALREADY_IN_PROGRESS" | "ATTEMPT_COMMAND_FAILED" | "CAPABILITY_ACCESS_REQUIRED" | "LIMITED_DISCOVERY_LIMIT_EXCEEDED" | "LIMITED_SESSION_LIMIT_EXCEEDED" | "PHOTO_RETENTION_DELETE_PREPARED" | "ACCOUNT_VERSION_CONFLICT" | "CLEANING_WINDOW_NOT_EXPIRED" | "ASSIGNMENT_SCHEDULE_INVALID" | "ROLLOVER_NOT_ALLOWED" | "INVALID_ATTEMPT_COMMAND" | "ATTEMPT_ACTIVATION_NOT_ALLOWED" | "CLEANING_SERVICE_DATE_NOT_DUE" | "CLEANING_SERVICE_DATE_EXPIRED" | "CLEANING_WINDOW_NOT_OPEN" | "CLEANING_WINDOW_EXPIRED" | "CHECKOUT_NOT_MATERIALIZED" | "RECLEAN_MAID_IMMUTABLE" | "PREVIOUS_ROOM_WORKFLOW_ACTIVE" | "SESSION_REVOKED" | "INVALID_CREDENTIALS" | "ACCOUNT_LOCKED" | "LOGIN_RATE_LIMITED" | "LOGIN_CLIENT_ID_UNAVAILABLE" | "LOGIN_RATE_LIMIT_UNAVAILABLE" | "ACTIVITY_LOG_UNAVAILABLE" | "AUTH_LOOKUP_FAILED" | "LOGIN_STATE_UPDATE_FAILED" | "INVALID_CURRENT_PASSWORD" | "AUTH_PASSWORD_CHANGE_FAILED" | "PASSWORD_STATE_INCONSISTENT" | "PASSWORD_STATE_UPDATE_FAILED" | "PASSWORD_CHANGE_RECEIPT_FAILED" | "PASSWORD_CHANGE_IN_PROGRESS" | "PASSWORD_CHANGE_SESSION_MISMATCH" | "PASSWORD_VERIFICATION_RATE_LIMITED" | "PASSWORD_VERIFICATION_RATE_LIMIT_UNAVAILABLE" | "PASSWORD_VERIFICATION_SESSION_REVOKE_FAILED" | "PASSWORD_RESET_STATE_UPDATE_FAILED" | "PASSWORD_CHANGE_REQUIRED" | "ACCOUNT_MANAGER_REQUIRED" | "ADMIN_REQUIRED" | "ASSIGNMENT_ACCESS_REQUIRED" | "DEVELOPER_REQUIRED" | "DEVELOPER_PROJECTION_FAILED" | "DATABASE_UNREACHABLE" | "MIGRATION_DRIFT" | "RLS_CONFIGURATION_INVALID" | "SCHEDULER_NOT_CONFIGURED" | "SCHEDULER_ACTOR_INVALID" | "SCHEDULER_DEGRADED" | "SCHEDULER_HEARTBEAT_FAILED" | "DIAGNOSTIC_TIMEOUT" | "DIAGNOSTICS_RATE_LIMITED" | "ACCOUNT_NOT_FOUND" | "DEVELOPER_ACCOUNT_PROTECTED" | "LAST_ACTIVE_ADMIN_REQUIRED" | "ACCOUNT_MUST_BE_INACTIVE" | "DEPARTED_ACCOUNT_IMMUTABLE" | "IDEMPOTENCY_KEY_REUSED" | "RESERVED_IDEMPOTENCY_KEY" | "DEACTIVATION_MUST_BE_FINISHED" | "PHONE_ALREADY_REGISTERED" | "LOGIN_ID_CONFLICT" | "PHONE_REQUIRED_FOR_RESET" | "AUTH_USER_CREATE_FAILED" | "AUTH_USER_UPDATE_FAILED" | "AUTH_PASSWORD_RESET_FAILED" | "ACCOUNT_AUTH_STATE_INCONSISTENT" | "ACCOUNT_COMMAND_FAILED" | "FORBIDDEN" | "MAID_REQUIRED" | "AVAILABILITY_ACCESS_REQUIRED" | "ACTIVE_MAID_REQUIRED" | "CLEANING_TARGET_NOT_FOUND" | "ASSIGNMENT_VERSION_CONFLICT" | "ASSIGNMENT_TARGET_STATE_INVALID" | "ASSIGNMENT_SEQUENCE_CONFLICT" | "ASSIGNMENT_NOT_FOUND" | "ASSIGNMENT_IMPACT_CHANGED" | "ASSIGNMENT_DRAFT_STALE_SCHEDULE" | "ASSIGNMENT_AVAILABILITY_REQUIRED" | "ASSIGNMENT_AVAILABILITY_STALE" | "ASSIGNMENT_MAID_UNAVAILABLE" | "ASSIGNMENT_WINDOW_EXPIRED" | "ASSIGNMENT_COMMIT_NOT_ALLOWED" | "ASSIGNMENT_COMMAND_FAILED" | "ASSIGNMENT_PREVIEW_DATE_NOT_ALLOWED" | "ASSIGNMENT_DURATION_POLICY_RETIRED" | "ASSIGNMENT_PREVIEW_LIMIT_EXCEEDED" | "ASSIGNMENT_PREVIEW_FAILED" | "INVALID_ASSIGNMENT_DURATION_POLICY" | "ASSIGNMENT_DURATION_POLICY_VERSION_CONFLICT" | "ACTIVE_ADMIN_REQUIRED" | "AVAILABILITY_WEEK_OUT_OF_RANGE" | "PAST_AVAILABILITY_DATE_NOT_ALLOWED" | "CHANGE_REQUEST_BEFORE_DEADLINE" | "STALE_VERSION" | "PENDING_CHANGE_REQUEST_EXISTS" | "INVALID_TRANSITION" | "AVAILABILITY_NOT_FOUND" | "CHANGE_REQUEST_NOT_FOUND" | "WEEK_START_MUST_BE_MONDAY" | "AVAILABILITY_DATES_MUST_BE_UNIQUE" | "AVAILABILITY_DATE_OUTSIDE_WEEK" | "AVAILABILITY_COMMAND_FAILED" | "INVALID_GUEST_NAME" | "INVALID_GUEST_COUNT" | "INVALID_RESERVATION_SCHEDULE" | "STANDARD_RESERVATION_REQUIRES_END" | "RESERVATION_TYPE_IMMUTABLE" | "RESERVATION_END_IMMUTABLE" | "BOOKABILITY_RANGE_TOO_LARGE" | "INVALID_ROOM_TYPE_FILTER" | "EXCLUDE_RESERVATION_NOT_FOUND" | "EXCLUDE_RESERVATION_NOT_ELIGIBLE" | "INVALID_RESERVATION_RANGE" | "RESERVATION_RANGE_TOO_LARGE" | "INVALID_RESERVATION_CURSOR" | "RESERVATION_CURSOR_NOT_CONFIGURED" | "INVALID_MOVE_EFFECTIVE_AT" | "RESERVATION_OVERLAP" | "TARGET_ROOM_OVERLAP" | "TARGET_ROOM_BLOCKED" | "TARGET_ROOM_NOT_READY" | "PIN_LEASE_ACTIVE" | "OPEN_ENDED_STAY_REQUIRES_END" | "ROOM_ALLOCATION_BLOCKED" | "RESERVATION_NOT_FOUND" | "CLEANING_REQUEST_NOT_FOUND" | "CLEANING_TEMPLATE_NOT_CONFIGURED" | "INVALID_CLEANING_TEMPLATE" | "INVALID_CLEANING_TEMPLATE_SLOTS" | "CLEANING_TEMPLATE_VERSION_CONFLICT" | "CLEANING_TEMPLATE_COMMAND_FAILED" | "INVALID_MANUAL_CLEANING_REQUEST" | "ACTIVE_STAY_RESERVATION_REQUIRED" | "STAYOVER_ACCESS_WINDOW_INVALID" | "VACANT_ROOM_REQUIRED" | "RESERVATION_ROOM_MISMATCH" | "NOT_MANUAL_CLEANING_REQUEST" | "REPLAN_REQUIRED" | "SCHEDULE_LOCKED" | "CONFLICT" | "RESERVATION_COMMAND_FAILED" | "RESERVATION_PII_KEY_INVALID" | "RESERVATION_PII_KEYRING_INVALID" | "RESERVATION_PII_DECRYPT_FAILED" | "COMPLAINT_ACCESS_REQUIRED" | "COMPLAINT_MAID_MISMATCH" | "COMPLAINT_NOT_FOUND" | "INVALID_COMPLAINT_CATEGORY" | "INVALID_COMPLAINT_FINDING" | "INVALID_COMPLAINT_PENALTY" | "INVALID_REWORK_DECISION" | "INVALID_COMPLAINT_RESPONSE" | "COMPLAINT_APPEAL_REASON_REQUIRED" | "COMPLAINT_APPEAL_REASON_FORBIDDEN" | "COMPLAINT_PERIOD_INVALID" | "COMPLAINT_PAGE_LIMIT_INVALID" | "INVALID_COMPLAINT_CURSOR" | "INVALID_COMPLAINT_REWORK" | "COMPLAINT_COMPENSATION_AMOUNT_INVALID" | "COMPLAINT_SOURCE_NOT_APPROVED" | "COMPLAINT_RESPONSE_REQUIRED" | "COMPLAINT_APPEAL_UNRESOLVED" | "COMPLAINT_RESPONSE_ALREADY_RECORDED" | "COMPLAINT_DECISION_REQUIRED" | "COMPLAINT_REWORK_MAID_UNAVAILABLE" | "COMPLAINT_REWORK_WINDOW_UNAVAILABLE" | "COMPLAINT_REWORK_NOT_CONFIRMED" | "COMPLAINT_REWORK_ALREADY_MATERIALIZED" | "COMPLAINT_REWORK_DECISION_STALE" | "COMPLAINT_REWORK_PRESTART_FROZEN" | "RECLEAN_TEMPLATE_NOT_CONFIGURED" | "COMPLAINT_INVALID_TRANSITION" | "COMPLAINT_COMMAND_FAILED" | "INVALID_INSPECTION_CURSOR" | "INSPECTION_CURSOR_NOT_CONFIGURED" | "INSPECTION_PAGE_LIMIT_INVALID" | "INSPECTION_RESPONSE_TOO_LARGE" | "INVALID_WORK_HISTORY_QUERY" | "INVALID_WORK_HISTORY_CURSOR" | "WORK_HISTORY_ACCESS_REQUIRED" | "WORK_HISTORY_MAID_SCOPE_REQUIRED" | "WORK_HISTORY_MAID_NOT_FOUND" | "WORK_HISTORY_QUERY_FAILED" | "INVALID_ROOM_OPERATION_QUERY" | "INVALID_ROOM_OPERATION_CURSOR" | "ROOM_OPERATION_CURSOR_NOT_CONFIGURED" | "ROOM_OPERATION_PAGE_LIMIT_INVALID" | "ROOM_OPERATION_RESPONSE_TOO_LARGE" | "NOTIFICATION_ACCESS_REQUIRED" | "NOTIFICATION_NOT_FOUND" | "INVALID_NOTIFICATION_CURSOR" | "NOTIFICATION_CURSOR_NOT_CONFIGURED" | "NOTIFICATION_RESPONSE_TOO_LARGE" | "NOTIFICATION_QUERY_FAILED" | "PAYROLL_ACCESS_REQUIRED" | "PAYROLL_MAID_NOT_FOUND" | "PAYROLL_WEEK_MUST_START_MONDAY" | "PAYROLL_PAGE_LIMIT_INVALID" | "PAYROLL_PAGE_KIND_INVALID" | "PAYROLL_CURSOR_INVALID" | "PAYROLL_CURSOR_NOT_CONFIGURED" | "PAYROLL_RESPONSE_TOO_LARGE" | "INVALID_EXPECTED_VERSION" | "PAYROLL_WEEK_NOT_CLOSED" | "PAYROLL_CYCLE_NOT_OPEN" | "NO_PAYROLL_AMOUNT" | "PAYROLL_NONPOSITIVE_REQUIRES_CARRY" | "PAYROLL_POSITIVE_REQUIRES_START" | "PAYROLL_CYCLE_ECONOMICALLY_FROZEN" | "PAYROLL_SOURCE_PAYMENT_UNCERTAIN" | "PAYROLL_SOURCE_ALREADY_REVERSED" | "PAYROLL_ROOT_ENTITLEMENT_NEGATIVE" | "STALE_ADJUSTMENT_VERSION" | "PAYROLL_LATE_EARNING_ALREADY_CARRIED" | "PAYROLL_EARNING_NOT_LATE" | "PAYROLL_LATE_CARRY_TARGET_FROZEN" | "PAYROLL_EARLIER_CARRY_PENDING" | "PAYROLL_PRIOR_LATE_EARNING_PENDING" | "PAYROLL_SOURCE_NOT_FOUND" | "PAYROLL_ADJUSTMENT_INVALID" | "PAYROLL_PAYMENT_ATTEMPT_NOT_FOUND" | "PAYROLL_PAYMENT_ATTEMPT_TERMINAL" | "PAYROLL_PAYMENT_TRANSITION_INVALID" | "PAYROLL_PAYMENT_REFERENCE_ALREADY_USED" | "PAYROLL_PAYMENT_REFERENCE_INVALID" | "PAYROLL_PAYMENT_METHOD_INVALID" | "PAYROLL_PAYMENT_REASON_INVALID" | "PAYROLL_PAYMENT_REOPEN_REASON_INVALID" | "PAYROLL_PAYMENT_RESULT_AMOUNT_MISMATCH" | "PAYROLL_COMMAND_FAILED" | "ROOM_NOT_FOUND" | "ROOM_TYPE_NOT_FOUND" | "ROOM_TYPE_CAPACITY_INVALID" | "ROOM_TYPE_CAPACITY_ACTIVE_RESERVATION_CONFLICT" | "ROOM_TYPE_CAPACITY_PREVIEW_STALE" | "ROOM_TYPE_VERSION_CONFLICT" | "ROOM_NUMBER_ALREADY_EXISTS" | "ROOM_TYPE_INACTIVE" | "ROOM_INACTIVE" | "ROOM_ALREADY_INACTIVE" | "ROOM_DEACTIVATION_BLOCKED" | "ROOM_DEACTIVATION_PREVIEW_STALE" | "ROOM_VERSION_CONFLICT" | "GUEST_COUNT_EXCEEDS_ROOM_TYPE_CAPACITY" | "ROOM_OPERATION_NOT_FOUND" | "INVALID_ROOM_PIN" | "INVALID_PIN_BOOTSTRAP_LIMIT" | "INVALID_PIN_BOOTSTRAP" | "ROOM_PIN_BOOTSTRAP_CONFIG_INVALID" | "ROOM_PIN_BOOTSTRAP_FAILED" | "ROOM_PIN_KEY_UNAVAILABLE" | "ROOM_PIN_CRYPTO_CONFIG_INVALID" | "ROOM_PIN_DECRYPT_FAILED" | "ROOM_PIN_COMMAND_FAILED" | "STALE_PIN_VERSION" | "ROOM_NUMBER_CHANGED" | "ROOM_PIN_REISSUE_REQUIRED" | "ROOM_PIN_MISMATCH_UNRESOLVED" | "INVALID_PIN_CHANGE_REASON" | "PIN_CHANGE_IN_PROGRESS_REQUIRED" | "PIN_CHANGE_IN_PROGRESS" | "PIN_CHANGE_LEASE_EXPIRED" | "PIN_CHANGE_LEASE_NOT_RESOLVABLE" | "PIN_REVEAL_AUTHORIZATION_CHANGED" | "GENERATED_PIN_REVEAL_NOT_ALLOWED" | "GENERATED_PIN_CONFIRMATION_NOT_ALLOWED" | "ROOM_PIN_UNCONFIGURED" | "ROOM_PIN_SHEET_OPERATOR_REQUIRED" | "ROOM_PIN_SHEET_NOT_CONFIGURED" | "ROOM_PIN_SHEET_OPERATION_FAILED" | "ROOM_PIN_SHEET_RESPONSE_TOO_LARGE" | "ROOM_PIN_SHEET_FULL_RESYNC_STALE" | "ROOM_PIN_SHEET_WORKER_BUSY" | "ROOM_PIN_SHEET_FULL_RESYNC_PENDING" | "ROOM_PIN_SHEET_ROOM_MASTER_INVALID" | "PIN_ACCESS_LEASE_REQUIRED" | "PIN_ENTITLEMENT_REQUIRED" | "PIN_ACCESS_REQUIRED" | "SENSITIVE_TEXT_NOT_ALLOWED" | "PIN_MATERIAL_NOT_ALLOWED" | "ROOM_COMMAND_FAILED" | "ORIGIN_NOT_ALLOWED" | "ROUTE_NOT_FOUND" | "RUNTIME_NOT_CONFIGURED" | "INTERNAL_SERVER_ERROR" | "INVALID_PHOTO_BINARY" | "INVALID_POST_APPROVAL_ROOM_ISSUE" | "PHOTO_BODY_TIMEOUT" | "PHOTO_DECODER_UNAVAILABLE" | "PHOTO_DECODE_LIMIT_EXCEEDED" | "PHOTO_MEDIA_TYPE_UNSUPPORTED" | "PHOTO_PROVIDER_IDENTITY_CONFLICT" | "PHOTO_STORAGE_QUOTA_EXCEEDED" | "PHOTO_STORAGE_QUOTA_UNAVAILABLE" | "PHOTO_TOO_LARGE" | "PHOTO_UPLOAD_ADMISSION_EXPIRED" | "PHOTO_UPLOAD_FENCE_CONFLICT" | "PHOTO_UPLOAD_LIMIT_EXCEEDED" | "PHOTO_UPLOAD_RATE_LIMITED" | "PHOTO_UPLOAD_TIME_INVALID" | "POST_APPROVAL_ROOM_ISSUE_ACCESS_REQUIRED" | "POST_APPROVAL_ROOM_ISSUE_BODY_TOO_LARGE" | "POST_APPROVAL_ROOM_ISSUE_COMMAND_FAILED" | "POST_APPROVAL_ROOM_ISSUE_DRAFT_CONFLICT" | "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_COMMAND_FAILED" | "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_CONFLICT" | "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_INVALID" | "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_PROJECTION_INVALID" | "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_RETRY_REQUIRED" | "POST_APPROVAL_ROOM_ISSUE_MEDIA_PURGED" | "POST_APPROVAL_ROOM_ISSUE_MEDIA_TYPE_INVALID" | "POST_APPROVAL_ROOM_ISSUE_PROJECTION_INVALID" | "POST_APPROVAL_ROOM_ISSUE_REPORT_SEALED" | "POST_APPROVAL_ROOM_ISSUE_SOURCE_UNAVAILABLE" | "POST_APPROVAL_ROOM_ISSUE_UPLOAD_NOT_ACCEPTED";
 
 export type ErrorEnvelope = {
   error: {
@@ -50,6 +50,9 @@ export type RoomProjection = {
   elevatorZone: "A" | "B" | "C" | null;
   dataStatus: "verified" | "verification_required";
   stateVersion: number;
+  serviceDate: string;
+  projectionMode: RoomProjectionMode;
+  detailConditionCodes: Array<RoomDetailConditionCode>;
   evaluatedAt: string;
   reservationPhase: "none" | "upcoming" | "current";
   serverTime: string;
@@ -62,6 +65,11 @@ export type RoomProjection = {
   nextReservationId: string | null;
   nextCheckInAt: string | null;
   nextCheckOutAt: string | null;
+  displayReservationId: string | null;
+  displayCheckInAt: string | null;
+  displayCheckOutAt: string | null;
+  displayGuestCount: number | null;
+  displayBaseOccupancy: number;
   blockingReasonCodes: Array<RoomBlockingReasonCode>;
   readinessReasonCodes: Array<RoomReadinessReasonCode>;
   occupied: boolean;
@@ -327,7 +335,8 @@ export type AssignmentPreviewResult = {
   inputFingerprint: string;
   fixedAssignments: Array<AssignmentPreviewRow>;
   proposedAssignments: Array<AssignmentPreviewRow>;
-  remainingUnassignedTargets: Array<AssignmentPreviewBlockedTarget>;
+  remainingUnassignedTargets: Array<AssignmentPreviewRemainingTarget>;
+  diagnostics: AssignmentPreviewDiagnostics;
   blockedTargets: Array<AssignmentPreviewBlockedTarget>;
   maidSummaries: Array<{
   maidProfileId: string;
@@ -438,16 +447,6 @@ export type AttemptLifecycleRequest = {
   expectedProfileVersion: number;
   action: "allow_upload";
   reasonCode: "DEACTIVATION_UPLOAD_ONLY";
-  payload: {
-
-};
-} | {
-  expectedExecutionVersion: number;
-  expectedAssignmentId: string;
-  expectedAssignmentRevision: number;
-  expectedProfileVersion: number;
-  action: "expire_scheduled";
-  reasonCode: "SCHEDULE_EXPIRED";
   payload: {
 
 };
@@ -792,7 +791,7 @@ export type PublishCleaningTemplateRequest = {
   cleaningKind: "checkout";
   expectedVersion: number;
   durationMinutes?: number | null | undefined;
-  slots: Array<CheckoutCleaningTemplateV8Slot>;
+  slots: CheckoutCleaningTemplateV9Slots | CheckoutCleaningTemplateV8Slots | CheckoutCleaningTemplateLegacyReplaySlots;
 };
 
 export type PublishedCleaningTemplate = {
@@ -1168,6 +1167,287 @@ export type WebPushSubscriptionRetireRequest = {
   expectedVersion: number;
 };
 
+export type PayrollRemittanceBasis = {
+  accrualAmount: number;
+  totalAmount: number;
+  adjustmentAmount: number;
+  carryInAmount: number;
+  carryOutAmount: number;
+  payableAmount: number;
+  lateEarningAmount: number;
+  lockedAmount: number | null;
+};
+
+export type PayrollRemittanceMarker = {
+  maidProfileId: string;
+  weekStart: string;
+  marked: boolean;
+  version: number;
+  lastChangedBy: string | null;
+  lastChangedAt: string | null;
+  confirmedBy: string | null;
+  confirmedAt: string | null;
+  needsReconfirmation: boolean;
+  basis: PayrollRemittanceBasis;
+  confirmedBasis: PayrollRemittanceBasis | null;
+  basisFingerprint: string;
+  canSet: boolean;
+  canClear: boolean;
+  canReconfirm: boolean;
+  setBlockedReason: null | "ADMIN_REQUIRED" | "PAYROLL_WEEK_NOT_CLOSED" | "NO_PAYROLL_AMOUNT";
+};
+
+export type PayrollRemittanceSetInput = {
+  maidProfileId: string;
+  weekStart: string;
+  expectedVersion: number;
+  expectedBasisFingerprint: string;
+  marked: boolean;
+};
+
+export type PayrollRemittanceReconfirmInput = {
+  maidProfileId: string;
+  weekStart: string;
+  expectedVersion: number;
+  expectedBasisFingerprint: string;
+};
+
+export type PayrollRemittanceHistoryEvent = {
+  revisionId: string;
+  version: number;
+  eventType: "marked" | "cleared" | "reconfirmed";
+  marked: boolean;
+  actorProfileId: string;
+  occurredAt: string;
+  basis: PayrollRemittanceBasis;
+};
+
+export type PayrollRemittanceHistory = {
+  maidProfileId: string;
+  weekStart: string;
+  entries: Array<PayrollRemittanceHistoryEvent>;
+  nextCursor: string | null;
+};
+
+export type CheckoutIncidentListItem = {
+  incidentId: string;
+  status: "open";
+  roomId: string;
+  roomNumber: string;
+  cleaningTargetId: string;
+  assignmentId: string;
+  attemptId: string;
+  reportedAt: string;
+  serviceDate: string;
+  allowedDecisions: Array<"EXTEND_CHECKOUT" | "CONFIRM_DEPARTED" | "FALSE_REPORT">;
+};
+
+export type CheckoutIncidentListEnvelope = {
+  items: Array<CheckoutIncidentListItem>;
+  nextCursor: string | null;
+};
+
+export type LimitedAttemptDiscoveryItem = {
+  attemptId: string;
+  assignmentId: string;
+  assignmentRevision: number;
+  executionVersion: number;
+  status: "in_progress" | "field_completed" | "upload_pending" | "interrupted";
+  kind: "finish_current" | "upload_submit" | "evidence_upload";
+  allowedActions: Array<"complete_field_work" | "upload_evidence" | "validate_evidence" | "submit">;
+  issuedAt: string;
+  expiresAt: string;
+};
+
+export type LimitedAttemptDiscovery = {
+  profileStatus: "active" | "deactivation_pending" | "upload_only";
+  evaluatedAt: string;
+  items: Array<LimitedAttemptDiscoveryItem>;
+};
+
+export type LimitedAttempt = {
+  attempt: AttemptExecution;
+  capability: AttemptCapability | null;
+  profileStatus: "active" | "deactivation_pending" | "upload_only";
+};
+
+export type LimitedAttemptLifecycleResult = AttemptLifecycleResult & {
+  profileStatus?: "active" | "deactivation_pending" | "upload_only";
+};
+
+export type AssignmentCard = {
+  cleaningKind: "checkout" | "stayover" | "additional" | "reclean";
+  sourceKind: string | null;
+  roomTypeSnapshot: AssignmentRoomTypeSnapshot | null;
+  roomTypeCode: string | null;
+  roomTypeName: string | null;
+  elevatorZone: string | null;
+  feeSnapshot: number;
+  originalServiceDate: string;
+  effectiveServiceDate: string | null;
+  rolloverCount: number;
+  rolloverReason: string | null;
+  canCancel: boolean;
+  cancelReasonCode: "NOT_MANUAL_CLEANING_REQUEST" | "CLEANING_REQUEST_CANCEL_CONFLICT" | "ASSIGNMENT_NOT_CURRENT" | "ADMIN_REQUIRED" | "CAPABILITY_UNAVAILABLE" | null;
+  assignmentId: string;
+  cleaningTargetId: string;
+  roomId: string | null;
+  roomNumber: string | null;
+  maidProfileId: string;
+  maidDisplayName: string;
+  serviceDate: string;
+  sequenceNumber: number;
+  revision: number;
+  isCurrent: boolean;
+  targetAssignmentVersion: number;
+  durationMinutes: number | null;
+  targetStatus: "unassigned" | "draft_assigned" | "notified" | "in_progress" | "upload_pending" | "inspection_pending" | "approved" | "rejected" | "cancelled" | null;
+  attemptStatus: "scheduled" | "in_progress" | "field_completed" | "upload_pending" | "submitted" | "approved" | "rejected" | "interrupted" | "superseded" | null;
+  submissionStatus: "submitted" | "superseded" | "approved" | "rejected" | null;
+  scheduleSnapshot: AssignmentScheduleSnapshot | null;
+  currentDeparture: AssignmentCurrentDeparture | null;
+  availableFrom: string | null;
+  dueAt: string | null;
+  notifiedAt: string | null;
+  endedAt: string | null;
+  createdAt: string;
+};
+
+export type RoomCandleItem = {
+  roomId: string;
+  roomNumber: string;
+  count: number;
+  roomStateVersion: number;
+};
+
+export type RoomCandlePage = {
+  items: Array<RoomCandleItem>;
+  nextCursor: string | null;
+};
+
+export type RoomCandleRequest = {
+  expectedRoomVersion: number;
+  reasonCode: RoomCommandReasonCode;
+  count: number;
+  physicallyVerified?: boolean;
+};
+
+export type RegisteredRoomReport = {
+  id: string;
+  attemptId: string;
+  kind: "room_issue" | "bomb_room";
+  memo: string;
+  reportedAt: string;
+  status: "open" | "resolved" | "reported" | "pending" | "approved" | "rejected";
+  sealedSubmissionId: string | null;
+  evidence: Array<RegisteredReportEvidence>;
+};
+
+export type RoomReportsEnvelope = {
+  roomId: string;
+  roomStateVersion: number;
+  evaluatedAt: string;
+  items: Array<RegisteredRoomReport>;
+  hasMore: boolean;
+  nextCursor: string | null;
+};
+
+export type PayrollWorkSummary = {
+  cycleId: string | null;
+  cycleStatus: PayrollStatus;
+  cycleVersion: number;
+  accrualAmount: number;
+  expectedAmount: number;
+  pendingAmount: number;
+  pendingCount: number;
+  totalAmount: number;
+  lateEarningAmount: number;
+  adjustmentAmount: number;
+  carryInAmount: number;
+  carryOutAmount: number;
+  payableAmount: number;
+  offsetSettled: boolean;
+  lockedAmount: number | null;
+};
+
+export type PayrollWorkEarning = {
+  entryId: string;
+  entryDate: string;
+  cleaningTargetId: string;
+  assignmentId: string;
+  attemptId: string;
+  submissionId: string | null;
+  inspectionDecisionId: string | null;
+  roomNumber: string | null;
+  roomTypeCode: string | null;
+  roomTypeName: string | null;
+  cleaningKind: "checkout" | "stayover" | "additional" | "reclean";
+  sourceKind: "scheduled_checkout" | "manual_checkout" | "stayover_request" | "manual_room_request" | "inspection_reclean" | "post_approval_complaint_reclean";
+  fieldCompletedAt: string | null;
+  feeSnapshot: number;
+  attemptStatus: "scheduled" | "in_progress" | "field_completed" | "upload_pending" | "submitted" | "approved" | "rejected" | "interrupted" | "superseded";
+  submissionStatus: "submitted" | "superseded" | "approved" | "rejected" | null;
+  inspectionDecision: "approved" | "rejected" | null;
+  earningId: string;
+  earnedOn: string;
+  earningSource: "cleaning" | "compensation";
+  baseAmount: number;
+  bombRoomBonus: number;
+  totalAmount: number;
+  itemContributionAmount: number;
+  lateContributionAmount: number;
+  alreadyClaimed: boolean;
+  lateCarried: boolean;
+};
+
+export type PayrollWorkWorkflow = {
+  entryId: string;
+  entryDate: string;
+  cleaningTargetId: string;
+  assignmentId: string;
+  attemptId: string;
+  submissionId: string | null;
+  inspectionDecisionId: string | null;
+  roomNumber: string | null;
+  roomTypeCode: string | null;
+  roomTypeName: string | null;
+  cleaningKind: "checkout" | "stayover" | "additional" | "reclean";
+  sourceKind: "scheduled_checkout" | "manual_checkout" | "stayover_request" | "manual_room_request" | "inspection_reclean" | "post_approval_complaint_reclean";
+  fieldCompletedAt: string | null;
+  feeSnapshot: number;
+  attemptStatus: "scheduled" | "in_progress" | "field_completed" | "upload_pending" | "submitted" | "approved" | "rejected" | "interrupted" | "superseded";
+  submissionStatus: "submitted" | "superseded" | "approved" | "rejected" | null;
+  inspectionDecision: "approved" | "rejected" | null;
+  earningId: null;
+  baseAmount: null;
+  bombRoomBonus: null;
+  totalAmount: null;
+  expectedContributionAmount: number;
+  pendingContributionAmount: number;
+  includedInPendingCount: boolean;
+  expectedBaseContributionAmount: number;
+  expectedBombContributionAmount: number;
+};
+
+export type PayrollWorkDetailsEnvelope = {
+  weekStart: string;
+  maidProfileId: string;
+  kind: "earnings" | "workflow";
+  summary: PayrollWorkSummary;
+  entries: Array<PayrollWorkEarning | PayrollWorkWorkflow>;
+  nextCursor: string | null;
+};
+
+export type PayrollAdjustmentBook = {
+  maidProfileId: string;
+  weekStart: string;
+  currentBookVersion: number;
+};
+
+export type PayrollAdjustmentBookEnvelope = {
+  adjustmentBook: PayrollAdjustmentBook;
+};
+
 export type SubmissionRoomIssues = Array<{
   id?: string;
   memo?: string;
@@ -1182,6 +1462,10 @@ export type SubmissionReviewContext = {
   serviceDate: string;
   maidProfileId: string;
 };
+
+export type RoomProjectionMode = "LIVE" | "PAST_END_OF_DAY" | "FUTURE_START_OF_DAY";
+
+export type RoomDetailConditionCode = "CHECKOUT_INSPECTION_REQUIRED" | "EXTRA_GUESTS" | "VACANT" | "CANDLE_PRESENT" | "ROOM_ISSUE_PRESENT" | "EARLY_CHECK_IN" | "LATE_CHECK_OUT" | "DATA_VERIFICATION_REQUIRED" | "PIN_SYNC_WARNING";
 
 export type RoomOccupancyStatus = "VACANT" | "OCCUPIED";
 
@@ -1229,29 +1513,115 @@ export type ReservationRoomMoveSegment = {
 };
 
 export type AssignmentPreviewRow = {
+  cleaningKind: string | null;
+  sourceKind: string | null;
+  roomTypeSnapshot: AssignmentRoomTypeSnapshot | null;
+  roomTypeCode: "standard" | "premium" | "oceanPremium" | "oceanFamily" | "unknown";
+  roomTypeName: string | null;
+  elevatorZone: string;
+  feeSnapshot: number;
+  originalServiceDate: string | null;
+  effectiveServiceDate: string | null;
+  rolloverCount: number | null;
+  rolloverReason: "ROLLED_OVER_UNASSIGNED" | "ROLLED_OVER_NOT_STARTED" | null;
+  canCancel: boolean;
+  cancelReasonCode: "NOT_MANUAL_CLEANING_REQUEST" | "CLEANING_REQUEST_CANCEL_CONFLICT" | "ASSIGNMENT_NOT_CURRENT" | "ADMIN_REQUIRED" | "CAPABILITY_UNAVAILABLE" | null;
   cleaningTargetId: string;
   roomId: string;
   roomNumber: string;
-  roomTypeCode: "standard" | "premium" | "oceanPremium" | "oceanFamily" | "unknown";
-  elevatorZone: string;
   maidProfileId: string;
   maidDisplayName: string;
   proposedSequenceNumber: number;
   serviceDate: string;
   expectedAssignmentVersion: number;
+  targetAssignmentVersion: number;
   expectedAvailabilityVersion: number | null;
-  feeSnapshot: number;
   durationMinutes: null;
   availableFrom: string;
   dueAt: string | null;
 };
 
-export type AssignmentPreviewBlockedTarget = {
+export type AssignmentPreviewRemainingTarget = {
+  cleaningKind: string | null;
+  sourceKind: string | null;
+  roomTypeSnapshot: AssignmentRoomTypeSnapshot | null;
+  roomTypeCode: string | null;
+  roomTypeName: string | null;
+  elevatorZone: string | null;
+  feeSnapshot: number | null;
+  originalServiceDate: string | null;
+  effectiveServiceDate: string | null;
+  rolloverCount: number | null;
+  rolloverReason: "ROLLED_OVER_UNASSIGNED" | "ROLLED_OVER_NOT_STARTED" | null;
+  canCancel: boolean;
+  cancelReasonCode: "NOT_MANUAL_CLEANING_REQUEST" | "CLEANING_REQUEST_CANCEL_CONFLICT" | "ASSIGNMENT_NOT_CURRENT" | "ADMIN_REQUIRED" | "CAPABILITY_UNAVAILABLE" | null;
   cleaningTargetId: string;
+  roomId: string;
+  roomNumber: string;
+  serviceDate: string;
+  targetAssignmentVersion: number;
+  expectedAssignmentVersion: number;
+  durationMinutes: null;
+  availableFrom: string;
+  dueAt: string | null;
+  reason: "NO_ELIGIBLE_MAID" | "RECLEAN_MAID_UNAVAILABLE";
+  reasonCodes: Array<"NO_ACTIVE_MAID" | "AVAILABILITY_NOT_SUBMITTED" | "NO_AVAILABLE_MAID" | "FIXED_ASSIGNMENT_CONFLICT" | "RECLEAN_MAID_UNAVAILABLE" | "RECLEAN_MAID_FIXED_ASSIGNMENT_CONFLICT" | "NO_FEASIBLE_ASSIGNMENT">;
+};
+
+export type AssignmentPreviewDiagnostics = {
+  evaluatedAt: string;
+  activeMaidCount: number;
+  submittedAvailabilityMaidCount: number;
+  availableMaidCount: number;
+  fixedExcludedMaidCount: number;
+  eligibleMaidCount: number;
+  fixedExclusions: Array<{
+  maidProfileId: string;
+  cleaningTargetId: string;
+  reasonCodes: Array<"FIXED_SEQUENCE_CONFLICT" | "FIXED_SERVICE_DATE_MISMATCH" | "FIXED_ASSIGNMENT_VERSION_MISMATCH" | "FIXED_SCHEDULE_MISMATCH" | "FIXED_SOURCE_BLOCKED" | "FIXED_ATTEMPT_OWNER_MISMATCH" | "FIXED_ATTEMPT_WORKFLOW_UNRESOLVED">;
+}>;
+};
+
+export type AssignmentPreviewBlockedTarget = {
+  cleaningKind: string | null;
+  sourceKind: string | null;
+  roomTypeSnapshot: AssignmentRoomTypeSnapshot | null;
+  roomTypeCode: string | null;
+  roomTypeName: string | null;
+  elevatorZone: string | null;
+  feeSnapshot: number | null;
+  originalServiceDate: string | null;
+  effectiveServiceDate: string | null;
+  rolloverCount: number | null;
+  rolloverReason: "ROLLED_OVER_UNASSIGNED" | "ROLLED_OVER_NOT_STARTED" | null;
+  canCancel: boolean;
+  cancelReasonCode: "NOT_MANUAL_CLEANING_REQUEST" | "CLEANING_REQUEST_CANCEL_CONFLICT" | "ASSIGNMENT_NOT_CURRENT" | "ADMIN_REQUIRED" | "CAPABILITY_UNAVAILABLE" | null;
+  cleaningTargetId: string;
+  roomId: string;
+  roomNumber: string;
+  serviceDate: string;
+  targetAssignmentVersion: number;
+  expectedAssignmentVersion: number;
+  durationMinutes: null;
+  availableFrom: string;
+  dueAt: string | null;
   reason: string;
 };
 
 export type AssignmentCommitCandidate = {
+  cleaningKind: string | null;
+  sourceKind: string | null;
+  roomTypeSnapshot: AssignmentRoomTypeSnapshot | null;
+  roomTypeCode: string | null;
+  roomTypeName: string | null;
+  elevatorZone: string | null;
+  feeSnapshot: number | null;
+  originalServiceDate: string | null;
+  effectiveServiceDate: string | null;
+  rolloverCount: number | null;
+  rolloverReason: "ROLLED_OVER_UNASSIGNED" | "ROLLED_OVER_NOT_STARTED" | null;
+  canCancel: boolean;
+  cancelReasonCode: "NOT_MANUAL_CLEANING_REQUEST" | "CLEANING_REQUEST_CANCEL_CONFLICT" | "ASSIGNMENT_NOT_CURRENT" | "ADMIN_REQUIRED" | "CAPABILITY_UNAVAILABLE" | null;
   assignmentId: string;
   cleaningTargetId: string;
   roomId: string;
@@ -1268,6 +1638,19 @@ export type AssignmentCommitCandidate = {
 };
 
 export type AssignmentCommitBlockedCandidate = {
+  cleaningKind: string | null;
+  sourceKind: string | null;
+  roomTypeSnapshot: AssignmentRoomTypeSnapshot | null;
+  roomTypeCode: string | null;
+  roomTypeName: string | null;
+  elevatorZone: string | null;
+  feeSnapshot: number | null;
+  originalServiceDate: string | null;
+  effectiveServiceDate: string | null;
+  rolloverCount: number | null;
+  rolloverReason: "ROLLED_OVER_UNASSIGNED" | "ROLLED_OVER_NOT_STARTED" | null;
+  canCancel: boolean;
+  cancelReasonCode: "NOT_MANUAL_CLEANING_REQUEST" | "CLEANING_REQUEST_CANCEL_CONFLICT" | "ASSIGNMENT_NOT_CURRENT" | "ADMIN_REQUIRED" | "CAPABILITY_UNAVAILABLE" | null;
   assignmentId: string;
   cleaningTargetId: string;
   roomId: string;
@@ -1285,6 +1668,19 @@ export type AssignmentCommitBlockedCandidate = {
 };
 
 export type AssignmentCommitUnassignedTarget = {
+  cleaningKind: string | null;
+  sourceKind: string | null;
+  roomTypeSnapshot: AssignmentRoomTypeSnapshot | null;
+  roomTypeCode: string | null;
+  roomTypeName: string | null;
+  elevatorZone: string | null;
+  feeSnapshot: number | null;
+  originalServiceDate: string | null;
+  effectiveServiceDate: string | null;
+  rolloverCount: number | null;
+  rolloverReason: "ROLLED_OVER_UNASSIGNED" | "ROLLED_OVER_NOT_STARTED" | null;
+  canCancel: boolean;
+  cancelReasonCode: "NOT_MANUAL_CLEANING_REQUEST" | "CLEANING_REQUEST_CANCEL_CONFLICT" | "ASSIGNMENT_NOT_CURRENT" | "ADMIN_REQUIRED" | "CAPABILITY_UNAVAILABLE" | null;
   cleaningTargetId: string;
   roomId: string;
   roomNumber: string;
@@ -1432,9 +1828,11 @@ export type SubmissionPhotoSlot = {
 
 export type CleaningTemplateRoomTypeCode = "standard" | "premium" | "oceanPremium" | "oceanFamily";
 
-export type CheckoutCleaningTemplateV8Slot = CleaningTemplateSlot & {
+export type CheckoutCleaningTemplateV9Slots = Array<CheckoutCleaningTemplateV9Slot>;
 
-};
+export type CheckoutCleaningTemplateV8Slots = Array<CheckoutCleaningTemplateV8Slot>;
+
+export type CheckoutCleaningTemplateLegacyReplaySlots = Array<CleaningTemplateSlot>;
 
 export type CleaningTemplateSlot = {
   slotKey: string;
@@ -1445,6 +1843,47 @@ export type CleaningTemplateSlot = {
   description?: string;
   section?: string;
   instanceKey?: string;
+};
+
+export type AssignmentRoomTypeSnapshot = {
+  code: string | null;
+  name: string | null;
+  elevatorZone: string | null;
+};
+
+export type AssignmentScheduleSnapshot = {
+  capturedAt: string;
+  scheduleRevision: number;
+  scheduleReasonCode: string;
+  sourceReservationVersion: number | null;
+  plannedCheckoutAt: string | null;
+  actualCheckoutAt: string | null;
+  plannedRoomDepartureAt: string | null;
+  actualRoomDepartureAt: string | null;
+  nextCheckInAt: string | null;
+  nextRoomArrivalAt: string | null;
+  nextArrivalKind: "check_in" | "room_move" | null;
+  isEarlyCheckIn: boolean | null;
+  isLateCheckout: boolean | null;
+  isScheduleUpdated: boolean;
+};
+
+export type AssignmentCurrentDeparture = {
+  evaluatedAt: string;
+  actualCheckoutAt: string | null;
+  actualRoomDepartureAt: string | null;
+};
+
+export type RoomCommandReasonCode = string;
+
+export type RegisteredReportEvidence = {
+  photoId: string;
+  readState: "available" | "expired" | "purged" | "unavailable";
+  retentionPolicy: "legacy_upload" | "cleaning_submission" | "room_issue" | "complaint" | "interruption" | "sync_conflict" | "mixed" | "orphan";
+  retentionStartsAt: string | null;
+  expiresAt: string | null;
+  purgedAt: string | null;
+  mediaAvailability: "available" | "purged" | "unavailable";
 };
 
 export type CheckoutIncidentDecision = {
@@ -1458,5 +1897,29 @@ export type CheckoutIncidentDecision = {
   newCheckoutAt?: string;
   nextAssignmentId: string;
   nextAttemptId?: string;
+};
+
+export type CheckoutCleaningTemplateV9Slot = {
+  slotKey: "cleaning-proof";
+  displayOrder: 0;
+  required: true;
+  label: "청소 사진";
+  maxPhotos: 20;
+} | {
+  slotKey: "bomb-proof";
+  displayOrder: 1;
+  required: false;
+  label: "폭탄방 증빙";
+  maxPhotos: 10;
+} | {
+  slotKey: "issue-proof";
+  displayOrder: 2;
+  required: false;
+  label: "특이사항 증빙";
+  maxPhotos: 10;
+};
+
+export type CheckoutCleaningTemplateV8Slot = CleaningTemplateSlot & {
+
 };
 

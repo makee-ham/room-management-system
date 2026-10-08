@@ -1,6 +1,6 @@
 "use strict";
 
-const SW_VERSION = "2026-09-29-5";
+const SW_VERSION = "2026-10-08-2";
 const CACHE_PREFIX = "castle-the-art-shell-";
 const CACHE_NAME = `${CACHE_PREFIX}${SW_VERSION}`;
 const APP_DOCUMENT_URL = new URL("./index.html", self.location.href);
@@ -22,7 +22,7 @@ const SENSITIVE_QUERY_KEY = /(?:^|_)(?:token|code|pin|customer|guest|name|phone|
 const PUSH_COPY = Object.freeze({
   assignment_changed: Object.freeze({
     title: "업무 배정이 변경되었습니다",
-    body: "앱에서 최신 업무 순서와 일정을 확인해 주세요.",
+    body: "앱에서 최신 담당 업무와 일정을 확인해 주세요.",
     tag: "assignment-changed"
   }),
   inspection_ready: Object.freeze({

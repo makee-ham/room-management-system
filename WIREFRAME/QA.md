@@ -1,5 +1,46 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-08 최신 백엔드 v0.9.0 연결
+
+백엔드 main `d9e053b01deea4e3d68facdd190dc41d32978538`, 릴리스 #403 및 #387의 실제 배포 기록과 운영 OpenAPI(150 paths / 162 operations)를 대조했다. 아래 9월 기록의 송금 표시·제출 후 수정 API 미지원 설명은 이번 연결의 현재 상태가 아니다. endpoint별 계약과 남은 작업은 [문서 31](../DOCS/31_BACKEND_V090_FRONTEND_INTEGRATION.md)에 정리했다. 프런트 컨펌 전이므로 백엔드 이슈는 게시하지 않았다.
+
+| 검사 | 결과 | 확인 범위 |
+| --- | --- | --- |
+| `check-backend-v090.mjs` | PASS · 5그룹 | 날짜별 room projection·7개 상세 조건·과거 변경 잠금·응답 경합, 배정 스냅샷/0원/CAS, 송금 표시 on/off/409/금액 재확인/기존 paid 원장과 독립, 메이드 제출 후 촛불/회수·추가 신고 2장 일괄 선택/11장 차단/업로드 응답 유실 복구·확정·사진 확대/Back, 관리자 종결·제출 전 신고/사진 만료·미퇴실 목록 전체 페이지/최신 CAS 팝업 |
+| `check-cleaning-workflow.mjs` | PASS · 30그룹 | 기존 배정/검수/PIN, 일반 사진 0/1/20/21장·다중 추가·7일 이력, 원 제출 불변·사진 큐·오프라인 복귀·권한 |
+| `check-live-navigation.mjs` | PASS · 5그룹 | 홈 검수/내일 배정 정확한 목적지, 날짜·상세·모달 Back/Forward, 역할·주차 경합, 사진 URL 수명 |
+| `check-deployed-wireframe-parity.mjs` | PASS · 3그룹 | 기존 청소 목차·6섹션·5열·상세 필터·객실 이슈 팝업·날짜·4개 폭 |
+| `check-operational-api.mjs` | PASS · 8그룹 | 주급 산출/정정 최신 adjustment book CAS, 컴플레인·Push 회귀 |
+| `check-live-connections.mjs` | PASS · 6그룹 | 객실·계정·카탈로그·운영 기록·업무 권한 회귀 |
+| `check-cleaning-assignment-continuity.mjs` | PASS · 9그룹 | 배정 선택/저장·통보/부분 실패/재시도·후속 배정 |
+| `generate-cleaning-client.mjs --production --check` | PASS | 운영 OpenAPI 150 paths / 162 operations와 생성 타입 일치 |
+| `check-api-integration.mjs` | PASS · 공개 읽기 | 운영 health·OpenAPI·publishable key·기존 POST preflight. 신규 PUT 허용은 별도 실패로 아래 기록 |
+| `check-workspace.mjs` / `check-pwa.mjs` | PASS | 정본 hash·inline 문법·기존 권한/보안/배포 계약·서비스 워커 `2026-10-08-2` |
+
+Browser plugin 미제공으로 Playwright + Chromium 151.0.7922.34를 사용했다. 합성 데이터로 360/390/768/1440px 가로 넘침, 접근성 이름·키보드·포커스·모달·뒤로가기, console warning/error와 page error를 확인했다. 모든 업무 쓰기는 요청을 가로챈 fixture이며 실제 운영 저장 통과를 의미하지 않는다. 실제 iOS/Android 갤러리 선택창·PWA OS Back·Drive purge·도어락 물리 변경은 미검증이다.
+
+대표 PNG: `QA/screenshots/v090-assignment-{360,390,768,1440}.png`, `v090-payroll-390.png`, `v090-supplemental-form-390.png`, `v090-history-390.png`. 전체 페이지 PNG의 고정 하단 내비게이션은 첫 viewport 하단에 나타난다. 실제 스크롤/클릭은 별도로 검사했다.
+
+검증 중 보완: 신규 endpoint 응답 fixture와 admin 권한 가드를 맞추고, 추가 신고의 중복 업로드 방지·모달 이탈 후 재등장 방지·로컬 사진 초기화·오래된 응답 차단을 확인했다. 생성기가 `allOf` 조건이 있는 object의 기본 필드를 누락하던 문제도 고쳤고 `--check`는 생성 결과와 파일의 byte 일치까지 검사한다. 사진 처리 전체 검사에서 HEIC 업로드 대기 timeout이 1회 있었으며 같은 검사 재실행과 최종 실행은 모두 30그룹 통과했다. 사진 원문·PIN·비밀값은 증거 문서에 기록하지 않는다.
+
+### 운영 차단과 미완료 범위
+
+- **송금 표시 저장: 운영 PUT CORS 실패.** 실제 Production origin의 OPTIONS 응답은 204이나 `Access-Control-Allow-Methods`에 PUT이 없다. 올바른 프런트 PUT 연결과 브라우저 저장 성공을 구분한다. 공통 CORS 수정/재배포가 필요하며 정확한 재현 요청은 문서 31에 있다.
+- 제한 계정의 보존 세션 재진입·scope별 작업 화면과 추가 증빙의 관리자 provider 작업 인계/장기 복구 화면은 아직 미연결이다. 새 제한 계정 API가 없다고 보고하지 않는다.
+- 과거 객실은 서버의 선택일 projection이지만 홈 검수는 현재 대기열, 주급은 선택 주차의 현재 원장이다. 과거 시점의 검수·주급 복원을 주장하지 않는다.
+- 실제 운영 업무 쓰기 UAT는 지정 테스트 메이드/객실/주차로 별도 필요하다. 이번 작업에서 운영 배정·주급·신고·PIN을 임의 변경하지 않았다.
+
+### 배포 후 직접 확인
+
+- 기존 관리자 Chrome 세션으로 Production의 홈 날짜 변경, 날짜별 객실 상태/읽기 전용, 오늘 복귀, 상세 조건 7개, 객실 운영 상태와 원래 이슈 등록 팝업을 확인했다. 입력·서버 기록은 실행하지 않았다.
+- 홈 청소 배정이 `tab=assignment-tomorrow`로 이동하고 다음날 배정일·현재 서버 배정/요금 스냅샷을 표시하는 것을 확인했다. Preview의 기존 관리자 세션도 새 청소 레이아웃과 최신 API 데이터 조회에 성공했다.
+- 실제 기존 주차의 송금 표시 GET과 객실별 확정/미확정 산출 내역을 확인했다. 이 과정에서 상세 로딩 완료 후 스위치가 비활성으로 남던 프런트 문제를 발견해 finally의 현재 화면 갱신으로 수정하고 회귀 검사를 추가했다. PUT/금액 정정/원장 취소는 실행하지 않았다.
+- 배포 묶음 생성은 QA 이미지·문서·타입·숨김 파일을 제외한다. 운영 실행에 필요한 파일과 기존 데모 참조 자산은 유지한다. 로컬 QA 원본은 삭제하지 않았다.
+- 최종 Production: `https://room-management-system-prod.vercel.app/`, deployment `dpl_CoUXBfbPYUr7o6c2ckYXQGuNzFbb` (`room-management-system-prod-hzhge77id.vercel.app`). 원본 HTML byte 일치, live/production runtime, worker `2026-10-08-2` 확인. 최종 배포에서도 실제 주급 산출 상세의 스위치 활성 복구를 직접 확인했다.
+- 최종 Preview: `https://room-management-system-prod-preview.vercel.app/`, deployment `dpl_HS4Gx2gofkxEhbnmqYiiecHEdedS` (`room-management-system-prod-12xpye6i3.vercel.app`). 보호 설정 유지. 인증된 CLI 응답의 앱 HTML은 로컬 원본과 byte 일치하며 알려진 Vercel feedback script만 뒤에 추가된다. runtime은 live/preview이다.
+- 두 배포 앱 원본 SHA-256: `82d2bc35f4d6813b6328192079f39eff9e5c9ae3b8aa303b034003342d518ac9`. 두 채널은 같은 운영 API/데이터베이스를 사용한다.
+- `check-deployed-visual.mjs` 최종 PASS: 실제 배포 HTML로 관리자 6개/메이드 4개 뷰, 360/390/768/1440px 넘침·console warning/error·page error를 확인했다. 이 자동 검사는 runtime만 demo로 가로채므로 실제 운영 데이터 쓰기 통과가 아니다. 새 PNG 7개를 남기고 테스트 실행으로만 바뀐 기존 PNG는 이번 변경에서 제외했다.
+
 ## 2026-09-29 배포·프리뷰 와이어프레임 정합성
 
 - 청소의 데모/운영 배정 화면이 공통 레이아웃·랜덤 카드·요약 렌더러를 사용한다. 같은 관리자 역할의 390/1440px 정본과 운영 adapter 화면을 비교했다. 데이터는 합성 fixture이며 실제 운영 수량과 다르다.

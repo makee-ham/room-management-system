@@ -344,8 +344,8 @@ async function checkOpenApi(apiBaseUrl) {
     (count, item) => count + Object.keys(item).filter((key) => ["get", "post", "put", "patch", "delete", "head", "options"].includes(key)).length,
     0,
   );
-  assert(Object.keys(document.paths ?? {}).length === 131, "OpenAPI path 수가 v0.6.0의 131개와 다릅니다.");
-  assert(operationCount === 141, "OpenAPI operation 수가 v0.6.0의 141개와 다릅니다.");
+  assert(Object.keys(document.paths ?? {}).length === 150, "OpenAPI path 수가 배포 v0.9.0의 150개와 다릅니다.");
+  assert(operationCount === 162, "OpenAPI operation 수가 배포 v0.9.0의 162개와 다릅니다.");
 }
 
 async function checkCors(apiBaseUrl) {
@@ -390,7 +390,7 @@ async function main() {
     console.log("[ok] 운영 health 계약을 확인했습니다.");
 
     await checkOpenApi(apiBaseUrl);
-    console.log("[ok] OpenAPI 0.6.0의 131개 path와 141개 operation 및 가능일 상시 제출 계약을 확인했습니다.");
+    console.log("[ok] 배포 v0.9.0 OpenAPI의 150개 path와 162개 operation 및 가능일 상시 제출 계약을 확인했습니다.");
 
   } catch (error) {
     console.error(`[fail] ${error instanceof Error ? error.message : "API 계약 검사에 실패했습니다."}`);
