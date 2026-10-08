@@ -1,5 +1,31 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-08 메이드 사진·제출·계정 권한 후속 수정
+
+프런트 `dev`의 `3bb0bb3`에서 시작했다. 백엔드 main은 `d9e053b`로 동일함을 재확인했다. 기존 와이어프레임 정보구조는 유지하며 사용자 지시대로 현장 완료 버튼만 청소 제출의 검수 요청 버튼 옆으로 이동했다.
+
+- 계정 관리: 업무 관리자 더보기/메이드 상세의 진입과 변경 액션, 구 history 진입을 제거·차단했다. 개발자 계정 관리와 본인 비밀번호 변경은 유지한다. 관리자 업무 조회에 필요한 계정 목록 API는 유지하며 서버 권한 축소와 혼동하지 않는다.
+- 사진 업로드: 이전 업로드 후 검증한 슬롯 응답을 다음 CAS 명령에 재사용한다. 정상 20장 배치의 슬롯 GET은 40회에서 21회로 감소했다. JPEG 재인코딩에 성공한 사진은 서버 verified 확인 후 메모리 미리보기로 재사용한다. 테스트 20장에서는 content 재다운로드 20회가 0회, 장당 113,271 bytes가 28,426 bytes였다. 이는 합성 이미지의 요청/크기 비교이며 실제 모바일 속도 배율이나 Drive 응답 SLA가 아니다.
+- 사진 조회: 클릭 즉시 로딩 상세를 연 뒤 메타데이터·사진을 점진 표시한다. 갤러리별 최대 4개 GET, 개별 실패 재시도, 만료 사진 요청 차단, 확대/Escape/Back, 이탈 후 늦은 응답 차단을 확인했다. 업로드는 기존 앱 전체 1건 순차 큐를 유지한다.
+- 촛불: 사진 갱신에도 입력 초안을 유지한다. 새 제출에서 최신 공유 촛불 GET 후 필요한 수량 변경 POST/CAS를 먼저 완료한다. 감소는 실제 회수 확인과 동일 version을 요구하며 409/실패는 제출을 차단한다. 과거 제출 3개/회수 후 현재 1개는 정상 별도 값으로 보존한다. 두 API의 원자성은 프런트에서 보장하지 않는다.
+
+`check-maid-photo-history-fixes.mjs` 6그룹 PASS: 실제 버튼 진입, 관리자/개발자 권한, 20장 배치 요청 수, 완료 위치, 촛불 초안/초기 동기화/감소 확인/409, 지연·실패·만료 사진과 뒤로가기. 모든 API 쓰기는 합성 fixture로 가로챘다. Browser plugin 미제공으로 Playwright/Chromium 151.0.7922.34 사용. 360/390/768/1440px 넘침, 44px 완료 버튼, 키보드·모달·사진 확대, console warning/error 및 page error 없음 확인.
+
+대표 PNG: `QA/screenshots/maid-fixes-admin-more-390.png`, `maid-fixes-history-390.png`, `maid-fixes-submission-{360,390,768,1440}.png`. 제출 PNG는 해당 섹션으로 스크롤한 viewport이고 이력 PNG의 과거 3개/현재 1개는 회수 기록 보호 fixture다. 변경 전 기존 업무 카드 구조와 대조했으며 의도된 차이는 완료 버튼 위치, 계정 관리 제거, 점진 로딩/재시도뿐이다.
+
+최종 코드 회귀: `check-maid-photo-history-fixes.mjs` 6그룹, `check-cleaning-workflow.mjs` 30그룹, `check-live-navigation.mjs` 5그룹, `check-live-connections.mjs` 6그룹, `check-backend-v090.mjs` 5그룹, 합계 52그룹 PASS. `check-workspace.mjs`, `check-pwa.mjs`, `git diff --check` PASS. 서비스 워커는 `2026-10-08-4`이다. 운영 읽기 확인에서 발견한 로딩 제목도 정리하고 해당 제목을 포함한 6그룹을 재실행했다.
+
+운영 기존 관리자 세션에서 수정 전 실제 이력 버튼이 목록을 유지한 채 사진 전체를 기다린 뒤 상세를 여는 현상을 확인했다. 조회만 했고 실제 사진 업로드·촛불 변경·검수는 실행하지 않았다. 물리 iOS/Android 갤러리, 모바일 통신 환경 성능, 운영 쓰기 UAT는 미검증이다.
+
+### 후속 수정 배포 확인
+
+- Production: `https://room-management-system-prod.vercel.app/`, `dpl_GVGzw5rRL2ABczein6x7vdFh4gXm` (`room-management-system-prod-dys9boa2e.vercel.app`). 앱 HTML byte 일치, live/production runtime, worker `2026-10-08-4` 확인.
+- Preview: `https://room-management-system-prod-preview.vercel.app/`, `dpl_8dHtYcZ9DMDEMC5T35cVANpeP1tW` (`room-management-system-prod-dgxzsp2tm.vercel.app`). 보호 설정 유지. 인증된 CLI로 앱 HTML byte 일치와 알려진 Vercel feedback script만 추가됨, live/preview runtime 및 worker 확인 후 alias를 교체했다.
+- 앱 원본 SHA-256: `9016eb96140252fabaeb5118b53e0a38e2f8f155ba56a3f78bb0a1b67772e3ff`. 두 채널은 같은 운영 API/데이터베이스를 사용한다.
+- `check-deployed-visual.mjs` 최종 PASS: 배포 HTML의 관리자 6개/메이드 4개 뷰, 360/390/768/1440px 넘침·console warning/error·page error 없음. runtime만 demo로 가로챈 검사이며 실제 운영 쓰기는 아니다.
+- 기존 운영 관리자 세션으로 계정 관리 메뉴 제거, 완료 목록 → 즉시 로딩 상세 → 실제 사진 로드/확대 → 브라우저 Back으로 상세·목록 복귀를 확인했다. 갤러리의 표시 이미지 14개는 모두 `complete`와 양수 `naturalWidth`를 확인했다. 실제 사진 원문은 QA 파일로 저장하지 않았다.
+- 기존 테스트가 재생성한 PNG 변경은 제외하고 위 대표 합성 PNG 6개만 추가했다. 백엔드 권한·촛불 두 명령의 비원자성·provider 지연은 문서 31에 별도 인계했고 컨펌 전 이슈 게시를 하지 않았다.
+
 ## 2026-10-08 최신 백엔드 v0.9.0 연결
 
 백엔드 main `d9e053b01deea4e3d68facdd190dc41d32978538`, 릴리스 #403 및 #387의 실제 배포 기록과 운영 OpenAPI(150 paths / 162 operations)를 대조했다. 아래 9월 기록의 송금 표시·제출 후 수정 API 미지원 설명은 이번 연결의 현재 상태가 아니다. endpoint별 계약과 남은 작업은 [문서 31](../DOCS/31_BACKEND_V090_FRONTEND_INTEGRATION.md)에 정리했다. 프런트 컨펌 전이므로 백엔드 이슈는 게시하지 않았다.
