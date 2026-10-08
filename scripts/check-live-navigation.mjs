@@ -39,9 +39,12 @@ await page.route(`${api}/**`,async route=>{
   assert.equal(route.request().method(),'GET','Only the explicit fixture approval may mutate');
   if(path==='/v1/payroll'){const week=url.searchParams.get('weekStart');if(week===delayedWeek)await new Promise(resolve=>{releaseDelay=resolve;});return json({payroll:[{...cycle(week),...(invalidPayroll?{totalAmount:null}:{})}],nextCursor:null});}
   if(path==='/v1/payroll/entries')return json({entries:[],nextCursor:null});
+  if(path==='/v1/payroll/remittance-marker')return json({maidProfileId:id(2),weekStart:url.searchParams.get('weekStart'),marked:false,version:0,basisFingerprint:'a'.repeat(64),canSet:true,canClear:false,canReconfirm:false,needsReconfirmation:false});
+  if(path==='/v1/payroll/work-details')return json({maidProfileId:id(2),weekStart:url.searchParams.get('weekStart'),kind:url.searchParams.get('kind'),summary:{},entries:[],nextCursor:null});
+  if(path.endsWith('/supplemental-room-issues'))return json({source:{sourceSubmissionId:submission.id,sourceStatus:'approved',ownership:'original_performer'},reports:[]});
   if(path==='/v1/notifications')return json({notifications:[],nextCursor:null});
   if(path==='/v1/accounts')return json({accounts});
-  if(path==='/v1/rooms')return json({rooms:[room]});
+  if(path==='/v1/rooms'){const serviceDate=url.searchParams.get('serviceDate')||date;return json({rooms:[{...room,serviceDate,projectionMode:serviceDate===date?'LIVE':serviceDate<date?'PAST_END_OF_DAY':'FUTURE_START_OF_DAY',detailConditionCodes:['VACANT']}]});}
   if(path===`/v1/rooms/${room.id}`)return json({room});
   if(path==='/v1/reservations')return json({reservations:[],nextCursor:null});
   if(path==='/v1/room-types')return json({items:[]});

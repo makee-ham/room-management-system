@@ -105,7 +105,14 @@ if (runtimeMode === "demo") {
 
 await rm(OUTPUT, { recursive: true, force: true });
 await mkdir(OUTPUT, { recursive: true });
-await cp(WIREFRAME, OUTPUT, { recursive: true });
+const excluded = new Set(["QA", "QA 2", "screenshots", "QA.md", "README.md", "cleaning-api.d.ts"]);
+await cp(WIREFRAME, OUTPUT, {
+  recursive: true,
+  filter: source => {
+    const relative = path.relative(WIREFRAME, source);
+    return !relative || !relative.split(path.sep).some(part => part.startsWith(".") || excluded.has(part));
+  },
+});
 await writeFile(
   path.join(OUTPUT, "runtime-config.json"),
   `${JSON.stringify(config)}\n`,
