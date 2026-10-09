@@ -55,7 +55,9 @@ await page.route(`${api}/**`,async route=>{
   if(path===`/v1/inspections/${submission.id}`)return json({submission});
   if(path===`/v1/cleaning-history/${submission.id}`)return json({submission:{...submission,status:'approved'}});
   if(path.startsWith('/v1/photos/'))return route.fulfill({contentType:'image/png',body:testPhoto});
-  if(path.startsWith('/v1/availability'))return json({availabilities:[],availability:null,requests:[]});
+  if(path==='/v1/availability')return json({availability:[]});
+  if(path==='/v1/availability/change-requests')return json({changeRequests:[]});
+  if(path==='/v1/availability/candidates')return json({candidates:[]});
   if(path==='/v1/work-history')return json({weekStart:monday,items:[],nextCursor:null});
   if(path==='/v1/complaints')return json({complaints:[],nextCursor:null});
   if(path==='/v1/cleaning-history')return json({date,fromDate:date,toDate:date,items:[{attemptId:id(5),submissionId:submission.id,performerProfileId:id(2),performerDisplayName:'QA 메이드',roomNumber:'211',roomTypeName:'스탠다드',cleaningKind:'checkout',fieldCompletedAt:`${date}T12:00:00+09:00`,serviceDate:date,inspectionStatus:'approved',mediaAvailability:'available',photoCount:2,baseFeeSnapshot:16000,earningTotalAmount:16000},{attemptId:id(50),submissionId:id(51),performerProfileId:id(52),performerDisplayName:'다른 QA 메이드',roomNumber:'999',cleaningKind:'checkout',fieldCompletedAt:`${date}T12:00:00+09:00`,serviceDate:date,inspectionStatus:'approved',mediaAvailability:'available'}],nextCursor:null});

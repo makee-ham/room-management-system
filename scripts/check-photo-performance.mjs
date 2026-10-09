@@ -60,12 +60,12 @@ async function fixture({old=false,snapshot=false,mode='valid',prepareMs=0,upload
         receipt={operationId:id(50),attemptId:attempt.attemptId,targetSlotId:slot.slotId,photoItemId,status:'accepted',photoId,collectionRevision:slot.collectionRevision,itemRevision:1};receipts.set(key,receipt);
       }
       if(mode==='lost'&&!lost){lost=true;return route.abort('failed');}
-      if(mode==='operation'&&!operationReady)return json(route,{...receipt,status:'reconciliation_pending',photoId:null,photoSlots:null});
+      if(mode==='operation'&&!operationReady)return json(route,{...receipt,status:'reconciliation_pending',photoId:null,photoSlots:null,retentionPolicy:null,mediaAvailability:null});
       const data={...receipt};
       if(url.searchParams.get('includePhotoSlots'))data.photoSlots=['null','refresh-failure'].includes(mode)?null:mode==='mismatch'?{...payload(),assignmentRevision:2}:payload();
       return json(route,data);
     }
-    if(path.startsWith('/v1/photo-uploads/'))return json(route,operationReady?[...receipts.values()][0]:{operationId:id(50),status:'reconciliation_pending',photoId:null});
+    if(path.startsWith('/v1/photo-uploads/'))return json(route,operationReady?[...receipts.values()][0]:{operationId:id(50),status:'reconciliation_pending',photoId:null,retentionPolicy:null,mediaAvailability:null});
     if(path.startsWith('/v1/photos/')){readsActive++;maxReads=Math.max(maxReads,readsActive);await wait(readMs);readsActive--;return route.fulfill({contentType:'image/jpeg',body:jpeg});}
     if(path==='/v1/notifications')return json(route,{notifications:[],nextCursor:null});
     if(path==='/v1/complaints')return json(route,{complaints:[],nextCursor:null});

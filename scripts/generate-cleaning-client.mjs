@@ -53,6 +53,17 @@ export function verifyCleaningContract(doc){
   assert((collectionPath?.delete?.parameters||[]).some(item=>item.name==='Idempotency-Key'&&item.in==='header'&&item.required===true),'Photo collection DELETE must require Idempotency-Key.');
   assert(schemas.AttemptPhotoSlots?.properties?.slots?.items?.properties?.maxPhotos?.enum?.includes(20),'Attempt photo slots must expose maxPhotos 20.');
   assert(schemas.AttemptPhotoSlots?.properties?.slots?.items?.properties?.photos?.items?.$ref?.endsWith('/AttemptPhotoItem'),'Attempt photo slots must expose collection items.');
+  for(const upload of [paths['/v1/attempts/{attemptId}/photo-slots/{slotId}/upload'].post,collectionUpload]){
+    const snapshotQuery=upload.parameters.find(parameter=>parameter.name==='includePhotoSlots'&&parameter.in==='query');
+    assert(snapshotQuery?.required===false&&snapshotQuery.schema?.enum?.length===1&&snapshotQuery.schema.enum[0]===true,'Photo snapshot query must remain optional and true-only.');
+  }
+  const operation=schemas.PhotoUploadOperation;
+  for(const field of ['retentionPolicy','mediaAvailability']){
+    assert(operation.required.includes(field)&&nullable(operation.properties[field]),`Pending operation ${field} must be required and nullable.`);
+    assert(!nullable(schemas.AttemptPhotoItem.properties[field]),`Stored photo ${field} must remain non-null.`);
+  }
+  assert(nullable(operation.properties.photoSlots)&&operation.properties.photoSlots.anyOf.some(item=>item.$ref==='#/components/schemas/AttemptPhotoSlots'),'Photo snapshot must use the existing slots projection or null.');
+  assert(operation.allOf.some(rule=>rule.if?.properties?.status?.enum?.includes('accepted')&&rule.then?.properties?.mediaAvailability?.type==='string'),'Accepted operation retention must remain non-null.');
   assert(paths['/v1/availability/submissions'].post.description?.includes('어느 요일이든 직접 제출·변경'),'Availability submission must be open on every day and time.');
   assert(schemas.ErrorCode?.enum?.includes('AVAILABILITY_WEEK_OUT_OF_RANGE'),'Availability week-range error must be present.');
   assert(!schemas.ErrorCode?.enum?.includes('OUTSIDE_AVAILABILITY_WINDOW'),'Retired availability submission window error remains.');

@@ -1,5 +1,42 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-09 최신 인계 반영과 조회 성능 #207
+
+인계 PR #209를 검사 후 dev `41ac17a`에 병합했다. 백엔드 v0.9.2/main `32c100e`, API 43의 공개 health 200 및 운영/게시 OpenAPI paths/components 동일성을 재확인했다. 게시 SHA256 `b1ab571818063e07964f139fa10a2225f93ba3945a98e303784b4b8bf22a6eff`, 150 paths/162 operations. 아래 이전 #206의 Draft/미배포 기록은 당시 checkpoint이며 최신 상태가 아니다.
+
+사진 nullable/snapshot 타입 재생성 및 생성기 계약 검사 PASS. pending operation의 보존 필드 두 null에 대해 상태 GET 재시도, accepted 후 새 업로드 없음, CAS/동일 key/Blob 회귀 PASS. 실제 인증 사진 성공 응답·Server-Timing UAT는 지정 계정/객실 미확정으로 실행하지 않았고 snapshot flag는 false 유지한다.
+
+`check-data-performance.mjs` 8그룹 PASS: 가능일 일괄/퇴사 제외/행 상한 fallback, 첫 페이지 표시·총액 보류·송금 조회 최대 3건, 부분 실패/중복/cursor 반복, marker 단건 재조회, 즉시 상세/summary mismatch, 상세 중 늦은 목록 응답, 주차 경합/로그아웃/본인 권한, 홈 단계별 표시, 360/390/768/1440px/포커스/Enter/Back/console. 기존 카드를 같은 역할·뷰포트로 비교했으며 정상 완료 상태의 구조·버튼 목적은 동일하다. 차이는 로딩·부분 실패 안내와 카드별 재조회다.
+
+Browser plugin 미제공으로 기존 Playwright/Chromium 151.0.7922.34를 사용했다. 모든 업무 API와 mutation은 합성 fixture로 가로챘다. 주급 최초 카드/전체 표시, 실제 버튼 이동, 페이지 identity/비어 있지 않음/오류 overlay 없음, 가로 넘침과 console warning/error 없음 확인. 정상 모바일·데스크톱 및 부분 오류 PNG를 육안 확인했다.
+
+### 합성 조회 시간
+
+동일 HTTP 지연(목록 30ms/후속 60ms, marker 80ms), `fe09fa7` 대 현재, 각 3회. 첫 표시는 카드 DOM 삽입, 전체 표시는 로드 완료 및 모든 송금 조회 중 표시 종료 뒤 시점이다. p95는 3회 중 최댓값이며 운영/실기기 성능 지표가 아니다. HTTP 수는 주급 목록과 marker 합계다.
+
+| 인원 | 변경 전 첫 표시 p50/p95 ms | 변경 후 첫 표시 p50/p95 ms | 변경 전 전체 p50/p95 ms | 변경 후 전체 p50/p95 ms | 주급 HTTP 전/후 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 | 132 / 135 | 43 / 44 | 138 / 140 | 139 / 144 | 2 / 2 |
+| 10 | 891 / 895 | 44 / 46 | 895 / 898 | 392 / 403 | 11 / 11 |
+| 20 | 1834 / 1839 | 44 / 45 | 1841 / 1844 | 656 / 664 | 22 / 22 |
+
+가능일 본 조회 수는 1/10/20명 각각 기존 1/10/20회에서 모두 1회이며 변경 요청 GET 1회는 별도다. 주급 batch API는 아직 운영에 없어 HTTP 수는 유지되고 순차 대기만 줄었다. 원격 row 상한 미실측과 상세 전체 페이지 검증 유지 등 한계는 [문서 33](../DOCS/33_DATA_PERFORMANCE_INTEGRATION.md)을 참고한다.
+
+### 회귀와 증거
+
+- `check-photo-performance.mjs` 전체 비교·6그룹 및 nullable 보강 후 비성능 회귀 PASS. 1/5/20장·4배 CPU·지연·409·유실·취소/이동·로그아웃·HEIC fallback·4개 폭·뷰어/Escape. 실제 codec/휴대폰 통신망은 미검증.
+- `check-cleaning-workflow.mjs` 30그룹, `check-live-navigation.mjs` 5그룹, `check-live-connections.mjs` 6그룹, `check-backend-v090.mjs` 5그룹, `check-operational-api.mjs` 8그룹, `check-live-performance.mjs` 12그룹 PASS.
+- 기존 테스트의 낡은 가능일 응답 필드와 날짜별 room projection, 예약 생성 뒤 목록 fixture를 현재 API 계약에 맞게 수정했다. 실패를 숨기거나 운영 validation을 완화하지 않았다.
+- 대표 캡처: `QA/screenshots/data-performance-{360,390,768,1440}.png`, `data-performance-partial-390.png`. 전부 QA 가상 데이터다. 사용자 제공 `admin-cleaning-toc-390.png`는 수정하지 않았다.
+- `check-workspace.mjs`, `check-pwa.mjs`, `generate-cleaning-client.mjs --production --check`, `git diff --check` PASS. 최종 UX 감사 원문은 변경하지 않았다.
+
+### 조회 성능 개선 배포
+
+- Production: `https://room-management-system-prod.vercel.app/`, `dpl_3UPWnUbFy1Mnse4rxD2wcQruDjt6` (`room-management-system-prod-1ncr7gd6u.vercel.app`). 공개 HTML/worker byte 일치, live/production 및 snapshot false 확인.
+- Preview: `https://room-management-system-prod-preview.vercel.app/`, `dpl_AvBAiuDcE4uGku2soFQPvWeTJVC3` (`room-management-system-prod-9la1k78gq.vercel.app`). 기존 보호 유지. 인증 CLI로 HTML의 알려진 Vercel feedback script만 제외한 byte 일치, worker byte 일치, live/preview 및 snapshot false 확인 후 alias 연결.
+- HTML SHA256 `0f994036e2b017ad7a53a556b59b179f57becaa13088da789059588534c98c24`, worker `2026-10-09-3`. 두 채널은 동일 운영 API/DB를 사용한다.
+- `check-deployed-visual.mjs` PASS: 배포 HTML의 관리자 6/메이드 4 화면, 360/390/768/1440px, 가로 넘침·console warning/error·page error 없음. runtime을 demo로 가로챈 시각 검사이며 운영 로그인/쓰기 UAT가 아니다.
+
 ## 2026-10-09 사진 성능 이슈 #206
 
 프런트 `dev` `314f0d7` 기준. 백엔드 #412의 `5630b62` 계약을 확인했고 Draft/운영 미배포라 `photoUploadSnapshot=false`로 배포한다. 활성화 조건은 [문서 32](../DOCS/32_PHOTO_PERFORMANCE_INTEGRATION.md)에 있다. 기존 청소 섹션·버튼 순서와 1~20장 다중 선택을 유지했고 대기 미리보기·누적 진행률·개별 재시도만 기존 사진 영역에 추가했다.
