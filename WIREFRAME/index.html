@@ -1020,6 +1020,7 @@
     .history-photo-expired span { margin-top:4px; font-size:12px; }
     .inspection-photo { display:block; width:100%; min-width:0; overflow:hidden; margin:0; padding:0; border:1px solid var(--line); border-radius:12px; color:var(--ink); background:#fff; text-align:left; }
     .inspection-photo > svg, .inspection-photo > img { display:block; width:100%; aspect-ratio:1.62/1; object-fit:cover; background:#edf2f6; }
+    .inspection-photo-placeholder { display:flex; width:100%; aspect-ratio:1.62/1; align-items:center; justify-content:center; background:#edf2f6; }
     .inspection-photo-copy { display:flex; align-items:center; gap:8px; min-height:62px; padding:10px 11px; }
     .inspection-photo-copy > span:first-child { width:100%; min-width:0; flex:1; }
     .inspection-photo-copy strong,.inspection-photo-copy small { display:block; }
@@ -3054,7 +3055,7 @@
           const apiUrl=new URL(apiBaseUrl),authUrl=new URL(supabaseUrl),apiHost=/^([a-z0-9]+)\.supabase\.co$/.exec(apiUrl.hostname),authHost=/^([a-z0-9]+)\.supabase\.co$/.exec(authUrl.hostname),keyOk=isBrowserPublishableKey(supabasePublishableKey);
           if(apiUrl.protocol!=='https:'||authUrl.protocol!=='https:'||apiUrl.username||apiUrl.password||authUrl.username||authUrl.password||apiUrl.port||authUrl.port||!apiHost||!authHost||apiHost[1]!==authHost[1]||apiHost[1]!==LIVE_PROJECT_REF||apiUrl.pathname!=='/functions/v1/api'||apiUrl.search||apiUrl.hash||authUrl.pathname!=='/'||authUrl.search||authUrl.hash||!keyOk)return null;
         }catch{return null;}
-        return {apiBaseUrl,supabaseUrl,supabasePublishableKey,sessionPersistence,deploymentChannel,featureFlags:{optionalCleaningWorkflow:value.featureFlags?.optionalCleaningWorkflow===true}};
+        return {apiBaseUrl,supabaseUrl,supabasePublishableKey,sessionPersistence,deploymentChannel,featureFlags:{optionalCleaningWorkflow:value.featureFlags?.optionalCleaningWorkflow===true,photoUploadSnapshot:value.featureFlags?.photoUploadSnapshot===true}};
       }
       async function loadRuntimeConfig(){
         LIVE_RUNTIME.status='loading';
@@ -3454,7 +3455,7 @@
       }
       function clearLiveAuthSurface(){
         liveConnectionReview=null;liveConnectionBusy=false;
-        LIVE_PHOTO_QUEUE.length=0;LIVE_OFFLINE_COMPLETIONS.clear();
+        LIVE_PHOTO_QUEUE.forEach(releaseLivePhotoJob);LIVE_PHOTO_QUEUE.length=0;LIVE_OFFLINE_COMPLETIONS.clear();
         liveHistoryRestoreSequence+=1;restoringHistory=false;
         LIVE_IDEMPOTENCY_KEYS.clear();clearAllPinModalSecrets();clearLivePinReveal();clearActiveCleaningPhotoUrls();clearCleaningPhotoUrls();livePinChangeContext=null;liveRoomDetail=null;liveRoomDetailReturnY=0;uncertainLiveMutation=null;try{sessionStorage.removeItem(cleaningIncidentStorageKey());}catch{}state.remote.cleaning=initialCleaningState();maskPin();protectedPinOverrides.clear();pendingPin=null;rawCloseModal();state.detail=null;
         if(isWireframeHistory(history.state))history.replaceState(null,'',`${location.pathname}${location.search}`);
@@ -4353,7 +4354,7 @@
         main.innerHTML=renderMain();topbar.outerHTML=renderTopbar();applyLiveCopyPolicy(main);
         app.querySelectorAll('[data-action="nav"][data-view]').forEach(item=>{if(item.dataset.view===currentView()&&!state.detail)item.setAttribute('aria-current','page');else item.removeAttribute('aria-current');});
         document.body.classList.toggle('quick-booking-fullscreen',!!(quickReservationViewActive()&&state.quickReservationFullscreen));
-        document.title=`${titleForView()} · CASTLE THE ART`;syncUrlState();if(quickReservationViewActive())restoreQuickGridViewport();return true;
+        document.title=`${titleForView()} · CASTLE THE ART`;syncUrlState();if(quickReservationViewActive())restoreQuickGridViewport();syncLiveCleaningPhotoSurface();return true;
       }
 
       function render() {
@@ -4382,6 +4383,7 @@
         document.documentElement.style.setProperty('--nav-count', nav.length);
         document.title=`${titleForView()} · CASTLE THE ART${liveMode()?'':' 데모'}`;
         syncUrlState();
+        if(liveMode())syncLiveCleaningPhotoSurface();
         if(state.loggedIn&&quickReservationViewActive())restoreQuickGridViewport();
         if(verifyDurable){const durableAfter=durableLedgerFingerprint(state);if(durableRenderSameState&&durableAfter!==durableBefore)throw new Error('렌더링 중 예약·청소 제출·급여·지급 원장이 변경되었습니다.');durableRenderStateRef=state;assertNoDuplicateDurableRecords(state);}
       }
@@ -9233,11 +9235,17 @@
       const CLEANING_PHOTO_STATUS_LABELS=Object.freeze({missing:'미촬영',cleared:'재촬영 필요',verified:'업로드 확인',pending:'처리 중',failed:'업로드 실패',purged:'보관 만료',expired:'보관 만료'});
       const CLEANING_PHOTO_INPUT_MAX_BYTES=5*1024*1024;
       const CLEANING_PHOTO_INPUT_MIMES=Object.freeze(['image/jpeg','image/webp','image/heic','image/heif']);
+      Object.assign(API_ERROR_COPY,{PHOTO_UPLOAD_PROCESSING:'사진 처리 중입니다. 잠시 뒤 저장 상태를 확인하세요.',PHOTO_CONFIRMATION_PENDING:'사진 저장은 접수됐습니다. 최신 상태를 다시 확인하세요.'});
       Object.assign(API_ERROR_COPY,{ASSIGNMENT_ACCESS_REQUIRED:'청소 배정 관리 권한이 없습니다.',ATTEMPT_ACCESS_REQUIRED:'본인에게 통보된 작업만 확인할 수 있습니다.',MAID_REQUIRED:'메이드 계정으로만 수행할 수 있습니다.',ASSIGNMENT_NOT_NOTIFIED:'아직 통보되지 않은 배정은 시작할 수 없습니다.',ATTEMPT_INVALID_TRANSITION:'현재 작업 상태에서는 이 동작을 수행할 수 없습니다.',ATTEMPT_ACTIVATION_NOT_ALLOWED:'현재 작업은 시작할 수 없습니다.',CLEANING_SERVICE_DATE_NOT_DUE:'아직 이 작업의 서비스 날짜가 아닙니다.',CLEANING_SERVICE_DATE_EXPIRED:'작업 가능 날짜가 지났습니다. 관리자에게 일정을 확인해 주세요.',CLEANING_WINDOW_NOT_OPEN:'아직 청소 시작 가능 시각이 아닙니다.',CLEANING_WINDOW_EXPIRED:'업무 마감이 지나 새 상태 확인이 필요합니다.',CHECKOUT_NOT_MATERIALIZED:'체크아웃 상태가 확정되지 않아 작업을 시작할 수 없습니다.',ASSIGNMENT_IMPACT_CHANGED:'배정 확정 영향이 바뀌었습니다. 최신 영향을 다시 확인해 주세요.',ASSIGNMENT_DRAFT_STALE_SCHEDULE:'청소 일정이 바뀌었습니다. Preview부터 다시 확인해 주세요.',ASSIGNMENT_AVAILABILITY_STALE:'근무 가능일 version이 바뀌었습니다. 최신 상태를 다시 확인해 주세요.',ASSIGNMENT_MAID_UNAVAILABLE:'선택한 메이드는 해당 날짜에 근무할 수 없습니다.',ASSIGNMENT_COMMIT_NOT_ALLOWED:'현재 배정은 통보 확정할 수 없습니다.',ASSIGNMENT_PREVIEW_DURATION_POLICY_UNCONFIRMED:'예상시간 정책이 확정되지 않아 배정을 결정할 수 없습니다.',NOTIFICATION_ACCESS_REQUIRED:'이 알림을 확인할 권한이 없습니다.',NOTIFICATION_NOT_FOUND:'알림이 없거나 더 이상 접근할 수 없습니다.'});
       Object.assign(API_ERROR_COPY,{ASSIGNMENT_VERSION_CONFLICT:'배정 version이 바뀌었습니다. 최신 배정을 확인해 주세요.',ATTEMPT_VERSION_CONFLICT:'작업 수행 version이 바뀌었습니다. 최신 수행 상태를 확인해 주세요.',MAID_ALREADY_IN_PROGRESS:'이미 진행 중인 다른 작업이 있어 이 작업을 시작할 수 없습니다.',PREVIOUS_ROOM_WORKFLOW_ACTIVE:'같은 객실의 이전 작업이 아직 끝나지 않았습니다.',CLEANING_TARGET_NOT_FOUND:'청소 대상을 찾을 수 없습니다. 최신 계획을 확인해 주세요.',ASSIGNMENT_NOT_FOUND:'배정을 찾을 수 없습니다. 최신 목록을 확인해 주세요.',ASSIGNMENT_TARGET_STATE_INVALID:'현재 청소 대상 상태에서는 배정을 변경할 수 없습니다.',ASSIGNMENT_SEQUENCE_CONFLICT:'배정 정보가 변경되었습니다. 새로고침 후 다시 저장해 주세요.',ASSIGNMENT_AVAILABILITY_REQUIRED:'담당자의 근무 가능일 제출이 필요합니다.',ASSIGNMENT_WINDOW_EXPIRED:'배정 작업 시간이 지나 최신 계획이 필요합니다.',PENDING_CHANGE_REQUEST_EXISTS:'이미 확인 대기 중인 담당 변경 요청이 있습니다.',CHANGE_REQUEST_NOT_FOUND:'담당 변경 요청이 없거나 더 이상 처리할 수 없습니다.',STALE_VERSION:'조회 뒤 서버 상태가 바뀌었습니다. 최신 내용을 다시 확인해 주세요.',CAPABILITY_ACCESS_REQUIRED:'현재 계정에 이 작업을 계속할 수행 권한이 없습니다.',ACCOUNT_EXECUTION_LIFECYCLE_REQUIRED:'계정 상태 변경 전에 진행 중 작업의 처리 방법을 결정해 주세요.',RECLEAN_MAID_IMMUTABLE:'재청소 담당자는 이 단계에서 변경할 수 없습니다.',INVALID_ATTEMPT_COMMAND:'현재 작업과 맞지 않는 수행 명령입니다.',ASSIGNMENT_PREVIEW_DATE_NOT_ALLOWED:'선택한 날짜는 배정 Preview를 만들 수 없습니다.',ASSIGNMENT_PREVIEW_LIMIT_EXCEEDED:'한 번에 계산할 수 있는 배정 대상을 초과했습니다.',CLEANING_TEMPLATE_NOT_CONFIGURED:'이 객실 유형의 청소 사진 슬롯이 아직 설정되지 않았습니다.',PIN_ENTITLEMENT_REQUIRED:'현재 통보된 본인 업무에서만 객실 PIN을 볼 수 있습니다.',PIN_ACCESS_REQUIRED:'현재 업무의 객실 PIN 조회 권한이 없습니다.',PIN_REVEAL_AUTHORIZATION_CHANGED:'PIN 조회 권한이 바뀌었습니다. 최신 업무를 다시 확인해 주세요.',ROOM_PIN_UNCONFIGURED:'이 객실에는 조회할 PIN이 아직 설정되지 않았습니다.',ROOM_PIN_MISMATCH_UNRESOLVED:'물리 도어락 PIN 확인이 끝난 뒤 조회할 수 있습니다.',ROOM_PIN_DECRYPT_FAILED:'객실 PIN을 안전하게 불러오지 못했습니다.'});
       const LIVE_CLEANING_PHOTO_URLS=new Set(),LIVE_CLEANING_ACTIVE_PHOTO_URLS=new Map(),LIVE_CLEANING_ACTIVE_PHOTO_ERRORS=new Map(),LIVE_CLEANING_ACTIVE_PHOTO_LOADING=new Set();
       function clearCleaningPhotoUrls(){for(const url of LIVE_CLEANING_PHOTO_URLS)URL.revokeObjectURL(url);LIVE_CLEANING_PHOTO_URLS.clear();}
-      function clearActiveCleaningPhotoUrls(){for(const url of LIVE_CLEANING_ACTIVE_PHOTO_URLS.values())URL.revokeObjectURL(url);LIVE_CLEANING_ACTIVE_PHOTO_URLS.clear();LIVE_CLEANING_ACTIVE_PHOTO_ERRORS.clear();LIVE_CLEANING_ACTIVE_PHOTO_LOADING.clear();}
+      let livePhotoPreviewGeneration=0;
+      function clearActiveCleaningPhotoUrls(){livePhotoPreviewGeneration+=1;for(const url of LIVE_CLEANING_ACTIVE_PHOTO_URLS.values())URL.revokeObjectURL(url);LIVE_CLEANING_ACTIVE_PHOTO_URLS.clear();LIVE_CLEANING_ACTIVE_PHOTO_ERRORS.clear();LIVE_CLEANING_ACTIVE_PHOTO_LOADING.clear();for(const job of LIVE_PHOTO_QUEUE)clearLivePhotoJobPreview(job);}
+      function syncLiveCleaningPhotoSurface(){
+        if(!cleaningActor('maid')||state.liveView!=='my'||cleaningState().inspectionDetail){if(LIVE_CLEANING_ACTIVE_PHOTO_URLS.size||LIVE_CLEANING_ACTIVE_PHOTO_LOADING.size||LIVE_PHOTO_QUEUE.some(job=>job.previewUrl))clearActiveCleaningPhotoUrls();return;}
+        for(const assignment of cleaningState().assignments){const attempt=cleaningAttemptForAssignment(assignment);if(attempt&&cleaningState().expandedMaidAssignments.has(assignment.assignmentId))void ensureLiveCleaningPhotoPreviews(attempt.attemptId);}
+      }
       function initialCleaningState(){return {status:'idle',assignments:[],attempts:new Map(),incidents:new Map(),blockedTargets:new Set(),incidentList:{status:'idle',items:[],error:null},photoSlots:new Map(),submissions:new Map(),leases:new Map(),uploadStates:new Map(),issueDrafts:new Map(),expandedMaidAssignments:new Set(),maidAssignmentsInitialized:false,preview:null,commitImpact:null,planningAvailability:{status:'idle',items:[],candidates:[]},commitImpactStatus:'idle',commitImpactError:null,draftSaveResults:new Map(),draftIdempotencyKeys:new Map(),changeRequests:[],inspections:[],inspectionDetail:null,lifecycleEdit:null,error:null,requestId:null,serviceDate:liveKstIsoDate(),busy:false,operation:null,lastReceipt:null,loadRevision:0};}
       function cleaningState(){return state.remote.cleaning;}
       function cleaningWorkflowEnabled(){return liveMode()&&LIVE_RUNTIME.config?.featureFlags?.optionalCleaningWorkflow===true;}
@@ -9264,14 +9272,32 @@
         for(const photoId of LIVE_CLEANING_ACTIVE_PHOTO_ERRORS.keys())if(!currentIds.has(photoId))LIVE_CLEANING_ACTIVE_PHOTO_ERRORS.delete(photoId);
       }
       async function ensureLiveCleaningPhotoPreviews(attemptId){
-        if(!cleaningActor('maid'))return;const generation=LIVE_RUNTIME.authGeneration,slots=cleaningState().photoSlots.get(attemptId)?.slots||[],items=slots.flatMap(liveCleaningSlotPhotoItems).filter(item=>item.photoId&&item.mediaAvailability!=='purged'&&!LIVE_CLEANING_ACTIVE_PHOTO_URLS.has(item.photoId)&&!LIVE_CLEANING_ACTIVE_PHOTO_ERRORS.has(item.photoId)&&!LIVE_CLEANING_ACTIVE_PHOTO_LOADING.has(item.photoId));if(!items.length)return;
+        if(!cleaningActor('maid')||state.liveView!=='my'||cleaningState().inspectionDetail)return;const generation=LIVE_RUNTIME.authGeneration,previewGeneration=livePhotoPreviewGeneration,slots=cleaningState().photoSlots.get(attemptId)?.slots||[],items=slots.flatMap(liveCleaningSlotPhotoItems).filter(item=>item.photoId&&item.mediaAvailability!=='purged'&&!LIVE_CLEANING_ACTIVE_PHOTO_URLS.has(item.photoId)&&!LIVE_CLEANING_ACTIVE_PHOTO_ERRORS.has(item.photoId)&&!LIVE_CLEANING_ACTIVE_PHOTO_LOADING.has(item.photoId));if(!items.length)return;
         items.forEach(item=>LIVE_CLEANING_ACTIVE_PHOTO_LOADING.add(item.photoId));
-        await Promise.all(Array.from({length:Math.min(4,items.length)},async()=>{while(items.length&&generation===LIVE_RUNTIME.authGeneration){const item=items.shift();try{const response=await apiRequest(`/v1/photos/${encodeURIComponent(item.photoId)}/content`,{responseType:'blob'});if(generation!==LIVE_RUNTIME.authGeneration||!cleaningActor('maid'))return;LIVE_CLEANING_ACTIVE_PHOTO_URLS.set(item.photoId,URL.createObjectURL(response.data));}catch(error){if(generation===LIVE_RUNTIME.authGeneration)LIVE_CLEANING_ACTIVE_PHOTO_ERRORS.set(item.photoId,error);}finally{if(generation===LIVE_RUNTIME.authGeneration){LIVE_CLEANING_ACTIVE_PHOTO_LOADING.delete(item.photoId);renderLivePhotoProgress();}}}}));
+        const current=()=>generation===LIVE_RUNTIME.authGeneration&&previewGeneration===livePhotoPreviewGeneration&&cleaningActor('maid');
+        await Promise.all(Array.from({length:Math.min(4,items.length)},async()=>{while(items.length&&current()){const item=takeVisibleLivePhoto(items);try{const response=await apiRequest(`/v1/photos/${encodeURIComponent(item.photoId)}/content`,{responseType:'blob'});if(!current())return;LIVE_CLEANING_ACTIVE_PHOTO_URLS.set(item.photoId,URL.createObjectURL(response.data));}catch(error){if(current())LIVE_CLEANING_ACTIVE_PHOTO_ERRORS.set(item.photoId,error);}finally{if(current()){LIVE_CLEANING_ACTIVE_PHOTO_LOADING.delete(item.photoId);renderLivePhotoProgress();}}}}));
       }
+      function takeVisibleLivePhoto(items){
+        const positions=new Map([...document.querySelectorAll('[data-live-photo-id]')].map(element=>[element.dataset.livePhotoId,element.getBoundingClientRect()]));
+        const distance=item=>{const rect=positions.get(item.photoId);return !rect?Infinity:rect.bottom>0&&rect.top<innerHeight?0:Math.min(Math.abs(rect.top),Math.abs(rect.bottom-innerHeight))+1;};
+        let best=0;for(let index=1;index<items.length;index+=1)if(distance(items[index])<distance(items[best]))best=index;
+        return items.splice(best,1)[0];
+      }
+      let livePhotoRenderFrame=null;
       function renderLivePhotoProgress(){
-        const active=document.activeElement,focus=historyFocusDescriptor(active),y=window.scrollY;
-        if(!renderLiveSurface())render();
-        if(active?.isConnected)active.focus?.({preventScroll:true});else (active?.id?document.getElementById(active.id):findHistoryFocusTarget(focus))?.focus({preventScroll:true});window.scrollTo(0,y);
+        if(livePhotoRenderFrame!==null)return;
+        livePhotoRenderFrame=requestAnimationFrame(()=>{
+          livePhotoRenderFrame=null;if(!cleaningActor())return;
+          const active=document.activeElement,focus=historyFocusDescriptor(active),detail=cleaningState().inspectionDetail;
+          for(const element of document.querySelectorAll('[data-live-photo-id]')){
+            let markup=null;
+            if(element.classList.contains('inspection-photo')){const photo=detail?.photos.find(item=>item.photoId===element.dataset.livePhotoId);if(photo)markup=renderLiveInspectionPhoto(photo,Number(element.dataset.photoIndex));}
+            else for(const payload of cleaningState().photoSlots.values()){for(const slot of payload.slots||[]){const items=liveCleaningSlotPhotoItems(slot),index=items.findIndex(item=>item.photoId===element.dataset.livePhotoId);if(index>=0)markup=liveCleaningPhotoPreviewMarkup(items[index],index,{...slot,attemptId:payload.attemptId},element.querySelector('[data-action="cleaning-photo-delete"]')?.disabled===false);}}
+            if(markup){const template=document.createElement('template');template.innerHTML=markup;const next=template.content.firstElementChild;if(!element.isEqualNode(next))element.replaceWith(next);}
+          }
+          if(detail&&!detail.readOnly){const template=document.createElement('template');template.innerHTML=renderLiveInspectionDetailPage(detail);for(const selector of ['.inspection-decision','[data-inspection-photo-status]','[data-inspection-photo-warning]','[data-inspection-bomb-actions]']){const target=document.querySelector(selector),next=template.content.querySelector(selector);if(target&&next&&!target.isEqualNode(next))target.replaceWith(next);}}
+          if(active?.isConnected) return;findHistoryFocusTarget(focus)?.focus({preventScroll:true});
+        });
       }
       async function loadLiveNotifications({quiet=false}={}){
         const actor=state.remote.auth.user;if(!['admin','maid'].includes(actor?.role))return false;
@@ -9339,7 +9365,15 @@
       }
       function liveCleaningPhotoPreviewMarkup(item,index,slot,canDelete){
         const url=LIVE_CLEANING_ACTIVE_PHOTO_URLS.get(item.photoId),error=LIVE_CLEANING_ACTIVE_PHOTO_ERRORS.get(item.photoId),loading=LIVE_CLEANING_ACTIVE_PHOTO_LOADING.has(item.photoId),collection=Number(slot.maxPhotos)>1&&!!item.photoItemId,label=`${index+1}번째 사진`,visual=url?`<img src="${esc(url)}" alt="${esc(label)}">`:`<span class="live-cleaning-photo-placeholder">${loading?'사진 불러오는 중':error?'미리보기 조회 실패':'사진 원문 확인 불가'}</span>`,remove=collection?`<button class="task-multi-photo-remove" type="button" data-action="cleaning-photo-delete" data-attempt="${esc(slot.attemptId||'')}" data-slot="${esc(slot.slotId)}" data-photo-item="${esc(item.photoItemId)}" data-item-revision="${Number(item.itemRevision)}" aria-label="${esc(label)} 삭제" ${canDelete?'':'disabled'}>${icon('x','icon-sm')}</button>`:`<button class="task-multi-photo-remove" type="button" aria-label="사진 삭제 · API 미제공" title="사진 삭제 API 미제공" disabled>${icon('x','icon-sm')}</button>`;
-        return `<article class="task-multi-photo-item ${item.uploadStatus==='failed'?'failed':''}" data-cleaning-photo-item="${esc(item.photoItemId||item.photoId)}"><button class="task-multi-photo-visual" type="button" data-action="live-cleaning-photo" data-id="${esc(item.photoId)}" aria-label="${esc(label)} 크게 보기" ${url?'':'disabled'}>${visual}</button><span class="task-multi-photo-copy"><strong>${esc(label)}</strong>${item.uploadStatus==='verified'?'등록 완료':esc(CLEANING_PHOTO_STATUS_LABELS[item.uploadStatus]||item.uploadStatus)}</span>${remove}</article>`;
+        return `<article class="task-multi-photo-item ${item.uploadStatus==='failed'?'failed':''}" data-live-photo-id="${esc(item.photoId)}" data-cleaning-photo-item="${esc(item.photoItemId||item.photoId)}"><button class="task-multi-photo-visual" type="button" data-action="live-cleaning-photo" data-id="${esc(item.photoId)}" aria-label="${esc(label)} 크게 보기" ${url?'':'disabled'}>${visual}</button><span class="task-multi-photo-copy"><strong>${esc(label)}</strong>${item.uploadStatus==='verified'?'등록 완료':esc(CLEANING_PHOTO_STATUS_LABELS[item.uploadStatus]||item.uploadStatus)}</span>${remove}</article>`;
+      }
+      function liveQueuedPhotoMarkup(slot,offset){
+        const known=new Set(liveCleaningSlotPhotoItems(slot).map(item=>item.photoId));
+        return LIVE_PHOTO_QUEUE.filter(job=>job.slotId===slot.slotId&&job.generation===LIVE_RUNTIME.authGeneration&&!known.has(job.receipt?.photoId)).map((job,index)=>{
+          const source=job.blob||job.file;if(!job.previewUrl&&source&&['image/jpeg','image/webp'].includes(source.type))job.previewUrl=URL.createObjectURL(source);
+          const label=`${offset+index+1}번째 사진`,status=job.error?(job.receipt?'저장 상태 확인 필요':'업로드 실패'):job.receipt?'저장 확인 중':job.phase==='uploading'?'업로드 중':'업로드 대기';
+          return `<article class="task-multi-photo-item ${job.error?'failed':''}" data-queued-photo="${esc(job.photoItemId)}"><div class="task-multi-photo-visual">${job.previewUrl?`<img src="${esc(job.previewUrl)}" loading="lazy" decoding="async" alt="${esc(label)} · ${status}">`:'<span class="live-cleaning-photo-placeholder">미리보기 준비 중</span>'}</div><span class="task-multi-photo-copy"><strong>${esc(label)}</strong>${status}</span>${job.error?button(job.receipt?'상태 확인':'재시도','live-photo-retry','outline',`data-id="${esc(job.photoItemId)}" aria-label="${esc(label)} ${job.receipt?'저장 상태 확인':'업로드 재시도'}"`):''}</article>`;
+        }).join('');
       }
       function renderCleaningPhotoSlots(assignment,attempt){
         if((cleaningState().photoSlots.get(attempt.attemptId)?.slots||[]).some(slot=>slot.slotKey==='cleaning-proof'))return renderFlatCleaningPhotos(assignment,attempt);
@@ -9352,10 +9386,10 @@
         return '<div class="view-stack" data-flat-cleaning-photos>'+slots.map(raw=>{
           const slot={...raw,attemptId:attempt.attemptId},items=liveCleaningSlotPhotoItems(slot),general=slot.slotKey==='cleaning-proof',label=general?'청소 사진':slot.slotKey==='bomb-proof'?'폭탄방 증빙':'특이사항 증빙',limit=Number(slot.maxPhotos),locked=!canUpload||items.length+liveSlotPhotoPending(slot.slotId)>=limit,local=slice.uploadStates.get(slot.slotId);
           const attrs=`data-cleaning-upload data-attempt="${esc(attempt.attemptId)}" data-assignment="${esc(assignment.assignmentId)}" data-assignment-revision="${Number(assignment.revision)}" data-slot="${esc(slot.slotId)}" data-photo-revision="${Number(slot.currentRevision)}" data-max-photos="${limit}" data-zone="${esc(label)}"`;
-          const gallery=items.length?'<div class="task-multi-photo-grid">'+items.map((item,index)=>liveCleaningPhotoPreviewMarkup(item,index,slot,canUpload&&!liveAttemptPhotoPending(attempt.attemptId))).join('')+'</div>':'<p class="meta">'+(general?'사진 1장 이상 필수':'등록된 사진 없음')+'</p>';
+          const queued=liveQueuedPhotoMarkup(slot,items.length),gallery=items.length||queued?'<div class="task-multi-photo-grid">'+items.map((item,index)=>liveCleaningPhotoPreviewMarkup(item,index,slot,canUpload&&!liveAttemptPhotoPending(attempt.attemptId))).join('')+queued+'</div>':'<p class="meta">'+(general?'사진 1장 이상 필수':'등록된 사진 없음')+'</p>';
           const controls='<div class="task-multi-photo-actions"><label class="btn btn-primary">'+icon('camera','icon-sm')+'촬영<input class="sr-only" type="file" accept="image/jpeg,image/webp,image/heic,image/heif" capture="environment" aria-label="'+label+' 촬영" data-upload-source="camera" '+attrs+' '+(locked?'disabled':'')+'></label><label class="btn btn-outline">'+icon('camera','icon-sm')+'사진 선택<input class="sr-only" type="file" accept="image/jpeg,image/webp,image/heic,image/heif" multiple aria-label="'+label+' 사진 선택" data-upload-source="gallery" '+attrs+' '+(locked?'disabled':'')+'></label></div>';
           const report=slot.slotKey==='issue-proof'&&canUpload?'<div class="field"><label for="cleaning-issue-memo-'+esc(attempt.attemptId)+'">특이사항 메모</label><textarea class="input-control" id="cleaning-issue-memo-'+esc(attempt.attemptId)+'" maxlength="500" data-control="cleaning-issue-memo" data-attempt="'+esc(attempt.attemptId)+'">'+esc(slice.issueDrafts.get(attempt.attemptId)||'')+'</textarea></div>'+button('특이사항 등록','cleaning-issue-save','outline','data-id="'+esc(assignment.assignmentId)+'" '+(items.length?'':'disabled')):'';
-          return '<section class="cleaning-workflow-row flat-evidence-section" data-photo-slot="'+esc(slot.slotId)+'"><div class="section-head"><h3>'+label+'</h3>'+statusBadge(items.length+' / '+limit+'장',general&&!items.length?'amber':'neutral')+'</div>'+gallery+controls+report+(local?.status==='uploading'?'<p role="status" data-upload-progress="'+esc(slot.slotId)+'">업로드 중 · '+Number(local.completed||0)+'/'+Number(local.total||0)+'장</p>':'')+(local?.error?'<p role="alert">'+esc(apiErrorCopy(local.error))+'</p>'+button('업로드 재시도','live-photo-retry','outline','data-id="'+esc(slot.slotId)+'"')+button('대기 사진 취소','live-photo-discard','outline','data-id="'+esc(slot.slotId)+'"'):'')+'</section>';
+          return '<section class="cleaning-workflow-row flat-evidence-section" data-photo-slot="'+esc(slot.slotId)+'"><div class="section-head"><h3>'+label+'</h3>'+statusBadge(items.length+' / '+limit+'장',general&&!items.length?'amber':'neutral')+'</div>'+gallery+controls+report+(local?'<p role="status" data-upload-progress="'+esc(slot.slotId)+'">'+(local.status==='error'?'확인 필요':local.status==='complete'?'업로드 완료':'업로드 중')+' · '+Number(local.completed||0)+'/'+Number(local.total||0)+'장</p>':'')+(local?.error?'<p role="alert">'+esc(apiErrorCopy(local.error))+'</p>'+button('업로드 재시도','live-photo-retry','outline','data-id="'+esc(slot.slotId)+'"')+button('대기 사진 취소','live-photo-discard','outline','data-id="'+esc(slot.slotId)+'"'):'')+'</section>';
         }).join('')+'</div>';
       }
       function renderLiveMaidPinManager(assignment){
@@ -9465,9 +9499,12 @@
         return `${detailHeader(esc(room.roomNumber)+'호 청소 상태','')}<div class="detail-grid"><div class="detail-stack"><section class="card card-pad"><div class="section-head"><h3>청소·제출 요약</h3>${statusBadge(label,status==='approved'?'green':'amber')}</div><div class="summary-strip"><span>담당 <strong>${esc(assignment?.maidDisplayName||'미배정')}</strong></span><span>시작 <strong>${attempt?.startedAt?esc(liveKstDateTimeLabel(attempt.startedAt)):'—'}</strong></span><span>현장 완료 <strong>${attempt?.fieldCompletedAt?esc(liveKstDateTimeLabel(attempt.fieldCompletedAt)):'—'}</strong></span><span>청소요금 <strong>${assignment?money(assignment.feeSnapshot):'미배정'}</strong></span></div></section><section class="card card-pad"><div class="section-head"><h3>청소 사진·검수</h3>${inspection?statusBadge(`사진 ${inspection.photoCount}장`,'blue'):''}</div>${action||'<p>검수 대기 제출이 없습니다.</p>'}${status==='approved'?button('완료 기록 보기','cleaning-tab','outline','data-tab="done"'):''}</section><section class="card card-pad"><h3>폭탄방·현장 특이사항</h3><p class="meta">${inspection?'제출 상세에서 증빙과 판정을 확인하세요.':status==='approved'?'완료 기록에서 증빙과 판정을 확인하세요.':'제출 전 신고 조회 API 미제공'}</p></section>${renderLiveRoomIssues(room)}</div><aside class="detail-stack"><section class="card card-pad"><h3>검수 타임라인</h3><ol class="timeline"><li><strong>통보</strong><span>${assignment?.notifiedAt?esc(liveKstDateTimeLabel(assignment.notifiedAt)):'—'}</span></li><li><strong>청소 시작</strong><span>${attempt?.startedAt?esc(liveKstDateTimeLabel(attempt.startedAt)):'—'}</span></li><li><strong>현장 완료</strong><span>${attempt?.fieldCompletedAt?esc(liveKstDateTimeLabel(attempt.fieldCompletedAt)):'—'}</span></li><li><strong>검수</strong><span>${esc(assignment?.submissionStatus?CLEANING_SUBMISSION_STATUS_LABELS[assignment.submissionStatus]||assignment.submissionStatus:'제출 전')}</span></li></ol></section></aside></div>${action?'<div class="sticky-command">'+action+'</div>':''}`;
       }
       function renderLiveInspectionGallery(photos){
-        return '<div class="inspection-gallery">'+photos.map((photo,index)=>photo.url
-          ?'<button class="inspection-photo" type="button" data-action="live-inspection-photo" data-id="'+esc(photo.photoId)+'" aria-label="사진 '+(index+1)+' 크게 보기"><img src="'+esc(photo.url)+'" alt="청소 사진 '+(index+1)+'"><span class="inspection-photo-copy"><strong>사진 '+(index+1)+'</strong>'+icon('search','icon-sm')+'</span></button>'
-          :'<div class="inspection-photo"><span class="inspection-photo-copy"><strong>사진 '+(index+1)+'</strong><small>'+(photo.loading?'불러오는 중':photo.error?'사진 조회 실패':'사진 보관 만료')+'</small>'+(photo.error?button('다시 시도','live-inspection-photo-retry','outline','data-id="'+esc(photo.photoId)+'" aria-label="사진 '+(index+1)+' 다시 불러오기"'):'')+'</span></div>').join('')+'</div>';
+        return '<div class="inspection-gallery">'+photos.map(renderLiveInspectionPhoto).join('')+'</div>';
+      }
+      function renderLiveInspectionPhoto(photo,index){
+        const attrs='data-live-photo-id="'+esc(photo.photoId)+'" data-photo-index="'+index+'"';
+        return photo.url?'<button class="inspection-photo" '+attrs+' type="button" data-action="live-inspection-photo" data-id="'+esc(photo.photoId)+'" aria-label="사진 '+(index+1)+' 크게 보기"><img src="'+esc(photo.url)+'" decoding="async" alt="청소 사진 '+(index+1)+'"><span class="inspection-photo-copy"><strong>사진 '+(index+1)+'</strong>'+icon('search','icon-sm')+'</span></button>'
+          :'<div class="inspection-photo" '+attrs+'><span class="inspection-photo-placeholder" aria-hidden="true">'+icon('camera')+'</span><span class="inspection-photo-copy"><strong>사진 '+(index+1)+'</strong><small>'+(photo.loading?'불러오는 중':photo.error?'사진 조회 실패':'사진 보관 만료')+'</small>'+(photo.error?button('다시 시도','live-inspection-photo-retry','outline','data-id="'+esc(photo.photoId)+'" aria-label="사진 '+(index+1)+' 다시 불러오기"'):'')+'</span></div>';
       }
       function openLiveInspectionPhoto(photoId,trigger=document.activeElement){
         const detail=cleaningState().inspectionDetail,photos=detail?.photos||[],index=photos.findIndex(item=>item.photoId===photoId),photo=photos[index];
@@ -9481,8 +9518,8 @@
         const slice=cleaningState(),submission=detail.submission||{},photos=(detail.photos||[]).filter(photo=>!photo.evidenceOnly&&!['bomb-proof','issue-proof'].includes(photo.slotKey)),roomNo=submission.reviewContext?.roomNumber||'객실',bomb=submission.bombReport,statusLabel=CLEANING_SUBMISSION_STATUS_LABELS[submission.status]||'상태 확인',decisionLocked=!!detail.readOnly||slice.busy||submission.status!=='submitted'||!!((bomb||submission.bombReportId)&&!submission.bombDecision),photosReady=photos.length>=1&&photos.length<=20&&photos.every(photo=>photo.url),evidencePhotos=(detail.photos||[]).filter(photo=>photo.slotKey==='bomb-proof'||(bomb?.evidencePhotoIds||[]).includes(photo.photoId));
         const summary=detailHeader(esc(roomNo)+'호 전체 제출 검수',esc(submission.reviewContext?.maidDisplayName||'제출자 확인 필요'))+
           '<section><div class="section-head"><h3>제출 요약</h3>'+statusBadge(statusLabel,submission.status==='approved'?'green':'amber')+'</div><div class="summary-strip"><span>제출 <strong>'+esc(liveKstDateTimeLabel(submission.submittedAt))+'</strong></span><span>사진 <strong>'+photos.length+'장</strong></span><span>촛불 <strong>'+Number(submission.candleCount||0)+'개</strong></span></div></section>';
-        const gallery='<section><div class="section-head"><h3>청소 사진</h3>'+statusBadge(photos.length+'장',photosReady?'green':'amber')+'</div>'+renderLiveInspectionGallery(photos)+(photosReady||detail.readOnly?'':'<div class="notice notice-warning">사진을 모두 불러온 뒤 승인할 수 있습니다.</div>')+'</section>';
-        const bombActions=!detail.readOnly&&bomb&&!submission.bombDecision?'<div class="job-actions">'+button('폭탄방 인정','cleaning-inspection-bomb-approve','outline','data-id="'+esc(submission.id)+'" '+(slice.busy||submission.status!=='submitted'||!evidencePhotos.length||evidencePhotos.some(photo=>!photo.url)?'disabled':''))+button('폭탄방 불인정','cleaning-inspection-bomb-reject','outline','data-id="'+esc(submission.id)+'" '+(slice.busy||submission.status!=='submitted'||!evidencePhotos.length||evidencePhotos.some(photo=>!photo.url)?'disabled':''))+'</div>':'';
+        const gallery='<section><div class="section-head"><h3>청소 사진</h3><span data-inspection-photo-status>'+statusBadge(photos.length+'장',photosReady?'green':'amber')+'</span></div>'+renderLiveInspectionGallery(photos)+'<div data-inspection-photo-warning>'+(photosReady||detail.readOnly?'':'<div class="notice notice-warning">사진을 모두 불러온 뒤 승인할 수 있습니다.</div>')+'</div></section>';
+        const bombActions=!detail.readOnly&&bomb&&!submission.bombDecision?'<div class="job-actions" data-inspection-bomb-actions>'+button('폭탄방 인정','cleaning-inspection-bomb-approve','outline','data-id="'+esc(submission.id)+'" '+(slice.busy||submission.status!=='submitted'||!evidencePhotos.length||evidencePhotos.some(photo=>!photo.url)?'disabled':''))+button('폭탄방 불인정','cleaning-inspection-bomb-reject','outline','data-id="'+esc(submission.id)+'" '+(slice.busy||submission.status!=='submitted'||!evidencePhotos.length||evidencePhotos.some(photo=>!photo.url)?'disabled':''))+'</div>':'';
         const evidence='<section><div class="section-head"><h3>폭탄방 신고</h3>'+(submission.bombDecision?statusBadge(submission.bombDecision==='approved'?'인정':'불인정',submission.bombDecision==='approved'?'green':'neutral'):'')+'</div>'+(bomb?'<p>'+esc(bomb.memo||'메모 없음')+'</p>'+renderLiveInspectionGallery(evidencePhotos)+bombActions:'<p class="meta">신고 없음</p>')+'</section>';
         const actions='<div class="sticky-command inspection-decision"><div class="job-actions">'+button('전체 반려','cleaning-inspection-reject-review','danger','data-id="'+esc(submission.id)+'" '+(decisionLocked?'disabled':''))+button('전체 승인','cleaning-inspection-approve','success','data-id="'+esc(submission.id)+'" '+(decisionLocked||!photosReady?'disabled':''))+'</div></div>';
         const issuePhotos=(detail.photos||[]).filter(photo=>photo.slotKey==='issue-proof');
@@ -9743,51 +9780,86 @@
       }
       function updateLivePhotoQueueState(slotId){
         const jobs=LIVE_PHOTO_QUEUE.filter(job=>job.slotId===slotId&&job.generation===LIVE_RUNTIME.authGeneration),failed=jobs.find(job=>job.error);
-        if(!jobs.length){cleaningState().uploadStates.delete(slotId);return;}
-        cleaningState().uploadStates.set(slotId,{status:failed?'error':'uploading',total:jobs.length,completed:0,error:failed?.error||null});
+        const previous=cleaningState().uploadStates.get(slotId)||{total:jobs.length,completed:0};
+        cleaningState().uploadStates.set(slotId,{...previous,status:failed?'error':jobs.length?'uploading':'complete',error:failed?.error||null});
+      }
+      function clearLivePhotoJobPreview(job){if(job.previewUrl)URL.revokeObjectURL(job.previewUrl);job.previewUrl=null;}
+      function releaseLivePhotoJob(job){clearLivePhotoJobPreview(job);job.file=null;job.blob=null;job.disposed=true;}
+      function livePhotoJobCurrent(job){return !job.disposed&&job.generation===LIVE_RUNTIME.authGeneration&&LIVE_PHOTO_QUEUE.includes(job);}
+      function prepareLivePhotoJob(job){
+        if(!job.preparation)job.preparation=(async()=>{try{const blob=await optimizeLivePhoto(job.file);if(livePhotoJobCurrent(job)){job.blob=blob;clearLivePhotoJobPreview(job);refreshLivePhotoUploadView(job);}}catch(error){if(livePhotoJobCurrent(job))job.preparationError=error;}})();
+        return job.preparation;
+      }
+      function nextLivePhotoJob(exclude=null){return LIVE_PHOTO_QUEUE.find(job=>job!==exclude&&job.generation===LIVE_RUNTIME.authGeneration&&!job.error&&!LIVE_PHOTO_QUEUE.some(other=>other.slotId===job.slotId&&other.error));}
+      function refreshLivePhotoUploadView(job){
+        if(!livePhotoJobCurrent(job)&&job.generation!==LIVE_RUNTIME.authGeneration)return;
+        const target=[...document.querySelectorAll('.flat-evidence-section')].find(element=>element.dataset.photoSlot===job.slotId),assignment=cleaningState().assignments.find(item=>item.assignmentId===job.assignmentId),attempt=assignment&&cleaningAttemptForAssignment(assignment);
+        if(!target||!attempt)return;
+        const active=document.activeElement,focus=historyFocusDescriptor(active),template=document.createElement('template');template.innerHTML=renderFlatCleaningPhotos(assignment,attempt);
+        const next=[...template.content.querySelectorAll('[data-photo-slot]')].find(element=>element.dataset.photoSlot===job.slotId);if(next)target.replaceWith(next);
+        if(active&&!active.isConnected)findHistoryFocusTarget(focus)?.focus({preventScroll:true});
+      }
+      function validLivePhotoSnapshot(data,job){
+        if(!data||data.attemptId!==job.attemptId||data.assignmentId!==job.assignmentId||Number(data.assignmentRevision)!==Number(job.assignmentRevision)||!Array.isArray(data.slots))return false;
+        const slot=data.slots.find(item=>item.slotId===job.slotId),receipt=job.receipt;
+        if(!slot||receipt?.status!=='accepted'||!receipt.photoId)return false;
+        if(Number(slot.maxPhotos)>1){
+          if(!Number.isSafeInteger(slot.collectionRevision)||!Array.isArray(slot.photos)||!Number.isSafeInteger(receipt.collectionRevision)||slot.collectionRevision<receipt.collectionRevision)return false;
+          return slot.photos.some(item=>item.photoId===receipt.photoId&&item.photoItemId===job.photoItemId&&item.uploadStatus==='verified'&&Number.isSafeInteger(item.itemRevision)&&item.itemRevision>=receipt.itemRevision);
+        }
+        return slot.photoId===receipt.photoId&&slot.uploadStatus==='verified'&&Number.isSafeInteger(slot.currentRevision)&&slot.currentRevision>=receipt.photoVersion;
       }
       async function uploadLiveCleaningPhoto(input){
         if(!cleaningActor('maid'))return;const files=[...(input.files||[])];input.value='';if(!files.length)return;
         const attemptId=input.dataset.attempt,slotId=input.dataset.slot,payload=cleaningState().photoSlots.get(attemptId),slot=payload?.slots?.find(item=>item.slotId===slotId);if(!slot){toast('사진 상태를 새로고침하세요.','error');return;}
-        for(let index=LIVE_PHOTO_QUEUE.length-1;index>=0;index--){const job=LIVE_PHOTO_QUEUE[index];if(job.slotId===slotId&&job.error?.status>=400&&job.error.status<500)LIVE_PHOTO_QUEUE.splice(index,1);}
-        const collection=Number(slot.maxPhotos)>1,flat=['cleaning-proof','bomb-proof','issue-proof'].includes(slot.slotKey),limit=slot.slotKey==='cleaning-proof'?Math.min(20,Number(slot.maxPhotos)||1):flat?Number(slot.maxPhotos)||1:collection?Math.min(MAID_ZONE_PHOTO_LIMIT,Number(slot.maxPhotos)):1,capacity=limit-(collection?liveCleaningSlotPhotoItems(slot).length:0)-liveSlotPhotoPending(slotId);
+        const replaceable=LIVE_PHOTO_QUEUE.filter(job=>job.slotId===slotId&&!job.receipt&&[400,413,415,422].includes(job.error?.status));
+        const collection=Number(slot.maxPhotos)>1,flat=['cleaning-proof','bomb-proof','issue-proof'].includes(slot.slotKey),limit=slot.slotKey==='cleaning-proof'?Math.min(20,Number(slot.maxPhotos)||1):flat?Number(slot.maxPhotos)||1:collection?Math.min(MAID_ZONE_PHOTO_LIMIT,Number(slot.maxPhotos)):1,capacity=limit-(collection?liveCleaningSlotPhotoItems(slot).length:0)-liveSlotPhotoPending(slotId)+replaceable.length;
         if(flat&&files.length>capacity||capacity<1){toast(`최대 ${limit}장입니다. ${Math.max(0,capacity)}장 이하로 선택하세요.`,'error');return;}
         if(files.some(file=>!CLEANING_PHOTO_INPUT_MIMES.includes(file.type))){toast('JPEG, WebP, HEIC 또는 HEIF 사진을 선택하세요.','error');return;}
-        for(const file of files.slice(0,capacity))LIVE_PHOTO_QUEUE.push({file,attemptId,slotId,assignmentId:payload.assignmentId||input.dataset.assignment,assignmentRevision:payload.assignmentRevision||Number(input.dataset.assignmentRevision),photoItemId:crypto.randomUUID(),key:crypto.randomUUID(),generation:LIVE_RUNTIME.authGeneration,error:null,path:null,blob:null});
+        for(const job of replaceable){releaseLivePhotoJob(job);LIVE_PHOTO_QUEUE.splice(LIVE_PHOTO_QUEUE.indexOf(job),1);}if(replaceable.length){const previous=sliceUploadProgress(slotId);cleaningState().uploadStates.set(slotId,{...previous,total:previous.total-replaceable.length});}
+        const selected=files.slice(0,capacity),progress=liveSlotPhotoPending(slotId)?sliceUploadProgress(slotId):{total:0,completed:0};cleaningState().uploadStates.set(slotId,{...progress,total:progress.total+selected.length});
+        for(const file of selected)LIVE_PHOTO_QUEUE.push({file,attemptId,slotId,assignmentId:payload.assignmentId||input.dataset.assignment,assignmentRevision:payload.assignmentRevision||Number(input.dataset.assignmentRevision),photoItemId:crypto.randomUUID(),key:crypto.randomUUID(),generation:LIVE_RUNTIME.authGeneration,error:null,path:null,blob:null,receipt:null});
         updateLivePhotoQueueState(slotId);render();void drainLivePhotoQueue();
       }
+      function sliceUploadProgress(slotId){const value=cleaningState().uploadStates.get(slotId);return {total:value?.total||0,completed:value?.completed||0};}
       async function drainLivePhotoQueue(){
-        if(livePhotoQueueRunning)return;livePhotoQueueRunning=true;const verifiedSlots=new Map();
+        if(livePhotoQueueRunning)return;livePhotoQueueRunning=true;const verifiedSlots=new Map(),generation=LIVE_RUNTIME.authGeneration;
         try{while(cleaningActor('maid')){
-          const job=LIVE_PHOTO_QUEUE.find(item=>item.generation===LIVE_RUNTIME.authGeneration&&!item.error&&!LIVE_PHOTO_QUEUE.some(previous=>previous.slotId===item.slotId&&previous.error));if(!job)break;
+          const job=nextLivePhotoJob();if(!job)break;
           try{
-            if(!job.blob)job.blob=await optimizeLivePhoto(job.file);if(job.generation!==LIVE_RUNTIME.authGeneration)break;
+            await prepareLivePhotoJob(job);if(!livePhotoJobCurrent(job))break;if(job.preparationError)throw job.preparationError;
+            // Only one following image is decoded while the current serial write is in flight.
+            const next=nextLivePhotoJob(job);if(next)void prepareLivePhotoJob(next);
             if(!job.path){
               const data=verifiedSlots.get(job.attemptId)||(await apiRequest(`/v1/attempts/${encodeURIComponent(job.attemptId)}/photo-slots`)).data;if(job.generation!==LIVE_RUNTIME.authGeneration)break;const slot=data.slots?.find(item=>item.slotId===job.slotId);
               if(!slot||data.assignmentId!==job.assignmentId||Number(data.assignmentRevision)!==Number(job.assignmentRevision))throw new ApiRequestError('assignment changed',{status:409,code:'ASSIGNMENT_VERSION_CONFLICT'});
               const collection=Number(slot.maxPhotos)>1;if(collection&&liveCleaningSlotPhotoItems(slot).length>=Number(slot.maxPhotos))throw new ApiRequestError('photo limit',{status:409,code:'PHOTO_LIMIT_EXCEEDED'});
               const query=new URLSearchParams({assignmentId:job.assignmentId,assignmentRevision:String(job.assignmentRevision),...(collection?{expectedCollectionRevision:String(slot.collectionRevision),expectedItemRevision:'0'}:{expectedPhotoRevision:String(slot.currentRevision)})});
+              if(LIVE_RUNTIME.config?.featureFlags?.photoUploadSnapshot===true)query.set('includePhotoSlots','true');
               job.path=`/v1/attempts/${encodeURIComponent(job.attemptId)}/photo-slots/${encodeURIComponent(job.slotId)}${collection?'/photos/'+encodeURIComponent(job.photoItemId):''}/upload?${query}`;
             }
             // A retry keeps the exact bytes, revisions and key of the original request.
-            const {data:receipt}=await apiRequest(job.path,{method:'POST',rawBody:job.blob,contentType:job.blob.type,idempotencyKey:job.key,timeoutMs:30000});if(job.generation!==LIVE_RUNTIME.authGeneration)break;
-            LIVE_PHOTO_QUEUE.splice(LIVE_PHOTO_QUEUE.indexOf(job),1);updateLivePhotoQueueState(job.slotId);verifiedSlots.delete(job.attemptId);
-            try{const {data}=await apiRequest(`/v1/attempts/${encodeURIComponent(job.attemptId)}/photo-slots`);if(job.generation===LIVE_RUNTIME.authGeneration){
-              verifiedSlots.set(job.attemptId,data);cleaningState().photoSlots.set(job.attemptId,data);
-              const verified=data.slots?.flatMap(liveCleaningSlotPhotoItems).find(item=>item.photoId===receipt?.photoId&&item.uploadStatus==='verified');
-              if(verified&&job.blob!==job.file&&!LIVE_CLEANING_ACTIVE_PHOTO_URLS.has(verified.photoId))LIVE_CLEANING_ACTIVE_PHOTO_URLS.set(verified.photoId,URL.createObjectURL(job.blob));
-              void ensureLiveCleaningPhotoPreviews(job.attemptId);
-            }}catch(error){if(job.generation===LIVE_RUNTIME.authGeneration)cleaningState().error=error;}finally{job.file=null;job.blob=null;}
-          }catch(error){verifiedSlots.delete(job.attemptId);if(job.generation!==LIVE_RUNTIME.authGeneration)break;job.error=error;updateLivePhotoQueueState(job.slotId);toast(`사진 업로드 실패 · ${apiErrorCopy(error)}`,'error');}
-          if(job.generation===LIVE_RUNTIME.authGeneration)render();
-        }}finally{livePhotoQueueRunning=false;if(cleaningActor('maid')&&LIVE_PHOTO_QUEUE.some(item=>item.generation===LIVE_RUNTIME.authGeneration&&!item.error&&!LIVE_PHOTO_QUEUE.some(other=>other.slotId===item.slotId&&other.error)))queueMicrotask(()=>void drainLivePhotoQueue());}
+            if(!job.receipt){job.phase='uploading';refreshLivePhotoUploadView(job);const {data}=await apiRequest(job.path,{method:'POST',rawBody:job.blob,contentType:job.blob.type,idempotencyKey:job.key,timeoutMs:30000});if(!livePhotoJobCurrent(job))break;job.receipt=data||{};}
+            if(job.receipt.status!=='accepted'&&job.receipt.operationId){const {data}=await apiRequest(`/v1/photo-uploads/${encodeURIComponent(job.receipt.operationId)}`);if(!livePhotoJobCurrent(job))break;job.receipt=data;}
+            if(job.receipt?.status!=='accepted')throw new ApiRequestError('photo processing',{status:409,code:'PHOTO_UPLOAD_PROCESSING',serverMessage:'사진 처리 중입니다. 잠시 뒤 저장 상태를 확인하세요.'});
+            const snapshot=LIVE_RUNTIME.config?.featureFlags?.photoUploadSnapshot===true&&validLivePhotoSnapshot(job.receipt.photoSlots,job)?job.receipt.photoSlots:null;
+            const data=snapshot||(await apiRequest(`/v1/attempts/${encodeURIComponent(job.attemptId)}/photo-slots`)).data;if(!livePhotoJobCurrent(job))break;
+            if(!validLivePhotoSnapshot(data,job))throw new ApiRequestError('photo confirmation pending',{status:409,code:'PHOTO_CONFIRMATION_PENDING',serverMessage:'사진 저장은 접수됐습니다. 최신 상태를 다시 확인하세요.'});
+            verifiedSlots.set(job.attemptId,data);cleaningState().photoSlots.set(job.attemptId,data);
+            const visible=state.liveView==='my'&&cleaningState().expandedMaidAssignments.has(job.assignmentId);
+            if(visible&&job.blob!==job.file&&!LIVE_CLEANING_ACTIVE_PHOTO_URLS.has(job.receipt.photoId))LIVE_CLEANING_ACTIVE_PHOTO_URLS.set(job.receipt.photoId,URL.createObjectURL(job.blob));
+            LIVE_PHOTO_QUEUE.splice(LIVE_PHOTO_QUEUE.indexOf(job),1);const progress=sliceUploadProgress(job.slotId);cleaningState().uploadStates.set(job.slotId,{...progress,completed:progress.completed+1});releaseLivePhotoJob(job);updateLivePhotoQueueState(job.slotId);
+            if(visible)void ensureLiveCleaningPhotoPreviews(job.attemptId);
+          }catch(error){verifiedSlots.delete(job.attemptId);if(!livePhotoJobCurrent(job))break;job.error=error;updateLivePhotoQueueState(job.slotId);toast(`${job.receipt?'사진 저장 상태 확인 필요':'사진 업로드 실패'} · ${apiErrorCopy(error)}`,'error');}
+          if(job.generation===LIVE_RUNTIME.authGeneration)refreshLivePhotoUploadView(job);
+        }}finally{livePhotoQueueRunning=false;if(generation===LIVE_RUNTIME.authGeneration)render();if(cleaningActor('maid')&&nextLivePhotoJob())queueMicrotask(()=>void drainLivePhotoQueue());}
       }
-      function retryLivePhotoQueue(slotId){
-        if(!cleaningActor('maid'))return;for(const job of LIVE_PHOTO_QUEUE)if(job.slotId===slotId)job.error=null;updateLivePhotoQueueState(slotId);render();void drainLivePhotoQueue();
+      function retryLivePhotoQueue(id){
+        if(!cleaningActor('maid'))return;for(const job of LIVE_PHOTO_QUEUE)if(job.slotId===id||job.photoItemId===id){job.error=null;updateLivePhotoQueueState(job.slotId);}render();void drainLivePhotoQueue();
       }
       async function discardLivePhotoQueue(slotId){
         if(!cleaningActor('maid'))return;const job=LIVE_PHOTO_QUEUE.find(item=>item.slotId===slotId&&item.error);if(!job)return;
-        for(let i=LIVE_PHOTO_QUEUE.length-1;i>=0;i--)if(LIVE_PHOTO_QUEUE[i].slotId===slotId)LIVE_PHOTO_QUEUE.splice(i,1);updateLivePhotoQueueState(slotId);
+        for(let i=LIVE_PHOTO_QUEUE.length-1;i>=0;i--)if(LIVE_PHOTO_QUEUE[i].slotId===slotId){releaseLivePhotoJob(LIVE_PHOTO_QUEUE[i]);LIVE_PHOTO_QUEUE.splice(i,1);}cleaningState().uploadStates.delete(slotId);
         try{const {data}=await apiRequest(`/v1/attempts/${encodeURIComponent(job.attemptId)}/photo-slots`);if(job.generation!==LIVE_RUNTIME.authGeneration)return;cleaningState().photoSlots.set(job.attemptId,data);void ensureLiveCleaningPhotoPreviews(job.attemptId);}catch(error){if(job.generation===LIVE_RUNTIME.authGeneration)cleaningState().error=error;}render();
       }
       const LIVE_OFFLINE_COMPLETIONS=new Map();
@@ -9840,11 +9912,11 @@
       async function loadLiveInspectionPhotos(detail,photoId=null){
         const generation=LIVE_RUNTIME.authGeneration,current=()=>generation===LIVE_RUNTIME.authGeneration&&cleaningState().inspectionDetail===detail;
         const pending=detail.photos.filter(photo=>photoId?photo.photoId===photoId&&!photo.loading:photo.loading);
-        pending.forEach(photo=>{photo.loading=true;photo.error=null;});if(photoId)render();
+        pending.forEach(photo=>{photo.loading=true;photo.error=null;});if(photoId)renderLivePhotoProgress();
         // Bound reads on mobile; each available image renders without waiting for the slowest one.
         await Promise.all(Array.from({length:Math.min(4,pending.length)},async()=>{
           while(pending.length&&current()){
-            const photo=pending.shift();
+            const photo=takeVisibleLivePhoto(pending);
             try{const {data}=await apiRequest('/v1/photos/'+encodeURIComponent(photo.photoId)+'/content',{responseType:'blob'});if(!current())return;photo.url=URL.createObjectURL(data);LIVE_CLEANING_PHOTO_URLS.add(photo.url);}
             catch(error){if(current())photo.error=error;}
             finally{photo.loading=false;if(current())renderLivePhotoProgress();}
