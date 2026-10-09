@@ -3297,22 +3297,27 @@
       }
       async function loadLiveAvailability({quiet=false}={}){
         const actor=state.remote.auth.user;if(!['admin','maid'].includes(actor?.role))return;
-        const generation=LIVE_RUNTIME.authGeneration,slice=state.remote.availability,weekStart=liveAvailabilityWeekStart();slice.status='loading';slice.error=null;slice.weekStart=weekStart;if(!quiet)render();
+        const generation=LIVE_RUNTIME.authGeneration,slice=state.remote.availability,weekStart=liveAvailabilityWeekStart(),revision=(slice.loadRevision||0)+1,isCurrent=()=>generation===LIVE_RUNTIME.authGeneration&&state.remote.availability===slice&&slice.loadRevision===revision;
+        Object.assign(slice,{status:'loading',error:null,weekStart,loadRevision:revision});if(!quiet)render();
         try{
-          let items=[],changeRequests=[];
-          if(actor.role==='maid'){
-            const {data,requestId}=await apiRequest(`/v1/availability?weekStart=${encodeURIComponent(weekStart)}`);items=Array.isArray(data?.availability)?data.availability:[];slice.requestId=requestId;
-            const changes=await apiRequest(`/v1/availability/change-requests?weekStart=${encodeURIComponent(weekStart)}`);changeRequests=Array.isArray(changes.data?.changeRequests)?changes.data.changeRequests:[];
-          }else{
-            const maids=(state.remote.accounts.items||[]).filter(account=>account.role==='maid'&&account.status!=='departed');
-            const results=await Promise.all(maids.map(async maid=>{const {data}=await apiRequest(`/v1/availability?weekStart=${encodeURIComponent(weekStart)}&maidProfileId=${encodeURIComponent(maid.id)}`);return Array.isArray(data?.availability)?data.availability:[];}));items=results.flat();
-            const changes=await apiRequest(`/v1/availability/change-requests?status=pending&weekStart=${encodeURIComponent(weekStart)}`);changeRequests=Array.isArray(changes.data?.changeRequests)?changes.data.changeRequests:[];slice.requestId=changes.requestId;
+          const path=`/v1/availability?weekStart=${encodeURIComponent(weekStart)}`;
+          const [response,changes]=await Promise.all([apiRequest(path),apiRequest(`/v1/availability/change-requests?${actor.role==='admin'?'status=pending&':''}weekStart=${encodeURIComponent(weekStart)}`)]);
+          if(!isCurrent())return;
+          if(!Array.isArray(response.data?.availability)||!Array.isArray(changes.data?.changeRequests))throw new ApiRequestError('availability missing',{status:502,code:'INVALID_RESPONSE'});
+          let items=response.data.availability;
+          const maids=(state.remote.accounts.items||[]).filter(account=>account.role==='maid'&&account.status!=='departed'),allowed=new Set(maids.map(maid=>maid.profileId||maid.id));
+          // The deployed query has no cursor. At the documented 1,000-row cap, read each visible maid explicitly.
+          if(actor.role==='admin'&&items.length>=1000){
+            items=[];let index=0;
+            await Promise.all(Array.from({length:Math.min(3,maids.length)},async()=>{while(isCurrent()&&index<maids.length){const maid=maids[index++],{data}=await apiRequest(path+'&maidProfileId='+encodeURIComponent(maid.profileId||maid.id));if(!Array.isArray(data?.availability)||data.availability.some(item=>item.maidProfileId!==(maid.profileId||maid.id)))throw new ApiRequestError('availability invalid',{status:502,code:'INVALID_RESPONSE'});items.push(...data.availability);}}));
           }
-          if(generation!==LIVE_RUNTIME.authGeneration)return;
+          if(!isCurrent())return;
+          if(items.some(item=>item.weekStart!==weekStart||actor.role==='maid'&&item.maidProfileId!==actor.profileId))throw new ApiRequestError('availability scope invalid',{status:502,code:'INVALID_RESPONSE'});
+          if(actor.role==='admin')items=items.filter(item=>allowed.has(item.maidProfileId));
           const current=items.filter(item=>item.current!==false&&item.status!=='superseded').sort((left,right)=>Number(right.version)-Number(left.version))[0],draftDates=slice.draftDirty?slice.draftDates:(current?.days||[]).filter(day=>day.available).map(day=>day.workDate);
-          state.remote.availability={...slice,status:'ready',items,changeRequests,error:null,lastSuccessAt:new Date().toISOString(),weekStart,draftDates};
-        }catch(error){if(generation!==LIVE_RUNTIME.authGeneration)return;state.remote.availability={...slice,status:'error',error,requestId:error?.requestId||null,weekStart};}
-        if(!quiet)render();
+          Object.assign(slice,{status:'ready',items,changeRequests:changes.data.changeRequests,error:null,requestId:response.requestId,lastSuccessAt:new Date().toISOString(),weekStart,draftDates});
+        }catch(error){if(!isCurrent())return;Object.assign(slice,{status:'error',error,requestId:error?.requestId||null,weekStart});}
+        if(!quiet&&isCurrent())render();
       }
       async function loadLiveDeveloperStatus({quiet=false}={}){
         if(state.remote.auth.user?.role!=='developer')return;
@@ -3328,28 +3333,33 @@
       function liveComplaintRange(){const today=liveKstIsoDate();return {from:`${addIsoDays(today,-30)}T00:00:00+09:00`,to:`${addIsoDays(today,1)}T00:00:00+09:00`};}
       async function loadLivePayroll({weekStart=null,quiet=false}={}){
         if(!['admin','maid'].includes(state.remote.auth.user?.role))return;
-        const generation=LIVE_RUNTIME.authGeneration,slice=state.remote.payroll,selected=weekStart||slice.weekStart||weekStartIso(liveKstIsoDate()),loadRevision=(slice.loadRevision||0)+1;slice.loadRevision=loadRevision;slice.status='loading';slice.weekStart=selected;slice.detail=null;slice.error=null;if(!quiet)render();
+        const generation=LIVE_RUNTIME.authGeneration,slice=state.remote.payroll,selected=weekStart||slice.weekStart||weekStartIso(liveKstIsoDate()),loadRevision=(slice.loadRevision||0)+1,isCurrent=()=>generation===LIVE_RUNTIME.authGeneration&&state.remote.payroll===slice&&slice.loadRevision===loadRevision;
+        Object.assign(slice,{loadRevision,status:'loading',weekStart:selected,detail:null,error:null,pageError:null,items:[],markers:new Map(),listComplete:false,nextCursor:null,lastSuccessAt:null});if(!quiet)render();
+        const lanes=[Promise.resolve(),Promise.resolve(),Promise.resolve()];let markerIndex=0;
+        const queueMarker=cycle=>{const lane=markerIndex++%lanes.length;lanes[lane]=lanes[lane].then(async()=>{if(!isCurrent())return;let record;try{record={value:await fetchLiveRemittanceMarker(cycle)};}catch(error){record={error};}if(isCurrent()){slice.markers.set(cycle.maidProfileId,record);scheduleLiveReadRender();}});};
         try{
-          const items=[];let cursor=null,requestId=null,pageCount=0;
-          do{const suffix=cursor?`&cursor=${encodeURIComponent(cursor)}`:'',{data,requestId:id}=await apiRequest(`/v1/payroll?weekStart=${encodeURIComponent(selected)}&limit=10${suffix}`);if(!Array.isArray(data?.payroll))throw new ApiRequestError('payroll missing',{status:502,code:'INVALID_RESPONSE'});requestId=requestId||id;items.push(...data.payroll);cursor=data?.nextCursor||null;pageCount+=1;}while(cursor&&pageCount<20);
-          if(cursor)throw new ApiRequestError('payroll cursor overflow',{status:502,code:'INVALID_RESPONSE'});
-          if(items.some(item=>item.weekStart!==selected||!['totalAmount','payableAmount','adjustmentAmount','carryInAmount','lateEarningAmount','itemCount'].every(key=>Number.isSafeInteger(item[key]))||item.lockedAmount!=null&&!Number.isSafeInteger(item.lockedAmount)||state.role==='maid'&&item.maidProfileId!==state.remote.auth.user?.profileId))throw new ApiRequestError('payroll response invalid',{status:502,code:'INVALID_RESPONSE'});
-          if(generation!==LIVE_RUNTIME.authGeneration||state.remote.payroll.loadRevision!==loadRevision)return;
-          const markers=new Map();
-          for(const cycle of items){try{markers.set(cycle.maidProfileId,{value:await fetchLiveRemittanceMarker(cycle)});}catch(error){markers.set(cycle.maidProfileId,{error});}}
-          if(generation!==LIVE_RUNTIME.authGeneration||state.remote.payroll.loadRevision!==loadRevision)return;
-          state.remote.payroll={...slice,status:'ready',items,markers,nextCursor:cursor,weekStart:selected,detail:null,error:null,mutationError:null,requestId,lastSuccessAt:new Date().toISOString(),busy:false};
-        }catch(error){if(generation!==LIVE_RUNTIME.authGeneration||state.remote.payroll.loadRevision!==loadRevision)return;state.remote.payroll={...slice,status:'error',weekStart:selected,error,requestId:error?.requestId||null,busy:false};}
-        if(!quiet)render();
+          const seen=new Set(),maids=new Set();let cursor=null;
+          do{
+            const suffix=cursor?`&cursor=${encodeURIComponent(cursor)}`:'',{data,requestId}=await apiRequest(`/v1/payroll?weekStart=${encodeURIComponent(selected)}&limit=10${suffix}`);if(!isCurrent())return;
+            if(!Array.isArray(data?.payroll)||data.payroll.some(item=>item.weekStart!==selected||!['totalAmount','payableAmount','adjustmentAmount','carryInAmount','lateEarningAmount','itemCount'].every(key=>Number.isSafeInteger(item[key]))||item.lockedAmount!=null&&!Number.isSafeInteger(item.lockedAmount)||state.role==='maid'&&item.maidProfileId!==state.remote.auth.user?.profileId||maids.has(item.maidProfileId)))throw new ApiRequestError('payroll response invalid',{status:502,code:'INVALID_RESPONSE'});
+            for(const cycle of data.payroll){if(maids.has(cycle.maidProfileId))throw new ApiRequestError('payroll duplicate',{status:502,code:'INVALID_RESPONSE'});maids.add(cycle.maidProfileId);}
+            cursor=data.nextCursor||null;if(cursor&&(seen.has(cursor)||seen.size>=19))throw new ApiRequestError('payroll cursor overflow',{status:502,code:'INVALID_RESPONSE'});if(cursor)seen.add(cursor);
+            slice.items.push(...data.payroll);Object.assign(slice,{status:'partial',nextCursor:cursor,listComplete:!cursor,requestId:slice.requestId||requestId});
+            for(const cycle of data.payroll){slice.markers.set(cycle.maidProfileId,{loading:true});queueMarker(cycle);}scheduleLiveReadRender();
+          }while(cursor&&isCurrent());
+          await Promise.all(lanes);if(!isCurrent())return;
+          Object.assign(slice,{status:'ready',error:null,mutationError:null,lastSuccessAt:new Date().toISOString()});
+        }catch(error){if(!isCurrent())return;Object.assign(slice,{status:slice.items.length?'partial':'error',error,pageError:error,listComplete:false,requestId:error?.requestId||null});await Promise.all(lanes);}
+        if(isCurrent()){if(!quiet)render();else scheduleLiveReadRender();}
       }
-      async function loadLivePayrollEntries(cycle){
+      async function loadLivePayrollEntries(cycle,isCurrent=()=>true){
         const kinds=['items','lateEarnings','adjustments'],result={};
-        await Promise.all(kinds.map(async kind=>{const entries=[];let cursor=null,pageCount=0;do{const suffix=cursor?`&cursor=${encodeURIComponent(cursor)}`:'',{data}=await apiRequest(`/v1/payroll/entries?weekStart=${encodeURIComponent(cycle.weekStart)}&maidProfileId=${encodeURIComponent(cycle.maidProfileId)}&kind=${encodeURIComponent(kind)}&limit=50${suffix}`);if(!Array.isArray(data?.entries))throw new ApiRequestError('payroll entries missing',{status:502,code:'INVALID_RESPONSE'});entries.push(...data.entries);cursor=data?.nextCursor||null;pageCount+=1;}while(cursor&&pageCount<20);if(cursor)throw new ApiRequestError('payroll entries overflow',{status:502,code:'INVALID_RESPONSE'});result[kind]=entries;}));
+        await Promise.all(kinds.map(async kind=>{const entries=[];let cursor=null,pageCount=0;do{if(!isCurrent())return;const suffix=cursor?`&cursor=${encodeURIComponent(cursor)}`:'',{data}=await apiRequest(`/v1/payroll/entries?weekStart=${encodeURIComponent(cycle.weekStart)}&maidProfileId=${encodeURIComponent(cycle.maidProfileId)}&kind=${encodeURIComponent(kind)}&limit=50${suffix}`);if(!isCurrent())return;if(!Array.isArray(data?.entries))throw new ApiRequestError('payroll entries missing',{status:502,code:'INVALID_RESPONSE'});entries.push(...data.entries);cursor=data?.nextCursor||null;pageCount+=1;}while(cursor&&pageCount<20);if(cursor)throw new ApiRequestError('payroll entries overflow',{status:502,code:'INVALID_RESPONSE'});result[kind]=entries;}));
         return result;
       }
-      async function loadLivePayrollWorkDetails(cycle){
+      async function loadLivePayrollWorkDetails(cycle,isCurrent=()=>true){
         const result={};let summary=null;
-        for(const kind of ['earnings','workflow']){const entries=[],seen=new Set();let cursor=null;do{const query=new URLSearchParams({maidProfileId:cycle.maidProfileId,weekStart:cycle.weekStart,kind,limit:'50'});if(cursor)query.set('cursor',cursor);const {data}=await apiRequest('/v1/payroll/work-details?'+query);if(data?.maidProfileId!==cycle.maidProfileId||data.weekStart!==cycle.weekStart||data.kind!==kind||!Array.isArray(data.entries))throw new ApiRequestError('payroll detail invalid',{status:502,code:'INVALID_RESPONSE'});if(summary&&JSON.stringify(summary)!==JSON.stringify(data.summary))throw new ApiRequestError('payroll changed between pages',{status:409,code:'STALE_VERSION'});summary=data.summary;entries.push(...data.entries);cursor=data.nextCursor;if(cursor&&(seen.has(cursor)||seen.size>=100))throw new ApiRequestError('invalid cursor',{status:502,code:'INVALID_RESPONSE'});if(cursor)seen.add(cursor);}while(cursor);result[kind]=entries;}
+        await Promise.all(['earnings','workflow'].map(async kind=>{const entries=[],seen=new Set();let cursor=null;do{if(!isCurrent())return;const query=new URLSearchParams({maidProfileId:cycle.maidProfileId,weekStart:cycle.weekStart,kind,limit:'50'});if(cursor)query.set('cursor',cursor);const {data}=await apiRequest('/v1/payroll/work-details?'+query);if(!isCurrent())return;if(data?.maidProfileId!==cycle.maidProfileId||data.weekStart!==cycle.weekStart||data.kind!==kind||!data.summary||!Array.isArray(data.entries))throw new ApiRequestError('payroll detail invalid',{status:502,code:'INVALID_RESPONSE'});if(summary&&JSON.stringify(summary)!==JSON.stringify(data.summary))throw new ApiRequestError('payroll changed between pages',{status:409,code:'STALE_VERSION'});summary=data.summary;entries.push(...data.entries);cursor=data.nextCursor;if(cursor&&(seen.has(cursor)||seen.size>=100))throw new ApiRequestError('invalid cursor',{status:502,code:'INVALID_RESPONSE'});if(cursor)seen.add(cursor);}while(cursor);result[kind]=entries;}));
         for(const key of ['accrualAmount','expectedAmount','pendingAmount','totalAmount','payableAmount','adjustmentAmount','carryInAmount','carryOutAmount'])if(Object.hasOwn(summary||{},key)&&Object.hasOwn(cycle,key)&&summary[key]!==cycle[key])throw new ApiRequestError('payroll summary changed',{status:409,code:'STALE_VERSION'});
         return {...result,summary};
       }
@@ -3405,9 +3415,24 @@
         const isFresh=fresh?fresh():liveSliceFresh(slice,maxAge);if(!force&&isFresh)return null;
         return coalesceLiveLoad(key,()=>loader({quiet:true,force}));
       }
+      let liveReadRenderFrame=0;
+      function scheduleLiveReadRender(){
+        if(liveReadRenderFrame)return;
+        const generation=LIVE_RUNTIME.authGeneration,view=currentView(),tab=state.adminMaidTab,navigation=liveHistoryRestoreSequence;
+        if(!['today','maids','pay','schedule'].includes(view))return;
+        liveReadRenderFrame=requestAnimationFrame(()=>{
+          liveReadRenderFrame=0;
+          if(generation!==LIVE_RUNTIME.authGeneration||view!==currentView()||tab!==state.adminMaidTab||navigation!==liveHistoryRestoreSequence||restoringHistory||state.detail||state.remote.payroll.detail)return;
+          const active=document.activeElement;
+          if(active?.matches('#main-content input:not([type="checkbox"]), #main-content textarea, #main-content select'))return;
+          const focus=historyFocusDescriptor(active),inMain=document.getElementById('main-content')?.contains(active);
+          if(!renderLiveSurface())render();
+          if(inMain)findHistoryFocusTarget(focus)?.focus({preventScroll:true});
+        });
+      }
       async function loadLiveViewData(view=currentView(),{force=false}={}){
         if(!liveMode()||state.remote.auth.status!=='authenticated')return [];
-        const generation=LIVE_RUNTIME.authGeneration,role=state.remote.auth.user?.role,tasks=[],add=task=>{if(task)tasks.push(task);};
+        const generation=LIVE_RUNTIME.authGeneration,role=state.remote.auth.user?.role,tab=state.adminMaidTab,tasks=[],progress=()=>{if(generation===LIVE_RUNTIME.authGeneration&&view===currentView()&&tab===state.adminMaidTab)scheduleLiveReadRender();},add=task=>{if(task){tasks.push(task);void task.then(progress,progress);}};
         if(['admin','maid'].includes(role))add(liveLoaderTask('notifications',state.remote.notifications,loadLiveNotifications,{force,maxAge:15000}));
         if(role==='developer'){
           add(liveLoaderTask('developer-status',state.remote.developer,loadLiveDeveloperStatus,{force}));
@@ -4039,7 +4064,7 @@
         const cleaningSlice=cleaningState(),homeAssignments=state.remote.homeAssignments,assignmentReady=homeAssignments.status==='ready'&&homeAssignments.date===addIsoDays(liveOperationalDate(),1),assignmentCount=assignmentReady?homeAssignments.items.length:null,inspectionCount=cleaningWorkflowEnabled()&&cleaningSlice.status==='ready'?cleaningSlice.inspections.length:null;
         const assignmentBody=`<div class="rail-row"><strong>내일 담당 ${assignmentReady?`${assignmentCount}건`:homeAssignments.status==='error'?'조회 실패':'조회 중'}</strong></div><div style="margin-top:10px">${button('청소 배정','go-cleaning-assignment','outline','data-day="tomorrow"')}</div>`;
         const inspectionBody=`<div class="rail-row"><strong>현재 검수 대기 ${inspectionCount===null?(cleaningSlice.status==='error'?'조회 실패':'조회 중'):`${inspectionCount}건`}</strong></div><div style="margin-top:10px">${button('검수 보기','go-inspection','outline')}</div>`;
-        const payrollSlice=state.remote.payroll,payrollTotal=(payrollSlice.items||[]).every(item=>Number.isSafeInteger(item.expectedAmount))?(payrollSlice.items||[]).reduce((sum,item)=>sum+item.expectedAmount,0):null,payrollReady=payrollSlice.status==='ready',payrollCopy=payrollReady?`${weekRangeLabel(payrollSlice.weekStart||liveClosedPayrollWeekStart(),true)} · ${payrollTotal===null?'API 미제공':money(payrollTotal)}`:payrollSlice.status==='error'?'주급 서버 확인 필요':'주급 원장 불러오는 중',costSection=`<section aria-label="청소비 예상 지출"><button class="card cleaning-cost-shortcut" type="button" data-action="go-payroll" data-week="${esc(payrollSlice.weekStart||liveClosedPayrollWeekStart())}" ${payrollReady?'':'disabled'} aria-label="${esc(payrollCopy)}. 주급 정산 화면 열기"><span class="cleaning-cost-shortcut-main">${icon('wallet')}<span><strong>청소비 예상 지출</strong><small>${esc(payrollCopy)}</small></span></span><span class="cleaning-cost-shortcut-cta">주급 정산${icon('chevronRight','icon-sm')}</span></button></section>`;
+        const payrollSlice=state.remote.payroll,payrollTotal=(payrollSlice.items||[]).every(item=>Number.isSafeInteger(item.expectedAmount))?(payrollSlice.items||[]).reduce((sum,item)=>sum+item.expectedAmount,0):null,payrollReady=payrollSlice.status==='ready'||payrollSlice.listComplete===true,payrollCopy=payrollReady?`${weekRangeLabel(payrollSlice.weekStart||liveClosedPayrollWeekStart(),true)} · ${payrollTotal===null?'API 미제공':money(payrollTotal)}`:(payrollSlice.status==='error'||payrollSlice.pageError)?'주급 서버 확인 필요':'주급 원장 불러오는 중',costSection=`<section aria-label="청소비 예상 지출"><button class="card cleaning-cost-shortcut" type="button" data-action="go-payroll" data-week="${esc(payrollSlice.weekStart||liveClosedPayrollWeekStart())}" ${payrollReady?'':'disabled'} aria-label="${esc(payrollCopy)}. 주급 정산 화면 열기"><span class="cleaning-cost-shortcut-main">${icon('wallet')}<span><strong>청소비 예상 지출</strong><small>${esc(payrollCopy)}</small></span></span><span class="cleaning-cost-shortcut-cta">주급 정산${icon('chevronRight','icon-sm')}</span></button></section>`;
         return `<div class="view-stack">${renderLiveDateTools()}${liveDateContextMarkup()}<section aria-labelledby="live-summary-title" data-admin-home-section="room-summary"><div class="mobile-section-title"><div><h2 id="live-summary-title">${liveOperationalDate()===liveKstIsoDate()?'오늘 객실 요약':'선택일 객실 요약'}</h2></div></div><div class="today-summary"><button class="card metric-card neutral" type="button" data-action="filter-rooms" data-filter="occupied" aria-label="투숙 중 객실 ${counts.occupied}개 목록 보기"><span>투숙 중</span><strong>${counts.occupied}</strong></button><button class="card metric-card amber" type="button" data-action="filter-rooms" data-filter="cleaning" aria-label="청소 필요 객실 ${counts.cleaning}개 목록 보기"><span>청소 필요</span><strong>${counts.cleaning}</strong></button><button class="card metric-card green" type="button" data-action="filter-rooms" data-filter="available" aria-label="배정 가능 객실 ${counts.ready}개 목록 보기"><span>배정 가능</span><strong>${counts.ready}</strong></button><button class="card metric-card red" type="button" data-action="filter-rooms" data-filter="blocked" aria-label="배정 불가 객실 ${counts.blocked}개 목록 보기"><span>배정 불가</span><strong>${counts.blocked}</strong></button></div></section><div class="accordion-list" data-admin-home-section="cleaning-actions">${renderAccordion('inspection','청소 검수',inspectionCount===null?(cleaningSlice.status==='error'?'조회 실패':'조회 중'):`${inspectionCount}건`,inspectionBody)}${renderAccordion('assignment','내일 청소 배정',assignmentReady?`${assignmentCount}건`:homeAssignments.status==='error'?'조회 실패':'조회 중',assignmentBody,true)}</div><div data-admin-home-section="cleaning-cost">${costSection}</div></div>`;
       }
       const LIVE_ROOM_TYPE_ORDER=Object.freeze(['standard','premium','oceanPremium','oceanFamily']);
@@ -4185,11 +4210,18 @@
       const LIVE_COMPLAINT_FINDING_LABELS={confirmed:'확인됨',unverifiable:'확인 불가',false:'사실 아님'};
       function liveAccountDisplayName(profileId){const actor=state.remote.auth.user;if(actor?.profileId===profileId)return actor.displayName||'내 계정';return (state.remote.accounts.items||[]).find(item=>(item.profileId||item.id)===profileId)?.displayName||'메이드 확인 필요';}
       function livePayrollCycleByMaid(maidProfileId){return (state.remote.payroll.items||[]).find(item=>item.maidProfileId===maidProfileId)||null;}
-      function livePayrollStatusMeta(cycle){const marker=state.remote.payroll.markers?.get(cycle?.maidProfileId)?.value;if(!marker)return {label:'송금 표시 확인 필요',tone:'neutral'};if(marker.needsReconfirmation)return {label:'금액 재확인 필요',tone:'amber'};if(marker.marked)return {label:'송금 완료',tone:'green'};return cycle?.weekStart>=weekStartIso(liveKstIsoDate())?{label:'집계 중',tone:'blue'}:{label:'미송금',tone:'neutral'};}
+      function livePayrollStatusMeta(cycle){const record=state.remote.payroll.markers?.get(cycle?.maidProfileId),marker=record?.value;if(!marker)return {label:record?.loading?'송금 표시 조회 중':'송금 표시 확인 필요',tone:'neutral'};if(marker.needsReconfirmation)return {label:'금액 재확인 필요',tone:'amber'};if(marker.marked)return {label:'송금 완료',tone:'green'};return cycle?.weekStart>=weekStartIso(liveKstIsoDate())?{label:'집계 중',tone:'blue'}:{label:'미송금',tone:'neutral'};}
       function livePayrollAction(cycle){
         if(!cycle)return '';
-        const record=state.remote.payroll.markers?.get(cycle.maidProfileId),marker=record?.value,admin=state.role==='admin',disabled=!admin||state.remote.payroll.busy||!marker||!(marker.marked?marker.canClear:marker.canSet),reason=!marker?'송금 표시 조회 실패':marker.needsReconfirmation?'금액 근거 변경 · 재확인 필요':marker.setBlockedReason==='PAYROLL_WEEK_NOT_CLOSED'?'집계 중':marker.setBlockedReason==='NO_PAYROLL_AMOUNT'?'지급 대상 없음':'';
-        return `<div class="toggle-row"><div><strong>${marker?(marker.marked?'송금 완료':'미송금'):'확인 필요'}</strong>${reason?`<span>${reason}</span>`:''}</div>${admin?`<button class="switch" type="button" role="switch" aria-checked="${marker?.marked===true}" aria-label="${esc(liveAccountDisplayName(cycle.maidProfileId))} 송금 완료" data-action="live-payroll-toggle" data-maid="${esc(cycle.maidProfileId)}" ${disabled?'disabled':''}></button>`:''}</div>${admin&&marker?.canReconfirm?button('금액 확인 완료','live-payroll-reconfirm','outline',`data-maid="${esc(cycle.maidProfileId)}" ${state.remote.payroll.busy?'disabled':''}`):''}`;
+        const record=state.remote.payroll.markers?.get(cycle.maidProfileId),marker=record?.value,admin=state.role==='admin',disabled=!admin||state.remote.payroll.busy||!marker||!(marker.marked?marker.canClear:marker.canSet),reason=!marker?(record?.loading?'송금 표시 조회 중':'송금 표시 조회 실패'):marker.needsReconfirmation?'금액 근거 변경 · 재확인 필요':marker.setBlockedReason==='PAYROLL_WEEK_NOT_CLOSED'?'집계 중':marker.setBlockedReason==='NO_PAYROLL_AMOUNT'?'지급 대상 없음':'';
+        return `<div class="toggle-row"><div><strong>${marker?(marker.marked?'송금 완료':'미송금'):record?.loading?'조회 중':'확인 필요'}</strong>${reason?`<span>${reason}</span>`:''}</div>${admin?`<button class="switch" type="button" role="switch" aria-checked="${marker?.marked===true}" aria-label="${esc(liveAccountDisplayName(cycle.maidProfileId))} 송금 완료" data-action="live-payroll-toggle" data-maid="${esc(cycle.maidProfileId)}" ${disabled?'disabled':''}></button>`:''}</div>${record?.error?button('송금 표시 재조회','live-payroll-marker-retry','outline',`data-maid="${esc(cycle.maidProfileId)}" ${state.remote.payroll.busy?'disabled':''}`):''}${admin&&marker?.canReconfirm?button('금액 확인 완료','live-payroll-reconfirm','outline',`data-maid="${esc(cycle.maidProfileId)}" ${state.remote.payroll.busy?'disabled':''}`):''}`;
+      }
+      async function retryLiveRemittanceMarker(maidProfileId){
+        const slice=state.remote.payroll,cycle=livePayrollCycleByMaid(maidProfileId),generation=LIVE_RUNTIME.authGeneration,revision=slice.loadRevision;
+        if(!['admin','maid'].includes(state.remote.auth.user?.role)||state.role==='maid'&&maidProfileId!==state.remote.auth.user.profileId||!cycle||slice.busy||!slice.markers?.get(maidProfileId)?.error)return;
+        slice.markers.set(maidProfileId,{loading:true});render();let record;
+        try{record={value:await fetchLiveRemittanceMarker(cycle)};}catch(error){record={error};}
+        if(generation===LIVE_RUNTIME.authGeneration&&state.remote.payroll===slice&&slice.loadRevision===revision){slice.markers.set(maidProfileId,record);render();}
       }
       async function fetchLiveRemittanceMarker(cycle){
         const {data}=await apiRequest('/v1/payroll/remittance-marker?'+new URLSearchParams({maidProfileId:cycle.maidProfileId,weekStart:cycle.weekStart}));
@@ -4199,10 +4231,10 @@
       async function setLiveRemittanceMarker(maidProfileId,{reconfirm=false}={}){
         const slice=state.remote.payroll,cycle=livePayrollCycleByMaid(maidProfileId),marker=slice.markers?.get(maidProfileId)?.value;
         if(!liveRoleAllowed('admin')||slice.busy||!cycle||!marker||!(reconfirm?marker.canReconfirm:marker.marked?marker.canClear:marker.canSet))return;
-        const generation=LIVE_RUNTIME.authGeneration,body={maidProfileId,weekStart:cycle.weekStart,expectedVersion:marker.version,expectedBasisFingerprint:marker.basisFingerprint,...(reconfirm?{}:{marked:!marker.marked})};slice.busy=true;render();
+        const generation=LIVE_RUNTIME.authGeneration,revision=slice.loadRevision,isCurrent=()=>generation===LIVE_RUNTIME.authGeneration&&state.remote.payroll===slice&&slice.loadRevision===revision,body={maidProfileId,weekStart:cycle.weekStart,expectedVersion:marker.version,expectedBasisFingerprint:marker.basisFingerprint,...(reconfirm?{}:{marked:!marker.marked})};slice.busy=true;render();
         try{await mutationApiRequest('/v1/payroll/remittance-marker'+(reconfirm?'/reconfirm':''),{method:reconfirm?'POST':'PUT',body});if(generation===LIVE_RUNTIME.authGeneration)toast(reconfirm?'금액 확인을 저장했습니다.':body.marked?'송금 완료로 저장했습니다.':'미송금으로 저장했습니다.');}
         catch(error){if(generation===LIVE_RUNTIME.authGeneration)toast(error.status===409?'금액 또는 송금 표시가 변경되었습니다. 최신 상태를 확인해 주세요.':apiErrorCopy(error,'송금 표시를 저장하지 못했습니다.'),'error');}
-        finally{if(generation===LIVE_RUNTIME.authGeneration){try{const value=await fetchLiveRemittanceMarker(cycle);if(state.remote.payroll===slice)slice.markers.set(maidProfileId,{value});}catch(error){if(state.remote.payroll===slice)slice.markers.set(maidProfileId,{error});}slice.busy=false;render();focusAfterRender('[data-action="live-payroll-toggle"][data-maid="'+maidProfileId+'"]');}}
+        finally{if(generation===LIVE_RUNTIME.authGeneration){try{if(isCurrent()){const value=await fetchLiveRemittanceMarker(cycle);if(isCurrent())slice.markers.set(maidProfileId,{value});}}catch(error){if(isCurrent())slice.markers.set(maidProfileId,{error});}slice.busy=false;render();if(isCurrent())focusAfterRender('[data-action="live-payroll-toggle"][data-maid="'+maidProfileId+'"]');}}
       }
       function renderLivePayrollCycleCard(cycle){
         const meta=livePayrollStatusMeta(cycle),name=liveAccountDisplayName(cycle.maidProfileId),current=cycle.weekStart>=weekStartIso(liveKstIsoDate()),confirmed=Number.isSafeInteger(cycle.accrualAmount)?cycle.accrualAmount:cycle.totalAmount,locked=current&&Number.isSafeInteger(cycle.expectedAmount)?cycle.expectedAmount:cycle.lockedAmount??cycle.payableAmount,late=cycle.lateEarningAmount;
@@ -4210,11 +4242,12 @@
       }
       function renderLivePayroll(){
         const slice=state.remote.payroll,stateMarkup=renderLiveRemoteState(slice,{label:'주급 정산',retryAction:'refresh-live-payroll'});if(stateMarkup)return stateMarkup;
-        const items=slice.items||[],total=items.reduce((sum,item)=>sum+(Number.isSafeInteger(item.accrualAmount)?item.accrualAmount:item.totalAmount),0),expected=items.every(item=>Number.isSafeInteger(item.expectedAmount))?money(items.reduce((sum,item)=>sum+item.expectedAmount,0)):'API 미제공',pending=items.every(item=>Number.isSafeInteger(item.pendingAmount))?money(items.reduce((sum,item)=>sum+item.pendingAmount,0)):'API 미제공',current=slice.weekStart===weekStartIso(liveKstIsoDate());
-        return `<div class="payroll-live"><section class="pay-hero"><span>${current?'이번 주':'선택 주차'} · ${esc(weekRangeLabel(slice.weekStart))} · 확정액</span><strong>${money(total)}</strong><div class="pay-hero-grid"><div><span>예상 청소비</span><b>${expected}</b></div><div><span>검수 대기</span><b>${pending}</b></div></div></section><div class="pay-week-toolbar"><div><h2>주별 지급 이력</h2></div><div class="actions"><button class="icon-btn" type="button" data-action="refresh-live-payroll" aria-label="주급 새로고침" title="주급 새로고침">${icon('sync')}</button><button class="icon-btn" type="button" data-action="live-payroll-week-shift" data-offset="-7" aria-label="이전 주">${icon('chevronLeft')}</button>${statusBadge(weekRangeLabel(slice.weekStart,true),'blue')}<button class="icon-btn" type="button" data-action="live-payroll-week-shift" data-offset="7" aria-label="다음 주" ${current?'disabled':''}>${icon('chevronRight')}</button>${button('이번 주','live-payroll-week-shift','outline',`data-offset="0" ${current?'disabled':''}`)}</div></div><div class="tab-panel">${items.map(renderLivePayrollCycleCard).join('')||'<section class="inline-empty"><h3>확정된 청소비가 없습니다</h3></section>'}</div></div>`;
+        const items=slice.items||[],complete=slice.listComplete!==false,waiting=slice.pageError?'집계 확인 필요':'조회 중',total=complete?money(items.reduce((sum,item)=>sum+(Number.isSafeInteger(item.accrualAmount)?item.accrualAmount:item.totalAmount),0)):waiting,expected=!complete?waiting:items.every(item=>Number.isSafeInteger(item.expectedAmount))?money(items.reduce((sum,item)=>sum+item.expectedAmount,0)):'API 미제공',pending=!complete?waiting:items.every(item=>Number.isSafeInteger(item.pendingAmount))?money(items.reduce((sum,item)=>sum+item.pendingAmount,0)):'API 미제공',current=slice.weekStart===weekStartIso(liveKstIsoDate());
+        return `<div class="payroll-live"><section class="pay-hero"><span>${current?'이번 주':'선택 주차'} · ${esc(weekRangeLabel(slice.weekStart))} · 확정액</span><strong>${total}</strong><div class="pay-hero-grid"><div><span>예상 청소비</span><b>${expected}</b></div><div><span>검수 대기</span><b>${pending}</b></div></div></section><div class="pay-week-toolbar"><div><h2>주별 지급 이력</h2></div><div class="actions"><button class="icon-btn" type="button" data-action="refresh-live-payroll" aria-label="주급 새로고침" title="주급 새로고침">${icon('sync')}</button><button class="icon-btn" type="button" data-action="live-payroll-week-shift" data-offset="-7" aria-label="이전 주">${icon('chevronLeft')}</button>${statusBadge(weekRangeLabel(slice.weekStart,true),'blue')}<button class="icon-btn" type="button" data-action="live-payroll-week-shift" data-offset="7" aria-label="다음 주" ${current?'disabled':''}>${icon('chevronRight')}</button>${button('이번 주','live-payroll-week-shift','outline',`data-offset="0" ${current?'disabled':''}`)}</div></div>${!complete?`<div class="notice ${slice.pageError?'notice-warning':'notice-info'}" role="status">${slice.pageError?'일부 주급을 불러오지 못했습니다.':'주급을 더 불러오는 중'}${slice.pageError?button('다시 불러오기','refresh-live-payroll','outline'):''}</div>`:''}<div class="tab-panel">${items.map(renderLivePayrollCycleCard).join('')||'<section class="inline-empty"><h3>확정된 청소비가 없습니다</h3></section>'}</div></div>`;
       }
       function renderLivePayrollDetail(detail){
         const cycle=detail.cycle,entries=detail.entries||{},meta=livePayrollStatusMeta(cycle),admin=state.role==='admin',name=liveAccountDisplayName(cycle.maidProfileId);
+        if(detail.loading||detail.error)return detailHeader(`${esc(name)} · 주급 산출 내역`,esc(weekRangeLabel(cycle.weekStart,true)))+(detail.error?`<div class="notice notice-warning" role="alert">${esc(apiErrorCopy(detail.error,'주급 산출 내역을 불러오지 못했습니다.'))}${button('다시 불러오기','live-payroll-detail','outline',`data-maid="${esc(cycle.maidProfileId)}"`)}</div>`:'<div class="auth-progress" role="status"><span class="auth-spinner" aria-hidden="true"></span>주급 산출 내역을 불러오는 중</div>');
         const itemRows=renderLivePayrollWorkRows(detail);
         const lateRows=(entries.lateEarnings||[]).map(item=>`<div class="rail-row"><div><strong>${esc(payrollDateLabel(item.earnedOn))} · ${money(Number(item.amount)||0)}</strong><span>지급 잠금 뒤 확정된 청소비</span></div>${admin?button('다음 주 반영','live-payroll-late-carry-review','outline',`data-id="${esc(item.earningId)}" data-version="0"`):''}</div>`).join('');
         const adjustmentRows=(entries.adjustments||[]).map(item=>{const versionKnown=true,controls=admin?(versionKnown?`${button('조정 정정','live-payroll-correction-review','outline',`data-source="adjustment" data-id="${esc(item.adjustmentId)}" data-version="${item.bookVersion}"`)}${button('조정 취소','live-payroll-reversal-review','outline',`data-source="adjustment" data-id="${esc(item.adjustmentId)}" data-version="${item.bookVersion}"`)}`:'<span class="live-cell-note">정정 버전 API 미제공</span>'):'';return `<div class="rail-row"><div><strong>${money(Number(item.amount)||0)} · ${esc(item.reasonCode)}</strong><span>${esc(item.availableWeekStart)} · 원본 보존 조정</span></div>${controls}</div>`;}).join('');
@@ -9929,10 +9962,11 @@
       async function openLivePayrollDetail(maidProfileId){
         const slice=state.remote.payroll,cycle=livePayrollCycleByMaid(maidProfileId),actor=state.remote.auth.user,navigation=liveHistoryRestoreSequence,generation=LIVE_RUNTIME.authGeneration;
         if(!cycle||slice.busy||!['admin','maid'].includes(actor?.role)||actor.role==='maid'&&maidProfileId!==actor.profileId)return;
-        slice.busy=true;slice.error=null;render();
-        try{const entries=await loadLivePayrollEntries(cycle),work=await loadLivePayrollWorkDetails(cycle);if(generation!==LIVE_RUNTIME.authGeneration||navigation!==liveHistoryRestoreSequence||state.remote.payroll!==slice)return;slice.detail={cycle,entries,work};requestAnimationFrame(()=>{window.scrollTo(0,0);document.getElementById('main-content')?.focus({preventScroll:true});});}
-        catch(error){if(generation!==LIVE_RUNTIME.authGeneration||navigation!==liveHistoryRestoreSequence)return;slice.error=error;toast(apiErrorCopy(error,'주급 산출 내역을 불러오지 못했습니다.')+(error.requestId?' · 문의 번호 '+error.requestId:''),'error');}
-        finally{slice.busy=false;if(generation===LIVE_RUNTIME.authGeneration&&navigation===liveHistoryRestoreSequence&&state.remote.payroll===slice)render();}
+        const detail={cycle,loading:true},isCurrent=()=>generation===LIVE_RUNTIME.authGeneration&&navigation===liveHistoryRestoreSequence&&state.remote.payroll===slice&&slice.detail===detail;
+        slice.busy=true;slice.error=null;slice.detail=detail;render();requestAnimationFrame(()=>{if(isCurrent()){window.scrollTo(0,0);document.getElementById('main-content')?.focus({preventScroll:true});}});
+        try{const [entries,work]=await Promise.all([loadLivePayrollEntries(cycle,isCurrent),loadLivePayrollWorkDetails(cycle,isCurrent)]);if(!isCurrent())return;Object.assign(detail,{entries,work,loading:false});}
+        catch(error){if(!isCurrent())return;Object.assign(detail,{error,loading:false});}
+        finally{slice.busy=false;if(isCurrent())render();}
       }
       async function runLivePayrollMutation({path,body,label,keepDetail=true}){
         const slice=state.remote.payroll;if(slice.busy)return null;
@@ -9945,6 +9979,7 @@
           try{
             await loadLivePayroll({weekStart:slice.weekStart,quiet:true});
             if(generation!==LIVE_RUNTIME.authGeneration||navigation!==liveHistoryRestoreSequence||view!==state.liveView)return result.data;
+            slice.busy=false;
             if(selectedMaid&&livePayrollCycleByMaid(selectedMaid))await openLivePayrollDetail(selectedMaid);else render();
           }finally{if(navigation===liveHistoryRestoreSequence){restoringHistory=false;writePageHistory(liveRouteSnapshot(),'replace');render();}}
           return result.data;
@@ -10081,6 +10116,7 @@
       function handleLivePayrollComplaintAction(action,el){
         const id=el.dataset.id,maidProfileId=el.dataset.maid,cycle=maidProfileId?livePayrollCycleForAction(maidProfileId):null;
         if(action==='refresh-live-payroll'){void loadLivePayroll();return;}
+        if(action==='live-payroll-marker-retry'){void retryLiveRemittanceMarker(el.dataset.maid);return;}
         if(action==='refresh-live-complaints'){void loadLiveComplaints();return;}
         if(action==='live-payroll-week-shift'){const offset=Number(el.dataset.offset),weekStart=offset===0?weekStartIso(liveKstIsoDate()):addIsoDays(state.remote.payroll.weekStart||weekStartIso(liveKstIsoDate()),offset);if([-7,0,7].includes(offset)&&weekStart<=weekStartIso(liveKstIsoDate()))void loadLivePayroll({weekStart});return;}
         if(action==='live-payroll-detail'){void openLivePayrollDetail(maidProfileId);return;}
@@ -10136,7 +10172,7 @@
       ['live-pin-prepare','live-pin-confirm','live-pin-rollback'].forEach(action=>mutationActions.add(action));
       const livePayrollComplaintActions=new Set(['refresh-live-payroll','refresh-live-complaints','live-payroll-week-shift','live-payroll-detail','live-payroll-start-review','live-payroll-start','live-payroll-carry-review','live-payroll-carry','live-payroll-result-review','live-payroll-result','live-payroll-correction-review','live-payroll-correction','live-payroll-reversal-review','live-payroll-reversal','live-payroll-late-carry-review','live-payroll-late-carry','live-complaint-detail','live-complaint-review','live-complaint-decision-review','live-complaint-decision','live-complaint-response','live-complaint-appeal-review','live-complaint-appeal','live-complaint-close','live-complaint-rework-review','live-complaint-rework']);
       livePayrollComplaintActions.forEach(action=>rebuiltActions.add(action));
-      ['live-payroll-toggle','live-payroll-reconfirm','live-payroll-toggle-save','live-payroll-reset-pending'].forEach(action=>{livePayrollComplaintActions.add(action);rebuiltActions.add(action);});
+      ['live-payroll-toggle','live-payroll-reconfirm','live-payroll-toggle-save','live-payroll-reset-pending','live-payroll-marker-retry'].forEach(action=>{livePayrollComplaintActions.add(action);rebuiltActions.add(action);});
       ['live-payroll-start','live-payroll-carry','live-payroll-result','live-payroll-correction','live-payroll-reversal','live-payroll-late-carry','live-complaint-review','live-complaint-decision','live-complaint-response','live-complaint-appeal','live-complaint-close','live-complaint-rework','retire-live-push'].forEach(action=>mutationActions.add(action));
       rebuiltActions.add('retire-live-push');
       rebuiltActions.add('live-inspection-photo');

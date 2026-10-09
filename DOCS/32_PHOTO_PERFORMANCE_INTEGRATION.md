@@ -15,6 +15,8 @@
 
 ## 현재 제공
 
+2026-10-09 후속 프런트: 인계 PR #209를 dev에 병합하고 운영 OpenAPI와 게시 paths/components 일치를 재확인했다. `cleaning-api.d.ts`의 nullable 보존 필드·선택 snapshot을 재생성하고 생성기 계약 검사와 null operation 회귀 fixture를 보강했다. 실제 업로드 대상 지정/UAT는 남아 옵션 false를 유지한다. 병행한 가능일·주급 조회 개선은 [문서 33](33_DATA_PERFORMANCE_INTEGRATION.md)에 분리했다.
+
 - 기존 청소 사진 섹션·촬영/갤러리·완료/검수 요청 위치 유지. 일반 사진 1~20장, 갤러리 다중 선택과 한도 내 추가, 폭탄방·특이사항 별도 유지.
 - 선택한 JPEG/WebP는 메모리 Blob URL로 즉시 미리보기. HEIC 디코딩 불가 시 준비 상태를 표시하고 서버 확인 뒤 인증 content로 조회. 선택 사진을 등록 완료로 간주하지 않는다.
 - 현재 사진 전송 중 다음 1장만 미리 준비한다. 기존 1920px/JPEG .82의 더 작은 결과만 사용하며 같은 앱의 전송은 계속 1건씩이다. 실패 재시도는 원 요청의 key·경로·revision·Blob bytes를 보존한다.

@@ -1779,13 +1779,14 @@ export type PhotoUploadOperation = {
   itemRevision: number | null;
   uploadedAt: string | null;
   purgeAfter: string | null;
-  retentionPolicy: "cleaning_submission" | "room_issue" | "complaint" | "interruption" | "sync_conflict" | "mixed" | "orphan" | "legacy_upload";
+  retentionPolicy: "cleaning_submission" | "room_issue" | "complaint" | "interruption" | "sync_conflict" | "mixed" | "orphan" | "legacy_upload" | null;
   retentionStartsAt: string | null;
   expiresAt: string | null;
   purgedAt: string | null;
-  mediaAvailability: "available" | "purged" | "unavailable";
+  mediaAvailability: "available" | "purged" | "unavailable" | null;
   compensationAllowed: boolean;
   quotaWarning?: boolean;
+  photoSlots?: AttemptPhotoSlots | null;
 };
 
 export type SubmissionPhotoBinding = {
