@@ -61,8 +61,9 @@ try{
   await mkdir('WIREFRAME/QA/screenshots',{recursive:true});
   await page.screenshot({path:`WIREFRAME/QA/screenshots/photo-queue-idle-${process.env.RMS_QA_BASELINE?'before':'after'}-390.png`});
   await gallery(0).setInputFiles(files(1));await until(()=>!!releaseUpload);
-  holdRead=true;
   await page.locator(`[data-action="cleaning-start"][data-id="${assignments[1].assignmentId}"]`).click();
+  await page.waitForFunction(()=>!__queueQA.get().busy);
+  holdRead=true;await page.evaluate(()=>{void __queueQA.reload();});
   await until(()=>!!releaseRead);
   holdUploads=false;releaseUpload();releaseUpload=null;
   await page.waitForFunction(()=>!__queueQA.get().running);
