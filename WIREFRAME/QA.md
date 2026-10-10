@@ -1,5 +1,41 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-10 백엔드 v0.9.3 묶음 조회 연결
+
+기준 `dev e2b95d8`. 백엔드 최신 #207 인계와 release `72771b5`의 batch/가능일 완전성/공통 timing 문서를 확인했다. 공개 health 200, 운영/게시 OpenAPI paths/components 동일, 151 paths/163 operations 및 CSV 문자열 계약 검사·타입 재생성 PASS. 기존 후보 문서의 미배포 상태는 이 checkpoint로 대체한다. SQL/운영 DB 변경 없음.
+
+주급 목록 첫 페이지는 계속 즉시 표시하고, 송금 표시는 도착한 페이지 최대 10명씩 조회한다. 한 묶음 전체를 검증한 뒤 반영한다. `404 ROUTE_NOT_FOUND`만 기존 단건 3병렬로 fallback하며 401/403/500/업무 404는 오류다. 실패 카드의 명시적 단건 재조회, 토글/CAS/금액 재확인, 세대 폐기를 유지했다. 배정 주 근무표도 활성 메이드별 N회 대신 전체 1회로 조회한다.
+
+### 검증과 수정
+
+- `check-data-performance.mjs` 12그룹 PASS: 0/1/10/20명 CSV·요청 수·페이지별 묶음 1개, 누락/순서/주차/잘못된 marker 전체 거부, 401/403/500/업무 404/route 404 분리, 20명 legacy 경로, 카드별 GET 재조회, 부분 합계 금지, 늦은 묶음·주차·로그아웃·본인 권한, 즉시 상세/Back/summary 충돌, 홈 점진 표시, 가능일 current/변경 요청/후보 500의 오류·재시도·배정 잠금.
+- 360px 조회 실패 상태에서 재조회 버튼이 가로 넘침을 일으키는 기존 문제를 발견했다. 재조회 버튼만 다음 줄에 배치해 정상·오류 모두 360/390/768/1440px 넘침 없음, 최소 44px 버튼·키보드 Enter 재시도 확인. 정상 주급 화면은 이전 dev와 390/1440px PNG byte 일치.
+- `check-backend-v090.mjs`, `check-operational-api.mjs`, `check-live-connections.mjs`, `check-cleaning-workflow.mjs`, `check-photo-performance.mjs`(이번 실행은 benchmark 제외), `check-live-navigation.mjs`, `check-live-performance.mjs`, `check-maid-photo-history-fixes.mjs` PASS. 송금 on/off·재확인·409, 실제 지급 원장 불변, 사진 1~20장/다중 선택/직렬 큐/null fallback/이력/확대, 촛불/검수/배정/권한/Back을 합성 API로 확인했다.
+- 기존 회귀 fixture 4개에 신규 batch 정상 응답을 추가했다. 내비게이션 첫 실행의 미지원 mock 오류는 이를 최신 계약으로 보완한 뒤 재실행해 통과했다. 제품의 오류 검증을 완화하지 않았다.
+- Browser plugin not available. 기존 Playwright/Chromium 151.0.7922.34, `http://127.0.0.1:4177`. 페이지 URL/제목·비어 있지 않은 화면·오류 overlay 없음·console warning/error 및 page error 없음. 테스트 요청과 mutation은 전부 가로챈 QA 가상 데이터다.
+- 증거: `QA/screenshots/v093-{before,after}-{390,1440}.png`, `v093-error-{360,390,768,1440}.png`. 정상 데스크톱과 모바일 오류 카드 육안 확인. 사용자 PNG와 기존 QA 캡처는 덮어쓰지 않는다.
+
+### 합성 성능
+
+같은 fixture로 각 3회. 목록 첫 페이지 30ms/후속 60ms, 단건 marker 80ms, 묶음은 네트워크 60ms + 3개 병렬 그룹당 20ms를 가정했다. 첫 표시는 카드 DOM 삽입, 전체 표시는 모든 송금 조회 중 표시 종료 뒤다. p95는 3회 중 최댓값이며 운영·실기기 p95나 DB 개선율이 아니다.
+
+| 인원 | 이전 첫 표시 p50/p95 ms | 현재 첫 표시 p50/p95 ms | 이전 전체 p50/p95 ms | 현재 전체 p50/p95 ms | 목록+송금 HTTP 전/후 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 | 45 / 46 | 41 / 42 | 136 / 137 | 135 / 142 | 2 / 2 |
+| 10 | 44 / 46 | 43 / 45 | 398 / 398 | 197 / 204 | 11 / 2 |
+| 20 | 44 / 44 | 44 / 44 | 666 / 673 | 352 / 355 | 22 / 4 |
+
+배정 주 가능일 조회도 10명일 때 10→1회다(후보 1회 별도). batch 내부 DB RPC는 여전히 N회이며 같은 DB snapshot이 아니다. 공통 `api_total`은 handler 시간으로만 해석한다. 실제 인증 계정 batch/근무표/사진 성공 UAT, 휴대폰 실기기 성능은 NOT RUN. 사진 snapshot flag는 false 유지하며 지정 대상 정상 UAT 뒤 프런트가 활성화한다. 실제 null 강제 재현 때문에 다른 개발을 막지 않는다. 백엔드 후속과 프런트 후속은 [문서 33](../DOCS/33_DATA_PERFORMANCE_INTEGRATION.md)에서 구분한다.
+
+### 배포와 정적 검사
+
+- `check-workspace.mjs`, `check-pwa.mjs`, `generate-cleaning-client.mjs --production --check`, `git diff --check` PASS. 최종 UX 감사 원문 불변. 게시 OpenAPI SHA256 `110623b8ad92c532d902bb7d8e5a57c6bb8309f65519a4e9b84e384f2ae57f60`.
+- 신규 batch 공개 무인증 GET은 `401 MISSING_ACCESS_TOKEN`, 운영 Origin CORS 일치, Server-Timing 없음 확인. 인증 성공·실제 개인정보 조회 검증과 구분한다.
+- Production: `https://room-management-system-prod.vercel.app/`, `dpl_8hzYSZUeWTQVtd6QpbQRM7erf8Wd` (`room-management-system-prod-b60dk8r15.vercel.app`). 공개 HTML/worker byte 일치, live/production, snapshot false 확인.
+- Preview: `https://room-management-system-prod-preview.vercel.app/`, `dpl_8WumXKV3pZYDYfV7bfiM7jbgjNH3` (`room-management-system-prod-204dap2dm.vercel.app`). 기존 배포 보호 유지. 인증 CLI로 알려진 Vercel feedback script만 제외한 HTML 일치, worker byte 일치, live/preview, snapshot false 확인 후 alias 연결.
+- 최종 HTML SHA256 `26ab0aa9909a8ed1e79fea43f6e5df7cf2ef48d0eaabd0589f24eaa5bbb3b214`, worker `2026-10-10-2` / SHA256 `4876161825cb213fcc385e1fc0daa50bd002f47a091762e896b9e7930215a5fe`. 두 채널은 같은 운영 API/DB를 사용한다.
+- `check-deployed-visual.mjs` PASS: 실제 배포 HTML의 관리자 6/메이드 4 화면, 4개 폭, 넘침·console/page error 없음. runtime을 demo로 가로챈 시각 검증이며 실계정 UAT가 아니다.
+
 ## 2026-10-09 최신 인계 반영과 조회 성능 #207
 
 인계 PR #209를 검사 후 dev `41ac17a`에 병합했다. 백엔드 v0.9.2/main `32c100e`, API 43의 공개 health 200 및 운영/게시 OpenAPI paths/components 동일성을 재확인했다. 게시 SHA256 `b1ab571818063e07964f139fa10a2225f93ba3945a98e303784b4b8bf22a6eff`, 150 paths/162 operations. 아래 이전 #206의 Draft/미배포 기록은 당시 checkpoint이며 최신 상태가 아니다.

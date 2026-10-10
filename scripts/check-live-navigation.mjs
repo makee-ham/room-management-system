@@ -40,6 +40,7 @@ await page.route(`${api}/**`,async route=>{
   if(path==='/v1/payroll'){const week=url.searchParams.get('weekStart');if(week===delayedWeek)await new Promise(resolve=>{releaseDelay=resolve;});return json({payroll:[{...cycle(week),...(invalidPayroll?{totalAmount:null}:{})}],nextCursor:null});}
   if(path==='/v1/payroll/entries')return json({entries:[],nextCursor:null});
   if(path==='/v1/payroll/remittance-marker')return json({maidProfileId:id(2),weekStart:url.searchParams.get('weekStart'),marked:false,version:0,basisFingerprint:'a'.repeat(64),canSet:true,canClear:false,canReconfirm:false,needsReconfirmation:false});
+  if(path==='/v1/payroll/remittance-markers')return json({weekStart:url.searchParams.get('weekStart'),markers:[{maidProfileId:id(2),weekStart:url.searchParams.get('weekStart'),marked:false,version:0,basisFingerprint:'a'.repeat(64),canSet:true,canClear:false,canReconfirm:false,needsReconfirmation:false}]});
   if(path==='/v1/payroll/work-details')return json({maidProfileId:id(2),weekStart:url.searchParams.get('weekStart'),kind:url.searchParams.get('kind'),summary:{},entries:[],nextCursor:null});
   if(path.endsWith('/supplemental-room-issues'))return json({source:{sourceSubmissionId:submission.id,sourceStatus:'approved',ownership:'original_performer'},reports:[]});
   if(path==='/v1/notifications')return json({notifications:[],nextCursor:null});

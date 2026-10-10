@@ -1167,6 +1167,11 @@ export type WebPushSubscriptionRetireRequest = {
   expectedVersion: number;
 };
 
+export type PayrollRemittanceBatch = {
+  weekStart: string;
+  markers: Array<PayrollRemittanceMarker>;
+};
+
 export type PayrollRemittanceBasis = {
   accrualAmount: number;
   totalAmount: number;

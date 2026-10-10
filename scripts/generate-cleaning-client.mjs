@@ -14,8 +14,8 @@ function assert(ok,copy){if(!ok)throw new Error(copy);}
 export function verifyCleaningContract(doc){
   const paths=doc.paths||{},schemas=doc.components?.schemas||{};
   assert(doc.info?.version==='0.6.0','Expected production API version 0.6.0.');
-  assert(Object.keys(paths).length===150,'Expected 150 paths.');
-  assert(Object.values(paths).reduce((n,p)=>n+Object.keys(p).filter(k=>methods.includes(k)).length,0)===162,'Expected 162 operations.');
+  assert(Object.keys(paths).length===151,'Expected 151 paths.');
+  assert(Object.values(paths).reduce((n,p)=>n+Object.keys(p).filter(k=>methods.includes(k)).length,0)===163,'Expected 163 operations.');
   assert(doc.servers?.[0]?.url===api||!production&&doc.servers?.[0]?.url==='https://example.supabase.co/functions/v1/api','OpenAPI server URL differs from the documented production API/source export.');
   const request=schemas.PublishCleaningTemplateRequest,response=schemas.PublishedCleaningTemplate;
   assert(request&&response,'Cleaning template schemas are missing.');
@@ -41,6 +41,11 @@ export function verifyCleaningContract(doc){
     ['/v1/room-types','get'],['/v1/reservations/bookability/preview','post'],['/v1/reservations/{reservationId}/room-change/preview','post'],['/v1/reservations/{reservationId}/room-change','post'],['/v1/cleaning-history','get'],['/v1/work-history','get']
   ];
   for(const [path,method] of requiredOperations)assert(paths[path]?.[method],`Missing ${method.toUpperCase()} ${path}`);
+  const batch=paths['/v1/payroll/remittance-markers']?.get,ids=batch?.parameters?.find(item=>item.name==='maidProfileIds');
+  assert(batch?.operationId==='listPayrollRemittanceMarkers'&&ids?.in==='query'&&ids.required&&ids.schema?.type==='string'&&ids.schema.minLength===36&&ids.schema.maxLength===369,'Remittance batch must accept one CSV query string, not repeated parameters or an array.');
+  assert(new RegExp(ids.schema.pattern).test('10000000-0000-4000-8000-000000000001,10000000-0000-4000-8000-000000000002'),'Remittance CSV must accept multiple UUIDs.');
+  const batchSchema=schemas.PayrollRemittanceBatch;
+  assert(batch.responses?.['200']?.content?.['application/json']?.schema?.$ref==='#/components/schemas/PayrollRemittanceBatch'&&batchSchema?.required?.includes('weekStart')&&batchSchema.required.includes('markers')&&batchSchema.properties.markers.items.$ref==='#/components/schemas/PayrollRemittanceMarker','Remittance batch must preserve weekStart and the existing marker contract.');
   const idempotentPosts=requiredOperations.filter(([,method])=>method==='post').filter(([path])=>!['/v1/assignments/preview','/v1/notifications/{notificationId}/read','/v1/reservations/bookability/preview','/v1/reservations/{reservationId}/room-change/preview'].includes(path));
   for(const [path] of idempotentPosts){const parameters=paths[path].post.parameters||[];assert(parameters.some(item=>item.name==='Idempotency-Key'&&item.in==='header'&&item.required===true),`Missing required Idempotency-Key on POST ${path}`);}
   assert(paths['/v1/attempts/{attemptId}/photo-slots/{slotId}/upload'].post.requestBody?.content?.['image/jpeg'],'Photo upload must accept image/jpeg bytes.');
@@ -92,4 +97,4 @@ Object.keys(schemas).filter(name=>/^(PayrollRemittance|PayrollWork|PayrollAdjust
 for(const name of needed){assert(schemas[name],`Missing schema ${name}`);output+=`export type ${name} = ${type(schemas[name])};\n\n`;}
 if(checkOnly)assert(await readFile(resolve(root,'WIREFRAME/cleaning-api.d.ts'),'utf8')===output,'Generated client types differ. Regenerate using the same OpenAPI source.');
 else await writeFile(resolve(root,'WIREFRAME/cleaning-api.d.ts'),output);
-console.log(`[ok] ${production?'Canonical OpenAPI':'Source OpenAPI'}: 150 paths / 162 operations; dated rooms, shared candles, remittance markers, supplemental reports, assignments and operational contracts verified. ${checkOnly?'Checked without writes.':'Client types regenerated.'}`);
+console.log(`[ok] ${production?'Canonical OpenAPI':'Source OpenAPI'}: 151 paths / 163 operations; dated rooms, shared candles, remittance batch CSV, supplemental reports, assignments and operational contracts verified. ${checkOnly?'Checked without writes.':'Client types regenerated.'}`);

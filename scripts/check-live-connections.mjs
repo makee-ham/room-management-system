@@ -60,6 +60,7 @@ await page.route('**/*',async route=>{
   if(path===`/v1/assignments/${targetId}/unavailable-cancel`){assert.deepEqual(body,{expectedCurrentAssignmentId:assignmentId,expectedAssignmentVersion:7,expectedAttemptId:attemptId,expectedExecutionVersion:3,reasonCode:'MAID_UNAVAILABLE'});return fixture(route,{assignment});}
   if(path===`/v1/payroll/${cycleId}`)return fixture(route,{cycle});
   if(path==='/v1/payroll')return fixture(route,{payroll:[cycle],nextCursor:null});
+  if(path==='/v1/payroll/remittance-markers')return fixture(route,{weekStart:url.searchParams.get('weekStart'),markers:[{maidProfileId:maidId,weekStart:url.searchParams.get('weekStart'),marked:false,version:0,basisFingerprint:'a'.repeat(64),canSet:false,canClear:false,canReconfirm:false,needsReconfirmation:false,setBlockedReason:'NO_PAYROLL_AMOUNT'}]});
   if(path==='/v1/payroll/entries')return fixture(route,{entries:[],nextCursor:null});
   if(path==='/v1/payroll/remittance-marker')return fixture(route,{maidProfileId:maidId,weekStart:url.searchParams.get('weekStart'),marked:false,version:0,basisFingerprint:'a'.repeat(64),canSet:false,canClear:false,canReconfirm:false,needsReconfirmation:false,setBlockedReason:'NO_PAYROLL_AMOUNT'});
   if(path==='/v1/payroll/work-details')return fixture(route,{maidProfileId:maidId,weekStart:url.searchParams.get('weekStart'),kind:url.searchParams.get('kind'),summary:{},entries:[],nextCursor:null});
