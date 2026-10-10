@@ -28,7 +28,7 @@ await page.route('**/*',async route=>{
   if(url.origin===origin){if(url.pathname==='/index.html')return route.fulfill({contentType:'text/html',body:source.replace('\n      void bootApplication();',boot+helpers)});return route.continue();}
   if(!request.url().startsWith(api+'/')){unexpected.push(url.origin);return route.abort();}
   const path=url.pathname.replace('/functions/v1/api','');
-  if(path==='/v1/assignments')return json(route,{assignments});
+  if(path==='/v1/assignments')return json(route,{assignments:url.searchParams.get('serviceDate')===date?assignments:[]});
   if(path==='/v1/assignment-change-requests')return json(route,{requests:[],nextCursor:null});
   if(path==='/v1/notifications')return json(route,{notifications:[],nextCursor:null});
   if(path==='/v1/complaints')return json(route,{complaints:[],nextCursor:null});
@@ -132,6 +132,21 @@ try{
   await page.locator(`[data-photo-slot="${slots[0][0].slotId}"] [data-action="live-photo-retry"]`).first().click();await settled();
   assert.equal(slots[0][0].photos.length,5);assert.equal(writes.filter(w=>w.i===0&&w.key).at(-1).key,failedWrite.key);assert.equal(maxActive,1);
   console.log('[ok] one room failure does not stop another room; attention status and same-key retry');
+  holdUploads=true;await gallery(0).setInputFiles(files(2));await until(()=>!!releaseUpload);
+  const nextDate=new Date(Date.parse(date+'T00:00:00Z')+86400000).toISOString().slice(0,10);
+  await page.locator('#cleaning-service-date').fill(nextDate);await page.locator('#cleaning-service-date').dispatchEvent('change');
+  await page.waitForFunction(()=>document.querySelectorAll('[data-maid-room-task]').length===0);
+  assert.equal(new URL(page.url()).searchParams.get('date'),nextDate);
+  assert.equal((await page.evaluate(()=>__queueQA.get())).queue,2);
+  assert((await page.locator('[data-live-photo-queue-status]').innerText()).includes('2장'));
+  holdUploads=false;releaseUpload();releaseUpload=null;await settled();
+  assert.equal(slots[0][0].photos.length,7);assert.equal(maxActive,1);
+  assert.equal(await page.locator('[data-maid-room-task]').count(),0,'completed old-date upload must not restore old-date cards');
+  await page.goBack();await page.locator(`[data-action="cleaning-maid-room-toggle"][data-id="${assignments[0].assignmentId}"]`).waitFor();
+  assert.equal(await page.locator('#cleaning-service-date').inputValue(),date);
+  await page.locator(`[data-action="cleaning-maid-room-toggle"][data-id="${assignments[0].assignmentId}"]`).click();
+  await page.waitForFunction(()=>document.querySelectorAll('[data-cleaning-photo-item]').length===7);
+  console.log('[ok] delayed 2-photo upload keeps original assignment across date change; Back reads all saved photos');
   assert.deepEqual(unexpected,[]);assert.deepEqual(errors,[]);
   console.log('[ok] 360/390/768/1440px, nonblank maid screen, no console/page errors; synthetic writes only');
 }finally{releaseUpload?.();releaseRead?.();await browser.close();}
