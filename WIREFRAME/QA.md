@@ -1,5 +1,20 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-10 기본 접힘·필요 시 상세 조회
+
+기준 `dev 82bc340`. 검증 흐름: 내 업무 진입 → 접힌 객실 목록 먼저 표시 → 객실 펼치기 → 해당 상세와 화면 근처 사진만 조회 → 다른 객실 명령/업로드 → 확대·뒤로가기. 기존 UI의 기본 접힘과 조회 시점만 변경하며 업무 쓰기는 전부 합성 fixture로 가로챘다.
+
+- PASS: `check-lazy-cleaning.mjs`. 느린 수행 상태 전에 첫 목록 표시, 기본 모두 접힘, 닫힌 객실 상세/이미지 요청 0건, 요청 중 접기/재열기, 15초 신선도·중복 요청 병합, 객실별 실패/재시도, 명령 후 해당 객실 GET 3개만 수행. 촛불/추가 특이사항 지연이 사진 표시를 막지 않음.
+- PASS: 화면 위아래 300px 안쪽부터 메이드 사진 조회. 20장 중 초기 6장만 요청한 fixture 확인. 두 객실을 함께 펼쳐도 인증 사진 GET 최대 4개, 개별 실패 재시도, 보관 만료 metadata 반영 시 메모리 URL 해제/확대 제거. 날짜·인증 변경의 늦은 응답 폐기.
+- PASS: 홈 검수/배정, 관리자 근무표, 데모 메이드 가능일·주급 상세 기본 접힘. 명시적으로 펼친 상태는 재렌더링에서 유지. 근무표 데이터는 요약/담당 선택/저장 검증에도 필요하므로 기본 조회 유지. 기존에 접히지 않던 화면은 새 패널로 바꾸지 않음.
+- PASS: `check-photo-queue-handoff.mjs`, `check-cleaning-workflow.mjs` 30그룹, `check-maid-photo-history-fixes.mjs`, `check-live-navigation.mjs`. 전송 중 다른 객실 시작·완료·추가 선택·이동, 입력 DOM/포커스/선택 영역, 동일 key/bytes 재시도, 검수 제출 가드, PIN/역할/촛불/이력/확대/Back/Forward 유지. 새 부분 조회에 맞춰 경합 검사는 명시적 전체 조회와 업로드를 겹쳐 검증한다.
+- PASS: `check-photo-performance.mjs` 1/5/20장 및 실패 회귀. snapshot/null/불일치·accepted 후 확인 실패·응답 유실·409·미완료 operation·HEIC fallback·한도·추가 선택·URL 수명·로그아웃. 업로드 최대 1개 유지. `check-data-performance.mjs`의 근무표/주급 묶음/홈 점진 표시 회귀 통과.
+- 합성 비교: 같은 3객실/조회 지연을 적용한 기존 `82bc340`은 첫 카드 1311ms, 변경 후 199ms. 해당 첫 진입 총 요청 25 → 5개, 상세/이미지 요청 20 → 0개. 단일 로컬 표본이며 서버 전송·실기기 속도 개선율이나 p50/p95로 해석하지 않는다. 재현: `RMS_QA_BASELINE=82bc340 node scripts/check-lazy-cleaning.mjs`.
+- 환경: 로컬 `http://127.0.0.1:4177`, 기존 Playwright/Chromium 151.0.7922.34. Browser plugin not available; 운영 읽기 전용 확인에는 기존 인앱 제어 도구를 사용한다. 360/390/768/1440px 가로 넘침 없음, 비어 있지 않은 화면, 키보드 Enter/Space/사진 Back·포커스 복귀, 접근성 이름/44px 객실 토글, console warning/error 및 page error 없음.
+- 증거: `QA/screenshots/lazy-cleaning-collapsed-{360,390,768,1440}.png`, `QA/screenshots/lazy-cleaning-expanded-{360,390,768,1440}.png`. QA 가상 객실/사진만 기록. 모바일 접힘·데스크톱 펼침 PNG를 육안 확인했고 기존 카드/버튼 구조를 유지한다. 과거 회귀 PNG는 복원하며 사용자 미커밋 PNG는 보존한다.
+- 백엔드 최신 인계 v0.9.4/API45의 기존 JSON/snapshot/null/CAS/순차 큐 계약과 호환한다. 신규 DB/Drive/권한/보존 변경 없음. `check-workspace.mjs`, `check-pwa.mjs`, `git diff --check` 통과. worker는 `2026-10-10-4`이며 강제 새로고침은 추가하지 않는다.
+- NOT RUN: 새 운영 업로드/제출/삭제, 실제 iOS/Android·갤러리·HEIC·20장·저속망·OS 백그라운드/종료 후 복구. 기존 사진 조회와 새 전송 실측을 구분한다. 앱 내부 이동 중 전송은 계속되지만 새로고침·로그아웃·앱 종료 후 전송 보장은 없다.
+
 ## 2026-10-10 사진 전송 중 업무 전환
 
 기준 `dev 43db494`. 검증 흐름: 객실 A 사진 선택 → 전송 대기 즉시 표시 → 객실 B 시작/현장 완료·추가 사진 선택 → 더보기로 이동 → 양쪽 사진 저장 확인 → 내 업무 복귀. 쓰기는 전부 합성 fixture로 가로챘으며 운영 사진·검수 상태는 변경하지 않았다.

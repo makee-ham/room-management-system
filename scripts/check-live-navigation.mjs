@@ -75,7 +75,7 @@ try{
   await responsive('home');await page.screenshot({path:resolve('WIREFRAME/QA/screenshots/live-home-tomorrow-390.png'),fullPage:true});
   await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:resolve('WIREFRAME/QA/screenshots/live-home-tomorrow-1440.png'),fullPage:true});await page.setViewportSize({width:390,height:900});
   await click('go-inspection');await stateIs('cleaning','inspection');assert.match(page.url(),/tab=inspection/);
-  await page.goBack();await stateIs('today');await click('go-cleaning-assignment');await stateIs('cleaning','assignment-tomorrow');assert.match(page.url(),/tab=assignment-tomorrow/);
+  await page.goBack();await stateIs('today');const assignmentDisclosure=page.locator('[data-action="toggle-section"][data-key="assignment"]');assert.equal(await assignmentDisclosure.getAttribute('aria-expanded'),'false');await assignmentDisclosure.click();await click('go-cleaning-assignment');await stateIs('cleaning','assignment-tomorrow');assert.match(page.url(),/tab=assignment-tomorrow/);
   await page.goBack();await stateIs('today');await page.goForward();await stateIs('cleaning','assignment-tomorrow');
   await page.locator('[data-action="cleaning-tab"][data-tab="assignment-today"]').click();await stateIs('cleaning','assignment-today');
   await page.goBack();await stateIs('cleaning','assignment-tomorrow');
