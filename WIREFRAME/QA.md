@@ -15,6 +15,10 @@
 - PASS: `node scripts/check-workspace.mjs`, `node scripts/check-pwa.mjs`, `git diff --check`. 390/1440px 대표 PNG 육안 확인. 정본 감사 문서는 변경하지 않았다.
 - NOT RUN: 실제 iOS/Android 갤러리·HEIC 20장·저속 통신망·OS 백그라운드/앱 종료 후 복구·새 운영 사진 업로드/삭제/제출. 앱 내부 이동 중 전송 유지와 새로고침/로그아웃/앱 종료 후 전송 보장은 별개이며 후자는 제공하지 않는다.
 - 백엔드 최신 이슈 #206의 v0.9.4/API45 1차 종료 인계에 변경 없음 확인. 이번 수정은 프런트 날짜/조회 범위 처리이며 새 endpoint·DB·권한 변경 요청은 없다. Worker `2026-10-11-1`, 강제 새로고침 없음.
+- Production Ready `dpl_7oG699U1grqE4HivJrrhuz8tTKw6` (`room-management-system-prod-oz5a8g3f7.vercel.app`) → `https://room-management-system-prod.vercel.app/`. live/production/local, snapshot true, 공개 HTML·worker byte 일치.
+- Preview Ready `dpl_EhNhMEt7eMANoVZXV2N8TiCsmcBe` (`room-management-system-prod-du860cpvp.vercel.app`) → `https://room-management-system-prod-preview.vercel.app/`. live/preview/session, snapshot true, 인증 CLI에서 해당 배포 feedback script만 제외한 HTML과 worker byte 일치. 첫 인증 호출은 scope 누락으로 보호 응답을 받았고 명시적 팀 scope로 확인했다. 고정 alias 및 공개 보호 302 유지.
+- 앱 소스 commit `f1491e0`. HTML SHA256 `c309e79e948e8f167349d522674e7a23ad0ba2f611e129f8506202ea4ffef864`, worker SHA256 `189491346517dea28c17ca44f14535f12538066ffa5411680d2d419fd42b646d`. 후속 commit은 배포 증거 문서뿐이다.
+- 운영 인앱 PASS: 전송/작성/모달 대기 없음 확인 → 일반 새로고침·새 버전 적용 → 10/11 업무 2건 → 날짜 입력으로 10/10 선택 시 URL 동기화·0건 → Back 10/11·2건/모두 접힘 → Forward 10/10 → 새로고침 후 10/10·0건 유지 → 10/11 복귀. console warning/error 없음. 운영 신규 업로드·삭제·검수 제출 및 사진 원문 캡처/로그 없음.
 
 ## 2026-10-10 기본 접힘·필요 시 상세 조회
 
