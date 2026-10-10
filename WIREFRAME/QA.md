@@ -1,5 +1,21 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-10 사진 snapshot 운영·프리뷰 전체 적용
+
+사용자의 명시적 전체 적용 지시, 기준 `dev 91ec7dd`. 앱 HTML/CSS/JS와 worker는 변경하지 않고 빌더 기본값, 환경 예시, Vercel Production·Preview 환경값을 true로 바꾸고 양 채널을 재배포했다. 아래 UAT 당시 false 기록은 역사적 checkpoint이며 현재 전역 설정은 true다. 서버 DB·Drive 최적화는 별도 작업이다.
+
+- PASS: `check-photo-rollout.mjs` 격리 fixture에서 양 채널 기본 true, 명시적 false 롤백, 로컬 환경/프로세스 환경 우선순위, demo 설정 분리. 실제 credential·운영 API 쓰기 없음.
+- PASS: `check-photo-performance.mjs` 전체 1/5/20장 비교 및 6그룹. snapshot/null/불일치/accepted 후 GET 실패/응답 유실/409/미완료 operation/동일 key·bytes, HEIC 불가 fallback, 추가 선택/20장 초과, 이동·로그아웃·메모리 URL, 최대 4조회·확대·키보드·포커스. 360/390/768/1440px 넘침 없음. 합성 snapshot 경로의 슬롯 GET은 각 선택 배치 1회로 20장도 21회에서 1회다. 실제 운영 속도 개선율로 해석하지 않는다.
+- PASS: `check-cleaning-workflow.mjs` 30그룹, `check-workspace.mjs`, `generate-cleaning-client.mjs --production --check`, `git diff --check`. 최신 공개 계약 151 paths/163 operations 확인. 사진 검증·제출·권한·CAS·순차 큐 계약 유지.
+- 합성 회귀: 기존 Playwright/Chromium 151.0.7922.34, `http://127.0.0.1:4177`. Browser plugin not available; 실제 운영 화면 검수에는 사용자가 요청한 인앱 브라우저 제어 도구를 사용했다. 합성 업무 mutation은 전부 fixture로 가로챘다. UI 소스 변경이 없어 기존 캡처를 새 결과로 덮어쓰지 않았다.
+- Production: `dpl_6ETg12p2mjZQ3Kse8eBMyvQs8v1n`, `room-management-system-prod-ajhkp1n87.vercel.app` → `https://room-management-system-prod.vercel.app/`. 공개 runtime live/production/local, snapshot true. HTML/worker byte 일치.
+- Preview: `dpl_AbqkYLb5GSzRPraMnULknm599fQc`, `room-management-system-prod-75rjivpk9.vercel.app` → `https://room-management-system-prod-preview.vercel.app/`. 인증 CLI로 runtime live/preview/session, snapshot true. HTML은 정확한 Vercel feedback script 하나만 제외하고 일치, worker byte 일치. 고정 alias 재확인과 기존 공개 보호 302 유지.
+- HTML SHA256 `26ab0aa9909a8ed1e79fea43f6e5df7cf2ef48d0eaabd0589f24eaa5bbb3b214`, worker `2026-10-10-2` / SHA256 `4876161825cb213fcc385e1fc0daa50bd002f47a091762e896b9e7930215a5fe`. runtime은 캐시하지 않으므로 새 앱 문서에서 새 값을 읽는다. 전송 중인 메모리 큐를 끊는 강제 갱신은 추가하지 않았다.
+- PASS: 배포 후 운영 인앱 일반 새로고침 → 내 업무 → 기존 사진 6장 모두 디코딩 → 확대 → Back → 원 사진 버튼 포커스. 정확한 URL/제목, 비어 있지 않은 화면, 오류 overlay 없음, console warning/error 없음. 개인정보·실제 사진 원문 캡처는 저장소에 기록하지 않았다.
+- NOT RUN: 이번 배포 뒤 새 운영 업로드/검수 제출/삭제. 같은 HTML·snapshot true의 정상 쓰기는 직전 지정 계정 5+1장 UAT로 확인했고 재실행하지 않았다. 실제 iOS/Android·HEIC·20장·저속망·실제 null/409/응답 유실은 여전히 미실행이다.
+
+롤백: 양 채널 환경값을 false로 저장하고 `RMS_PHOTO_UPLOAD_SNAPSHOT=false`로 재빌드·배포한 뒤 runtime 값을 확인한다. 환경값 변경만으로 정적 배포가 갱신되지 않는다. 사용 중 문서는 업로드 종료 후 새로 열어야 한다. 상세는 `DOCS/32_PHOTO_PERFORMANCE_INTEGRATION.md`를 따른다.
+
 ## 2026-10-10 지정 계정 사진 업로드 UAT
 
 사용자 지정 계정/객실, 운영 URL `https://room-management-system-prod.vercel.app/`, 인앱 브라우저 제어 도구. 운영 HTML SHA256은 아래 v0.9.3 배포 및 `dev 7f04adc` 소스와 동일했다. 코드·전체 배포 설정을 바꾸지 않고 현재 탭 runtime 응답의 snapshot 옵션만 일회성 true로 적용했다. 사용자가 5장 다중 선택 후 1장을 직접 추가했고, 일시 timing 관찰은 원문·이름·인증값·업무 ID 없이 시간/bytes/status/헤더만 메모리에 기록한 뒤 제거했다.

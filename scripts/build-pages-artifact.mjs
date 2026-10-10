@@ -87,7 +87,7 @@ if (runtimeMode === "demo") {
     supabasePublishableKey: value("SUPABASE_PUBLISHABLE_KEY"),
     sessionPersistence: value("RMS_SESSION_PERSISTENCE", "session").toLowerCase(),
     deploymentChannel,
-    featureFlags: { optionalCleaningWorkflow: true, photoUploadSnapshot: value("RMS_PHOTO_UPLOAD_SNAPSHOT", "false") === "true" },
+    featureFlags: { optionalCleaningWorkflow: true, photoUploadSnapshot: value("RMS_PHOTO_UPLOAD_SNAPSHOT", "true") === "true" },
   };
   const refs = [
     projectRef(config.apiBaseUrl, "/functions/v1/api"),

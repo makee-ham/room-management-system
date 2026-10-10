@@ -15,7 +15,7 @@
 
 ## 2026-10-10 지정 계정 정상 UAT
 
-프런트 `dev 7f04adc`와 동일한 운영 HTML에서 사용자가 직접 5장 다중 선택 후 1장을 추가했다. 인앱 브라우저 제어 도구로 현재 탭의 runtime 응답에만 `photoUploadSnapshot=true`를 일회성 적용했다. 배포 설정·소스·인증·API 응답은 변경하지 않았다. 전체 운영/프리뷰 옵션은 계속 **false**이며, 이 테스트를 전역 활성화로 해석하지 않는다.
+프런트 `dev 7f04adc`와 동일한 운영 HTML에서 사용자가 직접 5장 다중 선택 후 1장을 추가했다. 인앱 브라우저 제어 도구로 현재 탭의 runtime 응답에만 `photoUploadSnapshot=true`를 일회성 적용했다. 이 UAT 당시에는 배포 설정·소스·인증·API 응답을 변경하지 않았고 전체 운영/프리뷰 옵션은 false였다. 이후 사용자가 전체 적용을 지시해 아래 전역 활성화를 별도로 완료했다.
 
 - 6개 POST 모두 `includePhotoSlots=true`, HTTP 200, 등록 완료. 배치별 시작 전 슬롯 GET 1회 이후 업로드 사이/직후 재조회가 없어 유효 snapshot 경로 작동을 확인했다.
 - 다른 화면을 거쳐 돌아온 뒤 인증 content GET 6건과 저장본 6장의 디코딩을 확인했다. 확대, Escape, 확대에서 브라우저 뒤로가기와 사진 유지도 확인했다. 확대를 닫을 때 추가 content 요청은 없었다. 일시 계측을 제거하고 일반 설정으로 새로고침한 뒤에도 6장 디코딩을 확인했다. 검수 제출·승인·삭제는 실행하지 않았다.
@@ -32,11 +32,23 @@
 
 이 표본에서는 서버 `api_total`이 추가 1장 요청의 약 93%다. 추가 압축만으로 해결된다고 판단하지 않는다. DB 세부 왕복/잠금/최종 확정·snapshot과 Drive 폴더/토큰/업로드 단계 계측, 권한·보존 연계 작은 썸네일, 안전한 병렬 계약을 [백엔드 #411 실측 인계](https://github.com/wrongstory/room-management-system-backend/issues/411#issuecomment-6095870502)에 요청했다. [프런트 #206 결과](https://github.com/makee-ham/room-management-system/issues/206#issuecomment-6095868309)에도 같은 근거와 한계를 기록했다.
 
-정상 UAT 통과와 체감 속도 개선 완료는 별개다. 실제 모바일 갤러리/HEIC/20장/저속망, 실제 null·409·응답 유실 복구는 이번 UAT에서 **NOT RUN**이다. 실패는 운영에 강제로 유발하지 않았고 기존 fixture 회귀와 구분한다. 옵션 전역 활성화·배포는 별도 프런트 후속이다.
+정상 UAT 통과와 체감 속도 개선 완료는 별개다. 실제 모바일 갤러리/HEIC/20장/저속망, 실제 null·409·응답 유실 복구는 이번 UAT에서 **NOT RUN**이다. 실패는 운영에 강제로 유발하지 않았고 기존 fixture 회귀와 구분한다.
+
+## 2026-10-10 운영·프리뷰 전체 적용
+
+사용자의 전체 적용 지시에 따라 `RMS_PHOTO_UPLOAD_SNAPSHOT=true`를 Vercel Production·Preview 환경에 저장하고 두 채널을 다시 빌드·배포했다. 빌더 기본값과 `.env.example`도 true로 바꾸어 이후 배포에서 누락으로 꺼지지 않게 했다. 명시적인 false 환경값은 계속 우선하며, 앱은 runtime flag가 없으면 기존 조회 방식으로 동작한다.
+
+- Production `dpl_6ETg12p2mjZQ3Kse8eBMyvQs8v1n`: 고정 운영 주소에서 live/production/local 및 snapshot true 확인.
+- Preview `dpl_AbqkYLb5GSzRPraMnULknm599fQc`: 고정 프리뷰 주소에서 인증 CLI로 live/preview/session 및 snapshot true 확인. 기존 배포 보호 302 유지.
+- 두 산출물의 HTML·worker는 기존 정본과 동일하다. Preview HTML의 Vercel feedback script 하나만 제외하고 비교했다. API/DB·사진 원문·검수 상태·동시성·권한·보존 정책은 변경하지 않았다.
+- 배포 후 인앱 화면을 일반 새로고침하여 저장된 6장 디코딩, 확대, 브라우저 Back과 포커스 복귀, console warning/error 없음 확인. 추가 사진 업로드·제출·삭제는 실행하지 않았다.
+- `check-photo-rollout.mjs`는 격리된 임시 fixture에서 양 채널 기본 true, 명시적 false 롤백, 환경 우선순위와 demo 분리를 검증한다. 사진 1/5/20장·실패 복구·4개 폭 합성 회귀와 기존 청소 30그룹도 통과했다.
+
+열려 있는 다른 기기에는 다음 앱 진입 또는 새로고침부터 적용된다. 메모리 업로드 큐가 진행 중일 때는 새로고침하지 않는다. 서버 DB·Drive 성능 개선은 별도 백엔드 작업이며 이 전역 활성화를 서버 지연 해결로 표시하지 않는다. 상세 증거·미실행 범위는 `WIREFRAME/QA.md`를 따른다.
 
 ## 현재 제공
 
-2026-10-09 후속 프런트: 인계 PR #209를 dev에 병합하고 운영 OpenAPI와 게시 paths/components 일치를 재확인했다. `cleaning-api.d.ts`의 nullable 보존 필드·선택 snapshot을 재생성하고 생성기 계약 검사와 null operation 회귀 fixture를 보강했다. 2026-10-10 정상 UAT는 위 절을 따르며 전역 옵션은 false를 유지한다. 병행한 가능일·주급 조회 개선은 [문서 33](33_DATA_PERFORMANCE_INTEGRATION.md)에 분리했다.
+2026-10-09 후속 프런트: 인계 PR #209를 dev에 병합하고 운영 OpenAPI와 게시 paths/components 일치를 재확인했다. `cleaning-api.d.ts`의 nullable 보존 필드·선택 snapshot을 재생성하고 생성기 계약 검사와 null operation 회귀 fixture를 보강했다. 2026-10-10 정상 UAT와 전역 활성화는 위 절을 따른다. 병행한 가능일·주급 조회 개선은 [문서 33](33_DATA_PERFORMANCE_INTEGRATION.md)에 분리했다.
 
 - 기존 청소 사진 섹션·촬영/갤러리·완료/검수 요청 위치 유지. 일반 사진 1~20장, 갤러리 다중 선택과 한도 내 추가, 폭탄방·특이사항 별도 유지.
 - 선택한 JPEG/WebP는 메모리 Blob URL로 즉시 미리보기. HEIC 디코딩 불가 시 준비 상태를 표시하고 서버 확인 뒤 인증 content로 조회. 선택 사진을 등록 완료로 간주하지 않는다.
@@ -46,9 +58,9 @@
 - 사진 content는 기존 인증/no-store 조회를 유지한다. 현재 화면에서 보이는 사진부터 최대 4개씩 조회하며 완료된 이미지 노드와 검수 버튼 상태만 갱신한다. 업로드 진행도 해당 사진 섹션을 갱신하고 완료 시 제출 버튼을 갱신한다.
 - 내부 화면 이동 중 큐는 계속되지만 preview URL은 해제한다. 로그아웃/권한 세대 변경 시 파일·URL을 해제하고 늦은 준비/조회 결과는 반영하지 않는다. 종료 후 복구나 백그라운드 업로드 보장은 없다.
 
-## 프런트 실사용 점검 후 켤 옵션
+## 활성화 옵션과 롤백
 
-빌드 환경값 `RMS_PHOTO_UPLOAD_SNAPSHOT=true`를 주면 runtime `featureFlags.photoUploadSnapshot`을 켠다. 기본값은 **false**이며 이 문서 변경으로 활성화하지 않았다. 백엔드 운영 배포와 지정 계정 정상 UAT는 확인했고, 프런트 전역 활성화와 아래 미실행 실측은 남아 있다. 구버전 API는 알 수 없는 query를 거부하므로 구버전으로 롤백하기 전에 false로 재빌드·배포한다.
+빌드 환경값 `RMS_PHOTO_UPLOAD_SNAPSHOT=true`를 주면 runtime `featureFlags.photoUploadSnapshot`을 켠다. 현재 빌더 기본값과 두 배포 환경값은 **true**다. 구버전 API는 알 수 없는 query를 거부하므로 구버전으로 롤백하기 전에 양 채널 환경값을 false로 바꾸고 `RMS_PHOTO_UPLOAD_SNAPSHOT=false`로 재빌드·배포한다. 환경값 변경만으로 기존 정적 산출물이 바뀌지는 않는다. 새 runtime 응답에서 false를 확인하고 사용 중 문서도 전송 종료 후 새로 열어야 한다.
 
 1. 일반/collection upload POST에만 `includePhotoSlots=true`를 추가한다. false/빈 값은 보내지 않는다.
 2. accepted 응답의 `photoSlots`가 attempt/assignment/revision과 일치하고, 대상 photo/item의 verified 상태 및 최신 collection/item revision을 확인하면 후속 GET을 생략한다.
@@ -61,9 +73,9 @@
 1. 완료: 운영 Swagger 기준 nullable 타입과 snapshot 응답 처리 대조.
 2. 정상 경로 완료: 지정 테스트 계정/객실의 실제 업로드와 accepted snapshot. 실제 null fallback·동일 key/bytes 재시도는 미검증이며 fixture 결과와 구분한다.
 3. 완료: 허용 Origin의 인증된 사진 **성공** 응답에서 CORS `Server-Timing` 노출 확인. 오류/anonymous 401에는 timing 헤더를 요구하지 않는다.
-4. 후속: 결과는 #206과 `WIREFRAME/QA.md`에 기록했다. 프런트 전역 옵션 활성화와 실제 모바일 1/5/20장 실측은 남아 있다. 전역 업로드 1건·조회 최대 4건 상한은 그대로 유지한다.
+4. 전역 옵션 활성화 완료: 결과는 #206과 `WIREFRAME/QA.md`에 기록한다. 실제 모바일 1/5/20장 실측은 남아 있다. 전역 업로드 1건·조회 최대 4건 상한은 그대로 유지한다.
 
-2026-10-10 운영 사진 쓰기는 사용자가 지정한 테스트 대상에 직접 수행했다. 현재 탭에 한정한 검증과 전역 옵션 활성화는 구분하며, 전체 배포에 새 snapshot 효과가 적용됐다고 표시하지 않는다.
+2026-10-10 운영 사진 쓰기는 사용자가 지정한 테스트 대상에 직접 수행했다. 현재 탭에 한정한 UAT와 이후 전체 배포 활성화를 별도 기록하며, 이번 활성화 후 새 운영 쓰기를 다시 수행했다고 표시하지 않는다.
 
 `Server-Timing`의 `photo_db/body/decoder_init/decode/drive/total`은 인증 후 서버 구간이다. 브라우저 준비/전송/렌더 시간과 같지 않으며 이번 프런트는 사진·개인정보가 포함된 계측 로그를 추가하지 않았다. private thumbnail 및 안전한 업로드 병렬 계약은 백엔드 #411 후속 범위다.
 
