@@ -3475,7 +3475,7 @@
           if(view==='more')add(liveLoaderTask('complaints',state.remote.complaints,loadLiveComplaints,{force}));
         }
         if(!tasks.length)return [];
-        const result=await Promise.allSettled(tasks);if(generation===LIVE_RUNTIME.authGeneration&&!renderLiveSurface())render();return result;
+        const result=await Promise.allSettled(tasks);if(generation===LIVE_RUNTIME.authGeneration){if(role==='maid'&&view==='my')scheduleLiveReadRender();else if(!renderLiveSurface())render();}return result;
       }
       async function loadLiveRoleData(){return loadLiveViewData(currentView());}
       async function refreshAllLiveData(){
