@@ -14,6 +14,11 @@
 - 증거: `QA/screenshots/lazy-cleaning-collapsed-{360,390,768,1440}.png`, `QA/screenshots/lazy-cleaning-expanded-{360,390,768,1440}.png`. QA 가상 객실/사진만 기록. 모바일 접힘·데스크톱 펼침 PNG를 육안 확인했고 기존 카드/버튼 구조를 유지한다. 과거 회귀 PNG는 복원하며 사용자 미커밋 PNG는 보존한다.
 - 백엔드 최신 인계 v0.9.4/API45의 기존 JSON/snapshot/null/CAS/순차 큐 계약과 호환한다. 신규 DB/Drive/권한/보존 변경 없음. `check-workspace.mjs`, `check-pwa.mjs`, `git diff --check` 통과. worker는 `2026-10-10-4`이며 강제 새로고침은 추가하지 않는다.
 - NOT RUN: 새 운영 업로드/제출/삭제, 실제 iOS/Android·갤러리·HEIC·20장·저속망·OS 백그라운드/종료 후 복구. 기존 사진 조회와 새 전송 실측을 구분한다. 앱 내부 이동 중 전송은 계속되지만 새로고침·로그아웃·앱 종료 후 전송 보장은 없다.
+- 최종 추가 PASS: 늦은 `loadLiveViewData` 완료가 다른 객실의 작성 중 입력 DOM·내용·포커스를 유지하는 회귀를 보강했다. 보관 만료된 content는 메모리에서 해제하고 확대를 제거한다.
+- 2026-10-11 KST Production `dpl_DrgNpkuSHwKSLuf3ybJKGUY5uDPv` (`room-management-system-prod-20hlu4he1.vercel.app`) → `https://room-management-system-prod.vercel.app/`: Ready·고정 alias, live/production/local, snapshot true, HTML·worker byte 일치.
+- Preview `dpl_HkLGqmAumCvjufBoH2YwYkunSUsb` (`room-management-system-prod-gyiczc5w0.vercel.app`) → `https://room-management-system-prod-preview.vercel.app/`: 인증 CLI로 live/preview/session, snapshot true. 해당 배포 feedback script 하나만 제외한 HTML과 worker byte 일치. 고정 alias 및 기존 공개 보호 302 유지.
+- HTML SHA256 `4efe5de23b4e87705d5251106c42a0ea31fa05cdfac0e33508ba5165bf759009`, worker `2026-10-10-4` / SHA256 `92aaba7f98eae708e30dcb74990c48a22340e13c202cba2785ded6a5ad29d2a3`. 앱 소스 commit `830555a`이며 후속 변경은 배포 증거 문서만이다.
+- 운영 인앱 PASS: 전송·작성 대기 없음 확인 후 새로고침/새 버전 적용. 한국시간 자정 경과로 10/10 조회는 빈 상태, 10/11 조회는 본인 통보 업무 2건을 모두 닫힌 상태로 표시. 한 객실 펼침 → 상세 로딩 → 화면 근처로 스크롤 → 기존 사진 12장 디코딩 → Enter 확대 → 브라우저 Back → 원 사진 버튼 포커스 복귀 확인. console warning/error 없음. 두 객실을 다시 닫고 10/11 내 업무 화면을 남겼다. 원문 사진/인증정보는 캡처·로그·문서에 저장하지 않았고 신규 업로드/삭제/검수 제출도 하지 않았다.
 
 ## 2026-10-10 사진 전송 중 업무 전환
 
