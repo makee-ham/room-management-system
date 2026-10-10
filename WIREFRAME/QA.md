@@ -1,5 +1,23 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-10 사진 전송 중 업무 전환
+
+기준 `dev 43db494`. 검증 흐름: 객실 A 사진 선택 → 전송 대기 즉시 표시 → 객실 B 시작/현장 완료·추가 사진 선택 → 더보기로 이동 → 양쪽 사진 저장 확인 → 내 업무 복귀. 쓰기는 전부 합성 fixture로 가로챘으며 운영 사진·검수 상태는 변경하지 않았다.
+
+- 재현/수정: 변경 전 HTML에서 객실 B 명령의 늦은 조회가 A의 새 사진 1장을 0장으로 표시하는 경합을 재현했다. 같은 수행/배정/slot의 더 최신 서버 revision만 보존하며 새 삭제·동일 revision 보존 metadata·담당 변경을 무시하지 않는다.
+- PASS: `check-photo-queue-handoff.mjs`. 다른 객실 시작/현장 완료, 양쪽 4장 연속 추가, 이동 후 계속 전송, 실패 슬롯 격리와 동일 key 재시도, 전송/확인 중 검수 제출 버튼·명령 차단, 완료 후 버튼 활성화. 전송 완료 때 다른 객실 메모 DOM·내용·focus·selection 유지. 동시 업로드 최대 1개.
+- PASS: `check-photo-performance.mjs` 전체 1/5/20장 합성 비교 및 실패 6그룹. 순차 CAS·snapshot/null/불일치·accepted 후 조회 실패·유실·409·미완료 operation·같은 key/bytes·HEIC 불가 fallback·추가 선택/20장 초과·이동/로그아웃·메모리 URL·보이는 사진 우선 조회·키보드 확대/Escape/포커스 유지. 이번 현재/snapshot 경로의 큐 시작·완료 전체 화면 렌더는 0회. 운영 시간 개선율 아님.
+- PASS: `check-live-navigation.mjs`, `check-maid-photo-history-fixes.mjs`. 목적 화면/Back/Forward/역할 가드·이력/확대·촛불/제출 회귀. 청소 전체 검사에서 이전 구역형 장수 표시의 부분 갱신 누락을 발견해 함께 수정했다.
+- 360/390/768/1440px 가로 넘침 없음, 페이지 식별·비어 있지 않은 화면·오류 overlay 없음·console warning/error 및 page error 없음. 기존 Playwright/Chromium 151.0.7922.34, 로컬 `http://127.0.0.1:4177`; Browser plugin not available. 기존 인앱 검수 도구는 배포 읽기 전용 검수에 사용한다.
+- 평상시 390px 기존/수정 PNG는 byte 동일. 변화는 선택 직후 toast와 기존 상단 연결 영역의 전송/확인 장수이며 카드·버튼 목적은 유지한다. 대표 모바일/데스크톱 PNG를 육안 확인했다.
+- 증거: `QA/screenshots/photo-queue-idle-{before,after}-390.png`, `QA/screenshots/photo-queue-handoff-{360,390,768,1440}.png`. 전부 QA 가상 객실/사진이다.
+- NOT RUN: 이번 변경 뒤 운영 추가 업로드/삭제/검수 제출, 실제 iOS/Android 갤러리·HEIC·20장·저속망·OS 앱 전환/종료. 새로고침/로그아웃/앱 종료 후 전송 완료를 보장하지 않는다. 서버 DB/Drive 성능 개선은 별도 작업이다.
+- 최종 PASS: `check-cleaning-workflow.mjs` 30그룹, 최종 수정 뒤 사진 비성능 회귀 재실행, `check-workspace.mjs`, `check-pwa.mjs`, `git diff --check`. 기존 회귀가 생성한 과거 PNG는 복원하고 신규 증거만 기록했다. 사용자 미커밋 PNG는 변경하지 않았다.
+- Production `dpl_A9jhRihUFn3uXHvkj2RnGhBBRew3` (`room-management-system-prod-2ibrx4u0k.vercel.app`) → `https://room-management-system-prod.vercel.app/`: Ready 및 고정 alias, live/production/local, snapshot true, HTML/worker byte 일치 확인.
+- Preview `dpl_FvM93Fs7zykKs4tsBAtbnVgAg1X6` (`room-management-system-prod-dwne1qert.vercel.app`) → `https://room-management-system-prod-preview.vercel.app/`: 인증 CLI로 live/preview/session, snapshot true, HTML의 해당 배포 feedback script 하나만 제외하고 byte 일치, worker 일치. 기존 공개 보호 302 유지.
+- HTML SHA256 `0fd8eb56e1554b892aad06450fc239fee4c0d82c65013a1d1241571a4cd43343`. Worker `2026-10-10-3` / SHA256 `03e1d0904c395fb27971cc81d4f4f874b20ff7e2598d0c0dc3bfde7c76ad68a2`. 자동 강제 새로고침은 추가하지 않았다.
+- 운영 인앱 PASS: 전송/작성 대기 없음 확인 후 일반 새로고침, 신규 상태 표시 DOM 탑재, 기존 사진 6장 디코딩, Enter 확대, Back과 원래 버튼 포커스 복귀, console warning/error 없음. 더보기의 새 버전 적용으로 대기 worker를 반영했다. 실제 사진 원문은 캡처/로그/문서에 기록하지 않았다.
+
 ## 2026-10-10 사진 snapshot 운영·프리뷰 전체 적용
 
 사용자의 명시적 전체 적용 지시, 기준 `dev 91ec7dd`. 앱 HTML/CSS/JS와 worker는 변경하지 않고 빌더 기본값, 환경 예시, Vercel Production·Preview 환경값을 true로 바꾸고 양 채널을 재배포했다. 아래 UAT 당시 false 기록은 역사적 checkpoint이며 현재 전역 설정은 true다. 서버 DB·Drive 최적화는 별도 작업이다.
