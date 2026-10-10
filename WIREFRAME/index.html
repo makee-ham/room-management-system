@@ -754,6 +754,9 @@
     .pay-week-toolbar h2 { margin:0; }
     .payroll-live { display:grid; gap:18px; }
     .payroll-live .pay-person-head > div:first-child { min-width:0; }
+    .payroll-live .pay-person .job-actions { flex-wrap:wrap; }
+    .payroll-live .pay-person .job-actions > [data-action="live-payroll-marker-retry"] { flex-basis:100%; }
+    .payroll-live .job-actions:has([data-action="live-payroll-marker-retry"]) > .btn { white-space:normal; overflow-wrap:anywhere; }
     .pay-week-toolbar p { margin:3px 0 0; color:var(--muted); font-size:12px; }
     .pay-week-picker { display:inline-flex; align-items:center; justify-content:space-between; gap:9px; min-height:48px; padding:9px 12px; border:1px solid var(--line-strong); border-radius:10px; color:var(--navy); background:#fff; font-size:13px; font-weight:850; text-align:left; }
     .pay-week-picker span { min-width:0; }
@@ -3306,11 +3309,7 @@
           if(!Array.isArray(response.data?.availability)||!Array.isArray(changes.data?.changeRequests))throw new ApiRequestError('availability missing',{status:502,code:'INVALID_RESPONSE'});
           let items=response.data.availability;
           const maids=(state.remote.accounts.items||[]).filter(account=>account.role==='maid'&&account.status!=='departed'),allowed=new Set(maids.map(maid=>maid.profileId||maid.id));
-          // The deployed query has no cursor. At the documented 1,000-row cap, read each visible maid explicitly.
-          if(actor.role==='admin'&&items.length>=1000){
-            items=[];let index=0;
-            await Promise.all(Array.from({length:Math.min(3,maids.length)},async()=>{while(isCurrent()&&index<maids.length){const maid=maids[index++],{data}=await apiRequest(path+'&maidProfileId='+encodeURIComponent(maid.profileId||maid.id));if(!Array.isArray(data?.availability)||data.availability.some(item=>item.maidProfileId!==(maid.profileId||maid.id)))throw new ApiRequestError('availability invalid',{status:502,code:'INVALID_RESPONSE'});items.push(...data.availability);}}));
-          }
+          // v0.9.3 rejects truncated lists, including nested days, instead of returning partial success.
           if(!isCurrent())return;
           if(items.some(item=>item.weekStart!==weekStart||actor.role==='maid'&&item.maidProfileId!==actor.profileId))throw new ApiRequestError('availability scope invalid',{status:502,code:'INVALID_RESPONSE'});
           if(actor.role==='admin')items=items.filter(item=>allowed.has(item.maidProfileId));
@@ -3335,21 +3334,30 @@
         if(!['admin','maid'].includes(state.remote.auth.user?.role))return;
         const generation=LIVE_RUNTIME.authGeneration,slice=state.remote.payroll,selected=weekStart||slice.weekStart||weekStartIso(liveKstIsoDate()),loadRevision=(slice.loadRevision||0)+1,isCurrent=()=>generation===LIVE_RUNTIME.authGeneration&&state.remote.payroll===slice&&slice.loadRevision===loadRevision;
         Object.assign(slice,{loadRevision,status:'loading',weekStart:selected,detail:null,error:null,pageError:null,items:[],markers:new Map(),listComplete:false,nextCursor:null,lastSuccessAt:null});if(!quiet)render();
-        const lanes=[Promise.resolve(),Promise.resolve(),Promise.resolve()];let markerIndex=0;
-        const queueMarker=cycle=>{const lane=markerIndex++%lanes.length;lanes[lane]=lanes[lane].then(async()=>{if(!isCurrent())return;let record;try{record={value:await fetchLiveRemittanceMarker(cycle)};}catch(error){record={error};}if(isCurrent()){slice.markers.set(cycle.maidProfileId,record);scheduleLiveReadRender();}});};
+        let markerPages=Promise.resolve(),batchUnsupported=false;
+        const setMarker=(cycle,record)=>{if(isCurrent()){slice.markers.set(cycle.maidProfileId,record);scheduleLiveReadRender();}};
+        const queueMarkerPage=cycles=>{if(!cycles.length)return;markerPages=markerPages.then(async()=>{
+          if(!isCurrent())return;
+          if(!batchUnsupported){
+            try{const markers=await fetchLiveRemittanceMarkers(cycles);if(isCurrent())markers.forEach((value,index)=>setMarker(cycles[index],{value}));return;}
+            catch(error){if(!isCurrent())return;if(error.status===404&&error.code==='ROUTE_NOT_FOUND')batchUnsupported=true;else{cycles.forEach(cycle=>setMarker(cycle,{error}));return;}}
+          }
+          // Only an absent route enables the legacy path. Auth, business 404s and server failures stay errors.
+          let index=0;await Promise.all(Array.from({length:Math.min(3,cycles.length)},async()=>{while(isCurrent()&&index<cycles.length){const cycle=cycles[index++];try{setMarker(cycle,{value:await fetchLiveRemittanceMarker(cycle)});}catch(error){setMarker(cycle,{error});}}}));
+        });};
         try{
           const seen=new Set(),maids=new Set();let cursor=null;
           do{
             const suffix=cursor?`&cursor=${encodeURIComponent(cursor)}`:'',{data,requestId}=await apiRequest(`/v1/payroll?weekStart=${encodeURIComponent(selected)}&limit=10${suffix}`);if(!isCurrent())return;
-            if(!Array.isArray(data?.payroll)||data.payroll.some(item=>item.weekStart!==selected||!['totalAmount','payableAmount','adjustmentAmount','carryInAmount','lateEarningAmount','itemCount'].every(key=>Number.isSafeInteger(item[key]))||item.lockedAmount!=null&&!Number.isSafeInteger(item.lockedAmount)||state.role==='maid'&&item.maidProfileId!==state.remote.auth.user?.profileId||maids.has(item.maidProfileId)))throw new ApiRequestError('payroll response invalid',{status:502,code:'INVALID_RESPONSE'});
+            if(!Array.isArray(data?.payroll)||data.payroll.length>10||data.payroll.some(item=>item.weekStart!==selected||!['totalAmount','payableAmount','adjustmentAmount','carryInAmount','lateEarningAmount','itemCount'].every(key=>Number.isSafeInteger(item[key]))||item.lockedAmount!=null&&!Number.isSafeInteger(item.lockedAmount)||state.role==='maid'&&item.maidProfileId!==state.remote.auth.user?.profileId||maids.has(item.maidProfileId)))throw new ApiRequestError('payroll response invalid',{status:502,code:'INVALID_RESPONSE'});
             for(const cycle of data.payroll){if(maids.has(cycle.maidProfileId))throw new ApiRequestError('payroll duplicate',{status:502,code:'INVALID_RESPONSE'});maids.add(cycle.maidProfileId);}
             cursor=data.nextCursor||null;if(cursor&&(seen.has(cursor)||seen.size>=19))throw new ApiRequestError('payroll cursor overflow',{status:502,code:'INVALID_RESPONSE'});if(cursor)seen.add(cursor);
             slice.items.push(...data.payroll);Object.assign(slice,{status:'partial',nextCursor:cursor,listComplete:!cursor,requestId:slice.requestId||requestId});
-            for(const cycle of data.payroll){slice.markers.set(cycle.maidProfileId,{loading:true});queueMarker(cycle);}scheduleLiveReadRender();
+            for(const cycle of data.payroll)slice.markers.set(cycle.maidProfileId,{loading:true});queueMarkerPage(data.payroll);scheduleLiveReadRender();
           }while(cursor&&isCurrent());
-          await Promise.all(lanes);if(!isCurrent())return;
+          await markerPages;if(!isCurrent())return;
           Object.assign(slice,{status:'ready',error:null,mutationError:null,lastSuccessAt:new Date().toISOString()});
-        }catch(error){if(!isCurrent())return;Object.assign(slice,{status:slice.items.length?'partial':'error',error,pageError:error,listComplete:false,requestId:error?.requestId||null});await Promise.all(lanes);}
+        }catch(error){if(!isCurrent())return;Object.assign(slice,{status:slice.items.length?'partial':'error',error,pageError:error,listComplete:false,requestId:error?.requestId||null});await markerPages;}
         if(isCurrent()){if(!quiet)render();else scheduleLiveReadRender();}
       }
       async function loadLivePayrollEntries(cycle,isCurrent=()=>true){
@@ -4223,10 +4231,19 @@
         try{record={value:await fetchLiveRemittanceMarker(cycle)};}catch(error){record={error};}
         if(generation===LIVE_RUNTIME.authGeneration&&state.remote.payroll===slice&&slice.loadRevision===revision){slice.markers.set(maidProfileId,record);render();}
       }
-      async function fetchLiveRemittanceMarker(cycle){
-        const {data}=await apiRequest('/v1/payroll/remittance-marker?'+new URLSearchParams({maidProfileId:cycle.maidProfileId,weekStart:cycle.weekStart}));
+      function validateLiveRemittanceMarker(data,cycle){
         if(data?.maidProfileId!==cycle.maidProfileId||data.weekStart!==cycle.weekStart||!Number.isSafeInteger(data.version)||data.version<0||typeof data.marked!=='boolean'||!/^[0-9a-f]{64}$/.test(data.basisFingerprint)||!['canSet','canClear','canReconfirm','needsReconfirmation'].every(key=>typeof data[key]==='boolean'))throw new ApiRequestError('remittance marker invalid',{status:502,code:'INVALID_RESPONSE'});
         return data;
+      }
+      async function fetchLiveRemittanceMarker(cycle){
+        const {data}=await apiRequest('/v1/payroll/remittance-marker?'+new URLSearchParams({maidProfileId:cycle.maidProfileId,weekStart:cycle.weekStart}));
+        return validateLiveRemittanceMarker(data,cycle);
+      }
+      async function fetchLiveRemittanceMarkers(cycles){
+        const weekStart=cycles[0].weekStart,{data}=await apiRequest('/v1/payroll/remittance-markers?'+new URLSearchParams({weekStart,maidProfileIds:cycles.map(cycle=>cycle.maidProfileId).join(',')}));
+        if(data?.weekStart!==weekStart||!Array.isArray(data.markers)||data.markers.length!==cycles.length)throw new ApiRequestError('remittance batch invalid',{status:502,code:'INVALID_RESPONSE'});
+        // Validate the whole ordered page before making any switch actionable.
+        return data.markers.map((marker,index)=>validateLiveRemittanceMarker(marker,cycles[index]));
       }
       async function setLiveRemittanceMarker(maidProfileId,{reconfirm=false}={}){
         const slice=state.remote.payroll,cycle=livePayrollCycleByMaid(maidProfileId),marker=slice.markers?.get(maidProfileId)?.value;
@@ -9680,16 +9697,19 @@
         return data.candidates.map(item=>({...item,id:item.maidProfileId,profileId:item.maidProfileId}));
       }
       async function loadLiveAssignmentAvailability(date){
+        if(!cleaningActor('admin'))return null;
         const generation=LIVE_RUNTIME.authGeneration,weekStart=weekStartIso(date);
         try{
           if(!liveSliceFresh(state.remote.accounts))await coalesceLiveLoad('accounts',()=>loadLiveAccounts({quiet:true}));
+          if(generation!==LIVE_RUNTIME.authGeneration)return null;
           if(state.remote.accounts.status!=='ready')throw state.remote.accounts.error||new ApiRequestError('accounts unavailable',{status:502,code:'INVALID_RESPONSE'});
           const maids=state.remote.accounts.items.filter(item=>item.role==='maid'&&item.status==='active');
-          const [candidates,results]=await Promise.all([liveAssignmentCandidates(date),Promise.all(maids.map(maid=>apiRequest(`/v1/availability?weekStart=${encodeURIComponent(weekStart)}&maidProfileId=${encodeURIComponent(maid.profileId||maid.id)}`)))]);
+          const [candidates,{data}]=await Promise.all([liveAssignmentCandidates(date),apiRequest(`/v1/availability?weekStart=${encodeURIComponent(weekStart)}`)]);
           if(generation!==LIVE_RUNTIME.authGeneration)return null;
-          if(results.some(result=>!Array.isArray(result.data?.availability)))throw new ApiRequestError('availability missing',{status:502,code:'INVALID_RESPONSE'});
-          return {status:'ready',weekStart,items:results.flatMap(result=>result.data.availability),candidates,error:null};
-        }catch(error){return {status:'error',weekStart,items:[],candidates:[],error};}
+          if(!Array.isArray(data?.availability)||data.availability.some(item=>item.weekStart!==weekStart))throw new ApiRequestError('availability missing',{status:502,code:'INVALID_RESPONSE'});
+          const allowed=new Set(maids.map(maid=>maid.profileId||maid.id));
+          return {status:'ready',weekStart,items:data.availability.filter(item=>allowed.has(item.maidProfileId)),candidates,error:null};
+        }catch(error){if(generation!==LIVE_RUNTIME.authGeneration)return null;return {status:'error',weekStart,items:[],candidates:[],error};}
       }
       async function openLiveManualAssignmentDraft(targetId,trigger=document.activeElement){
         const slice=cleaningState(),target=slice.commitImpact?.remainingUnassignedTargets?.find(item=>item.cleaningTargetId===targetId);if(!cleaningActor('admin')||!target)return;

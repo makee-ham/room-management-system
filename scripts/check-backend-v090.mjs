@@ -47,6 +47,7 @@ await page.route('**/*',async route=>{
   if(path===`/v1/checkout-incidents/${id(95)}`)return reply(route,{incident:{incidentId:id(95),status:'open',roomId:room.id,cleaningTargetId:assignment.cleaningTargetId,version:5,impactFingerprint:'b'.repeat(64)}});
   if(path===`/v1/rooms/${room.id}/candles`){assert.equal(body.expectedRoomVersion,candle.roomStateVersion);if(body.count<candle.count)assert.equal(body.physicallyVerified,true);assert.equal(body.reasonCode,'CANDLE_ADJUSTED');candle={...candle,count:body.count,roomStateVersion:candle.roomStateVersion+1};return reply(route,{operation:{roomId:room.id,roomStateVersion:candle.roomStateVersion}},201);}
   if(path==='/v1/payroll')return reply(route,{payroll:[cycle],nextCursor:null});
+  if(path==='/v1/payroll/remittance-markers'){assert.equal(url.searchParams.get('maidProfileIds'),maid.profileId);return reply(route,{weekStart:week,markers:[marker]});}
   if(path==='/v1/payroll/remittance-marker'){
     if(method==='PUT'){assert(request.headers()['idempotency-key']);assert.equal(body.expectedVersion,marker.version);assert.equal(body.expectedBasisFingerprint,marker.basisFingerprint);assert.equal(Object.keys(body).length,5);if(markerConflict){markerConflict=false;marker={...marker,version:marker.version+1};return reply(route,{error:{code:'STALE_VERSION'}},409);}marker={...marker,marked:body.marked,version:marker.version+1,canSet:!body.marked,canClear:body.marked};}
     return reply(route,marker);
