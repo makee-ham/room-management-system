@@ -126,6 +126,16 @@ try{
   await page.goto(`${origin}/index.html?view=cleaning&tab=inspection`);await page.evaluate(()=>window.__navQA.setup());await stateIs('cleaning','inspection');
   await page.goto(`${origin}/index.html?view=cleaning&tab=inspection`);await page.evaluate(()=>window.__navQA.setup('maid'));await stateIs('my');assert.equal(await page.locator('[data-action="cleaning-inspection-open"]').count(),0);
   await page.locator('[data-action="nav"][data-view="pay"]:visible').first().click();await ready();assert.match(await page.locator('.pay-hero').innerText(),/40,000/);await responsive('maid payroll');await page.goBack();await stateIs('my');
+  await page.goto(`${origin}/index.html?view=my&date=${prior}`);await page.evaluate(()=>window.__navQA.setup('maid'));
+  assert.equal(await page.locator('#cleaning-service-date').inputValue(),prior,'direct link must query its selected service date');
+  await page.locator('#cleaning-service-date').fill(date);await page.locator('#cleaning-service-date').dispatchEvent('change');
+  await page.waitForURL(url=>url.searchParams.get('date')===date);
+  await page.goBack();await ready();assert.equal(await page.locator('#cleaning-service-date').inputValue(),prior);
+  await page.goForward();await ready();assert.equal(await page.locator('#cleaning-service-date').inputValue(),date);
+  await page.reload();await page.evaluate(()=>window.__navQA.setup('maid'));assert.equal(await page.locator('#cleaning-service-date').inputValue(),date);
+  const beforeEmpty=requests.length;await page.locator('#cleaning-service-date').fill('');await page.locator('#cleaning-service-date').dispatchEvent('change');
+  assert.equal(await page.locator('#cleaning-service-date').inputValue(),date);assert.equal(requests.length,beforeEmpty,'empty date must not query the API');
+  console.log('[ok] Maid service date: direct link, URL, Back/Forward, reload and empty input');
   assert.deepEqual(missing,[]);assert.deepEqual(errors,[]);assert.deepEqual(warnings,[]);
   console.log('[ok] Home exact destinations, tabs, page/modal Back and Forward, direct links and maid role guard');
   console.log('[ok] Current-week payroll, prior week, detail return, stale-response guard, missing estimate not fabricated');

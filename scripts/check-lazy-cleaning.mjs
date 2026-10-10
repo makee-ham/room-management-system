@@ -6,6 +6,7 @@ import {execFileSync} from 'node:child_process';
 import {createRequire} from 'node:module';
 const {chromium}=createRequire(import.meta.url)('playwright');
 const source=await readFile('WIREFRAME/index.html','utf8');
+const mobile=process.env.RMS_QA_MOBILE_EMULATION==='true';
 const origin=process.env.RMS_QA_ORIGIN||'http://127.0.0.1:4177';
 const api='https://aodikrxcczbogjpsjwjt.supabase.co/functions/v1/api';
 const id=n=>`78000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
@@ -17,23 +18,29 @@ const payload=i=>({attemptId:attempts[i].attemptId,assignmentId:assignments[i].a
 const submission={id:id(60),attemptId:attempts[2].attemptId,assignmentId:assignments[2].assignmentId,version:1,current:true,status:'submitted',candleCount:3,submittedAt:date+'T03:00:00Z'};
 const boot=`window.__lazyQA={setup:()=>{LIVE_RUNTIME.mode='live';LIVE_RUNTIME.status='ready';LIVE_RUNTIME.authGeneration++;LIVE_RUNTIME.config=normalizeRuntimeConfig({apiBaseUrl:'${api}',supabaseUrl:'https://aodikrxcczbogjpsjwjt.supabase.co',supabasePublishableKey:'sb_publishable_qa_fixture_not_a_real_key_1234567890',featureFlags:{optionalCleaningWorkflow:true,photoUploadSnapshot:true}});state.remote=initialRemoteState();state.role='maid';state.liveView='my';state.remote.auth={...state.remote.auth,status:'authenticated',user:{profileId:'${id(1)}',role:'maid',displayName:'QA 메이드'},session:{accessToken:'qa-fixture',expiresAt:Date.now()+3600000}};for(const key of ['rooms','notifications','complaints','availability','cleaningHistory'])Object.assign(state.remote[key],{status:'ready',lastSuccessAt:new Date().toISOString()});syncAuthState(state);window.__lazyDone=false;void loadLiveCleaning().then(()=>{window.__lazyDone=true;});},get:()=>({done:window.__lazyDone,busy:cleaningState().busy,status:cleaningState().status,reads:[...(cleaningState().maidReads||new Map())].map(([id,r])=>({id,summary:r.summaryStatus,detail:r.detailStatus,post:!!r.postPromise})),photoUrls:LIVE_CLEANING_ACTIVE_PHOTO_URLS.size,photoLoading:LIVE_CLEANING_ACTIVE_PHOTO_LOADING.size}),reload:()=>loadLiveCleaning({quiet:true}),viewReload:()=>{window.__viewDone=false;void loadLiveViewData('my',{force:true}).then(()=>{window.__viewDone=true;});},expire:id=>{const r=cleaningState().maidReads.get(id);r.summaryAt=0;r.detailAt=0;},defaults:()=>({sections:state.todaySections,pay:state.maidPayOpenWeek,week:!!state.weekAvailabilityOpen,assignment:!!state.assignmentAvailabilityOpen}),invalidate:()=>{LIVE_RUNTIME.authGeneration++;state.remote=initialRemoteState();clearActiveCleaningPhotoUrls();},render:()=>render(),demo:(role,view)=>{LIVE_RUNTIME.mode='demo';writeAuthSession(authAccounts().find(a=>a.role===role));state=makeScenario(0);state.role=role;state.adminView=view;state.maidView=view;render();}};`;
 const browser=await chromium.launch({headless:true});
+const navigationHook='window.__lazyQA.navigation=()=>({restoring:restoringHistory,date:cleaningState().serviceDate});';
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const until=async test=>{for(let n=0;n<300&&!test();n++)await pause(10);assert(test(),'fixture signal timeout');};
 const json=(route,data,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
 let jpeg;
 async function fixture(html,{delays=false}={}){
-  const page=await browser.newPage({viewport:{width:390,height:900},serviceWorkers:'block'});
+  const page=await browser.newPage({viewport:{width:390,height:900},serviceWorkers:'block',...(mobile?{isMobile:true,hasTouch:true,deviceScaleFactor:2}:{})});
+  if(mobile){const cdp=await page.context().newCDPSession(page);await cdp.send('Emulation.setCPUThrottlingRate',{rate:4});}
   const calls=[],errors=[],unexpected=[];
   const gate={detail:null,release:null,post:false,releasePost:null,summary:false,releaseSummary:null,failDetail:null,failPhoto:null,active:0,maxActive:0,slowPhotos:false};
   page.on('pageerror',e=>errors.push(e.message));
   page.on('console',m=>{if(['warning','error'].includes(m.type())&&!m.text().startsWith('Failed to load resource:'))errors.push(m.text());});
   await page.route('**/*',async route=>{
     const req=route.request(),url=new URL(req.url()),method=req.method();
-    if(url.origin===origin){if(url.pathname==='/index.html')return route.fulfill({contentType:'text/html',body:html.replace('\n      void bootApplication();',boot)});return route.continue();}
+    if(url.origin===origin){if(url.pathname==='/index.html')return route.fulfill({contentType:'text/html',body:html.replace('\n      void bootApplication();',boot+navigationHook)});return route.continue();}
     if(!req.url().startsWith(api+'/')){unexpected.push(url.origin);return route.abort();}
     const path=url.pathname.replace('/functions/v1/api','');calls.push({path,method,assignment:url.searchParams.get('assignmentId'),at:Date.now()});
+    if(mobile)await pause(250);
     if(delays)await pause(path==='/v1/assignments'?100:path.includes('/attempts/current')?200:path.includes('/supplemental-room-issues')||path==='/v1/rooms/candles'?200:100);
-    if(path==='/v1/assignments')return json(route,{assignments:url.searchParams.get('serviceDate')===date?assignments:[]});
+    if(path==='/v1/assignments'){
+      if(gate.assignmentDate===url.searchParams.get('serviceDate')){gate.assignmentDate=null;await new Promise(resolve=>{gate.releaseAssignments=resolve;});}
+      return json(route,{assignments:url.searchParams.get('serviceDate')===date?assignments:[]});
+    }
     if(path==='/v1/assignment-change-requests')return json(route,{requests:[],nextCursor:null});
     if(path==='/v1/notifications')return json(route,{notifications:[],nextCursor:null});
     if(path==='/v1/complaints')return json(route,{complaints:[],nextCursor:null});
@@ -90,10 +97,10 @@ try{
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
     assert(await page.locator('[data-action="cleaning-maid-room-toggle"]').evaluateAll(buttons=>buttons.every(b=>b.getBoundingClientRect().height>=44)));
     assert.equal(await page.locator('button:visible').evaluateAll(buttons=>buttons.filter(b=>!(b.textContent.trim()||b.getAttribute('aria-label'))).length),0);
-    await page.screenshot({path:`WIREFRAME/QA/screenshots/lazy-cleaning-collapsed-${width}.png`});
+    await page.screenshot({path:`${mobile?'/tmp':'WIREFRAME/QA/screenshots'}/lazy-cleaning-collapsed-${width}.png`});
   }
   await page.setViewportSize({width:390,height:900});gate.detail=0;
-  await toggle(page,0).press('Enter');await until(()=>!!gate.release);assert.equal(await toggle(page,0).getAttribute('aria-expanded'),'true');
+  if(mobile)await toggle(page,0).tap();else await toggle(page,0).press('Enter');await until(()=>!!gate.release);assert.equal(await toggle(page,0).getAttribute('aria-expanded'),'true');
   await toggle(page,0).press('Space');gate.release();gate.release=null;await waitDetail(page,0);
   assert.equal(await toggle(page,0).getAttribute('aria-expanded'),'false');assert.equal(calls.filter(c=>c.path.startsWith('/v1/photos/')).length,0);
   const metadataCount=()=>calls.filter(c=>/photo-slots$|\/submissions$/.test(c.path)).length;
@@ -110,7 +117,7 @@ try{
   for(const width of [360,390,768,1440]){
     await page.setViewportSize({width,height:900});await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
-    await page.screenshot({path:`WIREFRAME/QA/screenshots/lazy-cleaning-expanded-${width}.png`});
+    await page.screenshot({path:`${mobile?'/tmp':'WIREFRAME/QA/screenshots'}/lazy-cleaning-expanded-${width}.png`});
   }
   await page.setViewportSize({width:1440,height:8000});await page.evaluate(()=>scrollTo(0,0));
   await page.waitForFunction(()=>__lazyQA.get().photoUrls===20);assert(gate.maxActive<=4,`global photo reads ${gate.maxActive}`);
@@ -150,6 +157,23 @@ try{
   await page.waitForFunction(()=>document.querySelectorAll('[data-maid-room-task]').length===0);gate.release();gate.release=null;await pause(100);
   assert.equal(await page.locator('[data-maid-room-task]').count(),0);assert.equal((await page.evaluate(()=>__lazyQA.get())).photoUrls,0);
   console.log('[ok] date change ignores late detail and clears private photo URLs');
+  gate.assignmentDate=date;await page.goBack();await until(()=>!!gate.releaseAssignments);
+  assert.equal(await page.locator('[data-maid-room-task]').count(),0,'old-date cards must not flash while loading');
+  await page.goForward();await page.waitForFunction(()=>!__lazyQA.navigation().restoring);
+  assert.equal(await page.locator('#cleaning-service-date').inputValue(),nextDate);
+  await page.goBack();await card(page,0).waitFor();await page.waitForFunction(()=>!__lazyQA.navigation().restoring);
+  assert.equal(await page.locator('#cleaning-service-date').inputValue(),date);
+  assert.equal(await page.locator('[data-maid-room-task] [aria-expanded="true"]').count(),0);
+  gate.releaseAssignments();gate.releaseAssignments=null;await pause(100);
+  assert.equal(await page.locator('[data-maid-room-task]').count(),3);
+  assert.equal(new URL(page.url()).searchParams.get('date'),date);
+  for(const width of [360,390,768,1440]){
+    await page.setViewportSize({width,height:900});await page.evaluate(()=>scrollTo(0,0));
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+    await page.screenshot({path:`${mobile?'/tmp':'WIREFRAME/QA/screenshots'}/maid-date-return-${width}.png`});
+  }
+  await page.setViewportSize({width:390,height:900});
+  console.log('[ok] slow date A -> B -> A history navigation starts a new scoped read and keeps old cards hidden');
   await page.evaluate(()=>__lazyQA.setup());await page.waitForFunction(()=>__lazyQA.get().done);gate.detail=0;await toggle(page,0).click();await until(()=>!!gate.release);
   await page.evaluate(()=>__lazyQA.invalidate());gate.release();gate.release=null;await pause(100);
   assert.equal((await page.evaluate(()=>__lazyQA.get())).photoUrls,0);assert.deepEqual((await page.evaluate(()=>__lazyQA.get())).reads,[]);
@@ -162,5 +186,5 @@ try{
   console.log('[ok] existing home, availability and pay disclosures start closed and retain explicit expansion');
   assert.deepEqual(errors,[]);assert.deepEqual(unexpected,[]);
   console.log('[ok] auth reset rejects late reads; no private persistence or console/page errors');
-  console.log(`Environment: Chromium ${await browser.version()}, Playwright (Browser plugin unavailable); synthetic fixtures only.`);
+  console.log(`Environment: Chromium ${await browser.version()}, Playwright (Browser plugin unavailable); synthetic fixtures only; mobile touch/4x CPU/250ms response delay: ${mobile}.`);
 }finally{await browser.close();}

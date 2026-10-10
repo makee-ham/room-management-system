@@ -2997,7 +2997,8 @@
         if(state.role==='admin'&&state.liveView==='cleaning'&&['assignment-today','assignment-tomorrow','progress','inspection','done'].includes(tab))state.cleaningTab=tab;
         if(state.role==='admin'&&state.liveView==='maids'&&['workforce','history','pay','complaints'].includes(tab))state.adminMaidTab=tab;
         if(/^\d{4}-\d{2}-\d{2}$/.test(week||'')&&weekStartIso(week)===week&&week<=weekStartIso(liveKstIsoDate()))state.remote.payroll.weekStart=week;
-        if(isCleaningAssignmentTab(state.cleaningTab))cleaningState().serviceDate=addIsoDays(liveOperationalDate(),state.cleaningTab==='assignment-tomorrow'?1:0);
+        if(state.role==='maid')cleaningState().serviceDate=liveOperationalDate();
+        else if(isCleaningAssignmentTab(state.cleaningTab))cleaningState().serviceDate=addIsoDays(liveOperationalDate(),state.cleaningTab==='assignment-tomorrow'?1:0);
       }
       let liveHistoryRestoreSequence=0;
       async function restoreLiveHistory(entry){
@@ -3026,7 +3027,8 @@
           state.quickGridScrollLeft=Math.max(0,Number(route.context.left)||0);state.quickGridScrollTop=Math.max(0,Number(route.context.top)||0);
         }
         cleaningState().inspectionDetail=null;cleaningState().focusRoomId=route.focusRoomId||null;
-        if(/^\d{4}-\d{2}-\d{2}$/.test(route.serviceDate||'')&&route.serviceDate!==cleaningState().serviceDate){cleaningState().serviceDate=route.serviceDate;cleaningState().status='idle';}
+        const serviceDate=actor.role==='maid'?route.serviceDate||liveOperationalDate():route.serviceDate;
+        if(/^\d{4}-\d{2}-\d{2}$/.test(serviceDate||'')&&serviceDate!==cleaningState().serviceDate)resetLiveCleaningDate(serviceDate);
         if(route.view==='cleaning'&&['assignment-today','assignment-tomorrow','progress','inspection','done'].includes(route.tab))state.cleaningTab=route.tab;
         if(route.view==='maids'&&['workforce','history','pay','complaints'].includes(route.tab))state.adminMaidTab=route.tab;
         if(actor.role==='admin'&&route.workHistoryMaidId)state.workHistoryMaid=route.workHistoryMaidId;
@@ -3468,7 +3470,7 @@
           }
           if(view==='more')add(liveLoaderTask('complaints',state.remote.complaints,loadLiveComplaints,{force}));
         }else if(role==='maid'){
-          if(view==='my'&&cleaningWorkflowEnabled())add(liveLoaderTask('cleaning',state.remote.cleaning,loadLiveCleaning,{force}));
+          if(view==='my'&&cleaningWorkflowEnabled())add(liveLoaderTask(`cleaning:${cleaningState().serviceDate}:${cleaningState().serviceDateRevision||0}`,state.remote.cleaning,loadLiveCleaning,{force}));
           if(view==='schedule')add(liveLoaderTask('availability',state.remote.availability,loadLiveAvailability,{force}));
           if(view==='done')add(liveLoaderTask('cleaning-history',state.remote.cleaningHistory,loadLiveCleaningHistory,{force}));
           if(view==='pay')add(liveLoaderTask('payroll',state.remote.payroll,loadLivePayroll,{force}));
@@ -9281,7 +9283,20 @@
         if(action==='cleaning-incident-open'&&cleaningActor('admin')){const id=el.dataset.id||document.getElementById('cleaning-incident-id')?.value.trim()||'';if(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))void showCleaningIncident(id);else toast('사건 번호를 확인해 주세요.','error');}
         if(action==='cleaning-decision-save')void saveCleaningDecision();
       }
-      document.addEventListener('change',event=>{if(event.target.id==='cleaning-service-date'&&cleaningActor()&&!cleaningState().pending&&!cleaningState().busy){const slice=cleaningState();slice.serviceDate=event.target.value;slice.preview=null;slice.commitImpact=null;slice.commitImpactStatus='idle';slice.draftSaveResults?.clear?.();slice.draftIdempotencyKeys?.clear?.();slice.expandedMaidAssignments?.clear?.();slice.maidAssignmentsInitialized=false;if(cleaningActor('maid')){slice.assignments=[];slice.attempts.clear();slice.photoSlots.clear();slice.submissions.clear();slice.maidReads?.clear();clearActiveCleaningPhotoUrls();}void loadLiveCleaning();}});
+      function resetLiveCleaningDate(date){
+        const slice=cleaningState();slice.serviceDate=date;slice.serviceDateRevision=(slice.serviceDateRevision||0)+1;slice.loadRevision++;slice.status='idle';slice.preview=null;slice.commitImpact=null;slice.commitImpactStatus='idle';slice.draftSaveResults?.clear?.();slice.draftIdempotencyKeys?.clear?.();slice.expandedMaidAssignments?.clear?.();slice.maidAssignmentsInitialized=false;
+        if(cleaningActor('maid')){slice.assignments=[];slice.attempts.clear();slice.photoSlots.clear();slice.submissions.clear();slice.maidReads?.clear();clearActiveCleaningPhotoUrls();}
+        // Upload jobs keep their original assignment and bytes when the displayed date changes.
+      }
+      document.addEventListener('change',event=>{
+        if(event.target.id!=='cleaning-service-date'||!cleaningActor())return;
+        const slice=cleaningState(),date=event.target.value;
+        if(slice.pending||slice.busy||!/^\d{4}-\d{2}-\d{2}$/.test(date)||Number.isNaN(Date.parse(date))){event.target.value=slice.serviceDate;return;}
+        if(date===slice.serviceDate)return;
+        rememberCurrentHistoryRoute();clearLivePinReveal();resetLiveCleaningDate(date);
+        if(cleaningActor('maid')){state.remote.operationalDate=date;state.selectedDate=date;}
+        void loadLiveCleaning();
+      });
 
       // Production cleaning API contract: OpenAPI v0.5.1, 128 paths / 138 operations.
       // The live surface below deliberately owns separate state from every demo fixture.

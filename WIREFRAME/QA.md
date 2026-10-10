@@ -1,5 +1,21 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-11 날짜 이동·지연 응답 후속 검수
+
+기준 `dev d3016d1`. 검증 흐름: 내 업무 날짜 선택 → 다른 날짜 → Back/Forward·새로고침 → 같은 날짜의 API 목록 확인. 별도로 업로드 2장을 지연시킨 동안 날짜 변경 → 전송 완료 → Back → 원래 객실 저장본 확인. 운영 쓰기는 하지 않고 기존 API fixture로 전부 가로챘다.
+
+- 재현/수정: 메이드 날짜 링크에 관리자 `assignment-tomorrow` 상태가 적용되어 하루 뒤로 조회하는 회귀를 수정 전 자동 검사로 재현했다. 메이드 날짜 변경 시 URL이 이전 날짜로 남는 문제도 수정했다. 날짜 지우기는 기존 날짜로 복구하며 빈 날짜 API 호출은 하지 않는다.
+- PASS: `check-live-navigation.mjs` 직접 링크·URL·Back/Forward·새로고침·빈 입력, 기존 홈 검수/내일 배정 목적지·역할 가드·주급·사진 모달/포커스 회귀.
+- PASS: `check-lazy-cleaning.mjs` 날짜 A → B → A의 첫 A 조회를 보류해도 새 A 조회를 별도로 수행. 이전 날짜 카드가 로딩 중 노출되지 않고 이전 상세/사진의 늦은 응답을 폐기한다. 기존 기본 접힘·상세 재시도·화면 근처 이미지·앱 전체 최대 4조회·입력 포커스 보존 유지.
+- PASS: `check-photo-queue-handoff.mjs` 날짜를 바꿔도 대기 2장과 원래 assignment/attempt 유지, 순차 전송 후 원래 날짜에 돌아오면 저장한 사진 모두 조회. 기존 다른 객실 조작·추가 선택·실패 슬롯 격리·동일 key 재시도 통과. 서버 저장 완료 전 검수 제출 가드 유지.
+- PASS: `check-photo-performance.mjs` 비벤치 회귀(snapshot/null/불일치/유실/409/미완료 operation·같은 key/bytes·추가 선택/20장 한도·메모리 URL). `check-cleaning-workflow.mjs` 30그룹 통과. 서버 계약·업로드 동시성·보존 기간은 변경하지 않는다.
+- 환경: `http://127.0.0.1:4177`, Playwright/Chromium 151.0.7922.34. Browser plugin not available; 배포 읽기 검수는 기존 인앱 제어 도구 사용. 360/390/768/1440px 넘침 없음, 페이지 식별/비어 있지 않은 화면/키보드/접근성 이름/44px/모달/Back·포커스/console warning/error 검사 통과.
+- 대표 합성 증거: `QA/screenshots/maid-date-return-{360,390,768,1440}.png`. 기존 접힌 객실 카드·날짜 입력·버튼 구조는 그대로이며 날짜와 데이터 범위만 수정했다. 사용자 미커밋 PNG는 보존하고 기존 회귀가 다시 생성한 과거 PNG는 복원한다.
+- PASS 모바일 제한 조건: `RMS_QA_MOBILE_EMULATION=true node scripts/check-lazy-cleaning.mjs`로 터치 탭·기기 배율 2·CPU 4배 감속·API 응답별 250ms 추가 지연을 적용해 동일 회귀를 통과했다. 지연 응답은 route fixture이며 실제 통신 대역폭/통신 단절을 모사한 결과나 실기기 성능 수치로 해석하지 않는다.
+- PASS: `node scripts/check-workspace.mjs`, `node scripts/check-pwa.mjs`, `git diff --check`. 390/1440px 대표 PNG 육안 확인. 정본 감사 문서는 변경하지 않았다.
+- NOT RUN: 실제 iOS/Android 갤러리·HEIC 20장·저속 통신망·OS 백그라운드/앱 종료 후 복구·새 운영 사진 업로드/삭제/제출. 앱 내부 이동 중 전송 유지와 새로고침/로그아웃/앱 종료 후 전송 보장은 별개이며 후자는 제공하지 않는다.
+- 백엔드 최신 이슈 #206의 v0.9.4/API45 1차 종료 인계에 변경 없음 확인. 이번 수정은 프런트 날짜/조회 범위 처리이며 새 endpoint·DB·권한 변경 요청은 없다. Worker `2026-10-11-1`, 강제 새로고침 없음.
+
 ## 2026-10-10 기본 접힘·필요 시 상세 조회
 
 기준 `dev 82bc340`. 검증 흐름: 내 업무 진입 → 접힌 객실 목록 먼저 표시 → 객실 펼치기 → 해당 상세와 화면 근처 사진만 조회 → 다른 객실 명령/업로드 → 확대·뒤로가기. 기존 UI의 기본 접힘과 조회 시점만 변경하며 업무 쓰기는 전부 합성 fixture로 가로챘다.
