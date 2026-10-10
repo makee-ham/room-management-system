@@ -1932,9 +1932,10 @@
     .live-strip { position:sticky; top:0; z-index:45; border-bottom:1px solid #b9d8ed; background:#edf8ff; color:#174d70; }
     .live-strip.preview { border-bottom-color:#e7c889; background:#fff7df; color:#744f16; }
     .live-strip.preview p { color:#805f2a; }
-    .live-strip-inner { min-height:42px; max-width:1600px; margin:0 auto; padding:8px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .live-strip-inner { min-height:42px; max-width:1600px; margin:0 auto; padding:8px 18px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; }
     .live-strip strong { display:flex; align-items:center; gap:8px; font-size:.86rem; }
     .live-strip p { margin:0; color:#35677f; font-size:.8rem; text-align:right; }
+    .live-photo-queue-status { font-size:.8rem; font-weight:700; text-align:right; overflow-wrap:anywhere; }
     .live-signal { width:9px; height:9px; border-radius:50%; background:var(--green); box-shadow:0 0 0 3px rgba(22,122,90,.14); flex:0 0 auto; }
     .live-page { display:grid; gap:18px; }
     .live-page-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
@@ -4716,7 +4717,8 @@
 
       function renderLiveStrip(){
         const actor=state.remote.auth.user,roleLabel=actor?.role==='developer'?'개발자':actor?.role==='admin'?'관리자':actor?.role==='maid'?'메이드':'로그인 전',preview=runtimeDeploymentChannel()==='preview';
-        return `<section class="live-strip ${preview?'preview':''}" aria-label="운영 API 연결 상태"><div class="live-strip-inner"><strong><span class="live-signal"></span>${preview?'운영 API 연결 중 · Preview':`운영 연결 · ${esc(roleLabel)}`}</strong>${preview?'<p>운영 데이터 사용 · 승인한 대상만 변경하세요</p>':''}</div></section>`;
+        const uploadStatus=actor?.role==='maid'?livePhotoQueueStatusCopy():'';
+        return `<section class="live-strip ${preview?'preview':''}" aria-label="운영 API 연결 상태"><div class="live-strip-inner"><strong><span class="live-signal"></span>${preview?'운영 API 연결 중 · Preview':`운영 연결 · ${esc(roleLabel)}`}</strong>${actor?.role==='maid'?`<span class="live-photo-queue-status" data-live-photo-queue-status role="status" aria-live="polite" ${uploadStatus?'':'hidden'}>${esc(uploadStatus)}</span>`:''}${preview?'<p>운영 데이터 사용 · 승인한 대상만 변경하세요</p>':''}</div></section>`;
       }
 
       function renderSidebar(nav) {
@@ -9316,6 +9318,14 @@
       function liveCleaningVerifiedPhotoIds(attemptId){return (cleaningState().photoSlots.get(attemptId)?.slots||[]).flatMap(slot=>liveCleaningSlotPhotoItems(slot).filter(item=>item.uploadStatus==='verified'&&item.photoId).map(item=>item.photoId));}
       function liveCleaningBombPhotoIds(attemptId){const slots=cleaningState().photoSlots.get(attemptId)?.slots||[],bomb=slots.find(slot=>slot.slotKey==='bomb-proof');return bomb?liveCleaningSlotPhotoItems(bomb).filter(item=>item.uploadStatus==='verified').map(item=>item.photoId):liveCleaningVerifiedPhotoIds(attemptId);}
       function cleaningRequiredSlotsReady(attemptId){const slots=cleaningState().photoSlots.get(attemptId)?.slots||[];return slots.length>0&&slots.filter(slot=>slot.required).every(slot=>slot.uploadStatus==='verified'&&liveCleaningSlotPhotoItems(slot).length>0);}
+      function mergeLivePhotoSlotRevisions(incoming,current){
+        if(!incoming||!current||incoming.attemptId!==current.attemptId||incoming.assignmentId!==current.assignmentId||incoming.assignmentRevision!==current.assignmentRevision||!Array.isArray(incoming.slots)||!Array.isArray(current.slots))return incoming;
+        // A read started before an upload may finish after its newer server receipt.
+        return {...incoming,slots:incoming.slots.map(slot=>{
+          const previous=current.slots.find(item=>item.slotId===slot.slotId&&item.slotKey===slot.slotKey&&item.maxPhotos===slot.maxPhotos),key=Number(slot.maxPhotos)>1?'collectionRevision':'currentRevision';
+          return previous&&Number.isSafeInteger(previous[key])&&Number.isSafeInteger(slot[key])&&previous[key]>slot[key]?previous:slot;
+        })};
+      }
       function pruneLiveCleaningPhotoPreviews(photoSlots=cleaningState().photoSlots){
         const currentIds=new Set([...photoSlots.values()].flatMap(payload=>(payload?.slots||[]).flatMap(slot=>liveCleaningSlotPhotoItems(slot).map(item=>item.photoId))));
         for(const [photoId,url] of LIVE_CLEANING_ACTIVE_PHOTO_URLS){if(currentIds.has(photoId))continue;URL.revokeObjectURL(url);LIVE_CLEANING_ACTIVE_PHOTO_URLS.delete(photoId);LIVE_CLEANING_ACTIVE_PHOTO_ERRORS.delete(photoId);}
@@ -9385,6 +9395,7 @@
             (active.length?active:assignments.slice(0,1)).forEach(item=>slice.expandedMaidAssignments.add(item.assignmentId));slice.maidAssignmentsInitialized=true;
           }
           if(role==='maid'&&livePinRevealSecret?.assignmentId&&!assignments.some(item=>item.assignmentId===livePinRevealSecret.assignmentId&&item.roomId===livePinRevealSecret.roomId&&item.isCurrent===true&&!!item.notifiedAt))clearLivePinReveal();
+          for(const [attemptId,payload]of photoSlots)photoSlots.set(attemptId,mergeLivePhotoSlotRevisions(payload,slice.photoSlots.get(attemptId)));
           Object.assign(slice,{status:'ready',assignments,attempts,photoSlots,submissions,changeRequests,inspections,error:null,requestId:assignmentResponse.requestId,lastSuccessAt:new Date().toISOString(),lastReceipt:slice.lastReceipt,...(needsImpact?{planningAvailability,commitImpact:impactResult.response?.data?.impact||null,commitImpactStatus:impactResult.error?'error':'ready',commitImpactError:impactResult.error}: {})});
           if(role==='maid'){for(const items of submissions.values()){const submitted=items.find(item=>item.current)||items[0];if(submitted)await loadLivePostOperations(submitted.id,{quiet:true});}if(generation!==LIVE_RUNTIME.authGeneration||revision!==slice.loadRevision)return false;pruneLiveCleaningPhotoPreviews(photoSlots);assignments.filter(item=>slice.expandedMaidAssignments.has(item.assignmentId)).forEach(item=>{const attempt=attempts.get(item.assignmentId);if(attempt)void ensureLiveCleaningPhotoPreviews(attempt.attemptId);});}
           if(role==='admin'&&state.liveView==='cleaning'&&state.cleaningTab==='progress'){await loadLiveCheckoutIncidents();if(generation!==LIVE_RUNTIME.authGeneration||revision!==slice.loadRevision)return false;}
@@ -9799,6 +9810,7 @@
       async function saveLiveBombReport(assignmentId){let context;try{context=liveExecutionContext(assignmentId);}catch(error){cleaningState().error=error;render();return;}const memo=document.getElementById('cleaning-bomb-memo')?.value.trim()||'',evidencePhotoIds=liveCleaningBombPhotoIds(context.attempt.attemptId);if(!memo||!evidencePhotoIds.length){toast('메모와 검증된 증빙 사진을 확인하세요.','error');return;}await runLiveCleaningMutation({path:`/v1/attempts/${encodeURIComponent(context.attempt.attemptId)}/bomb-room-reports`,body:{evidencePhotoIds,memo},label:'폭탄방 신고'});}
       async function submitLiveCleaning(assignmentId,confirmation=null){
         let context;try{context=liveExecutionContext(assignmentId);}catch(error){cleaningState().error=error;render();return;}if(!cleaningRequiredSlotsReady(context.attempt.attemptId)){cleaningState().error=new ApiRequestError('required photos missing',{status:422,code:'VALIDATION_ERROR',serverMessage:'필수 사진 슬롯을 모두 업로드해 주세요.'});render();return;}
+        if(liveAttemptPhotoPending(context.attempt.attemptId)){toast('사진 전송과 저장 확인 후 제출할 수 있습니다.','error');return;}
         const current=cleaningCurrentSubmission(context.attempt.attemptId),input=document.getElementById(`cleaning-candles-${context.attempt.attemptId}`),candleCount=confirmation?.count??Number(input?.value);if(!Number.isSafeInteger(candleCount)||candleCount<0||candleCount>2147483647){toast('촛불 수량을 0 이상의 정수로 입력하세요.','error');return;}
         const generation=LIVE_RUNTIME.authGeneration;
         await runLiveCleaningMutation({path:`/v1/attempts/${encodeURIComponent(context.attempt.attemptId)}/submissions`,body:{clientSubmissionId:crypto.randomUUID(),expectedRevision:Number(current?.currentRevision)||0,candleCount},label:'청소 검수 요청 제출',beforeRequest:async()=>{
@@ -9820,6 +9832,27 @@
       }
       const LIVE_PHOTO_QUEUE=[];
       let livePhotoQueueRunning=false;
+      function livePhotoQueueStatusCopy(){
+        const jobs=LIVE_PHOTO_QUEUE.filter(job=>job.generation===LIVE_RUNTIME.authGeneration);
+        if(!jobs.length)return '';
+        const waiting=jobs.filter(job=>jobs.some(other=>other.slotId===job.slotId&&other.error)).length,active=jobs.length-waiting;
+        return waiting?active?`사진 전송 ${active}장 · 확인 ${waiting}장`:`사진 확인 필요 ${waiting}장`:`사진 전송 중 ${active}장`;
+      }
+      function refreshLivePhotoQueueStatus(){
+        const element=document.querySelector('[data-live-photo-queue-status]');if(!element)return;
+        const copy=cleaningActor('maid')?livePhotoQueueStatusCopy():'';element.textContent=copy;element.hidden=!copy;
+      }
+      function refreshLivePhotoTaskActions(assignmentId){
+        const target=[...document.querySelectorAll('[data-maid-room-task]')].find(item=>item.dataset.maidRoomTask===assignmentId),assignment=cleaningState().assignments.find(item=>item.assignmentId===assignmentId);
+        if(!target||!assignment)return;
+        const template=document.createElement('template');template.innerHTML=renderMaidCleaningAssignment(assignment);
+        for(const next of template.content.querySelectorAll('[data-cleaning-assignment] button,[data-cleaning-submission] button,[data-cleaning-submission] input,[data-action="cleaning-photo-delete"],[data-cleaning-upload]')){
+          const selector=next.id?`#${CSS.escape(next.id)}`:next.dataset.cleaningUpload!==undefined?`[data-cleaning-upload][data-slot="${CSS.escape(next.dataset.slot)}"][data-upload-source="${CSS.escape(next.dataset.uploadSource)}"]`:`[data-action="${CSS.escape(next.dataset.action)}"]${next.dataset.photoItem?`[data-photo-item="${CSS.escape(next.dataset.photoItem)}"]`:''}`;
+          const current=target.querySelector(selector);if(current)current.disabled=next.disabled;
+        }
+        const selector='[data-cleaning-submission] .room-action-reason',current=target.querySelector(selector),next=template.content.querySelector(selector);
+        if(current&&!next)current.remove();else if(!current&&next)target.querySelector('[data-cleaning-submission] .job-actions')?.before(next.cloneNode(true));
+      }
       function liveAttemptPhotoPending(attemptId){return LIVE_PHOTO_QUEUE.some(job=>job.attemptId===attemptId&&job.generation===LIVE_RUNTIME.authGeneration);}
       function liveSlotPhotoPending(slotId){return LIVE_PHOTO_QUEUE.filter(job=>job.slotId===slotId&&job.generation===LIVE_RUNTIME.authGeneration).length;}
       async function optimizeLivePhoto(file){
@@ -9846,10 +9879,11 @@
       function nextLivePhotoJob(exclude=null){return LIVE_PHOTO_QUEUE.find(job=>job!==exclude&&job.generation===LIVE_RUNTIME.authGeneration&&!job.error&&!LIVE_PHOTO_QUEUE.some(other=>other.slotId===job.slotId&&other.error));}
       function refreshLivePhotoUploadView(job){
         if(!livePhotoJobCurrent(job)&&job.generation!==LIVE_RUNTIME.authGeneration)return;
-        const target=[...document.querySelectorAll('.flat-evidence-section')].find(element=>element.dataset.photoSlot===job.slotId),assignment=cleaningState().assignments.find(item=>item.assignmentId===job.assignmentId),attempt=assignment&&cleaningAttemptForAssignment(assignment);
+        const slotTarget=[...document.querySelectorAll('[data-photo-slot]')].find(element=>element.dataset.photoSlot===job.slotId),target=slotTarget?.closest('[data-cleaning-zone]')||slotTarget,assignment=cleaningState().assignments.find(item=>item.assignmentId===job.assignmentId),attempt=assignment&&cleaningAttemptForAssignment(assignment);
         if(!target||!attempt)return;
-        const active=document.activeElement,focus=historyFocusDescriptor(active),template=document.createElement('template');template.innerHTML=renderFlatCleaningPhotos(assignment,attempt);
-        const next=[...template.content.querySelectorAll('[data-photo-slot]')].find(element=>element.dataset.photoSlot===job.slotId);if(next)target.replaceWith(next);
+        const active=document.activeElement,focus=historyFocusDescriptor(active),template=document.createElement('template');template.innerHTML=renderCleaningPhotoSlots(assignment,attempt);
+        const nextSlot=[...template.content.querySelectorAll('[data-photo-slot]')].find(element=>element.dataset.photoSlot===job.slotId),next=nextSlot?.closest('[data-cleaning-zone]')||nextSlot;if(next)target.replaceWith(next);
+        if(target.dataset.cleaningZone!==undefined){const selector=`[data-cleaning-photo-slots="${CSS.escape(job.attemptId)}"] .mobile-section-title`,current=document.querySelector(selector),updated=template.content.querySelector(selector);if(current&&updated)current.replaceWith(updated);}
         if(active&&!active.isConnected)findHistoryFocusTarget(focus)?.focus({preventScroll:true});
       }
       function validLivePhotoSnapshot(data,job){
@@ -9872,7 +9906,7 @@
         for(const job of replaceable){releaseLivePhotoJob(job);LIVE_PHOTO_QUEUE.splice(LIVE_PHOTO_QUEUE.indexOf(job),1);}if(replaceable.length){const previous=sliceUploadProgress(slotId);cleaningState().uploadStates.set(slotId,{...previous,total:previous.total-replaceable.length});}
         const selected=files.slice(0,capacity),progress=liveSlotPhotoPending(slotId)?sliceUploadProgress(slotId):{total:0,completed:0};cleaningState().uploadStates.set(slotId,{...progress,total:progress.total+selected.length});
         for(const file of selected)LIVE_PHOTO_QUEUE.push({file,attemptId,slotId,assignmentId:payload.assignmentId||input.dataset.assignment,assignmentRevision:payload.assignmentRevision||Number(input.dataset.assignmentRevision),photoItemId:crypto.randomUUID(),key:crypto.randomUUID(),generation:LIVE_RUNTIME.authGeneration,error:null,path:null,blob:null,receipt:null});
-        updateLivePhotoQueueState(slotId);render();void drainLivePhotoQueue();
+        updateLivePhotoQueueState(slotId);const job=LIVE_PHOTO_QUEUE.find(item=>item.slotId===slotId);if(job){refreshLivePhotoUploadView(job);refreshLivePhotoTaskActions(job.assignmentId);}refreshLivePhotoQueueStatus();toast(`사진 ${selected.length}장 전송 대기`);void drainLivePhotoQueue();
       }
       function sliceUploadProgress(slotId){const value=cleaningState().uploadStates.get(slotId);return {total:value?.total||0,completed:value?.completed||0};}
       async function drainLivePhotoQueue(){
@@ -9898,14 +9932,14 @@
             const snapshot=LIVE_RUNTIME.config?.featureFlags?.photoUploadSnapshot===true&&validLivePhotoSnapshot(job.receipt.photoSlots,job)?job.receipt.photoSlots:null;
             const data=snapshot||(await apiRequest(`/v1/attempts/${encodeURIComponent(job.attemptId)}/photo-slots`)).data;if(!livePhotoJobCurrent(job))break;
             if(!validLivePhotoSnapshot(data,job))throw new ApiRequestError('photo confirmation pending',{status:409,code:'PHOTO_CONFIRMATION_PENDING',serverMessage:'사진 저장은 접수됐습니다. 최신 상태를 다시 확인하세요.'});
-            verifiedSlots.set(job.attemptId,data);cleaningState().photoSlots.set(job.attemptId,data);
+            const latest=mergeLivePhotoSlotRevisions(data,cleaningState().photoSlots.get(job.attemptId));verifiedSlots.set(job.attemptId,latest);cleaningState().photoSlots.set(job.attemptId,latest);
             const visible=state.liveView==='my'&&cleaningState().expandedMaidAssignments.has(job.assignmentId);
             if(visible&&job.blob!==job.file&&!LIVE_CLEANING_ACTIVE_PHOTO_URLS.has(job.receipt.photoId))LIVE_CLEANING_ACTIVE_PHOTO_URLS.set(job.receipt.photoId,URL.createObjectURL(job.blob));
             LIVE_PHOTO_QUEUE.splice(LIVE_PHOTO_QUEUE.indexOf(job),1);const progress=sliceUploadProgress(job.slotId);cleaningState().uploadStates.set(job.slotId,{...progress,completed:progress.completed+1});releaseLivePhotoJob(job);updateLivePhotoQueueState(job.slotId);
             if(visible)void ensureLiveCleaningPhotoPreviews(job.attemptId);
           }catch(error){verifiedSlots.delete(job.attemptId);if(!livePhotoJobCurrent(job))break;job.error=error;updateLivePhotoQueueState(job.slotId);toast(`${job.receipt?'사진 저장 상태 확인 필요':'사진 업로드 실패'} · ${apiErrorCopy(error)}`,'error');}
-          if(job.generation===LIVE_RUNTIME.authGeneration)refreshLivePhotoUploadView(job);
-        }}finally{livePhotoQueueRunning=false;if(generation===LIVE_RUNTIME.authGeneration)render();if(cleaningActor('maid')&&nextLivePhotoJob())queueMicrotask(()=>void drainLivePhotoQueue());}
+          if(job.generation===LIVE_RUNTIME.authGeneration){refreshLivePhotoUploadView(job);refreshLivePhotoTaskActions(job.assignmentId);refreshLivePhotoQueueStatus();}
+        }}finally{livePhotoQueueRunning=false;if(generation===LIVE_RUNTIME.authGeneration)refreshLivePhotoQueueStatus();if(cleaningActor('maid')&&nextLivePhotoJob())queueMicrotask(()=>void drainLivePhotoQueue());}
       }
       function retryLivePhotoQueue(id){
         if(!cleaningActor('maid'))return;for(const job of LIVE_PHOTO_QUEUE)if(job.slotId===id||job.photoItemId===id){job.error=null;updateLivePhotoQueueState(job.slotId);}render();void drainLivePhotoQueue();
