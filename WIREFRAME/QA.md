@@ -1,5 +1,21 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-10 지정 계정 사진 업로드 UAT
+
+사용자 지정 계정/객실, 운영 URL `https://room-management-system-prod.vercel.app/`, 인앱 브라우저 제어 도구. 운영 HTML SHA256은 아래 v0.9.3 배포 및 `dev 7f04adc` 소스와 동일했다. 코드·전체 배포 설정을 바꾸지 않고 현재 탭 runtime 응답의 snapshot 옵션만 일회성 true로 적용했다. 사용자가 5장 다중 선택 후 1장을 직접 추가했고, 일시 timing 관찰은 원문·이름·인증값·업무 ID 없이 시간/bytes/status/헤더만 메모리에 기록한 뒤 제거했다.
+
+- PASS: 6개 upload POST `includePhotoSlots=true`/200, 6장 등록 완료. 각 선택 배치 시작 슬롯 GET 1회 뒤 업로드 간/직후 GET 없이 유효 snapshot 반영.
+- PASS: 다른 화면에서 내 업무로 복귀 후 인증 content GET 6건/200, 6장 모두 `complete && naturalWidth > 0`. 저장본 긴 변 1280px, 확대 및 Escape/브라우저 Back, 사진 유지와 포커스 복귀. 확대 닫기 때 추가 content GET 없음.
+- PASS: 일시 계측 제거 및 일반 설정 새로고침 후에도 6장 모두 디코딩 완료.
+- PASS: 추가 1장 성공 응답의 `Server-Timing`과 `Cache-Control: no-store`를 브라우저 JS에서 읽음. 검수 요청 제출/승인/사진 삭제는 실행하지 않음.
+- 첫 5장 요청 10.703/6.654/6.442/6.141/5.935초. POST 시작~마지막 완료 35.893초, 선행 슬롯 GET 포함 37.503초. POST 사이 공백 합계 약 18ms. 파일 선택·준비/전체 렌더 시간 또는 OFF 대비 개선율로 해석하지 않음.
+- 추가 1장 493,071 bytes/약 10.58초. 서버 timing(ms): DB 4128.2, Drive 4491.5, body 9.9, decoder init 140.2, decode 489.3, photo total 9263.8, API total 9851.5. 합계는 포함 관계이며 중복 합산하지 않음.
+- 6장 재조회는 최대 4동시, 개별 요청 2.156~2.443초, 첫 응답 2.156초/전체 약 4.647초. 서버 Drive 1.253~1.514초, DB 48.4~90.3ms. 실제 운영 표본 1회이며 cold/warm 평균·모바일 벤치마크가 아님.
+- NOT RUN: 실제 iOS/Android 갤러리·HEIC·20장·저속망, 실제 null/409/응답 유실 복구. 기존 fixture와 구분하고 운영 장애를 유발하지 않음. 이번 확인은 기존 인앱 viewport만 사용했으며 4개 반응형 폭 재검증은 하지 않음.
+- 사진 원문이 있는 화면은 저장소 QA 캡처에 남기지 않았다. 정상 UAT 통과와 체감 속도 개선 완료를 구분한다. 전체 운영/프리뷰 snapshot 옵션은 false이며 배포를 변경하지 않았다.
+
+결과: [프런트 #206](https://github.com/makee-ham/room-management-system/issues/206#issuecomment-6095868309), [백엔드 #411](https://github.com/wrongstory/room-management-system-backend/issues/411#issuecomment-6095870502). DB 세부 왕복/잠금/확정 및 Drive 세부 단계의 최적화, 작은 비공개 썸네일, 안전한 병렬 계약을 후속 요청했다. 최신 인계는 `DOCS/32_PHOTO_PERFORMANCE_INTEGRATION.md`를 따른다. 아래 이전 checkpoint의 사진 UAT 미실행 표시는 이 정상 경로 범위에서 갱신한다.
+
 ## 2026-10-10 백엔드 v0.9.3 묶음 조회 연결
 
 기준 `dev e2b95d8`. 백엔드 최신 #207 인계와 release `72771b5`의 batch/가능일 완전성/공통 timing 문서를 확인했다. 공개 health 200, 운영/게시 OpenAPI paths/components 동일, 151 paths/163 operations 및 CSV 문자열 계약 검사·타입 재생성 PASS. 기존 후보 문서의 미배포 상태는 이 checkpoint로 대체한다. SQL/운영 DB 변경 없음.
