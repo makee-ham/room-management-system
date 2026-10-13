@@ -1,5 +1,26 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-13 백엔드 추가 이슈 검수
+
+기준 dev 795da7e. 흐름: 객실 예약 등록 → 선택 날짜/객실 유지, 진행 중 → 미퇴실 신고 재조회, 청소 배정 → KST 날짜 경계, 관리자 내보내기 → 합성 PIN preview/apply/download. 실제 운영 쓰기는 하지 않았다.
+
+- PASS `check-backend-handoff-oct13.mjs`: LA timezone에서도 KST 당일 16시 전/후 기본 날짜, 명시 미래 날짜, 겹침 시 객실 유지, 느린 preview 중 작성 보존. 객실 변경 후 날짜 유지.
+- PASS: 미퇴실 신고 loading/error/stale/empty와 키보드 재조회. AUTH_CONTEXT_UNAVAILABLE은 로그인 후 me 실패/기존 세션 갱신 모두 세션 삭제 없이 재확인.
+- PASS: PIN flag OFF 및 maid/developer 요청 0건, 관리자 다운로드 blob을 openpyxl로 열어 시트 1·B/C열·문자열·앞자리 0·6자리 보존 확인. PIN 목록은 화면 미표시. 유실 후 모달 재진입·만료 후 동일 token/key 결과 확인, stale/config/행 오류, 원본 오류 텍스트 미노출, history/storage 원문·token 없음.
+- PASS: 서버 현재 long_stay 예약 기준 4/6자리 입력, 5자리 거절, 일반/랜덤 4자리 유지. 실제 도어락 변경 없음.
+- PASS: KST 일요일→월요일/월말/연말, 자정 전 초안 명령 차단, 현재 계획일 availability, 이전 날짜 늦은 응답 폐기, 원 serviceDate/담당/별도 target 2건 보존, 고유 행, 업로드 큐/명시 조회일 유지. flag OFF에서는 기존 change body 유지.
+- PASS: 기존 `check-reservation-bookability.mjs`, `check-cleaning-workflow.mjs` 30그룹, `check-lazy-cleaning.mjs`, `check-live-navigation.mjs`, `check-photo-queue-handoff.mjs`, `check-live-connections.mjs`. 예약 생성·수정/취소/이동, 버튼 목적지, 접힘/필요 시 조회, 검수/주급/사진·모달 Back/Forward·포커스·권한 회귀. 검수 사진 개수 단언은 비동기 이미지 생성·디코딩 완료 후 확인하도록 안정화하고 재실행 통과.
+- 환경: http://127.0.0.1:4177, Playwright Chromium 151.0.7922.34, Browser plugin not available. 360/390/768/1440px 페이지 식별·비어 있지 않은 화면·가로 넘침·접근성 이름·키보드·콘솔 검사. 의도한 HTTP 오류 fixture 외 app warning/error 없음.
+- 합성 PNG: `QA/screenshots/backend-handoff-reservation-date-{360,390,768,1440}.png`, `QA/screenshots/backend-handoff-pin-import-{360,390,768,1440}.png`. 390/1440px 육안 확인. 기존 예약 폼과 청소 표의 구조/버튼 유지, 새 PIN 전송은 기존 내보내기 안에 제공. 과거 검사 PNG는 복원하고 사용자 미커밋 PNG는 보존한다.
+- PASS: 운영 OpenAPI client `--production --check` 151 paths / 163 operations, PWA cache/보안 검사. worker 2026-10-13-1, 강제 새로고침 없음.
+- NOT RUN: 운영 PIN export/import·도어락 변경·신규 예약/배정/사진 쓰기, 실제 모바일·백그라운드 종료 복구. 백엔드 자정 SQL/Drive 검증은 프런트 합성 검증과 별개다. 미배포 계약은 두 flag 기본 false.
+- 백엔드 활성화 차단: 가져온 PIN의 물리 확인을 위한 secret-free 최신 pinVersion 조회 경로. [인계](../DOCS/34_BACKEND_OCT13_FRONTEND_HANDOFF.md)에 endpoint/필드를 정리했다.
+- PASS: `node scripts/check-workspace.mjs`, `git diff --check`. 정본 감사 문서는 변경하지 않았다.
+- Production Ready `dpl_ANcKYiRXTx9Cv8gQky9i6GwSdigS` (`room-management-system-prod-dbgcbxuqx.vercel.app`) → `https://room-management-system-prod.vercel.app/`. live/production/local, photoUploadSnapshot true, assignmentPlanningDate/roomPinTransfer false. 공개 HTML·worker byte 일치.
+- Preview Ready `dpl_CY593VBsZtUp8BDFbFMQW8NtW3DV` (`room-management-system-prod-xhwe7un4u.vercel.app`) → `https://room-management-system-prod-preview.vercel.app/`. live/preview/session, 동일 flags. 인증 CLI에서 해당 배포 feedback script만 제외한 HTML과 worker byte 일치. 고정 alias 및 공개 보호 302 유지.
+- 앱 소스 commit `221ebfe`. HTML SHA256 `09c990a028ed1f48d127cf676b72e9d9f6ecb8eab675b43f32518a55eea51ee3`, worker SHA256 `5eaa4ea27fe4bf96907c5206f7b42575d25ec7215047317fcefdac4530f8de76`. 후속 commit은 배포·검증 증거 문서뿐이다.
+- 운영 인앱 PASS: 전송/작성 대기 없음 확인 → 새로고침·새 버전 적용 → 메이드 로그인 유지 → 10/11 0건 → 날짜 입력 10/13·URL 동기화·2건 모두 접힘 → Back 10/11·0건. console warning/error 없음. 계정 전환, 신규 업로드/삭제/검수 제출, 관리자 운영 쓰기와 사진 원문 캡처는 하지 않았다.
+
 ## 2026-10-11 날짜 이동·지연 응답 후속 검수
 
 기준 `dev d3016d1`. 검증 흐름: 내 업무 날짜 선택 → 다른 날짜 → Back/Forward·새로고침 → 같은 날짜의 API 목록 확인. 별도로 업로드 2장을 지연시킨 동안 날짜 변경 → 전송 완료 → Back → 원래 객실 저장본 확인. 운영 쓰기는 하지 않고 기존 API fixture로 전부 가로챘다.
