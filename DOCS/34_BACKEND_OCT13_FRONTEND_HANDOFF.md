@@ -52,3 +52,11 @@ import 후 SHEET_PIN_AWAITING_PHYSICAL_CONFIRMATION으로 mismatch가 된 객실
 ## 검증
 
 WIREFRAME/QA.md 최신 절에 실행 결과와 배포 증거를 기록한다. 새 검사는 scripts/check-backend-handoff-oct13.mjs이며 Playwright와 openpyxl을 사용한다. RMS_QA_PYTHON으로 Python 경로를 지정할 수 있다. 모든 쓰기는 합성 API fixture이며 실제 PIN 전송·예약 생성·배정 변경은 실행하지 않는다.
+
+## 전달 결과
+
+- 프런트 [PR #221](https://github.com/makee-ham/room-management-system/pull/221), 앱 소스 221ebfe. 기준 브랜치는 dev이며 main에 직접 반영하지 않는다.
+- [운영](https://room-management-system-prod.vercel.app/)과 [보호된 프리뷰](https://room-management-system-prod-preview.vercel.app/)에 동일 앱 소스를 배포했다. 두 후보 flag는 false이고 기존 사진 snapshot은 true다.
+- #215/#218 수정은 활성 상태다. #219 날짜 경계 보호는 활성 상태이며 계획일 확장 계약은 서버 배포 후 활성화해야 한다. #220은 최신 pinVersion 경로 확인과 서버 배포 이후 활성화해야 한다.
+- #140 최신 백엔드 댓글의 배정 CPU/조회 집계 개선은 API 호출 변경 없음이며 운영 미배포라는 점을 확인했다. 합성 CPU 수치를 실제 모바일/네트워크 개선 수치로 취급하지 않는다.
+- 실제 운영 메이드 세션에서 업데이트·날짜 이동·뒤로가기와 콘솔을 읽기 검수했다. 관리자 쓰기, 실제 PIN Excel/Drive 처리와 실기기 갤러리는 검수하지 않았다.
