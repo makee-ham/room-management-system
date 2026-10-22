@@ -1,5 +1,23 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-22 · #227 사후 특이사항 메모 단독 등록 후보
+
+기준 dev `6fc4d44`. 사용자 정책 인계는 사후 새 특이사항 메모 필수·사진0~10장이며, 현재 운영 API/DB는 사진1장 이상이므로 `RMS_SUPPLEMENTAL_MEMO_ONLY=false`를 production/preview 기본값으로 둔다. 실제 운영 메모 단독 등록을 완료했다고 표시하지 않는다. 기존 화면에는 준비 중 이유를 안내한다. API snapshot·일반 청소 필수 사진·폭탄방 증빙 정책은 바꾸지 않았다.
+
+검증 환경: Browser plugin not available → 기존 Playwright Chromium151, `http://127.0.0.1:4177`, 360/390/768/1440px. 모든 업무 요청은 합성 API로 가로챘다.
+
+| 확인 | 결과 |
+| --- | --- |
+| 기본 OFF | PASS · 사진0장 요청0회, 기존 사진1~10장·준비 중 안내. production/preview/local 동일 기본값 및 명시 true만 후보 활성화 |
+| 합성 ON | PASS · 메모+0/1/10장, 빈메모+0/사진 차단,11장 선택 거절. 0장 upload0회·evidence[]·서버 반환 revision0 사용, 누락 revision은 finalize 차단 |
+| 목록/권한/재시도 | PASS · 사진 없음 메모 기록·사진 버튼 없음·관리자 해결·기존 제출 불변.409 재조회, finalize 응답 유실 시 같은 key/payload replay·이미 등록된 report 복구·개발자 직접 명령 차단 |
+| UI/보안 | PASS · 4개 너비/overflow·의미 있는 화면·overlay 없음·console warning/error/page exception0. Tab/모달/Escape/Back/포커스 복귀, 재진입 메모 보존·history 메모 비저장 |
+| 기존 회귀 | PASS · `check-backend-v090.mjs` 전체, cleaning-workflow30그룹 및 rollout. 원 source의 같은 역할/fixture OFF 모달390/1440 비교, 기본1~10장 목적·입력 위치 유지 |
+
+대표 증거: `WIREFRAME/QA/screenshots/v090-memo-off-form-{360,390,768,1440}.png`, `v090-memo-only-form-{360,390,768,1440}.png`, `v090-memo-only-record-390.png`, `supplemental-memo-before-{390,1440}.png`. 합성 데모 표기를 넣었다. 서비스워커 `2026-10-22-5`.
+
+현재 서버의0장 신고/실기기/실제 업무 mutation은 미실행이다. backend#474의 운영 계약·DB 적용 인계와 snapshot/client 갱신 전 ON 배포하지 않는다. #227은 OPEN으로 유지하며 실행 조건은 `DOCS/39_SUPPLEMENTAL_MEMO_ONLY_HANDOFF.md`에 기록했다. 최종 릴리스 PR에 실제 운영 배포 신원과 OFF 확인을 남긴다.
+
 ## 2026-10-22 · 남은 6개 이슈 재점검·관리자 청소 조회 병행
 
 기준 dev `6dee336`과 운영 main `3482da8`이다. 흐름은 관리자 청소관리 진입 → 독립 배정/변경 요청/검수 목록 조회 → 완전한 기존 카드와 `배정 이력 / 배정 관리` 표시다. Browser plugin not available로 기존 Playwright Chromium 151, `http://127.0.0.1:4177`, 360/390/768/1440px에서 합성 API만 사용했다. 실제 업무 쓰기 없음.
