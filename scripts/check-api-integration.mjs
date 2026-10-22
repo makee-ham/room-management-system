@@ -47,6 +47,9 @@ const REQUIRED_PATHS = new Map([
   ["/v1/reservations/cleaning-requests/{targetId}/cancel", ["post"]],
   ["/v1/reservations/transitions/process", ["post"]],
   ["/v1/rooms", ["get"]],
+  ["/v1/rooms/pins/export", ["get"]],
+  ["/v1/rooms/pins/import/preview", ["post"]],
+  ["/v1/rooms/pins/import/apply", ["post"]],
   ["/v1/room-types", ["get"]],
   ["/v1/rooms/{roomId}", ["get"]],
   ["/v1/rooms/{roomId}/master-data", ["patch"]],
@@ -344,8 +347,8 @@ async function checkOpenApi(apiBaseUrl) {
     (count, item) => count + Object.keys(item).filter((key) => ["get", "post", "put", "patch", "delete", "head", "options"].includes(key)).length,
     0,
   );
-  assert(Object.keys(document.paths ?? {}).length === 150, "OpenAPI path 수가 배포 v0.9.0의 150개와 다릅니다.");
-  assert(operationCount === 162, "OpenAPI operation 수가 배포 v0.9.0의 162개와 다릅니다.");
+  assert(Object.keys(document.paths ?? {}).length === 154, "OpenAPI path 수가 배포 v0.9.5 이후 계약의 154개와 다릅니다.");
+  assert(operationCount === 166, "OpenAPI operation 수가 배포 v0.9.5 이후 계약의 166개와 다릅니다.");
 }
 
 async function checkCors(apiBaseUrl) {
@@ -390,7 +393,7 @@ async function main() {
     console.log("[ok] 운영 health 계약을 확인했습니다.");
 
     await checkOpenApi(apiBaseUrl);
-    console.log("[ok] 배포 v0.9.0 OpenAPI의 150개 path와 162개 operation 및 가능일 상시 제출 계약을 확인했습니다.");
+    console.log("[ok] 배포 OpenAPI의 154개 path와 166개 operation 및 가능일·PIN 전송 계약을 확인했습니다.");
 
   } catch (error) {
     console.error(`[fail] ${error instanceof Error ? error.message : "API 계약 검사에 실패했습니다."}`);

@@ -10,6 +10,7 @@ const origin=process.env.RMS_QA_ORIGIN||'http://127.0.0.1:4177';
 const api='https://aodikrxcczbogjpsjwjt.supabase.co/functions/v1/api';
 const baseline=execFileSync('git',['show','314f0d7:WIREFRAME/index.html'],{encoding:'utf8',maxBuffer:4e6});
 const source=await readFile('WIREFRAME/index.html','utf8');
+const recoveryBaseline=execFileSync('git',['show','29bafc9:WIREFRAME/index.html'],{encoding:'utf8',maxBuffer:4e6});
 const id=n=>`76000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const date=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul'}).format(new Date());
 const actor={id:id(1),profileId:id(1),role:'maid',displayName:'QA 메이드',loginId:'QA',status:'active'};
@@ -19,7 +20,7 @@ const browser=await chromium.launch({headless:true});
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const metrics=[];
 let jpeg;
-async function fixture({old=false,snapshot=false,mode='valid',prepareMs=0,uploadMs=25,readMs=10,cpu=1}={}){
+async function fixture({old=false,beforeRecovery=false,snapshot=false,mode='valid',prepareMs=0,uploadMs=25,readMs=10,cpu=1}={}){
   const context=await browser.newContext({viewport:{width:390,height:900},serviceWorkers:'block'}),page=await context.newPage();
   const cdp=await context.newCDPSession(page);await cdp.send('Emulation.setCPUThrottlingRate',{rate:cpu});
   const slot={slotId:id(6),slotKey:'cleaning-proof',maxPhotos:20,required:true,collectionRevision:0,photos:[],photoCount:0,uploadStatus:'missing'};
@@ -43,13 +44,15 @@ async function fixture({old=false,snapshot=false,mode='valid',prepareMs=0,upload
   const json=(route,data,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
   await page.route('**/*',async route=>{
     const request=route.request(),url=new URL(request.url());
-    if(url.origin===new URL(origin).origin){if(url.pathname.endsWith('/index.html'))return route.fulfill({contentType:'text/html',body:(old?baseline:source).replace('\n      void bootApplication();',boot)});return route.continue();}
+    if(url.origin===new URL(origin).origin){if(url.pathname.endsWith('/index.html'))return route.fulfill({contentType:'text/html',body:(old?baseline:beforeRecovery?recoveryBaseline:source).replace('\n      void bootApplication();',boot)});return route.continue();}
     if(!request.url().startsWith(api+'/')){missing.push(url.origin);return route.abort();}
     const path=url.pathname.replace('/functions/v1/api',''),method=request.method();
     calls.push({path,method,key:request.headers()['idempotency-key'],hash:request.postDataBuffer()?createHash('sha256').update(request.postDataBuffer()).digest('hex'):null,bytes:request.postDataBuffer()?.length||0,optIn:url.searchParams.get('includePhotoSlots'),at:Date.now()});
     if(path.endsWith('/photo-slots')){await wait(readMs);if(mode==='refresh-failure'&&slot.photos.length&&!refreshFailed){refreshFailed=true;return json(route,{error:{code:'PHOTO_CONTENT_UNAVAILABLE'}},503);}return json(route,payload());}
     if(path.endsWith('/upload')){
       active++;maxActive=Math.max(active,maxActive);await wait(uploadMs);active--;
+      const recoveryErrors={'in-flight':[409,'PHOTO_UPLOAD_IN_FLIGHT'],provider:[503,'PHOTO_PROVIDER_UNAVAILABLE'],'quota-unavailable':[503,'PHOTO_STORAGE_QUOTA_UNAVAILABLE'],'quota-exceeded':[503,'PHOTO_STORAGE_QUOTA_EXCEEDED'],'lease-limit':[409,'PHOTO_UPLOAD_LEASE_LIMIT'],terminal:[409,'PHOTO_OPERATION_TERMINAL']};
+      if(recoveryErrors[mode]&&!conflict){conflict=true;const [status,code]=recoveryErrors[mode];return json(route,{error:{code,message:'DO_NOT_DISPLAY_PROVIDER_DETAIL'},requestId:'qa-photo-request'},status);}
       if(mode==='conflict'&&!conflict){conflict=true;return json(route,{error:{code:'PHOTO_COLLECTION_REVISION_CONFLICT'}},409);}
       if(mode==='validation-after-first'&&slot.photos.length===1&&!conflict){conflict=true;return json(route,{error:{code:'VALIDATION_ERROR'}},400);}
       const key=request.headers()['idempotency-key'];
@@ -84,6 +87,27 @@ async function fixture({old=false,snapshot=false,mode='valid',prepareMs=0,upload
   return {page,context,calls,slot,upload,settled,payload,operationReady:()=>{operationReady=true;},stats:()=>({maxActive,maxReads}),close:async()=>{assert.deepEqual(errors,[]);assert.deepEqual(missing,[]);await context.close();}};
 }
 try{
+  for(const mode of ['in-flight','provider','quota-unavailable','quota-exceeded','lease-limit','terminal']){
+    const f=await fixture({snapshot:true,mode,uploadMs:120});await f.upload(2);await f.settled();
+    const failed=await f.page.evaluate(()=>__photoQA.state());assert.equal(failed.errors,1);assert.equal(failed.queue,2);
+    const first=f.calls.find(call=>call.path.endsWith('/upload'));await wait(150);
+    assert.equal(f.calls.filter(call=>call.path.endsWith('/upload')).length,1,'no automatic retries');
+    const alert=f.page.locator('[data-photo-slot] [role="alert"]').first();assert((await alert.innerText()).includes('qa-photo-request'));assert(!(await alert.innerText()).includes('DO_NOT_DISPLAY'));
+    const blocked=['quota-exceeded','lease-limit','terminal'].includes(mode),retry=f.page.locator('[data-action="live-photo-retry"]').first();
+    assert.equal(await retry.isDisabled(),blocked);
+    if(mode==='in-flight'){
+      assert((await alert.innerText()).includes('같은 사진의 업로드 처리 중'));assert(!(await alert.innerText()).includes('충돌'));
+      await f.page.locator('#toast-region .toast').waitFor({state:'detached'});
+      for(const width of [360,390,768,1440]){await f.page.setViewportSize({width,height:900});await alert.evaluate(el=>el.scrollIntoView({block:"center"}));assert.equal(await f.page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await f.page.screenshot({path:`WIREFRAME/QA/screenshots/photo-recovery-oct22-${width}.png`});}
+    }
+    await f.page.evaluate(id=>{__photoQA.retry(id);__photoQA.retry(id);},failed.jobs[0].id);await f.settled();
+    const posts=f.calls.filter(call=>call.path.endsWith('/upload'));
+    if(blocked){assert.equal(posts.length,1);assert.equal((await f.page.evaluate(()=>__photoQA.state())).queue,2);assert.equal(f.slot.photos.length,0);}
+    else{assert.equal(posts.length,3);assert.equal(posts[1].key,first.key);assert.equal(posts[1].hash,first.hash);assert.equal(posts[1].path,first.path);assert.equal(f.slot.photos.length,2);assert.equal((await f.page.evaluate(()=>__photoQA.state())).queue,0);}
+    assert.equal(f.stats().maxActive,1);await f.close();
+  }
+  const before=await fixture({beforeRecovery:true,snapshot:true,mode:'in-flight'});await before.upload(2);await before.settled();await before.page.locator('#toast-region .toast').waitFor({state:'detached'});await before.page.locator('[data-photo-slot] [role="alert"]').first().evaluate(el=>el.scrollIntoView({block:'center'}));await before.page.screenshot({path:'WIREFRAME/QA/screenshots/photo-recovery-oct22-before-390.png'});await before.close();
+  console.log('[ok] photo in-flight/provider/quota/terminal errors; manual same-key/item/bytes retry; duplicate retry guard; terminal requests blocked; 4 viewports and baseline evidence');
   for(const count of (process.env.RMS_QA_SKIP_BENCH?[]:[1,5,20]))for(const kind of ['baseline','current','snapshot']){
     const f=await fixture({old:kind==='baseline',snapshot:kind==='snapshot',prepareMs:80,uploadMs:140,readMs:60,cpu:4});
     const start=Date.now();await f.upload(count);

@@ -923,6 +923,7 @@
     .room-export-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin-top:12px; }
     .room-export-options .btn { min-height:52px; }
     .room-export-options .room-sheet-sync { grid-column:1 / -1; justify-content:center; }
+    .room-pin-transfer > h3,.room-pin-transfer > p { grid-column:1 / -1; margin:0; }
     .room-sheet-status { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-top:12px; padding:12px; border:1px solid #bfd5ee; border-radius:10px; background:#f4f9ff; }
     .room-sheet-status strong,.room-sheet-status span { display:block; }
     .room-sheet-status span { margin-top:3px; color:var(--muted); font-size:12px; }
@@ -2875,8 +2876,10 @@
         if(!rows.length){toast('내보낼 객실이 없습니다.');return;}const quote=value=>`"${spreadsheetSafeCell(value).replaceAll('"','""')}"`,blob=format==='csv'?new Blob(['\ufeff',[columns,...rows].map(row=>row.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}):createRoomXlsx([columns,...rows]),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=`castle-the-art_rooms_${liveOperationalDate()}.${format}`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);closeModal();
       }
       function livePinTransferAllowed(){return liveRoleAllowed('admin')&&state.remote.auth.user?.mustChangePassword===false&&LIVE_RUNTIME.config?.featureFlags?.roomPinTransfer===true;}
+      function livePinExportAllowed(){return liveRoleAllowed('admin')&&state.remote.auth.user?.mustChangePassword===false&&(LIVE_RUNTIME.config?.featureFlags?.roomPinExport===true||livePinTransferAllowed());}
       function livePinTransferActions(){
-        return livePinTransferAllowed()?'<section class="room-export-options" aria-label="객실 PIN 전송"><h3>객실 PIN</h3>'+button('내보내기 · 앱 → 엑셀','live-pin-transfer-export','outline')+button('쓰기 · Drive → 앱','live-pin-transfer-open','outline')+'</section>':'';
+        if(!livePinExportAllowed())return '';
+        return '<section class="room-export-options room-pin-transfer" aria-label="객실 PIN 전송"><h3>객실 PIN</h3>'+button('내보내기 · 앱 → 엑셀','live-pin-transfer-export','outline')+button('쓰기 · Drive → 앱','live-pin-transfer-open','outline',livePinTransferAllowed()?'':'disabled aria-describedby="pin-import-unavailable"')+(!livePinTransferAllowed()?'<p id="pin-import-unavailable" class="meta">Drive 가져오기는 연결·물리 PIN 확인 경로 준비 중입니다.</p>':'')+'</section>';
       }
       function pinTransferErrorCopy(error){
         const copies={ROOM_PIN_TRANSFER_NOT_CONFIGURED:'서버의 Drive 연결 설정이 필요합니다.',ROOM_PIN_IMPORT_SOURCE_UNAVAILABLE:'Drive 원본을 읽지 못했습니다. 연결과 읽기 권한을 확인해 주세요.',ROOM_PIN_TRANSFER_STALE:'미리보기가 만료되었거나 원본·객실 정보가 바뀌었습니다. 다시 미리보기해 주세요.',ROOM_PIN_TRANSFER_BUSY:'다른 PIN 처리가 진행 중입니다. 잠시 뒤 같은 요청을 다시 확인해 주세요.',IDEMPOTENCY_KEY_REUSED:'요청 확인 키가 충돌했습니다. 다시 미리보기해 주세요.',ADMIN_REQUIRED:'업무 관리자만 사용할 수 있습니다.',PIN_ACCESS_REQUIRED:'객실 PIN 처리 권한이 필요합니다.',PASSWORD_CHANGE_REQUIRED:'개인 비밀번호 변경을 먼저 완료해 주세요.',INVALID_PIN_TRANSFER_REQUEST:'요청을 확인할 수 없습니다. 다시 미리보기해 주세요.'};
@@ -2922,17 +2925,17 @@
         }finally{if(generation===LIVE_RUNTIME.authGeneration&&livePinTransfer===transfer){transfer.busy=false;if(document.querySelector('[data-pin-import]'))renderLivePinImport();}}
       }
       async function exportLiveRoomPins(){
-        if(!livePinTransferAllowed()||livePinExportBusy)return;livePinExportBusy=true;const generation=LIVE_RUNTIME.authGeneration,modal=document.querySelector('#modal-root .modal');
+        if(!livePinExportAllowed()||livePinExportBusy)return;livePinExportBusy=true;const generation=LIVE_RUNTIME.authGeneration,modal=document.querySelector('#modal-root .modal');
         const button=document.querySelector('[data-action="live-pin-transfer-export"]');if(button)button.disabled=true;
         try{
           const mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',{data}=await apiRequest('/v1/rooms/pins/export',{responseType:'blob',requestHeaders:{Accept:mime},timeoutMs:30000});
-          if(generation!==LIVE_RUNTIME.authGeneration||!livePinTransferAllowed()||modal!==document.querySelector('#modal-root .modal')||document.hidden)return;
+          if(generation!==LIVE_RUNTIME.authGeneration||!livePinExportAllowed()||modal!==document.querySelector('#modal-root .modal')||document.hidden)return;
           const signature=new Uint8Array(await data.slice(0,4).arrayBuffer());
-          if(generation!==LIVE_RUNTIME.authGeneration||!livePinTransferAllowed()||modal!==document.querySelector('#modal-root .modal')||document.hidden)return;
+          if(generation!==LIVE_RUNTIME.authGeneration||!livePinExportAllowed()||modal!==document.querySelector('#modal-root .modal')||document.hidden)return;
           if(data.type.split(';')[0]!==mime||signature.join(',')!=='80,75,3,4')throw new ApiRequestError('invalid workbook',{status:502,code:'INVALID_RESPONSE'});
           const url=URL.createObjectURL(data),link=document.createElement('a');link.href=url;link.download='room-pins.xlsx';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
         }catch(error){if(generation===LIVE_RUNTIME.authGeneration)toast(pinTransferErrorCopy(error),'error');}
-        finally{livePinExportBusy=false;if(button?.isConnected)button.disabled=false;}
+        finally{if(generation===LIVE_RUNTIME.authGeneration){livePinExportBusy=false;if(button?.isConnected)button.disabled=false;}}
       }
       function demoMode(){return LIVE_RUNTIME.mode==='demo';}
       async function loadLiveCatalog(){
@@ -3121,7 +3124,7 @@
           const apiUrl=new URL(apiBaseUrl),authUrl=new URL(supabaseUrl),apiHost=/^([a-z0-9]+)\.supabase\.co$/.exec(apiUrl.hostname),authHost=/^([a-z0-9]+)\.supabase\.co$/.exec(authUrl.hostname),keyOk=isBrowserPublishableKey(supabasePublishableKey);
           if(apiUrl.protocol!=='https:'||authUrl.protocol!=='https:'||apiUrl.username||apiUrl.password||authUrl.username||authUrl.password||apiUrl.port||authUrl.port||!apiHost||!authHost||apiHost[1]!==authHost[1]||apiHost[1]!==LIVE_PROJECT_REF||apiUrl.pathname!=='/functions/v1/api'||apiUrl.search||apiUrl.hash||authUrl.pathname!=='/'||authUrl.search||authUrl.hash||!keyOk)return null;
         }catch{return null;}
-        return {apiBaseUrl,supabaseUrl,supabasePublishableKey,sessionPersistence,deploymentChannel,featureFlags:{optionalCleaningWorkflow:value.featureFlags?.optionalCleaningWorkflow===true,photoUploadSnapshot:value.featureFlags?.photoUploadSnapshot===true,assignmentPlanningDate:value.featureFlags?.assignmentPlanningDate===true,roomPinTransfer:value.featureFlags?.roomPinTransfer===true}};
+        return {apiBaseUrl,supabaseUrl,supabasePublishableKey,sessionPersistence,deploymentChannel,featureFlags:{optionalCleaningWorkflow:value.featureFlags?.optionalCleaningWorkflow===true,photoUploadSnapshot:value.featureFlags?.photoUploadSnapshot===true,assignmentPlanningDate:value.featureFlags?.assignmentPlanningDate===true,roomPinExport:value.featureFlags?.roomPinExport===true,roomPinTransfer:value.featureFlags?.roomPinTransfer===true}};
       }
       async function loadRuntimeConfig(){
         LIVE_RUNTIME.status='loading';
@@ -8979,7 +8982,7 @@
       async function openLivePinEditor(roomId,trigger=document.activeElement){
         let room=liveRoomById(roomId);if(!liveRoleAllowed('admin')||!room||state.remote.rooms.status==='mutating')return;let expectedPinVersion=0,longStay=false;const generation=LIVE_RUNTIME.authGeneration;clearLivePinReveal();state.remote.rooms.status='mutating';render();
         try{
-          if(LIVE_RUNTIME.config?.featureFlags?.roomPinTransfer){
+          if(livePinExportAllowed()){
             const {data}=await apiRequest('/v1/rooms/'+encodeURIComponent(roomId));if(generation!==LIVE_RUNTIME.authGeneration)return;
             if(data?.room?.id!==roomId)throw new ApiRequestError('room missing',{status:502,code:'INVALID_RESPONSE'});room=data.room;
             if(room.reservationPhase==='current'&&room.displayReservationId){
@@ -9418,6 +9421,17 @@
       const CLEANING_PHOTO_INPUT_MAX_BYTES=5*1024*1024;
       const CLEANING_PHOTO_INPUT_MIMES=Object.freeze(['image/jpeg','image/webp','image/heic','image/heif']);
       Object.assign(API_ERROR_COPY,{PHOTO_UPLOAD_PROCESSING:'사진 처리 중입니다. 잠시 뒤 저장 상태를 확인하세요.',PHOTO_CONFIRMATION_PENDING:'사진 저장은 접수됐습니다. 최신 상태를 다시 확인하세요.'});
+      Object.assign(API_ERROR_COPY,{
+        PHOTO_UPLOAD_IN_FLIGHT:'같은 사진의 업로드 처리 중입니다. 잠시 후 다시 확인해 주세요.',
+        PHOTO_PROVIDER_UNAVAILABLE:'사진 저장소 연결이 원활하지 않습니다. 사진을 유지한 채 다시 시도해 주세요.',
+        PHOTO_STORAGE_QUOTA_UNAVAILABLE:'사진 저장소 연결이 원활하지 않습니다. 사진을 유지한 채 다시 시도해 주세요.',
+        PHOTO_STORAGE_QUOTA_EXCEEDED:'사진 저장공간이 부족합니다. 사진을 유지하고 관리자에게 저장공간 확인을 요청해 주세요.',
+        PHOTO_UPLOAD_LEASE_LIMIT:'이 사진의 재시도 한도에 도달했습니다. 사진을 유지하고 문의 번호와 함께 관리자에게 확인해 주세요.',
+        PHOTO_OPERATION_TERMINAL:'이 사진 요청은 다시 실행할 수 없습니다. 사진을 유지하고 문의 번호와 함께 관리자에게 확인해 주세요.',
+        PHOTO_VERSION_CONFLICT:'사진 상태가 바뀌었습니다. 최신 사진을 조회하고 변경 내용을 확인해 주세요.',
+        PHOTO_COLLECTION_VERSION_CONFLICT:'사진 목록이 바뀌었습니다. 최신 사진을 조회하고 변경 내용을 확인해 주세요.',
+        PHOTO_ITEM_VERSION_CONFLICT:'사진 항목이 바뀌었습니다. 최신 사진을 조회하고 변경 내용을 확인해 주세요.'
+      });
       Object.assign(API_ERROR_COPY,{ASSIGNMENT_ACCESS_REQUIRED:'청소 배정 관리 권한이 없습니다.',ATTEMPT_ACCESS_REQUIRED:'본인에게 통보된 작업만 확인할 수 있습니다.',MAID_REQUIRED:'메이드 계정으로만 수행할 수 있습니다.',ASSIGNMENT_NOT_NOTIFIED:'아직 통보되지 않은 배정은 시작할 수 없습니다.',ATTEMPT_INVALID_TRANSITION:'현재 작업 상태에서는 이 동작을 수행할 수 없습니다.',ATTEMPT_ACTIVATION_NOT_ALLOWED:'현재 작업은 시작할 수 없습니다.',CLEANING_SERVICE_DATE_NOT_DUE:'아직 이 작업의 서비스 날짜가 아닙니다.',CLEANING_SERVICE_DATE_EXPIRED:'작업 가능 날짜가 지났습니다. 관리자에게 일정을 확인해 주세요.',CLEANING_WINDOW_NOT_OPEN:'아직 청소 시작 가능 시각이 아닙니다.',CLEANING_WINDOW_EXPIRED:'업무 마감이 지나 새 상태 확인이 필요합니다.',CHECKOUT_NOT_MATERIALIZED:'체크아웃 상태가 확정되지 않아 작업을 시작할 수 없습니다.',ASSIGNMENT_IMPACT_CHANGED:'배정 확정 영향이 바뀌었습니다. 최신 영향을 다시 확인해 주세요.',ASSIGNMENT_DRAFT_STALE_SCHEDULE:'청소 일정이 바뀌었습니다. Preview부터 다시 확인해 주세요.',ASSIGNMENT_AVAILABILITY_STALE:'근무 가능일 version이 바뀌었습니다. 최신 상태를 다시 확인해 주세요.',ASSIGNMENT_MAID_UNAVAILABLE:'선택한 메이드는 해당 날짜에 근무할 수 없습니다.',ASSIGNMENT_COMMIT_NOT_ALLOWED:'현재 배정은 통보 확정할 수 없습니다.',ASSIGNMENT_PREVIEW_DURATION_POLICY_UNCONFIRMED:'예상시간 정책이 확정되지 않아 배정을 결정할 수 없습니다.',NOTIFICATION_ACCESS_REQUIRED:'이 알림을 확인할 권한이 없습니다.',NOTIFICATION_NOT_FOUND:'알림이 없거나 더 이상 접근할 수 없습니다.'});
       Object.assign(API_ERROR_COPY,{ASSIGNMENT_VERSION_CONFLICT:'배정 version이 바뀌었습니다. 최신 배정을 확인해 주세요.',ATTEMPT_VERSION_CONFLICT:'작업 수행 version이 바뀌었습니다. 최신 수행 상태를 확인해 주세요.',MAID_ALREADY_IN_PROGRESS:'이미 진행 중인 다른 작업이 있어 이 작업을 시작할 수 없습니다.',PREVIOUS_ROOM_WORKFLOW_ACTIVE:'같은 객실의 이전 작업이 아직 끝나지 않았습니다.',CLEANING_TARGET_NOT_FOUND:'청소 대상을 찾을 수 없습니다. 최신 계획을 확인해 주세요.',ASSIGNMENT_NOT_FOUND:'배정을 찾을 수 없습니다. 최신 목록을 확인해 주세요.',ASSIGNMENT_TARGET_STATE_INVALID:'현재 청소 대상 상태에서는 배정을 변경할 수 없습니다.',ASSIGNMENT_SEQUENCE_CONFLICT:'배정 정보가 변경되었습니다. 새로고침 후 다시 저장해 주세요.',ASSIGNMENT_AVAILABILITY_REQUIRED:'담당자의 근무 가능일 제출이 필요합니다.',ASSIGNMENT_WINDOW_EXPIRED:'배정 작업 시간이 지나 최신 계획이 필요합니다.',PENDING_CHANGE_REQUEST_EXISTS:'이미 확인 대기 중인 담당 변경 요청이 있습니다.',CHANGE_REQUEST_NOT_FOUND:'담당 변경 요청이 없거나 더 이상 처리할 수 없습니다.',STALE_VERSION:'조회 뒤 서버 상태가 바뀌었습니다. 최신 내용을 다시 확인해 주세요.',CAPABILITY_ACCESS_REQUIRED:'현재 계정에 이 작업을 계속할 수행 권한이 없습니다.',ACCOUNT_EXECUTION_LIFECYCLE_REQUIRED:'계정 상태 변경 전에 진행 중 작업의 처리 방법을 결정해 주세요.',RECLEAN_MAID_IMMUTABLE:'재청소 담당자는 이 단계에서 변경할 수 없습니다.',INVALID_ATTEMPT_COMMAND:'현재 작업과 맞지 않는 수행 명령입니다.',ASSIGNMENT_PREVIEW_DATE_NOT_ALLOWED:'선택한 날짜는 배정 Preview를 만들 수 없습니다.',ASSIGNMENT_PREVIEW_LIMIT_EXCEEDED:'한 번에 계산할 수 있는 배정 대상을 초과했습니다.',CLEANING_TEMPLATE_NOT_CONFIGURED:'이 객실 유형의 청소 사진 슬롯이 아직 설정되지 않았습니다.',PIN_ENTITLEMENT_REQUIRED:'현재 통보된 본인 업무에서만 객실 PIN을 볼 수 있습니다.',PIN_ACCESS_REQUIRED:'현재 업무의 객실 PIN 조회 권한이 없습니다.',PIN_REVEAL_AUTHORIZATION_CHANGED:'PIN 조회 권한이 바뀌었습니다. 최신 업무를 다시 확인해 주세요.',ROOM_PIN_UNCONFIGURED:'이 객실에는 조회할 PIN이 아직 설정되지 않았습니다.',ROOM_PIN_MISMATCH_UNRESOLVED:'물리 도어락 PIN 확인이 끝난 뒤 조회할 수 있습니다.',ROOM_PIN_DECRYPT_FAILED:'객실 PIN을 안전하게 불러오지 못했습니다.'});
       const LIVE_CLEANING_PHOTO_URLS=new Set(),LIVE_CLEANING_ACTIVE_PHOTO_URLS=new Map(),LIVE_CLEANING_ACTIVE_PHOTO_ERRORS=new Map(),LIVE_CLEANING_ACTIVE_PHOTO_LOADING=new Set();
@@ -9678,8 +9692,8 @@
         const known=new Set(liveCleaningSlotPhotoItems(slot).map(item=>item.photoId));
         return LIVE_PHOTO_QUEUE.filter(job=>job.slotId===slot.slotId&&job.generation===LIVE_RUNTIME.authGeneration&&!known.has(job.receipt?.photoId)).map((job,index)=>{
           const source=job.blob||job.file;if(!job.previewUrl&&source&&['image/jpeg','image/webp'].includes(source.type))job.previewUrl=URL.createObjectURL(source);
-          const label=`${offset+index+1}번째 사진`,status=job.error?(job.receipt?'저장 상태 확인 필요':'업로드 실패'):job.receipt?'저장 확인 중':job.phase==='uploading'?'업로드 중':'업로드 대기';
-          return `<article class="task-multi-photo-item ${job.error?'failed':''}" data-queued-photo="${esc(job.photoItemId)}"><div class="task-multi-photo-visual">${job.previewUrl?`<img src="${esc(job.previewUrl)}" loading="lazy" decoding="async" alt="${esc(label)} · ${status}">`:'<span class="live-cleaning-photo-placeholder">미리보기 준비 중</span>'}</div><span class="task-multi-photo-copy"><strong>${esc(label)}</strong>${status}</span>${job.error?button(job.receipt?'상태 확인':'재시도','live-photo-retry','outline',`data-id="${esc(job.photoItemId)}" aria-label="${esc(label)} ${job.receipt?'저장 상태 확인':'업로드 재시도'}"`):''}</article>`;
+          const label=`${offset+index+1}번째 사진`,processing=job.error?.code==='PHOTO_UPLOAD_IN_FLIGHT',status=processing?'서버 처리 중':job.error?(job.receipt?'저장 상태 확인 필요':'업로드 실패'):job.receipt?'저장 확인 중':job.phase==='uploading'?'업로드 중':'업로드 대기';
+          return `<article class="task-multi-photo-item ${job.error?'failed':''}" data-queued-photo="${esc(job.photoItemId)}"><div class="task-multi-photo-visual">${job.previewUrl?`<img src="${esc(job.previewUrl)}" loading="lazy" decoding="async" alt="${esc(label)} · ${status}">`:'<span class="live-cleaning-photo-placeholder">미리보기 준비 중</span>'}</div><span class="task-multi-photo-copy"><strong>${esc(label)}</strong>${status}</span>${job.error?button(processing||job.receipt?'상태 확인':'재시도','live-photo-retry','outline',`data-id="${esc(job.photoItemId)}" aria-label="${esc(label)} ${processing||job.receipt?'저장 상태 확인':'업로드 재시도'}" ${livePhotoRetryBlocked(job.error)?'disabled':''}`):''}</article>`;
         }).join('');
       }
       function renderCleaningPhotoSlots(assignment,attempt){
@@ -9696,7 +9710,7 @@
           const queued=liveQueuedPhotoMarkup(slot,items.length),gallery=items.length||queued?'<div class="task-multi-photo-grid">'+items.map((item,index)=>liveCleaningPhotoPreviewMarkup(item,index,slot,canUpload&&!liveAttemptPhotoPending(attempt.attemptId))).join('')+queued+'</div>':'<p class="meta">'+(general?'사진 1장 이상 필수':'등록된 사진 없음')+'</p>';
           const controls='<div class="task-multi-photo-actions"><label class="btn btn-primary">'+icon('camera','icon-sm')+'촬영<input class="sr-only" type="file" accept="image/jpeg,image/webp,image/heic,image/heif" capture="environment" aria-label="'+label+' 촬영" data-upload-source="camera" '+attrs+' '+(locked?'disabled':'')+'></label><label class="btn btn-outline">'+icon('camera','icon-sm')+'사진 선택<input class="sr-only" type="file" accept="image/jpeg,image/webp,image/heic,image/heif" multiple aria-label="'+label+' 사진 선택" data-upload-source="gallery" '+attrs+' '+(locked?'disabled':'')+'></label></div>';
           const report=slot.slotKey==='issue-proof'&&canUpload?'<div class="field"><label for="cleaning-issue-memo-'+esc(attempt.attemptId)+'">특이사항 메모</label><textarea class="input-control" id="cleaning-issue-memo-'+esc(attempt.attemptId)+'" maxlength="500" data-control="cleaning-issue-memo" data-attempt="'+esc(attempt.attemptId)+'">'+esc(slice.issueDrafts.get(attempt.attemptId)||'')+'</textarea></div>'+button('특이사항 등록','cleaning-issue-save','outline','data-id="'+esc(assignment.assignmentId)+'" '+(items.length?'':'disabled')):'';
-          return '<section class="cleaning-workflow-row flat-evidence-section" data-photo-slot="'+esc(slot.slotId)+'"><div class="section-head"><h3>'+label+'</h3>'+statusBadge(items.length+' / '+limit+'장',general&&!items.length?'amber':'neutral')+'</div>'+gallery+controls+report+(local?'<p role="status" data-upload-progress="'+esc(slot.slotId)+'">'+(local.status==='error'?'확인 필요':local.status==='complete'?'업로드 완료':'업로드 중')+' · '+Number(local.completed||0)+'/'+Number(local.total||0)+'장</p>':'')+(local?.error?'<p role="alert">'+esc(apiErrorCopy(local.error))+'</p>'+button('업로드 재시도','live-photo-retry','outline','data-id="'+esc(slot.slotId)+'"')+button('대기 사진 취소','live-photo-discard','outline','data-id="'+esc(slot.slotId)+'"'):'')+'</section>';
+          return '<section class="cleaning-workflow-row flat-evidence-section" data-photo-slot="'+esc(slot.slotId)+'"><div class="section-head"><h3>'+label+'</h3>'+statusBadge(items.length+' / '+limit+'장',general&&!items.length?'amber':'neutral')+'</div>'+gallery+controls+report+(local?'<p role="status" data-upload-progress="'+esc(slot.slotId)+'">'+(local.status==='error'?'확인 필요':local.status==='complete'?'업로드 완료':'업로드 중')+' · '+Number(local.completed||0)+'/'+Number(local.total||0)+'장</p>':'')+(local?.error?'<p role="alert">'+esc(livePhotoErrorCopy(local.error))+'</p>'+button(local.error.code==='PHOTO_UPLOAD_IN_FLIGHT'?'저장 상태 확인':'업로드 재시도','live-photo-retry','outline','data-id="'+esc(slot.slotId)+'" '+(livePhotoRetryBlocked(local.error)?'disabled':''))+button('대기 사진 취소','live-photo-discard','outline','data-id="'+esc(slot.slotId)+'"'):'')+'</section>';
         }).join('')+'</div>';
       }
       function renderLiveMaidPinManager(assignment){
@@ -10085,6 +10099,8 @@
       }
       const LIVE_PHOTO_QUEUE=[];
       let livePhotoQueueRunning=false;
+      function livePhotoRetryBlocked(error){return ['PHOTO_STORAGE_QUOTA_EXCEEDED','PHOTO_UPLOAD_LEASE_LIMIT','PHOTO_OPERATION_TERMINAL'].includes(error?.code);}
+      function livePhotoErrorCopy(error){return apiErrorCopy(error)+(error?.requestId?' · 문의 번호 '+error.requestId:'');}
       function livePhotoQueueStatusCopy(){
         const jobs=LIVE_PHOTO_QUEUE.filter(job=>job.generation===LIVE_RUNTIME.authGeneration);
         if(!jobs.length)return '';
@@ -10190,12 +10206,12 @@
             if(visible&&job.blob!==job.file&&!LIVE_CLEANING_ACTIVE_PHOTO_URLS.has(job.receipt.photoId))LIVE_CLEANING_ACTIVE_PHOTO_URLS.set(job.receipt.photoId,URL.createObjectURL(job.blob));
             LIVE_PHOTO_QUEUE.splice(LIVE_PHOTO_QUEUE.indexOf(job),1);const progress=sliceUploadProgress(job.slotId);cleaningState().uploadStates.set(job.slotId,{...progress,completed:progress.completed+1});releaseLivePhotoJob(job);updateLivePhotoQueueState(job.slotId);
             if(visible)void ensureLiveCleaningPhotoPreviews(job.attemptId);
-          }catch(error){verifiedSlots.delete(job.attemptId);if(!livePhotoJobCurrent(job))break;job.error=error;updateLivePhotoQueueState(job.slotId);toast(`${job.receipt?'사진 저장 상태 확인 필요':'사진 업로드 실패'} · ${apiErrorCopy(error)}`,'error');}
+          }catch(error){verifiedSlots.delete(job.attemptId);if(!livePhotoJobCurrent(job))break;job.error=error;updateLivePhotoQueueState(job.slotId);toast(`${error.code==='PHOTO_UPLOAD_IN_FLIGHT'?'사진 처리 중':job.receipt?'사진 저장 상태 확인 필요':'사진 업로드 실패'} · ${livePhotoErrorCopy(error)}`,'error');}
           if(job.generation===LIVE_RUNTIME.authGeneration){refreshLivePhotoUploadView(job);refreshLivePhotoTaskActions(job.assignmentId);refreshLivePhotoQueueStatus();}
         }}finally{livePhotoQueueRunning=false;if(generation===LIVE_RUNTIME.authGeneration)refreshLivePhotoQueueStatus();if(cleaningActor('maid')&&nextLivePhotoJob())queueMicrotask(()=>void drainLivePhotoQueue());}
       }
       function retryLivePhotoQueue(id){
-        if(!cleaningActor('maid'))return;for(const job of LIVE_PHOTO_QUEUE)if(job.slotId===id||job.photoItemId===id){job.error=null;updateLivePhotoQueueState(job.slotId);}render();void drainLivePhotoQueue();
+        if(!cleaningActor('maid'))return;let retried=false;for(const job of LIVE_PHOTO_QUEUE)if((job.slotId===id||job.photoItemId===id)&&job.error&&!livePhotoRetryBlocked(job.error)){job.error=null;retried=true;updateLivePhotoQueueState(job.slotId);}if(!retried)return;render();void drainLivePhotoQueue();
       }
       async function discardLivePhotoQueue(slotId){
         if(!cleaningActor('maid'))return;const job=LIVE_PHOTO_QUEUE.find(item=>item.slotId===slotId&&item.error);if(!job)return;

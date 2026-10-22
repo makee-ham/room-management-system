@@ -17,6 +17,7 @@ Object.assign(env, {
   RMS_API_BASE_URL: "https://aodikrxcczbogjpsjwjt.supabase.co/functions/v1/api",
   SUPABASE_URL: "https://aodikrxcczbogjpsjwjt.supabase.co",
   SUPABASE_PUBLISHABLE_KEY: "sb_publishable_qa_fixture_not_a_real_key_1234567890",
+  RMS_SESSION_PERSISTENCE: "session",
 });
 
 async function build(overrides = {}) {
@@ -32,6 +33,7 @@ try {
   await mkdir(path.join(fixture, "scripts"));
   await mkdir(path.join(fixture, "WIREFRAME"));
   await copyFile(path.join(root, "scripts/build-pages-artifact.mjs"), path.join(fixture, "scripts/build-pages-artifact.mjs"));
+  await copyFile(path.join(root, "scripts/serve.py"), path.join(fixture, "scripts/serve.py"));
   await writeFile(path.join(fixture, "WIREFRAME/index.html"), "<!doctype html><title>QA</title>");
   for (const channel of ["production", "preview"]) {
     const config = await build({ RMS_DEPLOYMENT_CHANNEL: channel });
@@ -39,13 +41,24 @@ try {
     assert.equal(config.deploymentChannel, channel);
     assert.equal(config.featureFlags.photoUploadSnapshot, true);
     assert.equal(config.featureFlags.optionalCleaningWorkflow, true);
+    assert.equal(config.featureFlags.assignmentPlanningDate, true);
+    assert.equal(config.featureFlags.roomPinExport, true);
+    assert.equal(config.featureFlags.roomPinTransfer, false);
+    const rollback = await build({ RMS_DEPLOYMENT_CHANNEL: channel, RMS_ASSIGNMENT_PLANNING_DATE: "false", RMS_ROOM_PIN_EXPORT: "false" });
+    assert.equal(rollback.featureFlags.assignmentPlanningDate, false);
+    assert.equal(rollback.featureFlags.roomPinExport, false);
+    assert.equal(rollback.featureFlags.roomPinTransfer, false);
     assert.equal((await build({ RMS_DEPLOYMENT_CHANNEL: channel, RMS_PHOTO_UPLOAD_SNAPSHOT: "false" })).featureFlags.photoUploadSnapshot, false);
   }
   await writeFile(path.join(fixture, ".env.local"), "RMS_PHOTO_UPLOAD_SNAPSHOT=false\n");
   assert.equal((await build()).featureFlags.photoUploadSnapshot, false);
   assert.equal((await build({ RMS_PHOTO_UPLOAD_SNAPSHOT: "true" })).featureFlags.photoUploadSnapshot, true);
+  const serveConfig = overrides => JSON.parse(execFileSync(process.env.RMS_QA_PYTHON || "python3", ["-c", "import json,runpy; print(json.dumps(runpy.run_path('scripts/serve.py')['load_runtime_config']()))"], { cwd: fixture, env: { ...env, ...overrides }, encoding: "utf8" }));
+  assert.deepEqual(serveConfig({}).featureFlags, (await build()).featureFlags);
+  const rollbackFlags = { RMS_ASSIGNMENT_PLANNING_DATE: "false", RMS_ROOM_PIN_EXPORT: "false", RMS_ROOM_PIN_TRANSFER: "true" };
+  assert.deepEqual(serveConfig(rollbackFlags).featureFlags, (await build(rollbackFlags)).featureFlags);
   assert.deepEqual(await build({ RMS_RUNTIME_MODE: "demo" }), { mode: "demo" });
-  console.log("Photo snapshot rollout: production/preview default on, explicit rollback, environment precedence, demo isolation passed.");
+  console.log("Rollout: production/preview photo snapshot, planning dates and PIN export on; Drive import off; rollback, precedence and demo isolation passed.");
 } finally {
   await rm(fixture, { recursive: true, force: true });
 }

@@ -1,5 +1,37 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-22 · 이슈 후속: 사진 재시도·계획일·PIN Excel 분리
+
+기준 `origin/dev 29bafc9`. 흐름: 관리자 객실 내보내기 → PIN Excel 다운로드/Drive 잠금 → 메이드 사진 실패·동일 요청 재시도 → 오늘·내일 배정·KST 자정. Browser plugin not available로 기존 번들 Playwright Chromium 151.0.7922.34를 사용했다. 로컬 origin `http://127.0.0.1:4177`, 360/390/768/1440px. 업무 API는 합성 fixture로 가로챘으며 실제 PIN·사진·예약·배정·급여는 변경하지 않았다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 페이지·품질 | PASS · 페이지 식별, 의미 있는 화면, 오류 overlay 없음, 가로 넘침 없음. 의도한 HTTP 오류 fixture 외 app console warning/error·page error 없음 |
+| PIN 사용 조건 | PASS · export만 켠 관리자에서 Excel 활성/Drive 비활성 및 준비 사유 표시. 직접 preview/apply 0건. maid/developer와 모든 flag OFF의 직접 export/import 0건 |
+| Excel 내용·오류 | PASS · 다운로드 파일을 openpyxl로 열어 `시트 1`, B/C열, 문자열, 앞자리 0, 6자리 보존 확인. 중복 클릭 1요청, 403·잘못된 workbook에서 다운로드 0건, 실패 뒤 재시도 활성화 |
+| 다운로드 경합 | PASS · 모달 이탈·세션 교체 뒤 늦은 응답으로 다운로드하지 않음. 이전 세대의 finally가 새 세대의 진행 잠금을 풀지 않으며 새 세대만 다운로드 |
+| PIN 기존 계약 | PASS · 서버의 현재 long_stay로만 직접 4/6자리 허용, 5자리 거절, 일반/자동 생성 4자리. 명시 조회·원문 제거·권한 회귀, synthetic PIN/token의 URL/history/storage/console 노출 없음 |
+| 사진 오류 구분 | PASS · IN_FLIGHT는 서버 처리 중, provider/quota 조회 503은 저장소 연결 안내. quota 초과·lease 한도·terminal은 재시도 버튼과 직접 실행 차단, 문의 번호 표시. provider 원문 미표시 |
+| 사진 재시도 | PASS · 자동 재시도 0건. 수동 중복 클릭에도 같은 item/경로/key/hash로 1개씩 전송, 실패한 사진과 대기 사진 보존. accepted·미완료 operation·응답 유실·snapshot null/불일치/조회 실패 회귀 |
+| 계획일·자정 | PASS · 주/월/연말 경계, 이전 날짜 초안 명령 차단, 선택일 availability/change body, 원 날짜/담당/별도 target ID 보존, 느린 이전 응답 폐기. 업로드 큐·명시 조회일 보존 |
+| 설정·빌드 | PASS · production/preview/로컬 serve의 기본값 일치, plan/export true·Drive false, 환경 우선순위·rollback·demo 격리. PWA shell 캐시·민감 경로 제외, worker `2026-10-22-1` |
+| 키보드·목적지 | PASS · 44px PIN 주 버튼, 접근성 이름, 모달 Tab/Escape, 기존 CSV/xlsx/앱→Drive 버튼 label/action 동일. 기존 내비게이션·사진 확대·Back/Forward·포커스 회귀 |
+| 기존 업무 | PASS · 청소 30그룹, 앱 내부 이동·다른 객실 명령 중 순차 큐·동일 key, 필요 시 상세/보이는 사진 우선 조회, 가능일 일괄/송금 표시 batch·금액 검증·역할 가드 |
+| 운영 읽기 | PASS · health 200, OpenAPI 154 paths/166 operations, 공개키 검증·로컬 origin CORS. generated cleaning 타입 검사 및 전체 타입 재생성 결과 byte 일치 |
+
+초기 검사 실패는 실제로 보완했다. API 검사의 과거 고정 150/162를 배포 계약 154/166으로 갱신했고, serve/build 설정 비교 fixture에 기존 serve 필수값인 sessionPersistence를 명시한 뒤 통과했다. 공개 Swagger는 여전히 151/163이므로 생성기를 고정 운영 OpenAPI로 연결했다. 일부 사진 오류 코드의 generated enum 누락은 임의 수정하지 않고 [최신 인계](../DOCS/35_FRONTEND_OCT22_ISSUE_FOLLOWUP.md)에 정확히 남겼다.
+
+검사: `check-workspace.mjs`, `check-pwa.mjs`, `check-photo-rollout.mjs`, `check-api-integration.mjs`, `generate-cleaning-client.mjs --production --check`, `check-backend-handoff-oct13.mjs`, `RMS_QA_SKIP_BENCH=1 check-photo-performance.mjs`, `check-photo-queue-handoff.mjs`, `check-cleaning-workflow.mjs`, `check-live-navigation.mjs`, `check-lazy-cleaning.mjs`, `check-data-performance.mjs`, `check-operational-api.mjs`, `git diff --check`. 브라우저 스크립트는 `node scripts/<이름>`으로 실행한다. 전체 타입은 `openapi-typescript@7.13.0`으로 운영 OpenAPI를 다시 생성해 비교했다.
+
+대표 PNG는 전부 합성 QA 자료이며 390/1440px를 육안 대조했다. 기준 소스와 같은 역할·fixture·뷰포트를 사용했다. 내보내기는 기존 모달 아래에 PIN 동작만 추가하고 기존 버튼 목적을 보존했으며, 사진은 같은 카드에서 실패 문구·재시도 명칭만 바뀐다. 과거 회귀가 덮어쓴 기존 PNG는 복원하고 처음부터 있던 사용자 미추적 PNG는 보존했다.
+
+- `QA/screenshots/backend-handoff-pin-export-before-{390,1440}.png`
+- `QA/screenshots/backend-handoff-pin-export-only-{360,390,768,1440}.png`
+- `QA/screenshots/photo-recovery-oct22-before-390.png`
+- `QA/screenshots/photo-recovery-oct22-{360,390,768,1440}.png`
+
+NOT RUN: 운영/Preview 배포·환경변수 변경, 실제 PIN Excel/Drive·물리 도어락 변경·신규 업무 쓰기, 서버 자정 SQL 실증, iOS/Android 카메라/갤러리·실제 HEIC·저속망·설치 앱 Back·OS 종료. 사진 이번 검사에서는 성능 benchmark를 생략했으며, 기존 data-performance의 합성 표본은 운영 체감 개선율로 해석하지 않는다. Drive 가져오기는 backend #463과 물리 확인 pinVersion 경로가 해결될 때까지 잠근다. 관련 이슈의 실제 업무 UAT 항목은 완료로 닫지 않는다.
+
 ## 2026-10-13 백엔드 추가 이슈 검수
 
 기준 dev 795da7e. 흐름: 객실 예약 등록 → 선택 날짜/객실 유지, 진행 중 → 미퇴실 신고 재조회, 청소 배정 → KST 날짜 경계, 관리자 내보내기 → 합성 PIN preview/apply/download. 실제 운영 쓰기는 하지 않았다.

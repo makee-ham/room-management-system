@@ -139,7 +139,18 @@ def load_runtime_config() -> dict[str, object]:
         "supabaseUrl": values["supabaseUrl"].rstrip("/"),
         "supabasePublishableKey": values["supabasePublishableKey"],
         "sessionPersistence": persistence,
-        "featureFlags": {"optionalCleaningWorkflow": True},
+        "featureFlags": {
+            "optionalCleaningWorkflow": True,
+            **{
+                name: str(os.environ.get(env_name, file_values.get(env_name, default))).strip() == "true"
+                for name, env_name, default in (
+                    ("photoUploadSnapshot", "RMS_PHOTO_UPLOAD_SNAPSHOT", "true"),
+                    ("assignmentPlanningDate", "RMS_ASSIGNMENT_PLANNING_DATE", "true"),
+                    ("roomPinExport", "RMS_ROOM_PIN_EXPORT", "true"),
+                    ("roomPinTransfer", "RMS_ROOM_PIN_TRANSFER", "false"),
+                )
+            },
+        },
     }
 
 
