@@ -1,5 +1,28 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-22 · 청소 반복 항목을 리스트로 정리
+
+사용자가 큰 카드를 리스트형으로 바꾸도록 요청했다. 기존 디자인 체계 안의 표적 수정으로 Image Gen 새 시안은 만들지 않았으며, 기준 dev `ac4c6f0`의 같은 역할·합성 데이터·너비를 비교했다. 범위는 청소관리 진행 중·검수·완료와 공유 청소 이력이다. 관리자/메이드 내비게이션·업무 권한·상세 목적 화면·업무 명령은 유지했다.
+
+Browser plugin not available → 기존 Playwright Chromium151, `http://127.0.0.1:4177`, 360/390/768/1440px. 실제 업무 API는 합성 fixture로 가로챘다. 대표 PNG에는 합성 데모 표시를 넣었다.
+
+| 확인/디자인 대조 | 결과 |
+| --- | --- |
+| 반복 컨테이너 | 큰 둥근 카드·항목별 배경 상자를 구분선 행으로 변경. 같은 진행 중 1건 높이390px:416→188px,1440px:284→77px |
+| 정보/문구 | 객실·담당자·상태명·서비스일·시작 가능·업무 마감 보존. 긴 담당명/미설정/3행 목록 검증 |
+| 행동/목적지 | 배정 이력/배정 관리 두 버튼과 관리4개 행동 유지. 검수·완료 상세 이동/검색/만료 사진/비활성 상세 유지 |
+| 서체/색 | 기존 서체·남색·상태색/상태명 유지. 라벨11~12px·주 정보13~16px로 구분, 새로운 시각 자산 없음 |
+| 배치/반응형 | 데스크톱은 정보와 행동을 한 행, 모바일은 일정3열·두 버튼 한 줄. 가로 넘침0·최소44px·접근성 이름 유지 |
+| 키보드/모달 | Enter·Tab 포커스 유지·Escape·Back·포커스 복귀, 관리자4개 목적지와 메이드 권한 차단 회귀 |
+| 품질 | 의미 있는 화면/빈 화면 아님/오류 overlay 없음, page exception·앱 console warning/error0 |
+
+기존 화면과 새 PNG를 `view_image`로 직접 대조했다. 의도한 차이는 카드/배경 상자 제거·일정 묶음·목록1열·행 간격이며, 정보/행동/내비게이션 문구의 불필요한 추가·삭제는 없다. 남은 디자인 불일치 없음. 입력/검수/사진 상세의 표면은 유지했다.
+
+검증 명령: `node scripts/check-admin-cleaning-reads.mjs`, `node scripts/check-cleaning-workflow.mjs`, 로컬 origin의 `node scripts/check-deployed-visual.mjs`, `node scripts/check-photo-rollout.mjs`, `node scripts/check-workspace.mjs`, `npm run contract:check`, `npm run contract:test-diff`, `npm run contract:diff -- --base-ref origin/dev`. 실제 통과 결과는 PR에 기록한다.
+
+대표 증거: `QA/screenshots/cleaning-list-progress-{360,390,768,1440}.png`, `cleaning-list-inspection-{360,390,768,1440}.png`, `cleaning-list-done-{360,390,768,1440}.png`, `cleaning-list-before-{390,1440}.png`. 실계정 mutation·실사진·iOS/Android 설치앱은 미실행. 서비스워커 `2026-10-22-6`. 운영 반영은 최종 릴리스 PR에서 배포 신원·공개 소스 일치를 확인한다.
+
+
 ## 2026-10-22 · #227 사후 특이사항 메모 단독 등록 후보
 
 기준 dev `6fc4d44`. 사용자 정책 인계는 사후 새 특이사항 메모 필수·사진0~10장이며, 현재 운영 API/DB는 사진1장 이상이므로 `RMS_SUPPLEMENTAL_MEMO_ONLY=false`를 production/preview 기본값으로 둔다. 실제 운영 메모 단독 등록을 완료했다고 표시하지 않는다. 기존 화면에는 준비 중 이유를 안내한다. API snapshot·일반 청소 필수 사진·폭탄방 증빙 정책은 바꾸지 않았다.
