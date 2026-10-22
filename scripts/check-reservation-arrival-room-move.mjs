@@ -14,6 +14,7 @@ const browser=await chromium.launch({headless:true,...(process.env.RMS_QA_BROWSE
 const context=await browser.newContext({viewport:{width:390,height:900},serviceWorkers:'block'}),page=await context.newPage();
 page.setDefaultTimeout(8000);
 const pageErrors=[],consoleProblems=[],passed=[];
+await page.route('**/runtime-config.json',route=>route.fulfill({contentType:'application/json',body:JSON.stringify({mode:'demo'})}));
 page.on('pageerror',error=>pageErrors.push(error.message));
 page.on('console',message=>{const value=message.text();if(['warning','error'].includes(message.type())&&!/^Failed to load resource:/.test(value)&&value!=='Service Worker registration blocked by Playwright')consoleProblems.push(value);});
 

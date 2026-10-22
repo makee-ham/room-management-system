@@ -1,0 +1,36 @@
+name: API contract
+on:
+  pull_request:
+  push:
+    branches: [dev, main]
+permissions:
+  contents: read
+concurrency:
+  group: api-contract-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  api-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund --fetch-retries=1 --fetch-timeout=30000
+      - run: node scripts/check-workspace.mjs
+      - run: npm run contract:check
+      - run: npm run contract:test-diff
+      - name: Compare with the base commit
+        if: github.event_name == 'pull_request'
+        env:
+          CONTRACT_BASE_REF: ${{ github.event.pull_request.base.sha }}
+        run: npm run contract:diff
+      - name: Compare with the previous revision
+        if: github.event_name == 'push'
+        env:
+          CONTRACT_BASE_REF: ${{ github.event.before }}
+        run: npm run contract:diff

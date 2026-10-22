@@ -162,3 +162,20 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 - WIREFRAME/screenshots/admin-mobile-390.png
 - WIREFRAME/screenshots/maid-mobile-390.jpg
 - WIREFRAME/screenshots/maid-mobile-390.png
+
+# 2026-10-22 frontend release readiness
+- .github/workflows/api-contract.yml
+- DOCS/36_FRONTEND_RELEASE_READINESS.md
+- contracts/backend-openapi.json
+- contracts/backend-openapi.manifest.json
+- package-lock.json
+- package.json
+- scripts/check-backend-breaking-diff.mjs
+- scripts/check-backend-contract.mjs
+- scripts/generate-backend-client.mjs
+- scripts/openapi-breaking-diff-lib.mjs
+- scripts/test-backend-breaking-diff.mjs
+
+- DOCS/37_PREVIEW_MAIN_RELEASE_VERIFICATION.md
+- WIREFRAME/QA/screenshots/preview-oct22-admin-390.png
+- WIREFRAME/QA/screenshots/preview-oct22-calendar-1440.png

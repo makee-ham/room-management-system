@@ -1,5 +1,439 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-22 · 보호된 Preview 배포 검증
+
+dev `8669874`를 기존 보호된 Preview에 배포했다. 인증 GET 자산은 소스와 byte 일치, index SHA `44ade2c6848804d7d61634cf0a5b91465594f3541ac26d81e40fbf3a1a2fb4c0`, SW `2026-10-22-2`. 실제 live/preview/session·snapshot/계획일/Excel true·Drive false, 익명 보호 302, Preview origin CORS·health/OpenAPI PASS. 실제 Chrome 로그인·빈 폼 포커스·privacy 링크와 복귀·신규 코드 확인. 앱 warning/error 없음(Vercel 로그인 외부 FedCM 경고 1건 구분).
+
+인증 GET으로 받은 배포 파일을 로컬에서 렌더하고 demo runtime만 가로채 관리자 6개·메이드 4개 화면을 360/390/768/1440px에서 검증했다. 페이지 식별/의미 있는 화면/오류 overlay 없음/overflow 없음/콘솔·예외 없음/목적지 PASS. 대표 증거는 `preview-oct22-admin-390.png`, `preview-oct22-calendar-1440.png`. 배정 1/10/20개에서 사진 1장 업로드 후 전체 배정 재조회 0회, 초기 상세 GET 포함 대상 slots GET OFF=2/ON=1로 일정했다. 실제 계정의 업무·사진·PIN·급여 쓰기는 수행하지 않았다. 전체 신원·명령·실제 확인 한계는 `DOCS/37_PREVIEW_MAIN_RELEASE_VERIFICATION.md`를 따른다.
+
+## 2026-10-22 · 남은 프런트 이슈와 릴리스 준비
+
+흐름: 종료 예약 열기 → 읽기 전용, 중복 예약 → 입력 보존/객실 재선택, 과거 승인·미종료 배정 → 이력/관리자 처리 필요. Browser plugin not available로 Playwright Chromium 151.0.7922.34, `http://127.0.0.1:4177`, 360/390/768/1440px에서 검증했다. 모든 업무 API는 합성 fixture이며 운영 쓰기 없음.
+
+| 확인 | 결과 |
+| --- | --- |
+| 예약 #168/#170 | PASS · 취소/체크아웃 완료는 bookability 0회·명령 없음. 사전 겹침/생성409 뒤 기간·인원·고객 이름/모달 DOM 유지, 안내 확인 뒤 객실 포커스, 다른 객실 재시도. 503은 기존 같은 key 결과 확인 유지 |
+| 사진 #188/#189 | PASS · 5MiB -1/정확히/+1, 미지원 MIME. 거부 입력 업로드 0회·안전한 용량/형식·미전송 문구. 정상 입력 bytes, 서버 오류/requestId, accepted/null snapshot·수동 같은 key/Blob/item·직렬 큐 회귀 |
+| 메이드 #202 | PASS · 같은 과거 날짜 approved+scheduled, 승인 이력 cleaning-history 상세, 수행 photo-slots/submissions 0회·시작/업로드/제출 버튼 없음. 객실별 403/409/410/503이 목록을 대체하지 않음 |
+| 구조 #194 | PASS · 같은 scope 중복 함수 26종 제거, 정적 재발 차단. demo 유지, live 직접 URL·새로고침·Back/Forward·역할 가드·0건/오류 분리 |
+| UI 품질 | PASS · 페이지 식별·의미 있는 렌더·오류 overlay 없음·가로 넘침 없음, 44px 주 버튼/이름·키보드·포커스/모달·사진 확대/Back·app warning/error 및 page error 없음. 의도된 HTTP 오류 fixture 제외 |
+| 계약 #142 | PASS · npm ci·결정적 생성·154/166·34 CAS·20 cursor·필수 Idempotency·error/민감 필드·기존 breaking 회귀. 잘못된 base ref는 실패하며 실제 snapshot 없는 초기 base만 허용 |
+| 기존 회귀 | PASS · reservation-bookability, lazy-cleaning, photo-performance (벤치 제외), cleaning-workflow 30그룹, live-navigation, backend-handoff-oct13 |
+
+대표 PNG: `reservation-readonly-oct22-{360,390,768,1440}.png`, `reservation-conflict-oct22-{360,390,768,1440}.png`, `maid-past-readonly-oct22-{360,390,768,1440}.png` (`WIREFRAME/QA/screenshots/`). 기존 같은 역할 카드와 목적지/모달을 비교했다. 중복 예약 알림에 중첩되던 toast는 제거하고 기존 모달 inline alert와 확인 버튼을 사용한다. 과거 판정은 선택 조회일이 아니라 실제 KST 현재일과 비교한다.
+
+한계: 실제 계정 protected GET/물리 PIN·Drive·실사진 업로드·실기기 HEIC/카메라/PWA·운영 p50/p95는 미검증. Preview 배포/원격 CI/main 병합은 이 절 작성 시 대기이며 실제 결과는 후속 기록한다. 정책/이슈별 미완료 범위는 `DOCS/36_FRONTEND_RELEASE_READINESS.md`를 따른다.
+
+## 2026-10-22 · 이슈 후속: 사진 재시도·계획일·PIN Excel 분리
+
+기준 `origin/dev 29bafc9`. 흐름: 관리자 객실 내보내기 → PIN Excel 다운로드/Drive 잠금 → 메이드 사진 실패·동일 요청 재시도 → 오늘·내일 배정·KST 자정. Browser plugin not available로 기존 번들 Playwright Chromium 151.0.7922.34를 사용했다. 로컬 origin `http://127.0.0.1:4177`, 360/390/768/1440px. 업무 API는 합성 fixture로 가로챘으며 실제 PIN·사진·예약·배정·급여는 변경하지 않았다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 페이지·품질 | PASS · 페이지 식별, 의미 있는 화면, 오류 overlay 없음, 가로 넘침 없음. 의도한 HTTP 오류 fixture 외 app console warning/error·page error 없음 |
+| PIN 사용 조건 | PASS · export만 켠 관리자에서 Excel 활성/Drive 비활성 및 준비 사유 표시. 직접 preview/apply 0건. maid/developer와 모든 flag OFF의 직접 export/import 0건 |
+| Excel 내용·오류 | PASS · 다운로드 파일을 openpyxl로 열어 `시트 1`, B/C열, 문자열, 앞자리 0, 6자리 보존 확인. 중복 클릭 1요청, 403·잘못된 workbook에서 다운로드 0건, 실패 뒤 재시도 활성화 |
+| 다운로드 경합 | PASS · 모달 이탈·세션 교체 뒤 늦은 응답으로 다운로드하지 않음. 이전 세대의 finally가 새 세대의 진행 잠금을 풀지 않으며 새 세대만 다운로드 |
+| PIN 기존 계약 | PASS · 서버의 현재 long_stay로만 직접 4/6자리 허용, 5자리 거절, 일반/자동 생성 4자리. 명시 조회·원문 제거·권한 회귀, synthetic PIN/token의 URL/history/storage/console 노출 없음 |
+| 사진 오류 구분 | PASS · IN_FLIGHT는 서버 처리 중, provider/quota 조회 503은 저장소 연결 안내. quota 초과·lease 한도·terminal은 재시도 버튼과 직접 실행 차단, 문의 번호 표시. provider 원문 미표시 |
+| 사진 재시도 | PASS · 자동 재시도 0건. 수동 중복 클릭에도 같은 item/경로/key/hash로 1개씩 전송, 실패한 사진과 대기 사진 보존. accepted·미완료 operation·응답 유실·snapshot null/불일치/조회 실패 회귀 |
+| 계획일·자정 | PASS · 주/월/연말 경계, 이전 날짜 초안 명령 차단, 선택일 availability/change body, 원 날짜/담당/별도 target ID 보존, 느린 이전 응답 폐기. 업로드 큐·명시 조회일 보존 |
+| 설정·빌드 | PASS · production/preview/로컬 serve의 기본값 일치, plan/export true·Drive false, 환경 우선순위·rollback·demo 격리. PWA shell 캐시·민감 경로 제외, worker `2026-10-22-1` |
+| 키보드·목적지 | PASS · 44px PIN 주 버튼, 접근성 이름, 모달 Tab/Escape, 기존 CSV/xlsx/앱→Drive 버튼 label/action 동일. 기존 내비게이션·사진 확대·Back/Forward·포커스 회귀 |
+| 기존 업무 | PASS · 청소 30그룹, 앱 내부 이동·다른 객실 명령 중 순차 큐·동일 key, 필요 시 상세/보이는 사진 우선 조회, 가능일 일괄/송금 표시 batch·금액 검증·역할 가드 |
+| 운영 읽기 | PASS · health 200, OpenAPI 154 paths/166 operations, 공개키 검증·로컬 origin CORS. generated cleaning 타입 검사 및 전체 타입 재생성 결과 byte 일치 |
+
+초기 검사 실패는 실제로 보완했다. API 검사의 과거 고정 150/162를 배포 계약 154/166으로 갱신했고, serve/build 설정 비교 fixture에 기존 serve 필수값인 sessionPersistence를 명시한 뒤 통과했다. 공개 Swagger는 여전히 151/163이므로 생성기를 고정 운영 OpenAPI로 연결했다. 일부 사진 오류 코드의 generated enum 누락은 임의 수정하지 않고 [최신 인계](../DOCS/35_FRONTEND_OCT22_ISSUE_FOLLOWUP.md)에 정확히 남겼다.
+
+검사: `check-workspace.mjs`, `check-pwa.mjs`, `check-photo-rollout.mjs`, `check-api-integration.mjs`, `generate-cleaning-client.mjs --production --check`, `check-backend-handoff-oct13.mjs`, `RMS_QA_SKIP_BENCH=1 check-photo-performance.mjs`, `check-photo-queue-handoff.mjs`, `check-cleaning-workflow.mjs`, `check-live-navigation.mjs`, `check-lazy-cleaning.mjs`, `check-data-performance.mjs`, `check-operational-api.mjs`, `git diff --check`. 브라우저 스크립트는 `node scripts/<이름>`으로 실행한다. 전체 타입은 `openapi-typescript@7.13.0`으로 운영 OpenAPI를 다시 생성해 비교했다.
+
+대표 PNG는 전부 합성 QA 자료이며 390/1440px를 육안 대조했다. 기준 소스와 같은 역할·fixture·뷰포트를 사용했다. 내보내기는 기존 모달 아래에 PIN 동작만 추가하고 기존 버튼 목적을 보존했으며, 사진은 같은 카드에서 실패 문구·재시도 명칭만 바뀐다. 과거 회귀가 덮어쓴 기존 PNG는 복원하고 처음부터 있던 사용자 미추적 PNG는 보존했다.
+
+- `QA/screenshots/backend-handoff-pin-export-before-{390,1440}.png`
+- `QA/screenshots/backend-handoff-pin-export-only-{360,390,768,1440}.png`
+- `QA/screenshots/photo-recovery-oct22-before-390.png`
+- `QA/screenshots/photo-recovery-oct22-{360,390,768,1440}.png`
+
+NOT RUN: 운영/Preview 배포·환경변수 변경, 실제 PIN Excel/Drive·물리 도어락 변경·신규 업무 쓰기, 서버 자정 SQL 실증, iOS/Android 카메라/갤러리·실제 HEIC·저속망·설치 앱 Back·OS 종료. 사진 이번 검사에서는 성능 benchmark를 생략했으며, 기존 data-performance의 합성 표본은 운영 체감 개선율로 해석하지 않는다. Drive 가져오기는 backend #463과 물리 확인 pinVersion 경로가 해결될 때까지 잠근다. 관련 이슈의 실제 업무 UAT 항목은 완료로 닫지 않는다.
+
+## 2026-10-13 백엔드 추가 이슈 검수
+
+기준 dev 795da7e. 흐름: 객실 예약 등록 → 선택 날짜/객실 유지, 진행 중 → 미퇴실 신고 재조회, 청소 배정 → KST 날짜 경계, 관리자 내보내기 → 합성 PIN preview/apply/download. 실제 운영 쓰기는 하지 않았다.
+
+- PASS `check-backend-handoff-oct13.mjs`: LA timezone에서도 KST 당일 16시 전/후 기본 날짜, 명시 미래 날짜, 겹침 시 객실 유지, 느린 preview 중 작성 보존. 객실 변경 후 날짜 유지.
+- PASS: 미퇴실 신고 loading/error/stale/empty와 키보드 재조회. AUTH_CONTEXT_UNAVAILABLE은 로그인 후 me 실패/기존 세션 갱신 모두 세션 삭제 없이 재확인.
+- PASS: PIN flag OFF 및 maid/developer 요청 0건, 관리자 다운로드 blob을 openpyxl로 열어 시트 1·B/C열·문자열·앞자리 0·6자리 보존 확인. PIN 목록은 화면 미표시. 유실 후 모달 재진입·만료 후 동일 token/key 결과 확인, stale/config/행 오류, 원본 오류 텍스트 미노출, history/storage 원문·token 없음.
+- PASS: 서버 현재 long_stay 예약 기준 4/6자리 입력, 5자리 거절, 일반/랜덤 4자리 유지. 실제 도어락 변경 없음.
+- PASS: KST 일요일→월요일/월말/연말, 자정 전 초안 명령 차단, 현재 계획일 availability, 이전 날짜 늦은 응답 폐기, 원 serviceDate/담당/별도 target 2건 보존, 고유 행, 업로드 큐/명시 조회일 유지. flag OFF에서는 기존 change body 유지.
+- PASS: 기존 `check-reservation-bookability.mjs`, `check-cleaning-workflow.mjs` 30그룹, `check-lazy-cleaning.mjs`, `check-live-navigation.mjs`, `check-photo-queue-handoff.mjs`, `check-live-connections.mjs`. 예약 생성·수정/취소/이동, 버튼 목적지, 접힘/필요 시 조회, 검수/주급/사진·모달 Back/Forward·포커스·권한 회귀. 검수 사진 개수 단언은 비동기 이미지 생성·디코딩 완료 후 확인하도록 안정화하고 재실행 통과.
+- 환경: http://127.0.0.1:4177, Playwright Chromium 151.0.7922.34, Browser plugin not available. 360/390/768/1440px 페이지 식별·비어 있지 않은 화면·가로 넘침·접근성 이름·키보드·콘솔 검사. 의도한 HTTP 오류 fixture 외 app warning/error 없음.
+- 합성 PNG: `QA/screenshots/backend-handoff-reservation-date-{360,390,768,1440}.png`, `QA/screenshots/backend-handoff-pin-import-{360,390,768,1440}.png`. 390/1440px 육안 확인. 기존 예약 폼과 청소 표의 구조/버튼 유지, 새 PIN 전송은 기존 내보내기 안에 제공. 과거 검사 PNG는 복원하고 사용자 미커밋 PNG는 보존한다.
+- PASS: 운영 OpenAPI client `--production --check` 151 paths / 163 operations, PWA cache/보안 검사. worker 2026-10-13-1, 강제 새로고침 없음.
+- NOT RUN: 운영 PIN export/import·도어락 변경·신규 예약/배정/사진 쓰기, 실제 모바일·백그라운드 종료 복구. 백엔드 자정 SQL/Drive 검증은 프런트 합성 검증과 별개다. 미배포 계약은 두 flag 기본 false.
+- 백엔드 활성화 차단: 가져온 PIN의 물리 확인을 위한 secret-free 최신 pinVersion 조회 경로. [인계](../DOCS/34_BACKEND_OCT13_FRONTEND_HANDOFF.md)에 endpoint/필드를 정리했다.
+- PASS: `node scripts/check-workspace.mjs`, `git diff --check`. 정본 감사 문서는 변경하지 않았다.
+- Production Ready `dpl_ANcKYiRXTx9Cv8gQky9i6GwSdigS` (`room-management-system-prod-dbgcbxuqx.vercel.app`) → `https://room-management-system-prod.vercel.app/`. live/production/local, photoUploadSnapshot true, assignmentPlanningDate/roomPinTransfer false. 공개 HTML·worker byte 일치.
+- Preview Ready `dpl_CY593VBsZtUp8BDFbFMQW8NtW3DV` (`room-management-system-prod-xhwe7un4u.vercel.app`) → `https://room-management-system-prod-preview.vercel.app/`. live/preview/session, 동일 flags. 인증 CLI에서 해당 배포 feedback script만 제외한 HTML과 worker byte 일치. 고정 alias 및 공개 보호 302 유지.
+- 앱 소스 commit `221ebfe`. HTML SHA256 `09c990a028ed1f48d127cf676b72e9d9f6ecb8eab675b43f32518a55eea51ee3`, worker SHA256 `5eaa4ea27fe4bf96907c5206f7b42575d25ec7215047317fcefdac4530f8de76`. 후속 commit은 배포·검증 증거 문서뿐이다.
+- 운영 인앱 PASS: 전송/작성 대기 없음 확인 → 새로고침·새 버전 적용 → 메이드 로그인 유지 → 10/11 0건 → 날짜 입력 10/13·URL 동기화·2건 모두 접힘 → Back 10/11·0건. console warning/error 없음. 계정 전환, 신규 업로드/삭제/검수 제출, 관리자 운영 쓰기와 사진 원문 캡처는 하지 않았다.
+
+## 2026-10-11 날짜 이동·지연 응답 후속 검수
+
+기준 `dev d3016d1`. 검증 흐름: 내 업무 날짜 선택 → 다른 날짜 → Back/Forward·새로고침 → 같은 날짜의 API 목록 확인. 별도로 업로드 2장을 지연시킨 동안 날짜 변경 → 전송 완료 → Back → 원래 객실 저장본 확인. 운영 쓰기는 하지 않고 기존 API fixture로 전부 가로챘다.
+
+- 재현/수정: 메이드 날짜 링크에 관리자 `assignment-tomorrow` 상태가 적용되어 하루 뒤로 조회하는 회귀를 수정 전 자동 검사로 재현했다. 메이드 날짜 변경 시 URL이 이전 날짜로 남는 문제도 수정했다. 날짜 지우기는 기존 날짜로 복구하며 빈 날짜 API 호출은 하지 않는다.
+- PASS: `check-live-navigation.mjs` 직접 링크·URL·Back/Forward·새로고침·빈 입력, 기존 홈 검수/내일 배정 목적지·역할 가드·주급·사진 모달/포커스 회귀.
+- PASS: `check-lazy-cleaning.mjs` 날짜 A → B → A의 첫 A 조회를 보류해도 새 A 조회를 별도로 수행. 이전 날짜 카드가 로딩 중 노출되지 않고 이전 상세/사진의 늦은 응답을 폐기한다. 기존 기본 접힘·상세 재시도·화면 근처 이미지·앱 전체 최대 4조회·입력 포커스 보존 유지.
+- PASS: `check-photo-queue-handoff.mjs` 날짜를 바꿔도 대기 2장과 원래 assignment/attempt 유지, 순차 전송 후 원래 날짜에 돌아오면 저장한 사진 모두 조회. 기존 다른 객실 조작·추가 선택·실패 슬롯 격리·동일 key 재시도 통과. 서버 저장 완료 전 검수 제출 가드 유지.
+- PASS: `check-photo-performance.mjs` 비벤치 회귀(snapshot/null/불일치/유실/409/미완료 operation·같은 key/bytes·추가 선택/20장 한도·메모리 URL). `check-cleaning-workflow.mjs` 30그룹 통과. 서버 계약·업로드 동시성·보존 기간은 변경하지 않는다.
+- 환경: `http://127.0.0.1:4177`, Playwright/Chromium 151.0.7922.34. Browser plugin not available; 배포 읽기 검수는 기존 인앱 제어 도구 사용. 360/390/768/1440px 넘침 없음, 페이지 식별/비어 있지 않은 화면/키보드/접근성 이름/44px/모달/Back·포커스/console warning/error 검사 통과.
+- 대표 합성 증거: `QA/screenshots/maid-date-return-{360,390,768,1440}.png`. 기존 접힌 객실 카드·날짜 입력·버튼 구조는 그대로이며 날짜와 데이터 범위만 수정했다. 사용자 미커밋 PNG는 보존하고 기존 회귀가 다시 생성한 과거 PNG는 복원한다.
+- PASS 모바일 제한 조건: `RMS_QA_MOBILE_EMULATION=true node scripts/check-lazy-cleaning.mjs`로 터치 탭·기기 배율 2·CPU 4배 감속·API 응답별 250ms 추가 지연을 적용해 동일 회귀를 통과했다. 지연 응답은 route fixture이며 실제 통신 대역폭/통신 단절을 모사한 결과나 실기기 성능 수치로 해석하지 않는다.
+- PASS: `node scripts/check-workspace.mjs`, `node scripts/check-pwa.mjs`, `git diff --check`. 390/1440px 대표 PNG 육안 확인. 정본 감사 문서는 변경하지 않았다.
+- NOT RUN: 실제 iOS/Android 갤러리·HEIC 20장·저속 통신망·OS 백그라운드/앱 종료 후 복구·새 운영 사진 업로드/삭제/제출. 앱 내부 이동 중 전송 유지와 새로고침/로그아웃/앱 종료 후 전송 보장은 별개이며 후자는 제공하지 않는다.
+- 백엔드 최신 이슈 #206의 v0.9.4/API45 1차 종료 인계에 변경 없음 확인. 이번 수정은 프런트 날짜/조회 범위 처리이며 새 endpoint·DB·권한 변경 요청은 없다. Worker `2026-10-11-1`, 강제 새로고침 없음.
+- Production Ready `dpl_7oG699U1grqE4HivJrrhuz8tTKw6` (`room-management-system-prod-oz5a8g3f7.vercel.app`) → `https://room-management-system-prod.vercel.app/`. live/production/local, snapshot true, 공개 HTML·worker byte 일치.
+- Preview Ready `dpl_EhNhMEt7eMANoVZXV2N8TiCsmcBe` (`room-management-system-prod-du860cpvp.vercel.app`) → `https://room-management-system-prod-preview.vercel.app/`. live/preview/session, snapshot true, 인증 CLI에서 해당 배포 feedback script만 제외한 HTML과 worker byte 일치. 첫 인증 호출은 scope 누락으로 보호 응답을 받았고 명시적 팀 scope로 확인했다. 고정 alias 및 공개 보호 302 유지.
+- 앱 소스 commit `f1491e0`. HTML SHA256 `c309e79e948e8f167349d522674e7a23ad0ba2f611e129f8506202ea4ffef864`, worker SHA256 `189491346517dea28c17ca44f14535f12538066ffa5411680d2d419fd42b646d`. 후속 commit은 배포 증거 문서뿐이다.
+- 운영 인앱 PASS: 전송/작성/모달 대기 없음 확인 → 일반 새로고침·새 버전 적용 → 10/11 업무 2건 → 날짜 입력으로 10/10 선택 시 URL 동기화·0건 → Back 10/11·2건/모두 접힘 → Forward 10/10 → 새로고침 후 10/10·0건 유지 → 10/11 복귀. console warning/error 없음. 운영 신규 업로드·삭제·검수 제출 및 사진 원문 캡처/로그 없음.
+
+## 2026-10-10 기본 접힘·필요 시 상세 조회
+
+기준 `dev 82bc340`. 검증 흐름: 내 업무 진입 → 접힌 객실 목록 먼저 표시 → 객실 펼치기 → 해당 상세와 화면 근처 사진만 조회 → 다른 객실 명령/업로드 → 확대·뒤로가기. 기존 UI의 기본 접힘과 조회 시점만 변경하며 업무 쓰기는 전부 합성 fixture로 가로챘다.
+
+- PASS: `check-lazy-cleaning.mjs`. 느린 수행 상태 전에 첫 목록 표시, 기본 모두 접힘, 닫힌 객실 상세/이미지 요청 0건, 요청 중 접기/재열기, 15초 신선도·중복 요청 병합, 객실별 실패/재시도, 명령 후 해당 객실 GET 3개만 수행. 촛불/추가 특이사항 지연이 사진 표시를 막지 않음.
+- PASS: 화면 위아래 300px 안쪽부터 메이드 사진 조회. 20장 중 초기 6장만 요청한 fixture 확인. 두 객실을 함께 펼쳐도 인증 사진 GET 최대 4개, 개별 실패 재시도, 보관 만료 metadata 반영 시 메모리 URL 해제/확대 제거. 날짜·인증 변경의 늦은 응답 폐기.
+- PASS: 홈 검수/배정, 관리자 근무표, 데모 메이드 가능일·주급 상세 기본 접힘. 명시적으로 펼친 상태는 재렌더링에서 유지. 근무표 데이터는 요약/담당 선택/저장 검증에도 필요하므로 기본 조회 유지. 기존에 접히지 않던 화면은 새 패널로 바꾸지 않음.
+- PASS: `check-photo-queue-handoff.mjs`, `check-cleaning-workflow.mjs` 30그룹, `check-maid-photo-history-fixes.mjs`, `check-live-navigation.mjs`. 전송 중 다른 객실 시작·완료·추가 선택·이동, 입력 DOM/포커스/선택 영역, 동일 key/bytes 재시도, 검수 제출 가드, PIN/역할/촛불/이력/확대/Back/Forward 유지. 새 부분 조회에 맞춰 경합 검사는 명시적 전체 조회와 업로드를 겹쳐 검증한다.
+- PASS: `check-photo-performance.mjs` 1/5/20장 및 실패 회귀. snapshot/null/불일치·accepted 후 확인 실패·응답 유실·409·미완료 operation·HEIC fallback·한도·추가 선택·URL 수명·로그아웃. 업로드 최대 1개 유지. `check-data-performance.mjs`의 근무표/주급 묶음/홈 점진 표시 회귀 통과.
+- 합성 비교: 같은 3객실/조회 지연을 적용한 기존 `82bc340`은 첫 카드 1311ms, 변경 후 199ms. 해당 첫 진입 총 요청 25 → 5개, 상세/이미지 요청 20 → 0개. 단일 로컬 표본이며 서버 전송·실기기 속도 개선율이나 p50/p95로 해석하지 않는다. 재현: `RMS_QA_BASELINE=82bc340 node scripts/check-lazy-cleaning.mjs`.
+- 환경: 로컬 `http://127.0.0.1:4177`, 기존 Playwright/Chromium 151.0.7922.34. Browser plugin not available; 운영 읽기 전용 확인에는 기존 인앱 제어 도구를 사용한다. 360/390/768/1440px 가로 넘침 없음, 비어 있지 않은 화면, 키보드 Enter/Space/사진 Back·포커스 복귀, 접근성 이름/44px 객실 토글, console warning/error 및 page error 없음.
+- 증거: `QA/screenshots/lazy-cleaning-collapsed-{360,390,768,1440}.png`, `QA/screenshots/lazy-cleaning-expanded-{360,390,768,1440}.png`. QA 가상 객실/사진만 기록. 모바일 접힘·데스크톱 펼침 PNG를 육안 확인했고 기존 카드/버튼 구조를 유지한다. 과거 회귀 PNG는 복원하며 사용자 미커밋 PNG는 보존한다.
+- 백엔드 최신 인계 v0.9.4/API45의 기존 JSON/snapshot/null/CAS/순차 큐 계약과 호환한다. 신규 DB/Drive/권한/보존 변경 없음. `check-workspace.mjs`, `check-pwa.mjs`, `git diff --check` 통과. worker는 `2026-10-10-4`이며 강제 새로고침은 추가하지 않는다.
+- NOT RUN: 새 운영 업로드/제출/삭제, 실제 iOS/Android·갤러리·HEIC·20장·저속망·OS 백그라운드/종료 후 복구. 기존 사진 조회와 새 전송 실측을 구분한다. 앱 내부 이동 중 전송은 계속되지만 새로고침·로그아웃·앱 종료 후 전송 보장은 없다.
+- 최종 추가 PASS: 늦은 `loadLiveViewData` 완료가 다른 객실의 작성 중 입력 DOM·내용·포커스를 유지하는 회귀를 보강했다. 보관 만료된 content는 메모리에서 해제하고 확대를 제거한다.
+- 2026-10-11 KST Production `dpl_DrgNpkuSHwKSLuf3ybJKGUY5uDPv` (`room-management-system-prod-20hlu4he1.vercel.app`) → `https://room-management-system-prod.vercel.app/`: Ready·고정 alias, live/production/local, snapshot true, HTML·worker byte 일치.
+- Preview `dpl_HkLGqmAumCvjufBoH2YwYkunSUsb` (`room-management-system-prod-gyiczc5w0.vercel.app`) → `https://room-management-system-prod-preview.vercel.app/`: 인증 CLI로 live/preview/session, snapshot true. 해당 배포 feedback script 하나만 제외한 HTML과 worker byte 일치. 고정 alias 및 기존 공개 보호 302 유지.
+- HTML SHA256 `4efe5de23b4e87705d5251106c42a0ea31fa05cdfac0e33508ba5165bf759009`, worker `2026-10-10-4` / SHA256 `92aaba7f98eae708e30dcb74990c48a22340e13c202cba2785ded6a5ad29d2a3`. 앱 소스 commit `830555a`이며 후속 변경은 배포 증거 문서만이다.
+- 운영 인앱 PASS: 전송·작성 대기 없음 확인 후 새로고침/새 버전 적용. 한국시간 자정 경과로 10/10 조회는 빈 상태, 10/11 조회는 본인 통보 업무 2건을 모두 닫힌 상태로 표시. 한 객실 펼침 → 상세 로딩 → 화면 근처로 스크롤 → 기존 사진 12장 디코딩 → Enter 확대 → 브라우저 Back → 원 사진 버튼 포커스 복귀 확인. console warning/error 없음. 두 객실을 다시 닫고 10/11 내 업무 화면을 남겼다. 원문 사진/인증정보는 캡처·로그·문서에 저장하지 않았고 신규 업로드/삭제/검수 제출도 하지 않았다.
+
+## 2026-10-10 사진 전송 중 업무 전환
+
+기준 `dev 43db494`. 검증 흐름: 객실 A 사진 선택 → 전송 대기 즉시 표시 → 객실 B 시작/현장 완료·추가 사진 선택 → 더보기로 이동 → 양쪽 사진 저장 확인 → 내 업무 복귀. 쓰기는 전부 합성 fixture로 가로챘으며 운영 사진·검수 상태는 변경하지 않았다.
+
+- 재현/수정: 변경 전 HTML에서 객실 B 명령의 늦은 조회가 A의 새 사진 1장을 0장으로 표시하는 경합을 재현했다. 같은 수행/배정/slot의 더 최신 서버 revision만 보존하며 새 삭제·동일 revision 보존 metadata·담당 변경을 무시하지 않는다.
+- PASS: `check-photo-queue-handoff.mjs`. 다른 객실 시작/현장 완료, 양쪽 4장 연속 추가, 이동 후 계속 전송, 실패 슬롯 격리와 동일 key 재시도, 전송/확인 중 검수 제출 버튼·명령 차단, 완료 후 버튼 활성화. 전송 완료 때 다른 객실 메모 DOM·내용·focus·selection 유지. 동시 업로드 최대 1개.
+- PASS: `check-photo-performance.mjs` 전체 1/5/20장 합성 비교 및 실패 6그룹. 순차 CAS·snapshot/null/불일치·accepted 후 조회 실패·유실·409·미완료 operation·같은 key/bytes·HEIC 불가 fallback·추가 선택/20장 초과·이동/로그아웃·메모리 URL·보이는 사진 우선 조회·키보드 확대/Escape/포커스 유지. 이번 현재/snapshot 경로의 큐 시작·완료 전체 화면 렌더는 0회. 운영 시간 개선율 아님.
+- PASS: `check-live-navigation.mjs`, `check-maid-photo-history-fixes.mjs`. 목적 화면/Back/Forward/역할 가드·이력/확대·촛불/제출 회귀. 청소 전체 검사에서 이전 구역형 장수 표시의 부분 갱신 누락을 발견해 함께 수정했다.
+- 360/390/768/1440px 가로 넘침 없음, 페이지 식별·비어 있지 않은 화면·오류 overlay 없음·console warning/error 및 page error 없음. 기존 Playwright/Chromium 151.0.7922.34, 로컬 `http://127.0.0.1:4177`; Browser plugin not available. 기존 인앱 검수 도구는 배포 읽기 전용 검수에 사용한다.
+- 평상시 390px 기존/수정 PNG는 byte 동일. 변화는 선택 직후 toast와 기존 상단 연결 영역의 전송/확인 장수이며 카드·버튼 목적은 유지한다. 대표 모바일/데스크톱 PNG를 육안 확인했다.
+- 증거: `QA/screenshots/photo-queue-idle-{before,after}-390.png`, `QA/screenshots/photo-queue-handoff-{360,390,768,1440}.png`. 전부 QA 가상 객실/사진이다.
+- NOT RUN: 이번 변경 뒤 운영 추가 업로드/삭제/검수 제출, 실제 iOS/Android 갤러리·HEIC·20장·저속망·OS 앱 전환/종료. 새로고침/로그아웃/앱 종료 후 전송 완료를 보장하지 않는다. 서버 DB/Drive 성능 개선은 별도 작업이다.
+- 최종 PASS: `check-cleaning-workflow.mjs` 30그룹, 최종 수정 뒤 사진 비성능 회귀 재실행, `check-workspace.mjs`, `check-pwa.mjs`, `git diff --check`. 기존 회귀가 생성한 과거 PNG는 복원하고 신규 증거만 기록했다. 사용자 미커밋 PNG는 변경하지 않았다.
+- Production `dpl_A9jhRihUFn3uXHvkj2RnGhBBRew3` (`room-management-system-prod-2ibrx4u0k.vercel.app`) → `https://room-management-system-prod.vercel.app/`: Ready 및 고정 alias, live/production/local, snapshot true, HTML/worker byte 일치 확인.
+- Preview `dpl_FvM93Fs7zykKs4tsBAtbnVgAg1X6` (`room-management-system-prod-dwne1qert.vercel.app`) → `https://room-management-system-prod-preview.vercel.app/`: 인증 CLI로 live/preview/session, snapshot true, HTML의 해당 배포 feedback script 하나만 제외하고 byte 일치, worker 일치. 기존 공개 보호 302 유지.
+- HTML SHA256 `0fd8eb56e1554b892aad06450fc239fee4c0d82c65013a1d1241571a4cd43343`. Worker `2026-10-10-3` / SHA256 `03e1d0904c395fb27971cc81d4f4f874b20ff7e2598d0c0dc3bfde7c76ad68a2`. 자동 강제 새로고침은 추가하지 않았다.
+- 운영 인앱 PASS: 전송/작성 대기 없음 확인 후 일반 새로고침, 신규 상태 표시 DOM 탑재, 기존 사진 6장 디코딩, Enter 확대, Back과 원래 버튼 포커스 복귀, console warning/error 없음. 더보기의 새 버전 적용으로 대기 worker를 반영했다. 실제 사진 원문은 캡처/로그/문서에 기록하지 않았다.
+
+## 2026-10-10 사진 snapshot 운영·프리뷰 전체 적용
+
+사용자의 명시적 전체 적용 지시, 기준 `dev 91ec7dd`. 앱 HTML/CSS/JS와 worker는 변경하지 않고 빌더 기본값, 환경 예시, Vercel Production·Preview 환경값을 true로 바꾸고 양 채널을 재배포했다. 아래 UAT 당시 false 기록은 역사적 checkpoint이며 현재 전역 설정은 true다. 서버 DB·Drive 최적화는 별도 작업이다.
+
+- PASS: `check-photo-rollout.mjs` 격리 fixture에서 양 채널 기본 true, 명시적 false 롤백, 로컬 환경/프로세스 환경 우선순위, demo 설정 분리. 실제 credential·운영 API 쓰기 없음.
+- PASS: `check-photo-performance.mjs` 전체 1/5/20장 비교 및 6그룹. snapshot/null/불일치/accepted 후 GET 실패/응답 유실/409/미완료 operation/동일 key·bytes, HEIC 불가 fallback, 추가 선택/20장 초과, 이동·로그아웃·메모리 URL, 최대 4조회·확대·키보드·포커스. 360/390/768/1440px 넘침 없음. 합성 snapshot 경로의 슬롯 GET은 각 선택 배치 1회로 20장도 21회에서 1회다. 실제 운영 속도 개선율로 해석하지 않는다.
+- PASS: `check-cleaning-workflow.mjs` 30그룹, `check-workspace.mjs`, `generate-cleaning-client.mjs --production --check`, `git diff --check`. 최신 공개 계약 151 paths/163 operations 확인. 사진 검증·제출·권한·CAS·순차 큐 계약 유지.
+- 합성 회귀: 기존 Playwright/Chromium 151.0.7922.34, `http://127.0.0.1:4177`. Browser plugin not available; 실제 운영 화면 검수에는 사용자가 요청한 인앱 브라우저 제어 도구를 사용했다. 합성 업무 mutation은 전부 fixture로 가로챘다. UI 소스 변경이 없어 기존 캡처를 새 결과로 덮어쓰지 않았다.
+- Production: `dpl_6ETg12p2mjZQ3Kse8eBMyvQs8v1n`, `room-management-system-prod-ajhkp1n87.vercel.app` → `https://room-management-system-prod.vercel.app/`. 공개 runtime live/production/local, snapshot true. HTML/worker byte 일치.
+- Preview: `dpl_AbqkYLb5GSzRPraMnULknm599fQc`, `room-management-system-prod-75rjivpk9.vercel.app` → `https://room-management-system-prod-preview.vercel.app/`. 인증 CLI로 runtime live/preview/session, snapshot true. HTML은 정확한 Vercel feedback script 하나만 제외하고 일치, worker byte 일치. 고정 alias 재확인과 기존 공개 보호 302 유지.
+- HTML SHA256 `26ab0aa9909a8ed1e79fea43f6e5df7cf2ef48d0eaabd0589f24eaa5bbb3b214`, worker `2026-10-10-2` / SHA256 `4876161825cb213fcc385e1fc0daa50bd002f47a091762e896b9e7930215a5fe`. runtime은 캐시하지 않으므로 새 앱 문서에서 새 값을 읽는다. 전송 중인 메모리 큐를 끊는 강제 갱신은 추가하지 않았다.
+- PASS: 배포 후 운영 인앱 일반 새로고침 → 내 업무 → 기존 사진 6장 모두 디코딩 → 확대 → Back → 원 사진 버튼 포커스. 정확한 URL/제목, 비어 있지 않은 화면, 오류 overlay 없음, console warning/error 없음. 개인정보·실제 사진 원문 캡처는 저장소에 기록하지 않았다.
+- NOT RUN: 이번 배포 뒤 새 운영 업로드/검수 제출/삭제. 같은 HTML·snapshot true의 정상 쓰기는 직전 지정 계정 5+1장 UAT로 확인했고 재실행하지 않았다. 실제 iOS/Android·HEIC·20장·저속망·실제 null/409/응답 유실은 여전히 미실행이다.
+
+롤백: 양 채널 환경값을 false로 저장하고 `RMS_PHOTO_UPLOAD_SNAPSHOT=false`로 재빌드·배포한 뒤 runtime 값을 확인한다. 환경값 변경만으로 정적 배포가 갱신되지 않는다. 사용 중 문서는 업로드 종료 후 새로 열어야 한다. 상세는 `DOCS/32_PHOTO_PERFORMANCE_INTEGRATION.md`를 따른다.
+
+## 2026-10-10 지정 계정 사진 업로드 UAT
+
+사용자 지정 계정/객실, 운영 URL `https://room-management-system-prod.vercel.app/`, 인앱 브라우저 제어 도구. 운영 HTML SHA256은 아래 v0.9.3 배포 및 `dev 7f04adc` 소스와 동일했다. 코드·전체 배포 설정을 바꾸지 않고 현재 탭 runtime 응답의 snapshot 옵션만 일회성 true로 적용했다. 사용자가 5장 다중 선택 후 1장을 직접 추가했고, 일시 timing 관찰은 원문·이름·인증값·업무 ID 없이 시간/bytes/status/헤더만 메모리에 기록한 뒤 제거했다.
+
+- PASS: 6개 upload POST `includePhotoSlots=true`/200, 6장 등록 완료. 각 선택 배치 시작 슬롯 GET 1회 뒤 업로드 간/직후 GET 없이 유효 snapshot 반영.
+- PASS: 다른 화면에서 내 업무로 복귀 후 인증 content GET 6건/200, 6장 모두 `complete && naturalWidth > 0`. 저장본 긴 변 1280px, 확대 및 Escape/브라우저 Back, 사진 유지와 포커스 복귀. 확대 닫기 때 추가 content GET 없음.
+- PASS: 일시 계측 제거 및 일반 설정 새로고침 후에도 6장 모두 디코딩 완료.
+- PASS: 추가 1장 성공 응답의 `Server-Timing`과 `Cache-Control: no-store`를 브라우저 JS에서 읽음. 검수 요청 제출/승인/사진 삭제는 실행하지 않음.
+- 첫 5장 요청 10.703/6.654/6.442/6.141/5.935초. POST 시작~마지막 완료 35.893초, 선행 슬롯 GET 포함 37.503초. POST 사이 공백 합계 약 18ms. 파일 선택·준비/전체 렌더 시간 또는 OFF 대비 개선율로 해석하지 않음.
+- 추가 1장 493,071 bytes/약 10.58초. 서버 timing(ms): DB 4128.2, Drive 4491.5, body 9.9, decoder init 140.2, decode 489.3, photo total 9263.8, API total 9851.5. 합계는 포함 관계이며 중복 합산하지 않음.
+- 6장 재조회는 최대 4동시, 개별 요청 2.156~2.443초, 첫 응답 2.156초/전체 약 4.647초. 서버 Drive 1.253~1.514초, DB 48.4~90.3ms. 실제 운영 표본 1회이며 cold/warm 평균·모바일 벤치마크가 아님.
+- NOT RUN: 실제 iOS/Android 갤러리·HEIC·20장·저속망, 실제 null/409/응답 유실 복구. 기존 fixture와 구분하고 운영 장애를 유발하지 않음. 이번 확인은 기존 인앱 viewport만 사용했으며 4개 반응형 폭 재검증은 하지 않음.
+- 사진 원문이 있는 화면은 저장소 QA 캡처에 남기지 않았다. 정상 UAT 통과와 체감 속도 개선 완료를 구분한다. 전체 운영/프리뷰 snapshot 옵션은 false이며 배포를 변경하지 않았다.
+
+결과: [프런트 #206](https://github.com/makee-ham/room-management-system/issues/206#issuecomment-6095868309), [백엔드 #411](https://github.com/wrongstory/room-management-system-backend/issues/411#issuecomment-6095870502). DB 세부 왕복/잠금/확정 및 Drive 세부 단계의 최적화, 작은 비공개 썸네일, 안전한 병렬 계약을 후속 요청했다. 최신 인계는 `DOCS/32_PHOTO_PERFORMANCE_INTEGRATION.md`를 따른다. 아래 이전 checkpoint의 사진 UAT 미실행 표시는 이 정상 경로 범위에서 갱신한다.
+
+## 2026-10-10 백엔드 v0.9.3 묶음 조회 연결
+
+기준 `dev e2b95d8`. 백엔드 최신 #207 인계와 release `72771b5`의 batch/가능일 완전성/공통 timing 문서를 확인했다. 공개 health 200, 운영/게시 OpenAPI paths/components 동일, 151 paths/163 operations 및 CSV 문자열 계약 검사·타입 재생성 PASS. 기존 후보 문서의 미배포 상태는 이 checkpoint로 대체한다. SQL/운영 DB 변경 없음.
+
+주급 목록 첫 페이지는 계속 즉시 표시하고, 송금 표시는 도착한 페이지 최대 10명씩 조회한다. 한 묶음 전체를 검증한 뒤 반영한다. `404 ROUTE_NOT_FOUND`만 기존 단건 3병렬로 fallback하며 401/403/500/업무 404는 오류다. 실패 카드의 명시적 단건 재조회, 토글/CAS/금액 재확인, 세대 폐기를 유지했다. 배정 주 근무표도 활성 메이드별 N회 대신 전체 1회로 조회한다.
+
+### 검증과 수정
+
+- `check-data-performance.mjs` 12그룹 PASS: 0/1/10/20명 CSV·요청 수·페이지별 묶음 1개, 누락/순서/주차/잘못된 marker 전체 거부, 401/403/500/업무 404/route 404 분리, 20명 legacy 경로, 카드별 GET 재조회, 부분 합계 금지, 늦은 묶음·주차·로그아웃·본인 권한, 즉시 상세/Back/summary 충돌, 홈 점진 표시, 가능일 current/변경 요청/후보 500의 오류·재시도·배정 잠금.
+- 360px 조회 실패 상태에서 재조회 버튼이 가로 넘침을 일으키는 기존 문제를 발견했다. 재조회 버튼만 다음 줄에 배치해 정상·오류 모두 360/390/768/1440px 넘침 없음, 최소 44px 버튼·키보드 Enter 재시도 확인. 정상 주급 화면은 이전 dev와 390/1440px PNG byte 일치.
+- `check-backend-v090.mjs`, `check-operational-api.mjs`, `check-live-connections.mjs`, `check-cleaning-workflow.mjs`, `check-photo-performance.mjs`(이번 실행은 benchmark 제외), `check-live-navigation.mjs`, `check-live-performance.mjs`, `check-maid-photo-history-fixes.mjs` PASS. 송금 on/off·재확인·409, 실제 지급 원장 불변, 사진 1~20장/다중 선택/직렬 큐/null fallback/이력/확대, 촛불/검수/배정/권한/Back을 합성 API로 확인했다.
+- 기존 회귀 fixture 4개에 신규 batch 정상 응답을 추가했다. 내비게이션 첫 실행의 미지원 mock 오류는 이를 최신 계약으로 보완한 뒤 재실행해 통과했다. 제품의 오류 검증을 완화하지 않았다.
+- Browser plugin not available. 기존 Playwright/Chromium 151.0.7922.34, `http://127.0.0.1:4177`. 페이지 URL/제목·비어 있지 않은 화면·오류 overlay 없음·console warning/error 및 page error 없음. 테스트 요청과 mutation은 전부 가로챈 QA 가상 데이터다.
+- 증거: `QA/screenshots/v093-{before,after}-{390,1440}.png`, `v093-error-{360,390,768,1440}.png`. 정상 데스크톱과 모바일 오류 카드 육안 확인. 사용자 PNG와 기존 QA 캡처는 덮어쓰지 않는다.
+
+### 합성 성능
+
+같은 fixture로 각 3회. 목록 첫 페이지 30ms/후속 60ms, 단건 marker 80ms, 묶음은 네트워크 60ms + 3개 병렬 그룹당 20ms를 가정했다. 첫 표시는 카드 DOM 삽입, 전체 표시는 모든 송금 조회 중 표시 종료 뒤다. p95는 3회 중 최댓값이며 운영·실기기 p95나 DB 개선율이 아니다.
+
+| 인원 | 이전 첫 표시 p50/p95 ms | 현재 첫 표시 p50/p95 ms | 이전 전체 p50/p95 ms | 현재 전체 p50/p95 ms | 목록+송금 HTTP 전/후 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 | 45 / 46 | 41 / 42 | 136 / 137 | 135 / 142 | 2 / 2 |
+| 10 | 44 / 46 | 43 / 45 | 398 / 398 | 197 / 204 | 11 / 2 |
+| 20 | 44 / 44 | 44 / 44 | 666 / 673 | 352 / 355 | 22 / 4 |
+
+배정 주 가능일 조회도 10명일 때 10→1회다(후보 1회 별도). batch 내부 DB RPC는 여전히 N회이며 같은 DB snapshot이 아니다. 공통 `api_total`은 handler 시간으로만 해석한다. 실제 인증 계정 batch/근무표/사진 성공 UAT, 휴대폰 실기기 성능은 NOT RUN. 사진 snapshot flag는 false 유지하며 지정 대상 정상 UAT 뒤 프런트가 활성화한다. 실제 null 강제 재현 때문에 다른 개발을 막지 않는다. 백엔드 후속과 프런트 후속은 [문서 33](../DOCS/33_DATA_PERFORMANCE_INTEGRATION.md)에서 구분한다.
+
+### 배포와 정적 검사
+
+- `check-workspace.mjs`, `check-pwa.mjs`, `generate-cleaning-client.mjs --production --check`, `git diff --check` PASS. 최종 UX 감사 원문 불변. 게시 OpenAPI SHA256 `110623b8ad92c532d902bb7d8e5a57c6bb8309f65519a4e9b84e384f2ae57f60`.
+- 신규 batch 공개 무인증 GET은 `401 MISSING_ACCESS_TOKEN`, 운영 Origin CORS 일치, Server-Timing 없음 확인. 인증 성공·실제 개인정보 조회 검증과 구분한다.
+- Production: `https://room-management-system-prod.vercel.app/`, `dpl_8hzYSZUeWTQVtd6QpbQRM7erf8Wd` (`room-management-system-prod-b60dk8r15.vercel.app`). 공개 HTML/worker byte 일치, live/production, snapshot false 확인.
+- Preview: `https://room-management-system-prod-preview.vercel.app/`, `dpl_8WumXKV3pZYDYfV7bfiM7jbgjNH3` (`room-management-system-prod-204dap2dm.vercel.app`). 기존 배포 보호 유지. 인증 CLI로 알려진 Vercel feedback script만 제외한 HTML 일치, worker byte 일치, live/preview, snapshot false 확인 후 alias 연결.
+- 최종 HTML SHA256 `26ab0aa9909a8ed1e79fea43f6e5df7cf2ef48d0eaabd0589f24eaa5bbb3b214`, worker `2026-10-10-2` / SHA256 `4876161825cb213fcc385e1fc0daa50bd002f47a091762e896b9e7930215a5fe`. 두 채널은 같은 운영 API/DB를 사용한다.
+- `check-deployed-visual.mjs` PASS: 실제 배포 HTML의 관리자 6/메이드 4 화면, 4개 폭, 넘침·console/page error 없음. runtime을 demo로 가로챈 시각 검증이며 실계정 UAT가 아니다.
+
+## 2026-10-09 최신 인계 반영과 조회 성능 #207
+
+인계 PR #209를 검사 후 dev `41ac17a`에 병합했다. 백엔드 v0.9.2/main `32c100e`, API 43의 공개 health 200 및 운영/게시 OpenAPI paths/components 동일성을 재확인했다. 게시 SHA256 `b1ab571818063e07964f139fa10a2225f93ba3945a98e303784b4b8bf22a6eff`, 150 paths/162 operations. 아래 이전 #206의 Draft/미배포 기록은 당시 checkpoint이며 최신 상태가 아니다.
+
+사진 nullable/snapshot 타입 재생성 및 생성기 계약 검사 PASS. pending operation의 보존 필드 두 null에 대해 상태 GET 재시도, accepted 후 새 업로드 없음, CAS/동일 key/Blob 회귀 PASS. 실제 인증 사진 성공 응답·Server-Timing UAT는 지정 계정/객실 미확정으로 실행하지 않았고 snapshot flag는 false 유지한다.
+
+`check-data-performance.mjs` 8그룹 PASS: 가능일 일괄/퇴사 제외/행 상한 fallback, 첫 페이지 표시·총액 보류·송금 조회 최대 3건, 부분 실패/중복/cursor 반복, marker 단건 재조회, 즉시 상세/summary mismatch, 상세 중 늦은 목록 응답, 주차 경합/로그아웃/본인 권한, 홈 단계별 표시, 360/390/768/1440px/포커스/Enter/Back/console. 기존 카드를 같은 역할·뷰포트로 비교했으며 정상 완료 상태의 구조·버튼 목적은 동일하다. 차이는 로딩·부분 실패 안내와 카드별 재조회다.
+
+Browser plugin 미제공으로 기존 Playwright/Chromium 151.0.7922.34를 사용했다. 모든 업무 API와 mutation은 합성 fixture로 가로챘다. 주급 최초 카드/전체 표시, 실제 버튼 이동, 페이지 identity/비어 있지 않음/오류 overlay 없음, 가로 넘침과 console warning/error 없음 확인. 정상 모바일·데스크톱 및 부분 오류 PNG를 육안 확인했다.
+
+### 합성 조회 시간
+
+동일 HTTP 지연(목록 30ms/후속 60ms, marker 80ms), `fe09fa7` 대 현재, 각 3회. 첫 표시는 카드 DOM 삽입, 전체 표시는 로드 완료 및 모든 송금 조회 중 표시 종료 뒤 시점이다. p95는 3회 중 최댓값이며 운영/실기기 성능 지표가 아니다. HTTP 수는 주급 목록과 marker 합계다.
+
+| 인원 | 변경 전 첫 표시 p50/p95 ms | 변경 후 첫 표시 p50/p95 ms | 변경 전 전체 p50/p95 ms | 변경 후 전체 p50/p95 ms | 주급 HTTP 전/후 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 | 132 / 135 | 43 / 44 | 138 / 140 | 139 / 144 | 2 / 2 |
+| 10 | 891 / 895 | 44 / 46 | 895 / 898 | 392 / 403 | 11 / 11 |
+| 20 | 1834 / 1839 | 44 / 45 | 1841 / 1844 | 656 / 664 | 22 / 22 |
+
+가능일 본 조회 수는 1/10/20명 각각 기존 1/10/20회에서 모두 1회이며 변경 요청 GET 1회는 별도다. 주급 batch API는 아직 운영에 없어 HTTP 수는 유지되고 순차 대기만 줄었다. 원격 row 상한 미실측과 상세 전체 페이지 검증 유지 등 한계는 [문서 33](../DOCS/33_DATA_PERFORMANCE_INTEGRATION.md)을 참고한다.
+
+### 회귀와 증거
+
+- `check-photo-performance.mjs` 전체 비교·6그룹 및 nullable 보강 후 비성능 회귀 PASS. 1/5/20장·4배 CPU·지연·409·유실·취소/이동·로그아웃·HEIC fallback·4개 폭·뷰어/Escape. 실제 codec/휴대폰 통신망은 미검증.
+- `check-cleaning-workflow.mjs` 30그룹, `check-live-navigation.mjs` 5그룹, `check-live-connections.mjs` 6그룹, `check-backend-v090.mjs` 5그룹, `check-operational-api.mjs` 8그룹, `check-live-performance.mjs` 12그룹 PASS.
+- 기존 테스트의 낡은 가능일 응답 필드와 날짜별 room projection, 예약 생성 뒤 목록 fixture를 현재 API 계약에 맞게 수정했다. 실패를 숨기거나 운영 validation을 완화하지 않았다.
+- 대표 캡처: `QA/screenshots/data-performance-{360,390,768,1440}.png`, `data-performance-partial-390.png`. 전부 QA 가상 데이터다. 사용자 제공 `admin-cleaning-toc-390.png`는 수정하지 않았다.
+- `check-workspace.mjs`, `check-pwa.mjs`, `generate-cleaning-client.mjs --production --check`, `git diff --check` PASS. 최종 UX 감사 원문은 변경하지 않았다.
+
+### 조회 성능 개선 배포
+
+- Production: `https://room-management-system-prod.vercel.app/`, `dpl_3UPWnUbFy1Mnse4rxD2wcQruDjt6` (`room-management-system-prod-1ncr7gd6u.vercel.app`). 공개 HTML/worker byte 일치, live/production 및 snapshot false 확인.
+- Preview: `https://room-management-system-prod-preview.vercel.app/`, `dpl_AvBAiuDcE4uGku2soFQPvWeTJVC3` (`room-management-system-prod-9la1k78gq.vercel.app`). 기존 보호 유지. 인증 CLI로 HTML의 알려진 Vercel feedback script만 제외한 byte 일치, worker byte 일치, live/preview 및 snapshot false 확인 후 alias 연결.
+- HTML SHA256 `0f994036e2b017ad7a53a556b59b179f57becaa13088da789059588534c98c24`, worker `2026-10-09-3`. 두 채널은 동일 운영 API/DB를 사용한다.
+- `check-deployed-visual.mjs` PASS: 배포 HTML의 관리자 6/메이드 4 화면, 360/390/768/1440px, 가로 넘침·console warning/error·page error 없음. runtime을 demo로 가로챈 시각 검사이며 운영 로그인/쓰기 UAT가 아니다.
+
+## 2026-10-09 사진 성능 이슈 #206
+
+프런트 `dev` `314f0d7` 기준. 백엔드 #412의 `5630b62` 계약을 확인했고 Draft/운영 미배포라 `photoUploadSnapshot=false`로 배포한다. 활성화 조건은 [문서 32](../DOCS/32_PHOTO_PERFORMANCE_INTEGRATION.md)에 있다. 기존 청소 섹션·버튼 순서와 1~20장 다중 선택을 유지했고 대기 미리보기·누적 진행률·개별 재시도만 기존 사진 영역에 추가했다.
+
+검증 흐름: 메이드 내 업무 → 갤러리 다중 선택 → 즉시 미리보기/다음 사진 준비 → 순차 전송/verified 확인 → 청소 이력 사진 조회 → 확대/Escape/복귀. 기존 `314f0d7`과 동일 역할·데이터·폭에서 비교했다. 표시는 색뿐 아니라 대기/업로드/확인 필요/등록 완료 문구로 구분한다.
+
+| 검사 | 결과 |
+| --- | --- |
+| `check-photo-performance.mjs` | PASS · 1/5/20장 × 기존/현재/snapshot 9개 성능 fixture와 오류/이동/로그아웃/개별 재시도/추가 선택/HEIC fallback/표시 우선순위/키보드 6그룹 |
+| `check-cleaning-workflow.mjs` | PASS · 30그룹 · 기존 배정/청소/검수/PIN/20장/폭탄방/구형 슬롯/전역 순차 큐 |
+| `check-maid-photo-history-fixes.mjs` | PASS · 6그룹 · 계정 권한/현장 완료/촛불 초안/7일 이력/사진 확대/늦은 응답 |
+| `check-live-navigation.mjs` | PASS · 5그룹 · 목적지/날짜/역할/Back/Forward/Blob 수명 |
+| `check-backend-v090.mjs` | PASS · 5그룹 · 최신 객실/주급/제출 후 촛불·특이사항 |
+| `check-live-connections.mjs` | PASS · 6그룹 · 계정/객실/카탈로그/알림 권한 |
+| 정적 검사 | `check-workspace.mjs`, `check-pwa.mjs`, `git diff --check` PASS |
+
+Browser plugin 미제공으로 Playwright/Chromium 151.0.7922.34 사용. `http://127.0.0.1:4177`에서 360/390/768/1440px 가로 넘침·접근성 이름·페이지 식별/비어 있지 않음·오류 overlay 없음·console warning/error 및 page error 없음, 실제 버튼과 키보드 확대/Escape/포커스 복귀를 검증했다. 모든 업무 API 쓰기는 합성 fixture이며 실제 운영 쓰기는 하지 않았다.
+
+### 합성 성능 측정
+
+CPU 4배 감속, 사진 준비 80ms/POST 140ms/metadata GET 60ms 지연. 같은 합성 JPEG를 사용한 단일 실행값이며 운영 스마트폰/Drive 속도 개선율이 아니다. 최초/전체 표시는 이미지 디코딩(`complete && naturalWidth > 0`)까지 확인한다. 기존 압축과 확인 후 메모리 미리보기 재사용은 비교 전후 모두 존재한다.
+
+| 사진 | 버전 | 최초 표시 ms | 업로드 종료 ms | 전체 표시 ms | 슬롯 GET | content GET | 전체 화면 render |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 기존 | 834 | 836 | 837 | 2 | 0 | 2 |
+| 1 | 현재/옵션 OFF | 58 | 492 | 500 | 2 | 0 | 2 |
+| 1 | 옵션 ON fixture | 55 | 416 | 420 | 1 | 0 | 2 |
+| 5 | 기존 | 928 | 1991 | 1995 | 6 | 0 | 6 |
+| 5 | 현재/옵션 OFF | 138 | 1420 | 1425 | 6 | 0 | 2 |
+| 5 | 옵션 ON fixture | 127 | 1107 | 1115 | 1 | 0 | 2 |
+| 20 | 기존 | 1187 | 7663 | 7668 | 21 | 0 | 21 |
+| 20 | 현재/옵션 OFF | 429 | 4890 | 4899 | 21 | 0 | 2 |
+| 20 | 옵션 ON fixture | 423 | 3636 | 3641 | 1 | 0 | 2 |
+
+20장 이력 content GET에 250ms 지연을 각각 주입한 별도 조회: 최초 표시 277ms, 전체 표시 1349ms, 동시 4개, 초기 상세 외 전체 화면 재생성 0회. 스크롤 후 현재 보이는 사진을 다음 읽기 우선순위로 선택한다. 저장 실패/응답 유실은 동일 key/bytes 재시도, accepted 후 GET 실패와 미완료 operation은 POST 재전송 없이 조회만 재시도하는 것을 확인했다. 20장 정상 전송의 전체 POST 동시는 1개다. 일부 사진 검증 거절 후 새 사진 선택 시에도 남은 큐와 누적 전체 장수가 일치하는 회귀를 추가했다.
+
+대표 합성 PNG: `QA/screenshots/photo-performance-{360,390,768,1440}.png`, `photo-performance-retry-390.png`. 실제 객실 사진은 QA 파일에 저장하지 않았다. 기존 테스트가 재생성한 unrelated PNG는 커밋에서 제외한다. 물리 iOS/Android 갤러리, 실제 HEIC codec, OS 종료/백그라운드, 물리 저속 통신망, 운영 Drive 성능/UAT는 미검증이다.
+
+서비스 워커 `2026-10-09-2`, 앱 HTML SHA-256 `2b7941cbdcb5bde52cdb5a61db80d6be346d728d112909b311b924c7b7f326ed`. 최종 감사 원문은 변경하지 않았다.
+
+### 배포 확인
+
+- Production: `https://room-management-system-prod.vercel.app/`, `dpl_4D971W2JCxwZhY1ymJjoP2wwRCbT` (`room-management-system-prod-8xaf0shlg.vercel.app`). 공개 HTTP로 HTML byte 일치, live/production, snapshot OFF, worker 일치를 확인했다.
+- Preview: `https://room-management-system-prod-preview.vercel.app/`, `dpl_3fg3QWXZK17SZRZbuWutt955YFE1` (`room-management-system-prod-daes8d6mo.vercel.app`). 보호 설정을 유지했다. 인증된 CLI로 알려진 Vercel feedback script 외 앱 HTML byte 일치, live/preview, snapshot OFF, worker 일치를 확인하고 alias를 갱신했다.
+- `check-deployed-visual.mjs` PASS: 배포 HTML의 관리자 6개·메이드 4개 뷰와 4개 폭, 넘침/console warning/error/page error 없음. runtime을 demo로 가로챈 배포 UI 검사이며 실제 운영 데이터 검수와 구분한다.
+- 두 채널은 같은 운영 API/데이터베이스를 사용한다. #412는 최종 확인 시에도 Draft/미배포여서 새 query는 보내지 않는다. 운영 사진 업로드 성능과 실기기 HEIC 검증은 추후 지정 계정 UAT가 필요하다.
+
+## 2026-10-08 메이드 사진·제출·계정 권한 후속 수정
+
+프런트 `dev`의 `3bb0bb3`에서 시작했다. 백엔드 main은 `d9e053b`로 동일함을 재확인했다. 기존 와이어프레임 정보구조는 유지하며 사용자 지시대로 현장 완료 버튼만 청소 제출의 검수 요청 버튼 옆으로 이동했다.
+
+- 계정 관리: 업무 관리자 더보기/메이드 상세의 진입과 변경 액션, 구 history 진입을 제거·차단했다. 개발자 계정 관리와 본인 비밀번호 변경은 유지한다. 관리자 업무 조회에 필요한 계정 목록 API는 유지하며 서버 권한 축소와 혼동하지 않는다.
+- 사진 업로드: 이전 업로드 후 검증한 슬롯 응답을 다음 CAS 명령에 재사용한다. 정상 20장 배치의 슬롯 GET은 40회에서 21회로 감소했다. JPEG 재인코딩에 성공한 사진은 서버 verified 확인 후 메모리 미리보기로 재사용한다. 테스트 20장에서는 content 재다운로드 20회가 0회, 장당 113,271 bytes가 28,426 bytes였다. 이는 합성 이미지의 요청/크기 비교이며 실제 모바일 속도 배율이나 Drive 응답 SLA가 아니다.
+- 사진 조회: 클릭 즉시 로딩 상세를 연 뒤 메타데이터·사진을 점진 표시한다. 갤러리별 최대 4개 GET, 개별 실패 재시도, 만료 사진 요청 차단, 확대/Escape/Back, 이탈 후 늦은 응답 차단을 확인했다. 업로드는 기존 앱 전체 1건 순차 큐를 유지한다.
+- 촛불: 사진 갱신에도 입력 초안을 유지한다. 새 제출에서 최신 공유 촛불 GET 후 필요한 수량 변경 POST/CAS를 먼저 완료한다. 감소는 실제 회수 확인과 동일 version을 요구하며 409/실패는 제출을 차단한다. 과거 제출 3개/회수 후 현재 1개는 정상 별도 값으로 보존한다. 두 API의 원자성은 프런트에서 보장하지 않는다.
+
+`check-maid-photo-history-fixes.mjs` 6그룹 PASS: 실제 버튼 진입, 관리자/개발자 권한, 20장 배치 요청 수, 완료 위치, 촛불 초안/초기 동기화/감소 확인/409, 지연·실패·만료 사진과 뒤로가기. 모든 API 쓰기는 합성 fixture로 가로챘다. Browser plugin 미제공으로 Playwright/Chromium 151.0.7922.34 사용. 360/390/768/1440px 넘침, 44px 완료 버튼, 키보드·모달·사진 확대, console warning/error 및 page error 없음 확인.
+
+대표 PNG: `QA/screenshots/maid-fixes-admin-more-390.png`, `maid-fixes-history-390.png`, `maid-fixes-submission-{360,390,768,1440}.png`. 제출 PNG는 해당 섹션으로 스크롤한 viewport이고 이력 PNG의 과거 3개/현재 1개는 회수 기록 보호 fixture다. 변경 전 기존 업무 카드 구조와 대조했으며 의도된 차이는 완료 버튼 위치, 계정 관리 제거, 점진 로딩/재시도뿐이다.
+
+최종 코드 회귀: `check-maid-photo-history-fixes.mjs` 6그룹, `check-cleaning-workflow.mjs` 30그룹, `check-live-navigation.mjs` 5그룹, `check-live-connections.mjs` 6그룹, `check-backend-v090.mjs` 5그룹, 합계 52그룹 PASS. `check-workspace.mjs`, `check-pwa.mjs`, `git diff --check` PASS. 서비스 워커는 `2026-10-08-4`이다. 운영 읽기 확인에서 발견한 로딩 제목도 정리하고 해당 제목을 포함한 6그룹을 재실행했다.
+
+운영 기존 관리자 세션에서 수정 전 실제 이력 버튼이 목록을 유지한 채 사진 전체를 기다린 뒤 상세를 여는 현상을 확인했다. 조회만 했고 실제 사진 업로드·촛불 변경·검수는 실행하지 않았다. 물리 iOS/Android 갤러리, 모바일 통신 환경 성능, 운영 쓰기 UAT는 미검증이다.
+
+### 후속 수정 배포 확인
+
+- Production: `https://room-management-system-prod.vercel.app/`, `dpl_GVGzw5rRL2ABczein6x7vdFh4gXm` (`room-management-system-prod-dys9boa2e.vercel.app`). 앱 HTML byte 일치, live/production runtime, worker `2026-10-08-4` 확인.
+- Preview: `https://room-management-system-prod-preview.vercel.app/`, `dpl_8dHtYcZ9DMDEMC5T35cVANpeP1tW` (`room-management-system-prod-dgxzsp2tm.vercel.app`). 보호 설정 유지. 인증된 CLI로 앱 HTML byte 일치와 알려진 Vercel feedback script만 추가됨, live/preview runtime 및 worker 확인 후 alias를 교체했다.
+- 앱 원본 SHA-256: `9016eb96140252fabaeb5118b53e0a38e2f8f155ba56a3f78bb0a1b67772e3ff`. 두 채널은 같은 운영 API/데이터베이스를 사용한다.
+- `check-deployed-visual.mjs` 최종 PASS: 배포 HTML의 관리자 6개/메이드 4개 뷰, 360/390/768/1440px 넘침·console warning/error·page error 없음. runtime만 demo로 가로챈 검사이며 실제 운영 쓰기는 아니다.
+- 기존 운영 관리자 세션으로 계정 관리 메뉴 제거, 완료 목록 → 즉시 로딩 상세 → 실제 사진 로드/확대 → 브라우저 Back으로 상세·목록 복귀를 확인했다. 갤러리의 표시 이미지 14개는 모두 `complete`와 양수 `naturalWidth`를 확인했다. 실제 사진 원문은 QA 파일로 저장하지 않았다.
+- 기존 테스트가 재생성한 PNG 변경은 제외하고 위 대표 합성 PNG 6개만 추가했다. 백엔드 권한·촛불 두 명령의 비원자성·provider 지연은 문서 31에 별도 인계했고 컨펌 전 이슈 게시를 하지 않았다.
+
+## 2026-10-08 최신 백엔드 v0.9.0 연결
+
+백엔드 main `d9e053b01deea4e3d68facdd190dc41d32978538`, 릴리스 #403 및 #387의 실제 배포 기록과 운영 OpenAPI(150 paths / 162 operations)를 대조했다. 아래 9월 기록의 송금 표시·제출 후 수정 API 미지원 설명은 이번 연결의 현재 상태가 아니다. endpoint별 계약과 남은 작업은 [문서 31](../DOCS/31_BACKEND_V090_FRONTEND_INTEGRATION.md)에 정리했다. 프런트 컨펌 전이므로 백엔드 이슈는 게시하지 않았다.
+
+| 검사 | 결과 | 확인 범위 |
+| --- | --- | --- |
+| `check-backend-v090.mjs` | PASS · 5그룹 | 날짜별 room projection·7개 상세 조건·과거 변경 잠금·응답 경합, 배정 스냅샷/0원/CAS, 송금 표시 on/off/409/금액 재확인/기존 paid 원장과 독립, 메이드 제출 후 촛불/회수·추가 신고 2장 일괄 선택/11장 차단/업로드 응답 유실 복구·확정·사진 확대/Back, 관리자 종결·제출 전 신고/사진 만료·미퇴실 목록 전체 페이지/최신 CAS 팝업 |
+| `check-cleaning-workflow.mjs` | PASS · 30그룹 | 기존 배정/검수/PIN, 일반 사진 0/1/20/21장·다중 추가·7일 이력, 원 제출 불변·사진 큐·오프라인 복귀·권한 |
+| `check-live-navigation.mjs` | PASS · 5그룹 | 홈 검수/내일 배정 정확한 목적지, 날짜·상세·모달 Back/Forward, 역할·주차 경합, 사진 URL 수명 |
+| `check-deployed-wireframe-parity.mjs` | PASS · 3그룹 | 기존 청소 목차·6섹션·5열·상세 필터·객실 이슈 팝업·날짜·4개 폭 |
+| `check-operational-api.mjs` | PASS · 8그룹 | 주급 산출/정정 최신 adjustment book CAS, 컴플레인·Push 회귀 |
+| `check-live-connections.mjs` | PASS · 6그룹 | 객실·계정·카탈로그·운영 기록·업무 권한 회귀 |
+| `check-cleaning-assignment-continuity.mjs` | PASS · 9그룹 | 배정 선택/저장·통보/부분 실패/재시도·후속 배정 |
+| `generate-cleaning-client.mjs --production --check` | PASS | 운영 OpenAPI 150 paths / 162 operations와 생성 타입 일치 |
+| `check-api-integration.mjs` | PASS · 공개 읽기 | 운영 health·OpenAPI·publishable key·기존 POST preflight. 신규 PUT 허용은 별도 실패로 아래 기록 |
+| `check-workspace.mjs` / `check-pwa.mjs` | PASS | 정본 hash·inline 문법·기존 권한/보안/배포 계약·서비스 워커 `2026-10-08-2` |
+
+Browser plugin 미제공으로 Playwright + Chromium 151.0.7922.34를 사용했다. 합성 데이터로 360/390/768/1440px 가로 넘침, 접근성 이름·키보드·포커스·모달·뒤로가기, console warning/error와 page error를 확인했다. 모든 업무 쓰기는 요청을 가로챈 fixture이며 실제 운영 저장 통과를 의미하지 않는다. 실제 iOS/Android 갤러리 선택창·PWA OS Back·Drive purge·도어락 물리 변경은 미검증이다.
+
+대표 PNG: `QA/screenshots/v090-assignment-{360,390,768,1440}.png`, `v090-payroll-390.png`, `v090-supplemental-form-390.png`, `v090-history-390.png`. 전체 페이지 PNG의 고정 하단 내비게이션은 첫 viewport 하단에 나타난다. 실제 스크롤/클릭은 별도로 검사했다.
+
+검증 중 보완: 신규 endpoint 응답 fixture와 admin 권한 가드를 맞추고, 추가 신고의 중복 업로드 방지·모달 이탈 후 재등장 방지·로컬 사진 초기화·오래된 응답 차단을 확인했다. 생성기가 `allOf` 조건이 있는 object의 기본 필드를 누락하던 문제도 고쳤고 `--check`는 생성 결과와 파일의 byte 일치까지 검사한다. 사진 처리 전체 검사에서 HEIC 업로드 대기 timeout이 1회 있었으며 같은 검사 재실행과 최종 실행은 모두 30그룹 통과했다. 사진 원문·PIN·비밀값은 증거 문서에 기록하지 않는다.
+
+### 운영 차단과 미완료 범위
+
+- **송금 표시 저장: 운영 PUT CORS 실패.** 실제 Production origin의 OPTIONS 응답은 204이나 `Access-Control-Allow-Methods`에 PUT이 없다. 올바른 프런트 PUT 연결과 브라우저 저장 성공을 구분한다. 공통 CORS 수정/재배포가 필요하며 정확한 재현 요청은 문서 31에 있다.
+- 제한 계정의 보존 세션 재진입·scope별 작업 화면과 추가 증빙의 관리자 provider 작업 인계/장기 복구 화면은 아직 미연결이다. 새 제한 계정 API가 없다고 보고하지 않는다.
+- 과거 객실은 서버의 선택일 projection이지만 홈 검수는 현재 대기열, 주급은 선택 주차의 현재 원장이다. 과거 시점의 검수·주급 복원을 주장하지 않는다.
+- 실제 운영 업무 쓰기 UAT는 지정 테스트 메이드/객실/주차로 별도 필요하다. 이번 작업에서 운영 배정·주급·신고·PIN을 임의 변경하지 않았다.
+
+### 배포 후 직접 확인
+
+- 기존 관리자 Chrome 세션으로 Production의 홈 날짜 변경, 날짜별 객실 상태/읽기 전용, 오늘 복귀, 상세 조건 7개, 객실 운영 상태와 원래 이슈 등록 팝업을 확인했다. 입력·서버 기록은 실행하지 않았다.
+- 홈 청소 배정이 `tab=assignment-tomorrow`로 이동하고 다음날 배정일·현재 서버 배정/요금 스냅샷을 표시하는 것을 확인했다. Preview의 기존 관리자 세션도 새 청소 레이아웃과 최신 API 데이터 조회에 성공했다.
+- 실제 기존 주차의 송금 표시 GET과 객실별 확정/미확정 산출 내역을 확인했다. 이 과정에서 상세 로딩 완료 후 스위치가 비활성으로 남던 프런트 문제를 발견해 finally의 현재 화면 갱신으로 수정하고 회귀 검사를 추가했다. PUT/금액 정정/원장 취소는 실행하지 않았다.
+- 배포 묶음 생성은 QA 이미지·문서·타입·숨김 파일을 제외한다. 운영 실행에 필요한 파일과 기존 데모 참조 자산은 유지한다. 로컬 QA 원본은 삭제하지 않았다.
+- 최종 Production: `https://room-management-system-prod.vercel.app/`, deployment `dpl_CoUXBfbPYUr7o6c2ckYXQGuNzFbb` (`room-management-system-prod-hzhge77id.vercel.app`). 원본 HTML byte 일치, live/production runtime, worker `2026-10-08-2` 확인. 최종 배포에서도 실제 주급 산출 상세의 스위치 활성 복구를 직접 확인했다.
+- 최종 Preview: `https://room-management-system-prod-preview.vercel.app/`, deployment `dpl_HS4Gx2gofkxEhbnmqYiiecHEdedS` (`room-management-system-prod-12xpye6i3.vercel.app`). 보호 설정 유지. 인증된 CLI 응답의 앱 HTML은 로컬 원본과 byte 일치하며 알려진 Vercel feedback script만 뒤에 추가된다. runtime은 live/preview이다.
+- 두 배포 앱 원본 SHA-256: `82d2bc35f4d6813b6328192079f39eff9e5c9ae3b8aa303b034003342d518ac9`. 두 채널은 같은 운영 API/데이터베이스를 사용한다.
+- `check-deployed-visual.mjs` 최종 PASS: 실제 배포 HTML로 관리자 6개/메이드 4개 뷰, 360/390/768/1440px 넘침·console warning/error·page error를 확인했다. 이 자동 검사는 runtime만 demo로 가로채므로 실제 운영 데이터 쓰기 통과가 아니다. 새 PNG 7개를 남기고 테스트 실행으로만 바뀐 기존 PNG는 이번 변경에서 제외했다.
+
+## 2026-09-29 배포·프리뷰 와이어프레임 정합성
+
+- 청소의 데모/운영 배정 화면이 공통 레이아웃·랜덤 카드·요약 렌더러를 사용한다. 같은 관리자 역할의 390/1440px 정본과 운영 adapter 화면을 비교했다. 데이터는 합성 fixture이며 실제 운영 수량과 다르다.
+- 홈/객실 이전·다음·달력·오늘을 활성화하고 KST 예약 범위와 배정 날짜 조회를 연결했다. 날짜 Back/Forward와 늦은 이전 요청의 응답 차단, 선택일 유지 및 청소 탭 이동을 검사했다. 과거 운영 상태가 제공되는 것처럼 표시하지 않는다.
+- 상태 조건 아래 상세 조건 7개, 객실 운영 상태의 이슈 등록 팝업, 이슈 CAS/멱등성, 포커스 복귀를 확인했다. 송금 참조번호 팝업을 제거했다. **참조번호 없는 저장과 메이드 제출 후 수정은 API 미지원으로 비활성이며 완료가 아니다.**
+- 운영 OpenAPI 0.6.0과 백엔드 main/최신 dev를 다시 대조했다. 작업 중 PIN 수정 #316이 release #319/main 1780728로 배포됐으며 백엔드의 조회 smoke 성공 기록을 확인했다. 실제 PIN 변경 저장 테스트와 구분한다. 요청별 완료/제한과 이슈 초안은 [문서 30](../DOCS/30_DEPLOYED_WIREFRAME_API_PARITY.md)에 모았다.
+
+| 검사 | 결과 | 이번 확인 범위 |
+| --- | --- | --- |
+| `check-deployed-wireframe-parity.mjs` | PASS · 3그룹 | 상세 조건, 이슈 팝업/요청, 홈·객실 날짜/달력/Back/Forward/경합, 선택 날짜 청소 이동, 정본 6섹션/5열/단가/얼리·레이트, 4폭 |
+| `check-cleaning-workflow.mjs` | PASS · 30그룹 | 배정·검수·사진 0/1/20/21 및 일괄 추가, 별도 증빙, 최근 7일 사진 이력/확대, 권한/PIN 저장 계약, 사진 큐/부분 실패 |
+| `check-cleaning-assignment-continuity.mjs` | PASS · 9그룹 | 선택만으로 서버 변경하지 않음, 저장·통보, 부분 실패/재시도, 현재 작업 변경 차단, 미배정 후속 배정 |
+| `check-live-navigation.mjs` | PASS · 5그룹 | 홈 검수/내일 배정 목적지, 상세/모달 Back, 역할/주차 경합 |
+| `check-live-connections.mjs` | PASS · 6그룹 | 객실·계정·카탈로그·변경 권한/CAS, 진행 중 탭의 담당 불가 액션 |
+| `check-operational-api.mjs` | PASS · 8그룹 | 주급/이력 조회, 송금 미지원 상태에서 참조번호 폼/쓰기 없음, 컴플레인/Push fixture |
+
+Browser plugin 미제공으로 Playwright + Chromium 151.0.7922.34를 사용했다. 360/390/768/1440px 가로 넘침, 버튼 접근성 이름, 키보드/모달 포커스, 콘솔 warning/error와 page error를 확인했다. 쓰기는 모두 intercepted fixture다. 실제 운영 사진·배정·주급·PIN은 변경하지 않았다. 실제 iOS/Android 갤러리와 설치 앱 물리 뒤로가기는 미검증이다.
+
+대표 PNG: `QA/screenshots/parity-cleaning-{360,390,768,1440}.png`, `parity-filters-390.png`, `parity-room-issue-390.png`, `parity-home-date-390.png`. 전체 페이지 캡처의 고정 하단 내비게이션은 첫 viewport 위치에 나타나며 실제 스크롤/상호작용은 따로 검사했다. 서비스 워커는 `2026-09-29-5`이다.
+
+운영 읽기 검증 중 이슈/운영 중지 route가 문서에 있는 limit/cursor를 거부해 400을 반환하는 불일치를 발견했다. status만 허용하는 Edge route guard가 원인이며 status를 명시해도 limit을 보내면 실패했다. 프런트는 limit을 생략하고 서버 기본 page 크기를 사용한다. 회귀에서 status 값과 limit 생략을 강제하며 nextCursor 실패를 조회 성공으로 숨기지 않는다. 상세 코드 위치와 request ID는 문서 30 B07이다.
+
+### 최종 배포 확인
+
+- Production: `https://room-management-system-prod.vercel.app/`, deployment `dpl_DHxThkdKi25GnBtkssretFYp5k56` (`room-management-system-prod-cehei4c4o.vercel.app`). HTML 원본 byte 일치, live/production runtime, worker `2026-09-29-5` 확인.
+- Preview: `https://room-management-system-prod-preview.vercel.app/`, deployment `dpl_4tuBrjM6PMXzrKUeFwmrW2mboquA` (`room-management-system-prod-lxqn0kg5i.vercel.app`). 기존 보호 설정 유지. 인증된 Vercel CLI 응답은 로컬 HTML과 정확히 일치하며 끝에 해당 배포 ID의 Vercel feedback script 한 개만 추가됨을 별도 확인. runtime은 live/preview.
+- 두 배포의 앱 원본 SHA-256: `6f45a263cf9997e7a42db3a54d5e4cf14aa764a25acfe9e3995b4849f47836a3`.
+- `check-deployed-visual.mjs` PASS: 실제 Production HTML을 가져와 관리자 6개/메이드 4개 주요 뷰, 360/390/768/1440px를 확인했다. 이 자동 검사는 runtime만 demo로 가로채므로 운영 데이터 쓰기 통과를 뜻하지 않는다.
+- 기존 관리자 Chrome 세션의 읽기 전용 확인: Production 홈 날짜 이동과 내일 배정 목적지, 상세 필터 7개, 청소 공통 레이아웃과 API 기본 단가, 객실 운영 상태 정상 조회, 이슈 등록 팝업. Preview에서도 새 청소 레이아웃과 날짜 URL을 확인했다.
+- Production의 기존 객실 PIN 조회 성공 후 즉시 숨김을 직접 확인했다. PIN 원문은 결과·문서·이미지에 출력하지 않았으며 새 PIN 입력/실제 도어락 변경은 하지 않았다.
+- `check-workspace.mjs`, `check-pwa.mjs`, artifact 생성, `git diff --check` PASS. 배포 준비 중 중간 preview artifact 생성 경합이 1회 발생해 잘못 만들어진 임시 배포를 삭제했고 최종 파일·채널을 재검증해 다시 배포했다. 공개 alias는 정상 artifact 확인 후 교체했다.
+
+아래 과거 릴리즈의 송금 참조번호 입력/청소 순서/템플릿 메뉴 설명은 현재 UI가 아니다.
+
+## 2026-09-29 청소 와이어프레임 복원·순서 제거
+
+- 청소 목차, 접는 근무표, 랜덤 배정, 객실별 담당 선택, 메이드별 요약, 저장·통보를 운영 API에 연결했다. 청소 순서 표시·입력은 제거했다.
+- 더보기 청소 템플릿 메뉴와 직접 액션 진입을 차단했다. 서버 사진 슬롯 계약은 유지한다.
+- 주급은 송금 여부 스위치로 표시하고 현재 API의 start/paid를 한 번의 확인 흐름으로 연결했다. 실제 참조번호 입력은 API 필수이며 완료 해제는 지원되지 않아 비활성이다.
+- 메이드 제출 후 촛불·새 특이사항 변경은 데모에서 별도 객실 상태로 다룬다. 운영 모드에는 권한 있는 API가 없어 명시적 비활성 상태를 표시한다. 제출 사진/검수 결과를 수정하거나 관리자 API로 우회하지 않는다.
+- Playwright/Chromium 151.0.7922.34 사용: Browser plugin 미제공. 운영 쓰기는 모두 로컬 fixture로 차단했다.
+- PASS: 청소 30그룹, 연속 배정 9그룹, 운영 API 8그룹, 추가 API 연결 6그룹. 360/390/768/1440px 가로 넘침·주요 버튼·모달·사진 확대·역할·콘솔 오류를 검사했다.
+- 청소 전체 검사 첫 실행에서 증빙 버튼 대기 timeout 1회가 있었고 재실행 30그룹은 통과했다. 실제 모바일 갤러리 OS 선택창과 인증된 운영 쓰기 UAT는 수행하지 않았다.
+- 대표 PNG: `QA/screenshots/live-wireframe-cleaning-{390,1440}.png`, `admin-cleaning-continuous-{390,1440}.png`, `live-admin-payroll-390.png`, `cleaning-api-maid-390.png`.
+- 서비스 워커 `2026-09-29-2`. 아래 이전 릴리즈의 템플릿 발행/순서/지급 다단계 설명은 현재 UI가 아니다.
+
+백엔드 차이와 요청은 [문서 29](../DOCS/29_CLEANING_WIREFRAME_BACKEND_REQUESTS.md)에 정리한다. 최종 감사 원문은 변경하지 않는다.
+
+## 2026-09-29 API 누락 연결 검증
+
+Browser plugin이 제공되지 않아 Chromium 151.0.7922.34 + Playwright로 검사했다. 보호 API와 업무 변경은 모두 로컬 fixture로 가로챘고, 실제 운영 API는 health/OpenAPI/CORS/publishable key만 읽기 전용으로 확인했다. 현재 연결 결과와 B01~B07 협의 항목은 [문서 28](../DOCS/28_FRONTEND_CONNECTION_BACKEND_MEETING.md)에 있다.
+
+| 검사 | 결과 | 확인 범위 |
+| --- | --- | --- |
+| `check-live-connections.mjs` | PASS · 6그룹 | 카탈로그/정원 preview·CAS·TTL·409·등록/비활성, 실제 객실 사건/중지/이슈·해제·표시 정정, CSV PIN 제외, PIN 시트 접수 fence, 관리자 계정 진입, 최초 3슬롯 템플릿 발행, 감사/활동/진단, 오프라인 격리 정정, 알림 페이지/정확한 날짜·요청·지급 주차, 메이드 과거 배정 이력, 수행 불가 CAS |
+| `check-cleaning-workflow.mjs` | PASS · 30그룹 | 배정·통보·검수·현장 완료·PIN·권한, 응답 유실 동일 키 재시도·409, 사진 0/1/20/21장·7+13/7+14·삭제/재추가·부분 실패, 폭탄방/특이사항 분리, 증빙 판정 전 전체 검수 잠금, 불인정 후 승인 해제, 7일 이력/확대/Back, 1920px 최적화, 두 객실 큐와 내부 화면 이동·동시 업로드 최대 1건, 실제 브라우저 offline→online 완료 전송 |
+| `check-cleaning-assignment-continuity.mjs` | PASS · 10그룹 | 미배정 대상·부분 실패·동일 키 재시도·연속 통보·후속 배정·날짜별 후보 조회·수동 지정·진행 중 직접 변경 차단 |
+| `check-live-navigation.mjs` | PASS · 5그룹 | 홈→검수/내일 배정·하위 탭 직접 링크·Back/Forward·모달·사진 Escape·권한·주차 stale 응답·검수 후 주급 갱신 |
+| `check-operational-api.mjs` | PASS · 8그룹 | 관리자/본인 주급·정정·지급 상태 기록, 컴플레인 원 청소 조회/접수/판정/이의 확인/종결, Push 구독·폐기 |
+| `check-reservation-bookability.mjs` | PASS · 10그룹 | 6개 카드 상태·예약 인원·구간/기간 경계·장기투숙·생성/취소·객실 이동 preview/CAS/TTL |
+| `check-reservation-arrival-room-move.mjs` | PASS · 6그룹 | 데모 정본의 입실 예정/예약 상태·예약 전/투숙 중 객실 이동·모달 Escape. 테스트 runtime을 demo로 명시해 운영 설정과 독립시킴 |
+| `check-live-performance.mjs` | PASS · 12그룹 | 즉시 화면/모달 표시·shell 유지·기간 캐시·중복 요청 합치기·낙관적 예약 표시. 날짜가 바뀌어도 같은 fixture를 검증하도록 시계 고정 |
+| `check-candle-stepper.mjs` | PASS · 5그룹 | 수량 증가·감소 확인·실패 후 version 갱신·포커스·PWA 버전 형식 검사. 과거 배포 버전 문자열 고정 검사는 제거 |
+| `check-pwa.mjs` | PASS | manifest/icon·정적 shell cache 경계·업데이트 메시지·민감 Push 데이터 차단 |
+| `check-api-integration.mjs` | PASS | 실제 production origin의 CORS, 운영 health 정상, OpenAPI 0.6.0 131 paths / 141 operations |
+| `check-workspace.mjs` / `build-pages-artifact.mjs` | PASS | 필수 파일 154개·inline script 문법·역할/액션/보안 정적 계약·정본 hash·배포 artifact 생성 |
+
+### UX/UI 확인
+
+- 360/390/768/1440px에서 주요 관리자/메이드 화면 가로 넘침, 빈 접근성 이름, 콘솔 warning/error와 page error를 검사했다. 사진·객실 조작의 44px 터치 영역, Enter/Escape·포커스 복귀·모달과 상세 Back/Forward를 확인했다.
+- 기존 와이어프레임의 객실 4개 주요 버튼과 청소의 근무표→랜덤 초안→담당 수정→메이드별 요약 순서를 유지한다. API 필드를 나열한 대체 대시보드로 바꾸지 않는다.
+- 대표 변경 PNG: `QA/screenshots/live-connections-catalog-{390,1440}.png`, `live-connections-room-{390,1440}.png`, `live-connections-accounts-{390,1440}.png`, `live-wireframe-cleaning-{390,1440}.png`, `live-flat-cleaning-photos-{390,1440}.png`, `live-admin-complaint-1440.png`, `live-admin-payroll-390.png`.
+- 전체 페이지 PNG의 고정 하단 내비게이션이 첫 viewport 하단에 보이는 것은 캡처 방식이다. 실제 viewport·스크롤·포커스·주요 버튼 이동을 별도로 검증했다.
+- 최종 정책 감사 원문은 변경하지 않았다. 서비스 워커 버전은 `2026-09-29-1`이다.
+- Production artifact의 실제 HTML hash·runtime·worker 확인 결과는 해당 배포 PR의 결과 기록에 남긴다. 브라우저 fixture 검사와 인증 후 운영 UAT를 구분한다.
+
+### 운영 미검증 범위
+
+실제 계정의 청소 배정/사진 업로드/승인·반려/주급 기록, 실제 Drive 정규화·원본 삭제, Push 전달, 여러 관리자 동시 변경, 제한 계정, Android/iOS 갤러리·카메라·설치 앱 물리 Back은 아직 UAT가 필요하다. 테스트용 메이드/객실을 지정받지 않았으므로 운영 기록을 임의로 만들거나 지급 상태를 변경하지 않았다. 아래 과거 PASS를 이 범위의 실운영 통과로 해석하지 않는다.
+
 - 검증일: 2026-09-22
 - 추가 검증일: 2026-09-22 · 객실 촛불 감소 확인 흐름 (#172)
 - 문서 갱신일: 2026-09-23 · 사진 개별 업로드·메모리 큐·수신/저장 계약 확정
@@ -14,6 +448,17 @@
 > 8월 객실 마스터 반영 전의 회귀 기록과 PNG에 쓰인 데모 객실번호는 당시 fixture 식별자다. 현재 동일 시나리오는 `1208→117`, `201→350`, `202→332`, `203→528`, `301→536`, `302→639`, `401→142`, `402→211`, `412→352`로 실제 8월 객실에 매핑했다. 아래 기존 기록은 당시 실제 확인 근거로 보존하고, 현재 객실 마스터·위치 표시는 다음 절에서 별도로 재검증했다.
 
 > 2026-08-16 이후 타입별 기본 청소요금은 시트 값 `16,000 / 20,000 / 20,000 / 30,000원`이 운영 정본이다. 이전 임시 금액을 사용한 기록과 PNG는 현재 단가 검증 근거가 아니며, 아래 `재검증 예정` 기대값을 실제 브라우저에서 다시 확인한 뒤 새 증거로 교체해야 한다.
+
+## 추가 검증 · PR #192 검수 사진 URL 수명주기와 모바일 폭
+
+2026-09-26 PR #192를 최신 `dev`에 적용해 로컬 fixture와 Vercel Preview 운영 연결 화면을 함께 확인했다. 검수 사진 원문이나 URL은 저장·로그에 남기지 않았고 승인·반려 등 운영 mutation은 실행하지 않았다.
+
+| 검증 | 결과 | 실제 확인 내용 |
+|---|---|---|
+| 사진 URL 수명주기 | PASS | 관리자 검수 상세의 사진 Blob URL 11개가 실제 픽셀로 로드됐다. 운영 알림 모달을 열고 닫은 뒤에도 같은 URL과 픽셀이 유지됐고 사진 재조회도 발생하지 않았다. 검수 상세 이탈·세션 정리에서는 URL을 해제하는 로컬 회귀를 통과했다. |
+| 모바일 검수 상세 | PASS | 운영 데이터에서 `<figure>` 기본 좌우 여백 때문에 390px 문서가 11px 넘치던 원인을 확인하고 `.inspection-photo { margin: 0; }`으로 보정했다. 360/390/768/1440px 가로 넘침 0px를 회귀로 고정했다. |
+| 반응형·오류 | PASS | Chrome 153 + Playwright에서 검수 상세 네 너비와 사진 로드, 일반 모달 왕복, 승인·반려 fixture를 확인했다. console warning/error와 page error는 0건이었다. 대표 PNG는 `QA/screenshots/live-wireframe-inspection-detail-390.png`, `QA/screenshots/live-wireframe-inspection-detail-1440.png`이다. |
+| PWA 갱신 | PASS | 설치 앱의 새 HTML·스타일 반영을 위해 서비스 워커를 `2026-09-26-1`로 올렸다. Preview 재배포 뒤 고정 origin의 최신 worker와 화면을 다시 확인한다. |
 
 ## 문서 계약 갱신 · 사진 개별 업로드와 ZIP 폐기
 
@@ -2011,3 +2456,181 @@ Browser 플러그인이 제공되지 않아 `scripts/check-developer-room-manage
 | 회귀 명령 | `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-reservation-bookability.mjs` |
 
 이 검증의 API mutation은 로컬 fixture가 가로채며 production 예약 데이터는 변경하지 않는다.
+
+## 2026-09-24 · 업무관리자 간편예약 응답성 최적화
+
+Browser 플러그인이 제공되지 않아 번들 Playwright Chromium 151.0.7922.34와 지연을 넣은 OpenAPI 로컬 fixture로 검증했다. production 업무 데이터와 mutation은 사용하지 않았다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 첫 진입 | 통과 · 객실·객실 유형·현재 29일 예약을 각각 1회 조회 |
+| 기간 이동 선렌더 | 통과 · 다음 7일 클릭 직후 기존 표 유지, 전체 로딩 화면 없음, 새 범위 GET 1회 |
+| 범위 캐시 | 통과 · 이미 본 이전 29일 범위 복귀 시 예약 GET 0건 |
+| 등록 폼 | 통과 · 지연 fixture 응답 전 폼 표시, 매번 객실 GET 제거, 초기 bookability 1회 |
+| 연속 조작 | 통과 · 인원 2→3→4 연속 클릭을 마지막 preview 1회로 합침 |
+| 동일 조건 | 통과 · 4→3→4 복귀 시 10초 메모리 캐시로 preview 0건 |
+| 서버 정본 | 통과 · 제출 직전 강제 preview와 `intervalBookable`·`roomStateVersion` 검증 유지 |
+| 낙관적 표시 | 통과 · create 응답 전 점선 `저장 중`, 성공 응답 뒤 서버 예약 ID·version projection으로 교체 |
+| 실패 복구 | 통과 · cancel `STALE_VERSION`에서 임시 상태를 되돌리고 단건·목록·객실·현재 범위를 재조회한 뒤 사용자 재확인 |
+| 보안 | 통과 · 고객명은 범위·bookability 캐시와 URL·로그·웹 저장소에 미포함 |
+| 반응형·콘솔 | 통과 · 390·1440px 가로 넘침 0건, page error·console warning/error 0건 |
+
+회귀 명령:
+
+- `node scripts/check-live-performance.mjs`
+- `node scripts/check-reservation-bookability.mjs`
+- `node scripts/check-cleaning-workflow.mjs`
+
+대표 PNG:
+
+- `QA/screenshots/admin-quick-booking-optimistic-390.png`
+
+## 2026-09-26 · 운영 청소 구역 사진 UI 일치·3장 상한
+
+와이어프레임과 운영 메이드 청소 상세의 사진 구성을 `구역명 · N/3장 → 항목명·설명 → 썸네일·개별 삭제 → 촬영/갤러리`로 통일했다. 기존 10장 상한은 현재 사용자 결정에 따라 와이어프레임과 운영 화면 모두 3장으로 낮췄다. Browser 플러그인이 제공되지 않아 번들 Playwright Chromium 151.0.7922.34로 검증했으며 운영 mutation은 실행하지 않았다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 와이어프레임 상한 | 통과 · 공통 `MAID_ZONE_PHOTO_LIMIT=3`, 모든 현재 구역·기타·특이사항·폭탄방 선택 수가 같은 상한 사용 |
+| 운영 구역 구조 | 통과 · 서버 슬롯을 객실 유형의 기존 구역·항목 표시 모델에 투영하고 모든 구역 헤더에 `N/3장` 표시 |
+| 컬렉션 추가 | 통과 · 서버 `maxPhotos: 10` fixture에서 갤러리 4장 선택 시 POST 3회만 실행하고 네 번째 파일 제외 |
+| 사진 미리보기 | 통과 · 권한이 있는 현재 attempt 사진만 `GET /v1/photos/{photoId}/content`로 읽어 탭 메모리의 blob URL로 표시 |
+| 개별 삭제 | 통과 · 사진 항목별 DELETE에 assignment revision·collection revision·item revision·Idempotency-Key 사용, 성공 후 서버 슬롯 재조회 |
+| 삭제 후 재추가 | 통과 · 3/3에서 추가 버튼 잠김, 한 장 삭제 후 2/3과 버튼 활성 복원, 카메라 WebP 한 장 재추가 후 3/3 |
+| 모달 복귀 | 통과 · 사진 3장 표시 중 알림함을 열고 닫은 뒤 재렌더해도 기존 blob 미리보기를 재사용하고 중복 content GET을 생성하지 않음 |
+| 일반 슬롯 계약 부재 | 통과 · 현재 서버 `maxPhotos: 1` 슬롯은 기존 한 장 교체를 유지하고 `추가 촬영·사진 삭제 API 미제공` 표시 |
+| 반응형·접근성 | 통과 · 360/390/768/1440px 가로 넘침 0건, 촬영·갤러리·삭제 컨트롤 44px 이상, 파일 입력 접근성 이름 유지 |
+| 브라우저 품질 | 통과 · page error·console warning/error 0건, token·PIN·고객명 URL/console 노출 0건 |
+| 운영 CORS DELETE | 차단 · 운영 preflight의 `Access-Control-Allow-Methods` 에 `DELETE` 가 없어 실제 브라우저 개별 삭제는 아직 검수 통과로 표시할 수 없음 |
+
+대표 PNG:
+
+- `QA/screenshots/live-maid-section-photos-390.png`
+
+현재 OpenAPI v0.5.1의 다중 업로드·삭제는 `extra-proof` 슬롯에만 허용되고 일반 구역은 `maxPhotos: 1`이다. 따라서 이번 프런트는 지원 슬롯에서 3장·삭제를 실제 연결하고, 일반 구역에는 성공을 가장하지 않고 API 미제공 상태를 노출한다. 다만 현재 운영 CORS가 `DELETE`를 허용하지 않으므로 로컬 fixture에서 개별 삭제 계약을 통과했어도 운영 브라우저 삭제는 백엔드 배포 전까지 차단 상태다. 모든 구역의 실제 3장·삭제 활성화는 백엔드 계약 변경 후 서버가 해당 슬롯을 컬렉션으로 내려주고 CORS에 `DELETE`를 포함할 때 완성된다. 백엔드 추적 이슈는 `wrongstory/room-management-system-backend#303`이다.
+
+## 2026-09-26 · 전체 제출 검수 사진 URL 수명주기
+
+관리자 청소 상세의 전체 제출 검수 사진이 깨진 원인은 사진 API가 아니라 프런트의 blob URL 조기 폐기였다. 검수 상세를 열면서 만든 URL을 일반 모달 정리 함수가 즉시 폐기하던 결합을 제거하고, 검수 상세 이탈·탭 이동·세션 종료 경계에서만 폐기하도록 수정했다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 사진 content 응답 | 통과 · 유효한 PNG fixture 2장을 `GET /v1/photos/{photoId}/content`로 로드 |
+| 실제 렌더 | 통과 · 두 이미지 모두 `complete=true`, `naturalWidth/naturalHeight > 0` |
+| 일반 모달 간섭 | 통과 · 검수 상세에서 알림함을 열고 닫아도 blob URL 2개 유지, content GET 추가 0건 |
+| 상세 이탈 정리 | 통과 · 기존 뒤로가기·청소 탭 이동 경계에서 inspection detail과 blob URL 정리 유지 |
+| 세션 정리 | 통과 · 로그아웃·인증 전환 경계에서 inspection blob URL 명시 폐기 |
+| 오류·민감정보 | 통과 · page error·console warning/error 0건, token·사진 원문 로그 노출 0건 |
+
+회귀 명령:
+
+- `node scripts/check-workspace.mjs`
+- `RMS_QA_BROWSER_CHANNEL=chrome node scripts/check-cleaning-workflow.mjs`
+
+대표 PNG:
+
+- `QA/screenshots/live-wireframe-inspection-detail-1440.png`
+
+## 2026-09-28 · 운영 개편 1차: 이동·확정 주급·사진 확대
+
+Browser 플러그인이 제공되지 않아 번들 Playwright Chromium으로 검증했다. 아래 API는 모두 로컬 fixture로 가로챘으며 실제 운영 계정·사진·지급·예약은 변경하지 않았다. 일반 사진 1~20장 입력과 최근 7일 과거 사진 조회의 완료 기록이 아니다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 홈 목적지 | 통과 · 이전에 내일 배정을 열었어도 검수 보기는 검수 탭, 청소 배정은 오늘 배정 탭으로 이동 |
+| 직접 링크 | 통과 · 화면·하위 탭 query 복원, 메이드의 관리자 검수 URL 직접 접근은 본인 업무로 제한 |
+| 브라우저 기록 | 통과 · 홈/청소 탭/주급 주차/주급 상세/검수 상세의 Back·Forward, 확대 창 Back·Escape |
+| 사진 | 통과 · 클릭 확대·다음 사진, 실제 img naturalWidth 확인, 일반 모달을 닫을 때 중복 content GET과 blob 조기 폐기 없음 |
+| 민감정보 | 통과 · live history에 모달 HTML·blob URL·인증 토큰 없음. PIN/고객명 URL·console 회귀 검사 유지 |
+| 주급 조회 | 통과 · 이번 주 40,000원/직전 주 28,000원 fixture, 현재 주차 지급 잠금, 늦게 도착한 이전 주 응답 무시, 금액 누락을 0원으로 위장하지 않음 |
+| 기존 운영 기능 | 통과 · 로컬 fixture의 지급 시작/외부 송금 결과/정정/컴플레인/배정/업로드/검수 승인·반려 회귀 |
+| 반응형·키보드 | 통과 · 360/390/768/1440px 가로 넘침 없음, 확대 모달 Tab 포커스 유지, 주차 버튼 44px 이상 |
+| 브라우저 품질 | 통과 · 신규 회귀에서 page error·console warning/error 0건 |
+| 실제 설치 앱 | 미검증 · iOS/Android 설치 앱의 물리 뒤로가기·OS 종료 동작은 실기기 검수 필요 |
+| 운영 API preflight | 차단 · `node scripts/check-api-integration.mjs`에서 운영 publishable key 검증은 통과했지만 `CORS 허용 method가 없습니다: DELETE`로 실패. 운영 삭제 검수 완료로 표시하지 않음 |
+| 새 업로드·과거 조회 | 미완료 · 일반 1~20장 입력/제출, 미제출 작업 전환, 메이드 과거 사진 상세는 백엔드 계약 변경 후 후속 구현 |
+
+비교 기준은 같은 관리자 주급 화면의 `admin-payroll-per-maid-toggle-390.png`와 새 운영 화면이다. 탭, 주급 합계, 주차 선택, 메이드별 카드, 산출 보기의 위치를 대조했다. fixture 날짜·금액은 다르며 예상/검수 대기 금액과 기존 지급 스위치까지 와이어프레임과 완전히 일치했다고 기록하지 않는다. 주급의 API 미제공 항목과 전체 UI 대조는 후속 범위에 남는다.
+
+회귀 명령:
+
+- `node scripts/check-live-navigation.mjs`
+- `node scripts/check-operational-api.mjs`
+- `node scripts/check-cleaning-workflow.mjs`
+- `node scripts/check-workspace.mjs`
+
+대표 PNG (검수 사진은 `QA FIXTURE / NOT A ROOM PHOTO`로 표시한 640×400px 테스트 패턴이며 실제 청소 사진이 아님):
+
+- `QA/screenshots/live-inspection-gallery-390.png`
+- `QA/screenshots/live-inspection-gallery-1440.png`
+- `QA/screenshots/live-inspection-photo-viewer-390.png`
+- `QA/screenshots/live-weekly-payroll-current-390.png`
+- `QA/screenshots/live-weekly-payroll-current-1440.png`
+
+## 2026-09-28 · 운영 개편 2차: 일반 사진·별도 증빙·이력·예상 주급
+
+앞선 1차의 미완료 사진/API 항목을 구현했다. 아래는 로컬 API fixture와 Chromium Playwright 검사이며 운영 계정 mutation 성공으로 간주하지 않는다. Browser 플러그인이 없어 Playwright를 사용했다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 사진 수 | 통과 · 0장 제출 차단, 1장 가능, 모바일 갤러리 20장 한 번 선택, 기존 7장에 13장 추가, 남은 수량 초과 선택 거부, 삭제 후 추가 가능 |
+| 업로드 실패 | 통과 · 3장 중 1장 성공 후 503 시 실제 사진 재조회, 동일 요청 키로 결과 확인 후 최신 revision 재조회, 개별 삭제·다시 추가. 업로드 중 진행 장수 표시 |
+| 작성 메모 | 통과 · 사진 추가·삭제·업로드 오류 후 특이사항 메모 메모리 유지, 등록 성공 시 삭제. 저장소/history에 초안을 기록하지 않음 |
+| 별도 증빙 | 통과 · 폭탄방은 bomb-proof만 전송, 특이사항은 issue-proof와 메모만 전송, 일반 필수 사진과 분리 |
+| 이력 | 통과 · 메이드 최근 목록에서 읽기 전용 상세, 사진/특이사항 메모, 확대 창 Back과 Escape |
+| 주급 | 통과 · 이번 주 확정 40,000원/예상 56,000원/대기 16,000원 fixture, 이전 주·산출 상세 복귀·응답 역전·누락 금액 비조작 |
+| 내비게이션 | 통과 · 홈 검수/배정의 목적 하위 탭, 직접 링크 권한, page/modal Back·Forward |
+| 기존 기능 | 통과 · 배정/업로드/검수·예약/객실/PIN·급여 명령·컴플레인·Web Push 로컬 회귀 |
+| 반응형 | 통과 · 360/390/768/1440px 가로 넘침 없음, 모달 키보드 포커스·접근성 이름·44px 주요 컨트롤 |
+| 정적/전체 화면 | 통과 · workspace/PWA/hash, 로컬 관리자 6개·메이드 4개 주 화면, console/page 오류 없음 |
+| 한계 | 실제 운영 청소 생성·촬영·검수·송금 및 iOS/Android 카메라/설치 앱 물리 Back은 미실행 |
+
+와이어프레임의 주급 탭/합계/주차/메이드 카드/산출 보기 위치를 유지했다. 일반 사진만 사용자 결정에 따라 구역 카드를 제거했고 폭탄방·특이사항은 별도 유지했다. 과거 제출 화면은 당시 구역 계약을 유지한다. fixture 사진에는 `QA FIXTURE / NOT A ROOM PHOTO`를 표시한다.
+
+검증: `check-workspace.mjs`, `check-cleaning-workflow.mjs`(27개 그룹), `check-live-navigation.mjs`, `check-operational-api.mjs`, 로컬 origin의 `check-deployed-visual.mjs`.
+
+대표 PNG:
+- `QA/screenshots/live-flat-cleaning-photos-390.png`
+- `QA/screenshots/live-flat-cleaning-photos-1440.png`
+- `QA/screenshots/live-history-photos-1440.png`
+- `QA/screenshots/live-weekly-payroll-current-390.png`
+- `QA/screenshots/live-weekly-payroll-current-1440.png`
+
+## 2026-09-28 · 운영 배포 검증
+
+프런트 `30231a5`와 백엔드 main `5303fd5`/Git `v0.7.0`을 배포했다. 이 절은 앞선 1차의 미완료 API/CORS 상태를 대체하며, 합성 UI 검사와 운영 read-only 검사를 구분한다.
+
+| 실제 확인 범위 | 결과 |
+| --- | --- |
+| 운영 HTML | 통과 · production alias의 SHA-256 `a7ec94764499ba9a29dd96dbc3728285ddc74b234e9fd92423323f471160c767`가 병합 소스와 일치 |
+| 운영 설정 | 통과 · live/production/cleaning enabled, `.env.local`와 사용자 미커밋 PNG는 404, 업로드 dry-run에서도 제외 확인 |
+| 운영 API | 통과 · publishable key, health, OpenAPI 0.6.0(131/141), production origin CORS DELETE, 토큰 없는 이력/주급 401/no-store |
+| 운영 DB | 통과 · 85번째 migration, 현재 주 payroll 숫자 projection, service-only RPC/private RLS. 미시작 17건 전환, 제출1/사진11 및 16개 테이블 보존 hash 동일 |
+| 보안 점검 | 기존 leaked-password 보호 설정 WARN 1건 유지. 이번 migration 관련 추가 WARN/ERROR 없음 |
+| 배포 UI | 통과 · 실제 배포 HTML의 관리자 6개/메이드 4개 주 화면, 360/390/768/1440px 가로 넘침·page error·console warning/error 0건. 런타임만 데모로 가로채 고객 업무를 조작하지 않음 |
+| live 로그인/PWA | 통과 · 실제 운영 설정의 4개 너비 로그인 화면, 새 브라우저 worker `2026-09-28-1`, 캐시 HTML hash 일치, shell 5개 외 API/사진/runtime config 캐시 없음 |
+| 기존 탭 업데이트 | 미완료 · worker 전환 중 자동검사 코드가 중단됨. 새 브라우저 검사를 기존 설치 앱 업데이트 성공으로 간주하지 않음 |
+| 실기기/업무 UAT | 미실행 · iOS/Android 갤러리·카메라·설치 앱 물리 Back, 실제 운영 계정의 청소 제출·검수·지급 |
+
+명령: production origin의 `check-api-integration.mjs`, `check-deployed-visual.mjs`; 별도 익명 live 로그인/PWA read-only 검사. 백엔드 feature/release의 application/migration 필수 CI 통과 후 운영 반영. 릴리스 CI의 외부 ECR 이미지 한도는 세 번째 실행에서 정상화됐고 검사 기준이나 고정 이미지는 변경하지 않았다.
+
+대표 PNG:
+- `QA/screenshots/deployed-20260928-login-390.png`
+- `QA/screenshots/deployed-20260928-login-1440.png`
+
+프런트 컨펌 뒤 남은 화면/API 차이를 기대 동작·재현 방법과 함께 백엔드 이슈로 등록한다. 현재는 이슈를 생성하지 않았다.
+
+## 2026-09-28 홈 내일 배정·API 연결 재점검
+
+검증 흐름: 관리자 홈 → 검수/내일 배정 → 정확한 하위 탭과 Back/Forward, 메이드 관리 → 상세·이력 → 해당 수행자 사진 → 직전 상세, 승인 → 주급 재조회.
+
+- `check-live-navigation.mjs` 통과: 검수/배정 DOM 순서, 내일 URL/serviceDate, 360/390/768/1440px, 키보드·모달 포커스·사진 확대·역할 가드, 검수 cursor, 메이드 상세의 타인 기록 제외, 승인 후 주급 캐시 무효화.
+- 주급 새로고침 버튼과 홈 예상액 `expectedAmount` 표시를 포함해 위 검사를 재실행했다.
+- `check-cleaning-workflow.mjs` 27그룹, `check-operational-api.mjs` 8그룹, `check-workspace.mjs` 통과. 일반 사진 1~20장, 다중 선택·부분 실패·이력 사진·검수 회귀 유지.
+- Browser plugin not available. 로컬 `http://127.0.0.1:4177`에서 bundled Playwright Chromium 151.0.7922.34 사용. 테스트 업무 API는 모두 fixture로 가로채 운영 쓰기 없음.
+- 페이지 식별/비어 있지 않은 화면/오류 overlay 없음/console warning·error 없음/overflow 없음/실제 버튼 전이 확인. 대표 PNG를 눈으로 확인했다.
+- 운영 읽기 전용 집계: 최근 7일 완료 1건, 검수 대기 0건, 이번 주 확정 수익 0건, 지난주 1건. 빈 검수/이번 주 0원을 API 미동작으로 단정하지 않는다.
+- 기존 대기 문구와 실제 API의 차이는 `DOCS/27_PRODUCT_API_IMPLEMENTATION_MATRIX.md`에 F01~F11/B01~B03으로 기록했다. 전부 고쳤다는 뜻이 아니며 프런트 컨펌 전 이슈는 만들지 않았다.
+- 실제 로그인 이후 업무 API 전체왕복, 실기기 갤러리/카메라/설치 앱 Back, 운영 승인/반려/송금 결과 기록은 미실행이다.
+
+대표 PNG: `QA/screenshots/live-home-tomorrow-390.png`, `QA/screenshots/live-home-tomorrow-1440.png`, `QA/screenshots/live-maid-detail-history-390.png`, `QA/screenshots/live-weekly-payroll-current-390.png`.

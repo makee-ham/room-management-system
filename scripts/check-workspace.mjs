@@ -96,6 +96,7 @@ const required = [
   'WIREFRAME/QA/screenshots/admin-manual-checkout-390.png',
   'WIREFRAME/QA/screenshots/admin-quick-booking-1440.png',
   'WIREFRAME/QA/screenshots/admin-quick-booking-390.png',
+  'WIREFRAME/QA/screenshots/admin-quick-booking-optimistic-390.png',
   'WIREFRAME/QA/screenshots/admin-quick-booking-sticky-header-390.png',
   'WIREFRAME/QA/screenshots/admin-room-total-filter-1440.png',
   'WIREFRAME/QA/screenshots/admin-calendar-standard-1440.png',
@@ -355,7 +356,7 @@ for (const contract of [
   "requirementsMode:'photo-only-v1'",
   '구역별 촬영',
   '인증 항목 ${requiredUploads.length}개 · 각 구역 전체 최대 ${MAID_ZONE_PHOTO_LIMIT}장',
-  'const MAID_ZONE_PHOTO_LIMIT=10',
+  'const MAID_ZONE_PHOTO_LIMIT=3',
   'function taskUploadRemainingCapacity(task,upload)',
   '남은 인증 사진 ${photosLeft}장',
   'taskZoneGroups',
@@ -497,14 +498,14 @@ for (const [typeId, expected] of Object.entries(expectedCheckoutPhotoCounts)) {
   if (rules.some(rule => rule.zone !== '기타' && rule.required !== true)) {
     throw new Error(`${typeId} has a non-기타 slot that is not required.`);
   }
-  if (rules.some(rule => rule.zone === '기타' && (rule.required !== false || rule.maxPhotos !== 10))) {
-    throw new Error(`${typeId} 기타 slot must be optional with maxPhotos 10.`);
+  if (rules.some(rule => rule.zone === '기타' && (rule.required !== false || rule.maxPhotos !== 3))) {
+    throw new Error(`${typeId} 기타 slot must be optional with maxPhotos 3.`);
   }
 }
 for (const contract of [
   "checkout:{name:'퇴실 청소',version:'v7'",
   'function legacyCheckoutTemplateSnapshotFor',
-  "version:'v6',photos:Object.freeze(current.photos.filter(item=>item.id!=='tv-on')",
+  "version:'v6',photos:Object.freeze(expandPhotoRules(roomNo,current.typeId,TYPE_PHOTO_GROUPS[current.typeId]).filter(item=>item.id!=='tv-on')",
   "if(exact)return {status:exact.status||'empty',upload:exact};",
   "draft.kind==='퇴실 청소'?legacyCheckoutTemplateSnapshotFor(draft.room)",
   "templateVersionSeed:'v7'",
@@ -627,7 +628,7 @@ for (const contract of ['currentAttemptId(no)!==attemptId', 'currentAttemptId(id
 for (const removed of ['add-task-photo', 'add-task-photos', "'add-photo'", "'add-photos'", '파일 전송 없이 슬롯 상태만']) {
   if (html.includes(removed)) throw new Error(`Removed simulated photo completion contract remains: ${removed}`);
 }
-for (const contract of ['paymentRecords:{}', 'paymentAttemptHistory:[]', 'paymentRecordKey(weekStart,maidId)', 'data-action="toggle-payment" data-week=', 'data-maid=', 'taskFingerprint', "['OPEN','PAYING','CHECK']", 'confirm-finish-payment', 'mark-payment-check', 'confirm-payment-open-v2', 'resolutionReason']) {
+for (const contract of ['paymentRecords:{}', 'paymentAttemptHistory:[]', 'paymentRecordKey(weekStart,maidId)', 'data-action="toggle-payment" data-week=', 'data-maid=', 'taskFingerprint', "['OPEN','PAYING','CHECK','PAID']", 'saveLivePayrollToggle', 'live-payroll-toggle-save', 'resolutionReason', 'maidCanEditRoomOperations', 'data-post-submission-operations']) {
   if (!html.includes(contract)) throw new Error(`Per-maid payment contract missing: ${contract}`);
 }
 if (/cfg\.start==='2026-08-03'&&index===0/.test(html) || /state\.payment\s*=/.test(html)) {
@@ -924,7 +925,6 @@ for (const removedQuickCalendarContract of ['.quick-day-header.weekend','weekend
   if (html.includes(removedQuickCalendarContract)) throw new Error(`Combined red weekend styling returned: ${removedQuickCalendarContract}`);
 }
 for (const businessWeekContract of [
-  'offset=(d.getDay()+6)%7',
   'mondayOffset=-((date.getUTCDay()+6)%7)',
   '날짜를 누르면 그 날짜가 포함된 월요일–일요일 주차를 선택합니다.',
 ]) {
@@ -1267,7 +1267,7 @@ if (reservationModalSource.includes('퇴실 고객 체크아웃') || reservation
 
 const assignmentDashboardStart = html.indexOf('function renderAssignmentDashboard');
 const assignmentDashboardSource = html.slice(assignmentDashboardStart, html.indexOf('function cleaningTabButton', assignmentDashboardStart));
-const assignmentFlowContracts = ['메이드 주간 근무표', 'renderRandomAssignmentCard()', '객실별 담당 수정', 'renderMaidOrderBoardContent()'];
+const assignmentFlowContracts = ['메이드 주간 근무표', '${random}', '객실별 담당 수정', '${summary}'];
 let assignmentFlowIndex = -1;
 for (const contract of assignmentFlowContracts) {
   const nextIndex = assignmentDashboardSource.indexOf(contract);
@@ -1285,10 +1285,10 @@ if (!maidOrderItemSource.includes('assignmentSchedulePriorityBadges(item)') || !
 for (const removed of ['previous=ordered[index-1]', 'next=ordered[index+1]', 'data-action="move-assignment-order"']) {
   if (maidOrderItemSource.includes(removed)) throw new Error(`Removed manual maid priority control remains: ${removed}`);
 }
-for (const contract of ['assignment.order', 'maid-order-number', 'maid-order-copy', 'data-control="assignment-maid"', 'data-location="summary"', '${item.room}호</strong>']) {
+for (const contract of ['maid-order-copy', 'data-control="assignment-maid"', 'data-location="summary"', '${item.room}호</strong>']) {
   if (!maidOrderItemSource.includes(contract)) throw new Error(`Editable maid assignment summary contract missing: ${contract}`);
 }
-if (maidOrderItemSource.includes('${assignment.order}번째 · ${item.room}호')) {
+if (maidOrderItemSource.includes('maid-order-number') || maidOrderItemSource.includes('${assignment.order}번째')) {
   throw new Error('Maid assignment summary repeats the visible order ordinal before the room number.');
 }
 const assignmentRowsStart = html.indexOf('const rows=visibleTargets.map', assignmentDashboardStart);
@@ -1697,7 +1697,7 @@ for (const contract of ['관리자·메이드 모바일 UX 단순화', '접이�
 for (const contract of ['객실 호수 링크·배정 요약 담당 변경', '객실 타입 링크는 0개', '배정된 변경 1건 저장·통보', 'admin-assignment-room-link-1440.png', 'admin-assignment-summary-edit-1440.png', 'admin-assignment-summary-edit-390.png']) {
   if (!qa.includes(contract)) throw new Error(`Editable assignment summary QA contract missing: ${contract}`);
 }
-for (const contract of ['객실·예약·청소 사용성 보완 (2026-09-01)', '이 페이지` 목차', '우선순위를 위·아래로 조정하는 컨트롤은 제공하지 않습니다', '한 구역에 속한 전체 항목의 사진 합계는 최대 10장', '원형 `ⓘ`']) {
+for (const contract of ['객실·예약·청소 사용성 보완 (2026-09-01)', '이 페이지` 목차', '우선순위를 위·아래로 조정하는 컨트롤은 제공하지 않습니다', '한 구역에 속한 전체 항목의 사진 합계는 최대 3장', '원형 `ⓘ`']) {
   if (!wireframeReadme.includes(contract)) throw new Error(`2026-09-01 usability README contract missing: ${contract}`);
 }
 if (html.includes('내일 청소·일정 주의 한눈에') || html.includes('assignmentAttentionItems()')) {
@@ -2098,7 +2098,7 @@ for (const contract of [
   '메이드 제출 기준 ${expectedItems.length}개 슬롯 · 관리자 검수 ${items.length}개 슬롯',
   'data-template-contract-match="${structureMatches?\'true\':\'false\'}"',
   "snapshot?.photos?.some(item=>item.id==='tv-on'||String(item.id).startsWith('tv-on-'))",
-  '일반 슬롯은 1장, 기타 슬롯은 최대 10장을 유지합니다.',
+  '일반 슬롯은 1장, 기타 슬롯은 최대 ${MAID_ZONE_PHOTO_LIMIT}장을 유지합니다.',
   'function enforceCleaningPhotoRequirementRules(items=[])',
   'data-template-max-photos="${photoUploadLimit(item)}"',
   'typeTemplateParity:(typeId,kind=\'퇴실 청소\')=>',
@@ -2126,7 +2126,7 @@ for(const stale of ["${esc(upload.label)} · ${upload.required?'필수':'선택'
   if(taskZoneCardSource.includes(stale))throw new Error(`Maid photo card still renders redundant slot copy: ${stale}`);
 }
 if(html.includes("{id:'entry-number',zone:'현관',label:'객실번호·현관'"))throw new Error('Current templates still contain the redundant room-number entrance slot.');
-if((html.match(/required:false,fixture:'supply',multiple:true,maxPhotos:10/g)||[]).length!==6)throw new Error('All six optional evidence slots must use maxPhotos 10.');
+if((html.match(/required:false,fixture:'supply',multiple:true,maxPhotos:3/g)||[]).length!==6)throw new Error('All six optional evidence slots must use maxPhotos 3.');
 if((html.match(/zone:'기타'/g)||[]).length<6||html.includes("zone:'선택 증빙'"))throw new Error('Optional evidence zone must be named 기타 everywhere.');
 for(const contract of [
   'function photoUploadLimit(upload)',
@@ -2154,7 +2154,7 @@ if (currentAdminTodayStart < 0 || currentAdminTodayEnd < 0) {
 }
 const currentAdminToday = html.slice(currentAdminTodayStart, currentAdminTodayEnd);
 for (const required of [
-  "renderAccordion('assignment','오늘 청소 배정'",
+  "renderAccordion('assignment','내일 청소 배정'",
   "renderAccordion('inspection','청소 검수'",
 ]) {
   if (!currentAdminToday.includes(required)) throw new Error(`Admin-home core item missing: ${required}`);
@@ -2415,7 +2415,8 @@ for (const contract of [
   "title:'다음 주 가능일 전원 제출 완료'",
   "detail:'등록된 메이드 9명이 모두 근무 가능일을 제출했습니다.'",
   'return MAIDS.filter(maid=>maidCanReceiveNewAssignment(maid.id)&&availabilityForWorkDate(maid.id,state.assignmentDate)===\'available\');',
-  '<strong>${eligible.length}명</strong>',
+  'return renderAssignmentRandomView({eligibleCount:eligible.length,unassigned,summary,active,actions});',
+  '<strong>${eligibleCount}명</strong>',
 ]) {
   if (!html.includes(contract)) throw new Error(`All-maid random-assignment contract missing: ${contract}`);
 }
@@ -2509,6 +2510,9 @@ for(const contract of [
 ]){
   if(!html.includes(contract))throw new Error(`Production auth/PWA contract missing: ${contract}`);
 }
+const rawCloseModalSource=html.match(/function rawCloseModal\([^]*?\n\s*}\n\s*function dismissModal/)?.[0]||'';
+if(rawCloseModalSource.includes('clearCleaningPhotoUrls()'))throw new Error('Generic modal close must not revoke inspection photo URLs.');
+if(!html.includes('clearLivePinReveal();clearActiveCleaningPhotoUrls();clearCleaningPhotoUrls();'))throw new Error('Session cleanup must revoke inspection photo URLs.');
 for(const contract of [
   "function defaultLiveView(role){return role==='admin'?'today':role==='developer'?'overview':'my';}",
   'const liveAdminNav=adminNav;',
@@ -2531,16 +2535,18 @@ for(const contract of [
   'function renderLiveDeveloperRooms(){',
   "{id:'rooms',label:'객실',icon:'rooms'}",
   'data-live-developer-rooms',
-  'data-control="developer-room-type"',
-  'data-control="developer-room-number"',
-  'data-control="developer-room-delete-number"',
-  'data-control="developer-room-type-base"',
-  'data-control="developer-room-type-max"',
-  'data-room-type-capacity=',
-  '기준 인원 ≤ 최대 인원',
-  "button('유형별 인원 저장 · API 미제공','developer-room-capacity-save','primary','disabled aria-disabled=\"true\"')",
-  "button('객실 추가 · API 미제공','developer-room-create','primary','disabled aria-disabled=\"true\"')",
-  "button('삭제 영향 확인 · API 미제공','developer-room-delete','outline','disabled aria-disabled=\"true\"')",
+  'id="developer-room-type"',
+  'id="developer-room-number"',
+  'id="developer-room-delete-number"',
+  '/v1/developer/room-catalog',
+  'maxOccupancy<baseOccupancy',
+  "reasonCode:'CAPACITY_POLICY_CHANGE'",
+  "reasonCode:'ROOM_CATALOG_ADD'",
+  "reasonCode:'ROOM_CATALOG_REMOVE'",
+  'impactFingerprint:preview.impactFingerprint',
+  "button('영향 확인','live-capacity-review'",
+  "button('객실 추가','live-catalog-create'",
+  "button('삭제 영향 확인','live-catalog-deactivate'",
   "view==='rooms'?renderLiveDeveloperRooms()",
   'function loadLiveReservations({quiet=false}={}){',
   'function loadLiveAvailability({quiet=false}={}){',
@@ -2590,7 +2596,7 @@ for(const contract of [
   '/pin-changes/prepare`,{body:{pinDigits,expectedPinVersion:',
   '/pin-changes/${encodeURIComponent(context.leaseId)}/${action}`',
   'clearLivePageSecretsForHide(){',
-  'clearLivePinReveal();document.querySelectorAll',
+  'clearLivePinReveal();clearActiveCleaningPhotoUrls();document.querySelectorAll',
 ]){
   if(!html.includes(contract))throw new Error(`Production room PIN contract missing: ${contract}`);
 }
@@ -2606,7 +2612,7 @@ for(const contract of [
   "normalizedGuestCount===undefined?preview?.guestCount==null:Number(preview?.guestCount)===normalizedGuestCount",
   "guestCount=Number(document.getElementById('live-reservation-guests')?.value)",
   "guestCount:reservation.guestCount",
-  "void refreshLiveReservationRoomSelection()",
+  "scheduleLiveReservationRoomSelection()",
   "excludeReservationId=form?.dataset.reservationId||null",
   'function liveRoomGuestPolicy(room)',
   'async function ensureLiveRoomGuestPolicy(room)',
@@ -2614,7 +2620,7 @@ for(const contract of [
   "ROOM_TYPE_CAPACITY_UNAVAILABLE:'객실 유형별 기본·최대 인원을 불러오지 못했습니다. 다시 시도해 주세요.'",
   'base:available?base:null,max:available?max:null',
   'GUEST_COUNT_EXCEEDS_ROOM_TYPE_CAPACITY',
-  'refreshLiveReservationRoomSelection(roomId)',
+  'refreshLiveReservationRoomSelection(roomId,{force:true})',
   'Number(roomSelect?.dataset.stateVersion)!==Number(candidate.roomStateVersion)',
   'expectedRoomVersion:Number(candidate.roomStateVersion)',
   "['ROOM_ALLOCATION_BLOCKED','STALE_VERSION'].includes(error?.code)",
@@ -2624,13 +2630,13 @@ for(const contract of [
   "reasonCode:'GUEST_REQUEST'",
   "RESERVATION_CANCELLATION_NOT_ALLOWED:'체크인 이후 또는 현재 예약 상태에서는 취소할 수 없습니다.'",
   "CLEANING_WORKFLOW_CANCEL_CONFLICT:'이미 진행 중인 청소 업무가 있어 예약을 취소할 수 없습니다.'",
-  'excludeReservationId:null',
+  'excludeReservationId:excludeReservationId||null',
 ]){
   if(!liveReservationGuardSource.includes(contract)&&!html.includes(contract))throw new Error(`Reservation interval bookability guard missing: ${contract}`);
 }
 if(html.includes('base:available?base:1'))throw new Error('Missing room-type capacity must not silently collapse the reservation guest count to one.');
 const liveReservationCreateSource=liveReservationGuardSource.slice(liveReservationGuardSource.indexOf('async function submitLiveReservationCreate'),liveReservationGuardSource.indexOf('async function submitLiveReservationUpdate'));
-if(liveReservationCreateSource.indexOf('refreshLiveReservationRoomSelection(roomId)')<0||liveReservationCreateSource.indexOf('refreshLiveReservationRoomSelection(roomId)')>liveReservationCreateSource.indexOf('runLiveReservationMutation'))throw new Error('Reservation create must refresh and validate the room before POST.');
+if(liveReservationCreateSource.indexOf('refreshLiveReservationRoomSelection(roomId,{force:true})')<0||liveReservationCreateSource.indexOf('refreshLiveReservationRoomSelection(roomId,{force:true})')>liveReservationCreateSource.indexOf('runLiveReservationMutation'))throw new Error('Reservation create must force-refresh and validate the room before POST.');
 const liveReservationDetailSource=liveReservationGuardSource.slice(liveReservationGuardSource.indexOf('async function openLiveReservationDetail'),liveReservationGuardSource.indexOf('function liveReservationPayload'));
 for(const contract of ['guestCount:reservation.guestCount',"auxiliaryLabel:active?'다음 예약 등록':'" ,'upsertLiveReservation(safeReservation)'])if(!liveReservationDetailSource.includes(contract))throw new Error(`Reservation detail modal API contract missing: ${contract}`);
 for(const [code,copy] of [
@@ -2662,7 +2668,13 @@ for(const contract of [
 console.log('Live candle confirmation and latest-state recovery contracts: passed');
 for(const contract of [
   'const LIVE_READ_FRESH_MS=30000',
+  'const LIVE_CALENDAR_CACHE_MS=120000',
+  'const LIVE_BOOKABILITY_CACHE_MS=10000',
   'function coalesceLiveLoad(key,task)',
+  'function liveReservationCalendarSnapshot(',
+  'function scheduleLiveReservationRoomSelection(',
+  "_syncState:'saving'",
+  '화면에 먼저 반영하고 서버에 저장하고 있습니다.',
   'async function loadLiveViewData(view=currentView()',
   "if(view==='today'){add(liveLoaderTask('payroll'",
   'function renderLiveSurface()',
@@ -2750,20 +2762,20 @@ for(const contract of ['export type RoomProjection =','primaryDisplayStatus: Roo
 }
 if(!serveSource.includes('"optionalCleaningWorkflow": True')||!pagesBuildSource.includes('optionalCleaningWorkflow: true'))throw new Error('Cleaning workflow live runtime gate must be enabled.');
 if(!html.includes("value.featureFlags?.optionalCleaningWorkflow===true"))throw new Error('Cleaning release gate must require an explicit boolean.');
-for(const contract of ['/v1/assignments/preview','/v1/assignments/commit-impact','/v1/attempts/{attemptId}/photo-slots','/v1/attempts/{attemptId}/submissions','/v1/inspections/{submissionId}/approve','/v1/notifications/{notificationId}/read']){
+for(const contract of ['/v1/assignments/preview','/v1/assignments/commit-impact','/v1/attempts/{attemptId}/photo-slots','/v1/attempts/{attemptId}/photo-slots/{slotId}/photos/{photoItemId}/upload','/v1/attempts/{attemptId}/photo-slots/{slotId}/photos/{photoItemId}','/v1/attempts/{attemptId}/submissions','/v1/inspections/{submissionId}/approve','/v1/notifications/{notificationId}/read']){
   if(!cleaningTypes.includes(contract.split('/').at(-1) || '')&&!readFileSync(resolve(root,'scripts/generate-cleaning-client.mjs'),'utf8').includes(contract))throw new Error(`Cleaning API generated contract missing: ${contract}`);
 }
-for(const contract of ['runLiveCleaningMutation','expectedImpactFingerprint','expectedPhotoRevision','clientSubmissionId','responseType===\'blob\'','handleLiveNotificationAction']){
+for(const contract of ['runLiveCleaningMutation','expectedImpactFingerprint','expectedPhotoRevision','expectedCollectionRevision','expectedItemRevision','cleaning-photo-delete','liveCleaningPhotoGroups','clientSubmissionId','responseType===\'blob\'','handleLiveNotificationAction']){
   if(!html.includes(contract))throw new Error(`Cleaning live implementation contract missing: ${contract}`);
 }
 for(const contract of ['commitImpactStatus:\'idle\'','draftSaveResults:new Map()','draftIdempotencyKeys:new Map()','data-cleaning-planning-impact','function saveLiveAssignmentDraftRows','cleaning-save-all-drafts','cleaning-manual-draft-review','await loadLiveCommitImpact({quiet:true,announce:false})','function liveAssignmentAllowsDirectChange','이미 시작된 작업은 직접 재배정하지 않습니다.']){
   if(!html.includes(contract))throw new Error(`Continuous cleaning assignment contract missing: ${contract}`);
 }
 const assignmentContinuitySource=readFileSync(resolve(root,'scripts/check-cleaning-assignment-continuity.mjs'),'utf8');
-for(const contract of ['Preview 전 commit-impact 미배정 4개 객실 표시','일부 실패 뒤 성공 카드 유지','첫 확정 뒤 남은 2건 계속 배정 가능','진행 중 작업 직접 변경 차단']){
+for(const contract of ['미배정 4개 객실','일부 초안 실패 시 성공 보존','남은 객실 추가 배정·통보','진행 중 작업 직접 변경 차단']){
   if(!assignmentContinuitySource.includes(contract))throw new Error(`Cleaning assignment continuity browser contract missing: ${contract}`);
 }
-for(const contract of ['function liveCleaningTabButton','function renderLiveAdminAssignmentDashboard','function renderLiveRandomAssignmentCard','class="assignment-page tab-panel"','오늘 배정','내일 배정','진행 중','검수 대상 목록','id="cleaning-section-random"','data-cleaning-assignments',"if(liveMode()){\n            state.cleaningTab=tab;"]){
+for(const contract of ['function liveCleaningTabButton','function renderLiveAdminAssignmentDashboard','function renderLiveRandomAssignmentCard','function renderAssignmentDashboardView','function renderAssignmentSummaryView','오늘 배정','내일 배정','진행 중','검수 대상 목록','id="cleaning-section-random"','data-assignment-target',"if(liveMode()){\n            state.cleaningTab=tab;"]){
   if(!html.includes(contract))throw new Error(`Cleaning wireframe fidelity contract missing: ${contract}`);
 }
 if(html.includes('<h3>배정 Preview·확정 영향</h3>'))throw new Error('API-shaped cleaning planning panel must not replace the canonical assignment wireframe.');
@@ -2780,3 +2792,10 @@ for(const contract of ['/v1/payroll/start','/v1/payroll/adjustments/corrections'
 }
 if(!html.includes('정정 버전 API 미제공'))throw new Error('Payroll adjustment version blocker must be explicit instead of guessed.');
 console.log('Payroll, complaint, Web Push, and room primary-status adapter contracts: passed');
+
+const entryHtml=readFileSync(resolve(root,'WIREFRAME/index.html'),'utf8');
+const entryNames=[...entryHtml.matchAll(/^      (?:async )?function (\w+)\(/gm)].map(match=>match[1]);
+const duplicateEntries=[...new Set(entryNames.filter((name,index)=>entryNames.indexOf(name)!==index))];
+if(duplicateEntries.length)throw new Error(`Duplicate app entry functions: ${duplicateEntries.join(', ')}`);
+if(entryHtml.includes('업무 API 연결 대기'))throw new Error('Obsolete maid fallback must not return.');
+console.log('Single live/demo entrypoint declarations: passed');

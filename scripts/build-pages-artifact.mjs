@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -87,7 +89,7 @@ if (runtimeMode === "demo") {
     supabasePublishableKey: value("SUPABASE_PUBLISHABLE_KEY"),
     sessionPersistence: value("RMS_SESSION_PERSISTENCE", "session").toLowerCase(),
     deploymentChannel,
-    featureFlags: { optionalCleaningWorkflow: true },
+    featureFlags: { optionalCleaningWorkflow: true, photoUploadSnapshot: value("RMS_PHOTO_UPLOAD_SNAPSHOT", "true") === "true", assignmentPlanningDate: value("RMS_ASSIGNMENT_PLANNING_DATE", "true") === "true", roomPinExport: value("RMS_ROOM_PIN_EXPORT", "true") === "true", roomPinTransfer: value("RMS_ROOM_PIN_TRANSFER", "false") === "true" },
   };
   const refs = [
     projectRef(config.apiBaseUrl, "/functions/v1/api"),
@@ -105,12 +107,24 @@ if (runtimeMode === "demo") {
 
 await rm(OUTPUT, { recursive: true, force: true });
 await mkdir(OUTPUT, { recursive: true });
-await cp(WIREFRAME, OUTPUT, { recursive: true });
+const excluded = new Set(["QA", "QA 2", "screenshots", "QA.md", "README.md", "cleaning-api.d.ts"]);
+await cp(WIREFRAME, OUTPUT, {
+  recursive: true,
+  filter: source => {
+    const relative = path.relative(WIREFRAME, source);
+    return !relative || !relative.split(path.sep).some(part => part.startsWith(".") || excluded.has(part));
+  },
+});
 await writeFile(
   path.join(OUTPUT, "runtime-config.json"),
   `${JSON.stringify(config)}\n`,
   { encoding: "utf8", mode: 0o600 },
 );
+const sourceCommit = value("VERCEL_GIT_COMMIT_SHA") || execFileSync("git", ["rev-parse", "HEAD"], { cwd: ROOT, encoding: "utf8" }).trim();
+if (!/^[a-f0-9]{40}$/u.test(sourceCommit)) throw new Error("A full source commit is required for deployment traceability.");
+const html = await readFile(path.join(OUTPUT, "index.html"));
+const worker = await readFile(path.join(OUTPUT, "sw.js"), "utf8");
+await writeFile(path.join(OUTPUT, "build-info.json"), `${JSON.stringify({ sourceCommit, indexSha256: createHash("sha256").update(html).digest("hex"), serviceWorkerVersion: worker.match(/2026-\d{2}-\d{2}-\d+/u)?.[0] || null, deploymentChannel })}\n`);
 console.log(
   runtimeMode === "demo"
     ? "Pages artifact prepared in demo mode without production credentials."
