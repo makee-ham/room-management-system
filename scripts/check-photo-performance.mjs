@@ -20,7 +20,7 @@ const browser=await chromium.launch({headless:true});
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const metrics=[];
 let jpeg;
-async function fixture({old=false,beforeRecovery=false,snapshot=false,mode='valid',prepareMs=0,uploadMs=25,readMs=10,cpu=1}={}){
+async function fixture({assignmentCount=1,old=false,beforeRecovery=false,snapshot=false,mode='valid',prepareMs=0,uploadMs=25,readMs=10,cpu=1}={}){
   const context=await browser.newContext({viewport:{width:390,height:900},serviceWorkers:'block'}),page=await context.newPage();
   const cdp=await context.newCDPSession(page);await cdp.send('Emulation.setCPUThrottlingRate',{rate:cpu});
   const slot={slotId:id(6),slotKey:'cleaning-proof',maxPhotos:20,required:true,collectionRevision:0,photos:[],photoCount:0,uploadStatus:'missing'};
@@ -33,7 +33,7 @@ async function fixture({old=false,beforeRecovery=false,snapshot=false,mode='vali
     window.__photoQA={setup:payload=>{LIVE_RUNTIME.authGeneration++;LIVE_RUNTIME.mode='live';LIVE_RUNTIME.status='ready';LIVE_RUNTIME.config=normalizeRuntimeConfig({apiBaseUrl:'${api}',supabaseUrl:'https://aodikrxcczbogjpsjwjt.supabase.co',supabasePublishableKey:'sb_publishable_abcdefghijklmnopqrstuvwxyz1234',featureFlags:{optionalCleaningWorkflow:true,photoUploadSnapshot:${snapshot}}});
       state.remote=initialRemoteState();state.role='maid';state.liveView='my';state.detail=null;liveRoomDetail=null;state.remote.auth={...state.remote.auth,status:'authenticated',user:${JSON.stringify(actor)},session:{accessToken:'qa-only',expiresAt:Date.now()+3600000}};
       for(const key of ['rooms','accounts','notifications','complaints','availability','cleaningHistory'])Object.assign(state.remote[key],{status:'ready',lastSuccessAt:new Date().toISOString()});
-      Object.assign(cleaningState(),{status:'ready',assignments:[${JSON.stringify(assignment)}],attempts:new Map([['${assignment.assignmentId}',${JSON.stringify(attempt)}]]),photoSlots:new Map([['${attempt.attemptId}',payload]]),expandedMaidAssignments:new Set(['${assignment.assignmentId}']),maidAssignmentsInitialized:true});syncAuthState(state);render();renders=0;
+      Object.assign(cleaningState(),{status:'ready',assignments:${JSON.stringify(Array.from({length:assignmentCount},(_,i)=>({...assignment,assignmentId:i?id(500+i):assignment.assignmentId,roomNumber:String(211+i)})))},attempts:new Map([['${assignment.assignmentId}',${JSON.stringify(attempt)}]]),photoSlots:new Map([['${attempt.attemptId}',payload]]),expandedMaidAssignments:new Set(['${assignment.assignmentId}']),maidAssignmentsInitialized:true});syncAuthState(state);render();renders=0;
     },state:()=>({queue:LIVE_PHOTO_QUEUE.length,running:livePhotoQueueRunning,errors:LIVE_PHOTO_QUEUE.filter(job=>job.error).length,prepares,maxPrepares,renders,prepared:LIVE_PHOTO_QUEUE.filter(job=>job.blob).length,previewUrls:LIVE_PHOTO_QUEUE.filter(job=>job.previewUrl).length,activeUrls:LIVE_CLEANING_ACTIVE_PHOTO_URLS.size,progress:cleaningState().uploadStates.get('${slot.slotId}'),jobs:LIVE_PHOTO_QUEUE.map(job=>({id:job.photoItemId,accepted:job.receipt?.status==='accepted'}))}),
       retry:id=>retryLivePhotoQueue(id),discard:()=>discardLivePhotoQueue('${slot.slotId}'),logout:()=>{LIVE_RUNTIME.authGeneration++;clearLiveAuthSurface();state.remote.auth.status='anonymous';render();},
       details:photos=>{clearCleaningPhotoUrls();state.liveView='done';cleaningState().inspectionDetail={readOnly:true,status:'ready',submission:{id:'${id(10)}',status:'approved',submittedAt:new Date().toISOString(),photos},photos:photos.map(photo=>({...photo,loading:true}))};render();return loadLiveInspectionPhotos(cleaningState().inspectionDetail);},
@@ -87,6 +87,13 @@ async function fixture({old=false,beforeRecovery=false,snapshot=false,mode='vali
   return {page,context,calls,slot,upload,settled,payload,operationReady:()=>{operationReady=true;},stats:()=>({maxActive,maxReads}),close:async()=>{assert.deepEqual(errors,[]);assert.deepEqual(missing,[]);await context.close();}};
 }
 try{
+  for(const assignmentCount of [1,10,20])for(const snapshot of [false,true]){
+    const f=await fixture({assignmentCount,snapshot});await f.upload(1);await f.settled();assert.equal(f.slot.photos.length,1);
+    assert.equal(f.calls.filter(c=>c.path==='/v1/assignments'||c.path==='/v1/attempts/current'||c.path.endsWith('/submissions')).length,0);
+    // Includes one initial detail GET: fallback adds one scoped GET, snapshot adds none.
+    assert.equal(f.calls.filter(c=>c.path.endsWith('/photo-slots')).length,snapshot?1:2);await f.close();
+  }
+  console.log('[ok] 1/10/20 assignments: no whole assignment/attempt/submission reload, constant scoped GETs with and without snapshot');
   for(const size of [5242879,5242880,5242881]){
     const f=await fixture({snapshot:true});await f.page.locator('[data-upload-source="gallery"]').first().setInputFiles({name:'synthetic-boundary.heic',mimeType:'image/heic',buffer:Buffer.alloc(size,1)});await f.settled();
     const posts=f.calls.filter(c=>c.path.endsWith('/upload'));

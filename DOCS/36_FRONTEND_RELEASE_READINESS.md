@@ -1,5 +1,7 @@
 # 10월 22일 프런트 릴리스 준비
 
+> 현재 제공·소비·활성·운영 배포·남은 UAT는 [남은 이슈 재점검](38_REMAINING_FRONTEND_ISSUES.md)을 따른다. 아래 날짜별 계약·미연결 표기는 당시 기록이다.
+
 기준: dev `10c46b9` (PR #222) 이후. 사용자 요청: 열린 프런트 이슈 처리 → 관련 PR 병합 → 보호된 Preview 검증 → main PR 병합. 실제 사진 업로드/재시도 UAT는 [백엔드 최신 인계](https://github.com/makee-ham/room-management-system/issues/206#issuecomment-6331210551)에 따라 사용자가 진행한다.
 
 ## 이슈 판정

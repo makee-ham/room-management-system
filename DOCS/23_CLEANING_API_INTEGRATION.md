@@ -1,5 +1,7 @@
 # 청소관리 운영 API 연동
 
+> 현재 제공·소비·활성·운영 배포·남은 UAT는 [남은 이슈 재점검](38_REMAINING_FRONTEND_ISSUES.md)을 따른다. 아래 날짜별 계약·미연결 표기는 당시 기록이다.
+
 기준일: 2026-09-23
 운영 계약: `CASTLE THE ART Room Management API` v0.5.1, 128 paths / 138 operations
 OpenAPI 코드 생성 정본: `https://wrongstory.github.io/room-management-system-backend/openapi.json`
