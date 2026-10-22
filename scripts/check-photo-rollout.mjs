@@ -40,7 +40,7 @@ try {
   for (const channel of ["production", "preview"]) {
     const config = await build({ RMS_DEPLOYMENT_CHANNEL: channel });
     const buildInfo=JSON.parse(await readFile(path.join(fixture,"_site/build-info.json"),"utf8"));
-    assert.equal(buildInfo.sourceCommit,env.VERCEL_GIT_COMMIT_SHA);assert.equal(buildInfo.deploymentChannel,channel);assert.equal(buildInfo.indexSha256.length,64);assert.equal(buildInfo.serviceWorkerVersion,"2026-10-22-2");
+    assert.equal(buildInfo.sourceCommit,env.VERCEL_GIT_COMMIT_SHA);assert.equal(buildInfo.deploymentChannel,channel);assert.equal(buildInfo.indexSha256.length,64);assert.equal(buildInfo.serviceWorkerVersion,"2026-10-22-3");
     assert.equal(config.mode, "live");
     assert.equal(config.deploymentChannel, channel);
     assert.equal(config.featureFlags.photoUploadSnapshot, true);

@@ -1,5 +1,22 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-22 · 청소 진행중 카드의 두 버튼과 배정 관리
+
+기준 `dev 8669874`, 사용자 첨부 진행중 카드의 5개 행동을 `배정 이력 / 배정 관리` 두 버튼으로 변경했다. 흐름은 관리자 `청소관리 → 진행중 → 배정 이력` 및 `배정 관리 → 담당 변경/해제/담당 불가/수행 상태·인계`다. Browser plugin not available로 기존 Playwright Chromium 151.0.7922.34, `http://127.0.0.1:4177`에서 합성 API fixture로 검증했다. 실제 운영 배정은 변경하지 않았다.
+
+| 확인 범위 | 결과 |
+| --- | --- |
+| 카드 구성·목적지 | PASS · 카드에는 정확히 두 버튼. 배정 이력은 기존 이력 GET·모달, 배정 관리는 관리 4개 행동을 표시하며 열기 자체의 API 요청 없음 |
+| 기존 관리 기능 | PASS · 담당 변경/배정 해제/담당 불가/수행 상태·인계 각각 기존 확인창·폼 진입. 담당 변경 저장의 기존 CAS·idempotency·취소 요청 결정 회귀 유지 |
+| 반응형·품질 | PASS · 카드/모달 360/390/768/1440px, 가로 넘침 없음·44px 이상 카드 버튼·접근성 이름·의미 있는 화면·오류 overlay 없음 |
+| 키보드·복귀 | PASS · Enter로 관리 열기, Tab 포커스가 모달 안에 유지, Escape 및 브라우저 Back으로 닫기, 하위 기능 취소 후 카드의 배정 관리로 포커스 복귀 |
+| 역할·민감 정보 | PASS · 메이드의 관리 직접 호출은 모달·요청 0건. 기존 token/PIN/고객명 URL/history/storage/console 차단 회귀 유지 |
+| 회귀·오류 | PASS · `check-cleaning-workflow.mjs` 30그룹. 합성 HTTP 오류 외 app console warning/error·page exception 없음 |
+
+증거는 `WIREFRAME/QA/screenshots/cleaning-progress-actions-before-{390,1440}.png`, `cleaning-progress-actions-{360,390,768,1440}.png`, `cleaning-assignment-management-{360,390,768,1440}.png`다. 같은 관리자·배정 fixture·뷰포트로 기존 카드와 비교했으며 객실·담당·상태·서비스일·시작/마감 표시는 유지했다. 서비스워커 `2026-10-22-3`. `node scripts/check-workspace.mjs`, PWA·rollout 검사, `npm run contract:check`, `npm run contract:test-diff`도 통과했다.
+
+한계: 실제 계정·실기기·운영 mutation·새 Preview/production 배포는 이번 검증에 포함하지 않았다. 변경된 모든 업무 요청은 로컬 합성 fixture에서만 수행했다.
+
 ## 2026-10-22 · 남은 프런트 이슈와 릴리스 준비
 
 흐름: 종료 예약 열기 → 읽기 전용, 중복 예약 → 입력 보존/객실 재선택, 과거 승인·미종료 배정 → 이력/관리자 처리 필요. Browser plugin not available로 Playwright Chromium 151.0.7922.34, `http://127.0.0.1:4177`, 360/390/768/1440px에서 검증했다. 모든 업무 API는 합성 fixture이며 운영 쓰기 없음.
