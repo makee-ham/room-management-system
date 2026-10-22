@@ -179,3 +179,7 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 - DOCS/37_PREVIEW_MAIN_RELEASE_VERIFICATION.md
 - WIREFRAME/QA/screenshots/preview-oct22-admin-390.png
 - WIREFRAME/QA/screenshots/preview-oct22-calendar-1440.png
+
+# 2026-10-22 remaining frontend issues
+- DOCS/38_REMAINING_FRONTEND_ISSUES.md
+- scripts/check-admin-cleaning-reads.mjs

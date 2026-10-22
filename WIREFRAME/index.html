@@ -2839,9 +2839,9 @@
         catch(error){if(review.generation===LIVE_RUNTIME.authGeneration){liveConnectionReview=null;closeModal();if(review.reload)await review.reload();render();toast(`${apiErrorCopy(error)}${error.requestId?` · 문의 번호 ${error.requestId}`:''}`,'error');}}
         finally{liveConnectionBusy=false;liveAccountMutationButtonDisabled(false);}
       }
-      async function livePageItems(path,key='items'){
+      async function livePageItems(path,key='items',isCurrent=()=>true){
         const items=[],seen=new Set();let cursor=null,last=null;
-        do{const url=new URL(path,location.origin);if(cursor)url.searchParams.set('cursor',cursor);const {data}=await apiRequest(url.pathname+url.search);if(!Array.isArray(data?.[key]))throw new ApiRequestError('invalid list',{status:502,code:'INVALID_RESPONSE'});items.push(...data[key]);last=data;cursor=data.nextCursor||null;if(cursor&&(seen.has(cursor)||seen.size>=100))throw new ApiRequestError('invalid cursor',{status:502,code:'INVALID_RESPONSE'});if(cursor)seen.add(cursor);}while(cursor);
+        do{if(!isCurrent())throw new ApiRequestError('read changed',{status:409,code:'STALE_VERSION'});const url=new URL(path,location.origin);if(cursor)url.searchParams.set('cursor',cursor);const {data}=await apiRequest(url.pathname+url.search);if(!isCurrent())throw new ApiRequestError('read changed',{status:409,code:'STALE_VERSION'});if(!Array.isArray(data?.[key]))throw new ApiRequestError('invalid list',{status:502,code:'INVALID_RESPONSE'});items.push(...data[key]);last=data;cursor=data.nextCursor||null;if(cursor&&(seen.has(cursor)||seen.size>=100))throw new ApiRequestError('invalid cursor',{status:502,code:'INVALID_RESPONSE'});if(cursor)seen.add(cursor);}while(cursor);
         return {...last,[key]:items};
       }
       async function loadLiveRoomRecords(roomId){
@@ -9413,15 +9413,17 @@
         if(!cleaningActor())return false;
         if(cleaningActor('maid'))return loadLiveMaidCleaning({quiet});
         const slice=cleaningState(),generation=LIVE_RUNTIME.authGeneration,revision=++slice.loadRevision,role=state.remote.auth.user.role,date=slice.serviceDate,needsImpact=role==='admin'&&state.liveView==='cleaning'&&['assignment-today','assignment-tomorrow'].includes(state.cleaningTab);
+        let readActive=true;const current=()=>readActive&&generation===LIVE_RUNTIME.authGeneration&&revision===slice.loadRevision&&slice===cleaningState()&&date===slice.serviceDate;
+        const readInspections=async()=>{
+          const items=[],cursors=new Set();let cursor=null,pageCount=0;
+          do{if(!current())return [];const query=new URLSearchParams({limit:'100'});if(cursor)query.set('cursor',cursor);const {data}=await apiRequest(`/v1/inspections?${query}`);if(!current())return [];if(!Array.isArray(data?.submissions))throw new ApiRequestError('inspections missing',{status:502,code:'INVALID_RESPONSE'});items.push(...data.submissions);cursor=data.nextCursor||null;pageCount+=1;if(cursor&&(cursors.has(cursor)||pageCount>=20))throw new ApiRequestError('inspection cursor overflow',{status:502,code:'INVALID_RESPONSE'});if(cursor)cursors.add(cursor);}while(cursor);
+          return items;
+        };
         if(needsImpact){slice.commitImpactStatus='loading';slice.commitImpactError=null;}if(!quiet){slice.status='loading';slice.error=null;render();}
         try{
-          const [assignmentResponse,impactResult,planningAvailability]=await Promise.all([apiRequest(`/v1/assignments?serviceDate=${encodeURIComponent(date)}`),needsImpact?apiRequest(`/v1/assignments/commit-impact?serviceDate=${encodeURIComponent(date)}`).then(response=>({response,error:null})).catch(error=>({response:null,error})):Promise.resolve({response:null,error:null}),needsImpact?loadLiveAssignmentAvailability(date):Promise.resolve(null)]);if(generation!==LIVE_RUNTIME.authGeneration||revision!==slice.loadRevision||slice!==cleaningState()||date!==slice.serviceDate)return false;
-          let assignments=Array.isArray(assignmentResponse.data?.assignments)?assignmentResponse.data.assignments:[],changeRequests=[],inspections=[],attempts=new Map(),photoSlots=new Map(),submissions=new Map();
+          const [assignmentResponse,impactResult,planningAvailability,changeResponse,inspections]=await Promise.all([apiRequest(`/v1/assignments?serviceDate=${encodeURIComponent(date)}`),needsImpact?apiRequest(`/v1/assignments/commit-impact?serviceDate=${encodeURIComponent(date)}`).then(response=>({response,error:null})).catch(error=>({response:null,error})):Promise.resolve({response:null,error:null}),needsImpact?loadLiveAssignmentAvailability(date):Promise.resolve(null),livePageItems('/v1/assignment-change-requests?limit=100','requests',current),readInspections()]);if(!current())return false;
+          const assignments=Array.isArray(assignmentResponse.data?.assignments)?assignmentResponse.data.assignments:[],changeRequests=changeResponse.requests,attempts=new Map(),photoSlots=new Map(),submissions=new Map();
           {
-            const changeResponse={data:await livePageItems('/v1/assignment-change-requests?limit=100','requests')};
-            changeRequests=Array.isArray(changeResponse.data?.requests)?changeResponse.data.requests:[];
-            let cursor=null,pageCount=0;const cursors=new Set();
-            do{const query=new URLSearchParams({limit:'100'});if(cursor)query.set('cursor',cursor);const {data}=await apiRequest(`/v1/inspections?${query}`);if(generation!==LIVE_RUNTIME.authGeneration||revision!==slice.loadRevision||slice!==cleaningState()||date!==slice.serviceDate)return false;if(!Array.isArray(data?.submissions))throw new ApiRequestError('inspections missing',{status:502,code:'INVALID_RESPONSE'});inspections.push(...data.submissions);cursor=data.nextCursor||null;pageCount+=1;if(cursor&&(cursors.has(cursor)||pageCount>=20))throw new ApiRequestError('inspection cursor overflow',{status:502,code:'INVALID_RESPONSE'});if(cursor)cursors.add(cursor);}while(cursor);
             const focused=assignments.find(item=>item.roomId===(focusRoomId||slice.focusRoomId||liveRoomDetail?.id)&&item.isCurrent&&item.notifiedAt);
             if(focused){const {data}=await apiRequest(`/v1/attempts/lifecycle-impact?assignmentId=${encodeURIComponent(focused.assignmentId)}`);attempts.set(focused.assignmentId,data?.attempt||null);}
           }
@@ -9429,7 +9431,7 @@
           Object.assign(slice,{status:'ready',assignments,attempts,photoSlots,submissions,changeRequests,inspections,error:null,requestId:assignmentResponse.requestId,lastSuccessAt:new Date().toISOString(),lastReceipt:slice.lastReceipt,...(needsImpact?{planningAvailability,commitImpact:impactResult.response?.data?.impact||null,commitImpactStatus:impactResult.error?'error':'ready',commitImpactError:impactResult.error}: {})});
           if(role==='admin'&&state.liveView==='cleaning'&&state.cleaningTab==='progress'){await loadLiveCheckoutIncidents();if(generation!==LIVE_RUNTIME.authGeneration||revision!==slice.loadRevision||slice!==cleaningState()||date!==slice.serviceDate)return false;}
           if(!liveSliceFresh(state.remote.notifications,15000))void coalesceLiveLoad('notifications',()=>loadLiveNotifications({quiet:true}));if(!quiet){render();if(slice.focusRoomId||slice.inspectionDetail)requestAnimationFrame(()=>window.scrollTo(0,0));}return true;
-        }catch(error){if(generation!==LIVE_RUNTIME.authGeneration||revision!==slice.loadRevision||slice!==cleaningState()||date!==slice.serviceDate)return false;Object.assign(slice,{status:'error',error,requestId:error.requestId||null});if(!quiet)render();return false;}
+        }catch(error){if(generation!==LIVE_RUNTIME.authGeneration||revision!==slice.loadRevision||slice!==cleaningState()||date!==slice.serviceDate)return false;Object.assign(slice,{status:'error',error,requestId:error.requestId||null});if(!quiet)render();return false;}finally{readActive=false;}
       }
       function invalidateLiveCleaningReadModels(){
         for(const key of ['payroll','cleaningHistory','workHistory','homeAssignments','rooms'])state.remote[key].lastSuccessAt=null;

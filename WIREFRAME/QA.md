@@ -1,5 +1,23 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-22 · 남은 6개 이슈 재점검·관리자 청소 조회 병행
+
+기준 dev `6dee336`과 운영 main `3482da8`이다. 흐름은 관리자 청소관리 진입 → 독립 배정/변경 요청/검수 목록 조회 → 완전한 기존 카드와 `배정 이력 / 배정 관리` 표시다. Browser plugin not available로 기존 Playwright Chromium 151, `http://127.0.0.1:4177`, 360/390/768/1440px에서 합성 API만 사용했다. 실제 업무 쓰기 없음.
+
+| 확인 | 결과 |
+| --- | --- |
+| 새 병행 조회 | PASS · 어느 응답도 끝나기 전에 3개 읽기 시작. 불완전한 카드/관리 액션 노출 없음. cursor 전체 수집·반복 cursor 오류·503 오류를 0건으로 오인하지 않음 |
+| 늦은 응답 | PASS · 날짜·load revision·세션 변경과 형제 읽기 실패 뒤 오래된 cursor 추가 요청 중단. 새 날짜 응답만 유지 |
+| 기존 UI 비교 | PASS · 같은 데모/역할/너비의 변경 전후 카드 HTML 동일, 390/1440 PNG 비교. 두 버튼·기존 관리 목적지 유지 |
+| 렌더링·입력 | PASS · 4개 너비, 가로 넘침 없음, 의미 있는 청소관리 화면·오류 overlay 없음. Enter/Tab/Escape/Back/포커스 복귀, page exception·app warning/error 0건 |
+| 기존 회귀 | PASS · cleaning-workflow 30그룹, assignment-continuity, lazy-cleaning, data-performance(기능 검사·benchmark 생략), photo-performance(기능 검사·benchmark 생략), backend-handoff, live-connections |
+| 사진/자정/PIN | PASS · 배정 1/10/20개 snapshot ON/OFF 조회량 일정. 같은 key/Blob/item·snapshot/null/오류·직렬 큐. KST 주/월/연말·stale write·업로드 보존, 합성 XLSX 실제 파싱 및 문자열·앞자리0·장기4/6자리 |
+| 문서·공개 계약 | PASS · 문서 21의 계정 권한/목록 endpoint/조정 version/사진 큐 오래된 설명 정정. backend #175 확정 정책에 따라 사진 보관 변경 없음. 공개 health200, OpenAPI154/166 원문 SHA가 고정 snapshot과 동일 |
+
+새 검사 `node scripts/check-admin-cleaning-reads.mjs`. 연결 검사도 새 `배정 관리 → 담당 불가` 진입을 사용한다. 대표 PNG: `WIREFRAME/QA/screenshots/remaining-cleaning-read-{360,390,768,1440}.png`, `remaining-cleaning-read-before-{390,1440}.png`. 합성 데모 표시를 넣었으며 실제 운영 계정 이미지를 fixture로 커밋하지 않았다. 서비스워커 `2026-10-22-4`.
+
+열린 이슈의 프런트 구현·외부 UAT 구분은 `DOCS/38_REMAINING_FRONTEND_ISSUES.md`를 따른다. 실제 메이드 계정·휴대폰/PWA·실사진 사용자 UAT·운영 p50/p95·실제 자정 업무·Drive 인증/pinVersion 복구는 미검증/후속이다. 변경 소스의 PR/운영 배포 신원과 검증 결과는 최종 릴리스 PR에 기록하며, 이 로컬 QA를 운영 mutation UAT로 표현하지 않는다.
+
 ## 2026-10-22 · 청소 진행중 카드의 두 버튼과 배정 관리
 
 기준 `dev 8669874`, 사용자 첨부 진행중 카드의 5개 행동을 `배정 이력 / 배정 관리` 두 버튼으로 변경했다. 흐름은 관리자 `청소관리 → 진행중 → 배정 이력` 및 `배정 관리 → 담당 변경/해제/담당 불가/수행 상태·인계`다. Browser plugin not available로 기존 Playwright Chromium 151.0.7922.34, `http://127.0.0.1:4177`에서 합성 API fixture로 검증했다. 실제 운영 배정은 변경하지 않았다.
