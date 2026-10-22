@@ -175,3 +175,7 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 - scripts/generate-backend-client.mjs
 - scripts/openapi-breaking-diff-lib.mjs
 - scripts/test-backend-breaking-diff.mjs
+
+- DOCS/37_PREVIEW_MAIN_RELEASE_VERIFICATION.md
+- WIREFRAME/QA/screenshots/preview-oct22-admin-390.png
+- WIREFRAME/QA/screenshots/preview-oct22-calendar-1440.png

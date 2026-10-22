@@ -1,5 +1,11 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-22 · 보호된 Preview 배포 검증
+
+dev `8669874`를 기존 보호된 Preview에 배포했다. 인증 GET 자산은 소스와 byte 일치, index SHA `44ade2c6848804d7d61634cf0a5b91465594f3541ac26d81e40fbf3a1a2fb4c0`, SW `2026-10-22-2`. 실제 live/preview/session·snapshot/계획일/Excel true·Drive false, 익명 보호 302, Preview origin CORS·health/OpenAPI PASS. 실제 Chrome 로그인·빈 폼 포커스·privacy 링크와 복귀·신규 코드 확인. 앱 warning/error 없음(Vercel 로그인 외부 FedCM 경고 1건 구분).
+
+인증 GET으로 받은 배포 파일을 로컬에서 렌더하고 demo runtime만 가로채 관리자 6개·메이드 4개 화면을 360/390/768/1440px에서 검증했다. 페이지 식별/의미 있는 화면/오류 overlay 없음/overflow 없음/콘솔·예외 없음/목적지 PASS. 대표 증거는 `preview-oct22-admin-390.png`, `preview-oct22-calendar-1440.png`. 배정 1/10/20개에서 사진 1장 업로드 후 전체 배정 재조회 0회, 초기 상세 GET 포함 대상 slots GET OFF=2/ON=1로 일정했다. 실제 계정의 업무·사진·PIN·급여 쓰기는 수행하지 않았다. 전체 신원·명령·실제 확인 한계는 `DOCS/37_PREVIEW_MAIN_RELEASE_VERIFICATION.md`를 따른다.
+
 ## 2026-10-22 · 남은 프런트 이슈와 릴리스 준비
 
 흐름: 종료 예약 열기 → 읽기 전용, 중복 예약 → 입력 보존/객실 재선택, 과거 승인·미종료 배정 → 이력/관리자 처리 필요. Browser plugin not available로 Playwright Chromium 151.0.7922.34, `http://127.0.0.1:4177`, 360/390/768/1440px에서 검증했다. 모든 업무 API는 합성 fixture이며 운영 쓰기 없음.
