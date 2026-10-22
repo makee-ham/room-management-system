@@ -61,3 +61,7 @@ node scripts/check-workspace.mjs
 - PIN·고객명·사진 원문을 브라우저 영속 저장소에 저장하지 않습니다.
 - `.codex-remote-attachments/`는 작업 중 임시 첨부물이므로 Git에 포함하지 않습니다.
 - 외부 Codex 폴더에 있던 최종 UX 감사는 내용과 SHA-256을 유지한 채 `DOCS/FINAL_UX_AUDIT.md`에 포함했습니다.
+
+## OpenAPI 계약 검증
+
+앱 실행에는 npm 의존성이 필요하지 않습니다. 계약 생성·CI는 Node 22에서 `npm ci`, `npm run contract:check`, `npm run contract:test-diff`, `npm run contract:diff -- --base-ref origin/dev`를 사용합니다. snapshot 갱신은 `npm run contract:generate` 후 검증합니다. 입력 신원·재현·검사 범위는 [릴리스 준비](DOCS/36_FRONTEND_RELEASE_READINESS.md)를 따릅니다.
