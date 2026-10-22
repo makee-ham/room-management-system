@@ -87,6 +87,16 @@ async function fixture({old=false,beforeRecovery=false,snapshot=false,mode='vali
   return {page,context,calls,slot,upload,settled,payload,operationReady:()=>{operationReady=true;},stats:()=>({maxActive,maxReads}),close:async()=>{assert.deepEqual(errors,[]);assert.deepEqual(missing,[]);await context.close();}};
 }
 try{
+  for(const size of [5242879,5242880,5242881]){
+    const f=await fixture({snapshot:true});await f.page.locator('[data-upload-source="gallery"]').first().setInputFiles({name:'synthetic-boundary.heic',mimeType:'image/heic',buffer:Buffer.alloc(size,1)});await f.settled();
+    const posts=f.calls.filter(c=>c.path.endsWith('/upload'));
+    assert.equal(posts.length,size>5242880?0:1);
+    if(size>5242880){const text=await f.page.locator('[data-photo-slot] [role="alert"]').innerText();assert(text.includes('5MiB'));assert(text.includes('서버에 전송하지 않았습니다.'));}
+    else assert.equal(posts[0].bytes,size);
+    await f.close();
+  }
+  const invalid=await fixture();await invalid.page.locator('[data-upload-source="gallery"]').first().setInputFiles({name:'synthetic.txt',mimeType:'text/plain',buffer:Buffer.from('fixture')});assert((await invalid.page.locator('#toast-region').innerText()).includes('지원하지 않는 사진 형식'));assert((await invalid.page.locator('#toast-region').innerText()).includes('서버에 전송하지 않았습니다.'));assert.equal(invalid.calls.filter(c=>c.path.endsWith('/upload')).length,0);await invalid.close();
+  console.log('[ok] local preflight 5MiB -1/exact/+1 and unsupported MIME; raw accepted bytes, zero rejected requests and specific safe copy');
   for(const mode of ['in-flight','provider','quota-unavailable','quota-exceeded','lease-limit','terminal']){
     const f=await fixture({snapshot:true,mode,uploadMs:120});await f.upload(2);await f.settled();
     const failed=await f.page.evaluate(()=>__photoQA.state());assert.equal(failed.errors,1);assert.equal(failed.queue,2);

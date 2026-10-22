@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -118,6 +120,11 @@ await writeFile(
   `${JSON.stringify(config)}\n`,
   { encoding: "utf8", mode: 0o600 },
 );
+const sourceCommit = value("VERCEL_GIT_COMMIT_SHA") || execFileSync("git", ["rev-parse", "HEAD"], { cwd: ROOT, encoding: "utf8" }).trim();
+if (!/^[a-f0-9]{40}$/u.test(sourceCommit)) throw new Error("A full source commit is required for deployment traceability.");
+const html = await readFile(path.join(OUTPUT, "index.html"));
+const worker = await readFile(path.join(OUTPUT, "sw.js"), "utf8");
+await writeFile(path.join(OUTPUT, "build-info.json"), `${JSON.stringify({ sourceCommit, indexSha256: createHash("sha256").update(html).digest("hex"), serviceWorkerVersion: worker.match(/2026-\d{2}-\d{2}-\d+/u)?.[0] || null, deploymentChannel })}\n`);
 console.log(
   runtimeMode === "demo"
     ? "Pages artifact prepared in demo mode without production credentials."

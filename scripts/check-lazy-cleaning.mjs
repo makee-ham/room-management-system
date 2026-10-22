@@ -39,12 +39,15 @@ async function fixture(html,{delays=false}={}){
     if(delays)await pause(path==='/v1/assignments'?100:path.includes('/attempts/current')?200:path.includes('/supplemental-room-issues')||path==='/v1/rooms/candles'?200:100);
     if(path==='/v1/assignments'){
       if(gate.assignmentDate===url.searchParams.get('serviceDate')){gate.assignmentDate=null;await new Promise(resolve=>{gate.releaseAssignments=resolve;});}
-      return json(route,{assignments:url.searchParams.get('serviceDate')===date?assignments:[]});
+      return json(route,{assignments:[date,gate.historyDate].includes(url.searchParams.get('serviceDate'))?assignments:[]});
     }
     if(path==='/v1/assignment-change-requests')return json(route,{requests:[],nextCursor:null});
     if(path==='/v1/notifications')return json(route,{notifications:[],nextCursor:null});
     if(path==='/v1/complaints')return json(route,{complaints:[],nextCursor:null});
+    if(path==='/v1/cleaning-history')return json(route,{date:gate.historyDate,fromDate:gate.historyDate,toDate:gate.historyDate,items:[{submissionId:submission.id,attemptId:attempts[0].attemptId,roomId:assignments[0].roomId,roomNumber:'117',roomTypeName:'QA 객실',performerDisplayName:'QA 메이드',cleaningKind:'checkout',fieldCompletedAt:gate.historyDate+'T03:00:00Z',originalServiceDate:gate.historyDate,serviceDate:gate.historyDate,submittedAt:gate.historyDate+'T03:05:00Z',decidedAt:gate.historyDate+'T04:00:00Z',baseFeeSnapshot:16000,earningTotalAmount:16000,inspectionStatus:'approved',photoCount:0,mediaAvailability:'purged'}],nextCursor:null});
+    if(path==='/v1/cleaning-history/'+submission.id)return json(route,{submission:{...submission,status:'approved',photos:[],reviewContext:{},fieldCompletedAt:gate.historyDate+'T03:00:00Z'}});
     if(path==='/v1/attempts/current'){
+      if(gate.failSummary&&url.searchParams.get('assignmentId')===assignments[2].assignmentId)return json(route,{error:{code:gate.failSummary===403?'CAPABILITY_ACCESS_REQUIRED':'UPSTREAM_UNAVAILABLE'},requestId:'qa-room-only'},gate.failSummary);
       if(gate.summary===true||gate.summary===url.searchParams.get('assignmentId')){gate.summary=false;await new Promise(resolve=>{gate.releaseSummary=resolve;});}
       return json(route,{attempt:attempts[assignments.findIndex(a=>a.assignmentId===url.searchParams.get('assignmentId'))]});
     }
@@ -107,7 +110,7 @@ try{
   const beforeReopen=metadataCount();await toggle(page,0).press('Enter');await card(page,0).locator('[data-cleaning-assignment]').waitFor();
   assert.equal(metadataCount(),beforeReopen,'fresh reopen reuses verified detail');
   assert.equal(await card(page,0).locator('[data-live-photo-id]').last().locator('img').count(),0,'offscreen photos wait for viewport');
-  await card(page,0).locator('[data-live-photo-id]').first().scrollIntoViewIfNeeded();
+  await card(page,0).locator('[data-live-photo-id]').first().evaluate(el=>el.scrollIntoView({block:'center'}));
   await page.waitForFunction(()=>[...document.querySelectorAll('[data-cleaning-photo-item] img')].some(img=>img.complete&&img.naturalWidth>0));
   const loadedFirst=calls.filter(c=>c.path.startsWith('/v1/photos/')).length;assert(loadedFirst>0&&loadedFirst<20,`near viewport loaded ${loadedFirst}/20`);
   console.log(`[ok] expand/collapse while loading, keyboard, fresh cache; viewport reads ${loadedFirst}/20 photos initially`);
@@ -174,6 +177,23 @@ try{
   }
   await page.setViewportSize({width:390,height:900});
   console.log('[ok] slow date A -> B -> A history navigation starts a new scoped read and keeps old cards hidden');
+  // #202: approved + scheduled past assignments must never request performance capabilities.
+  const past=await fixture(source),pastDate=new Date(Date.now()-86400000*30).toISOString().slice(0,10);
+  past.gate.historyDate=pastDate;const oldStatuses=attempts.map(a=>a.status),oldDates=assignments.map(a=>a.serviceDate),oldRooms=assignments.map(a=>a.roomNumber),oldAvailable=assignments.map(a=>a.availableFrom);
+  assignments.forEach(a=>{a.serviceDate=pastDate;a.availableFrom=pastDate+'T01:00:00Z';});assignments[0].roomNumber='117';assignments[1].roomNumber='512';attempts[0].status='approved';attempts[1].status='scheduled';
+  await past.page.evaluate(()=>__lazyQA.setup());await past.page.waitForFunction(()=>__lazyQA.get().done);
+  await past.page.locator('#cleaning-service-date').fill(pastDate);await past.page.locator('#cleaning-service-date').dispatchEvent('change');await past.page.waitForFunction(()=>__lazyQA.get().done&&__lazyQA.get().status==='ready');
+  await toggle(past.page,0).click();await past.page.locator('[data-action="live-cleaning-history-detail"]').waitFor();
+  await toggle(past.page,1).click();await card(past.page,1).getByText('관리자 처리 필요 · 읽기 전용',{exact:true}).waitFor();
+  assert.equal(past.calls.filter(c=>/photo-slots$|\/submissions$/.test(c.path)).length,0);
+  assert.equal(await past.page.locator('[data-action="cleaning-start"],[data-cleaning-upload],[data-action="cleaning-submit"]').count(),0);
+  for(const width of [360,390,768,1440]){await past.page.setViewportSize({width,height:1000});await past.page.evaluate(()=>scrollTo(0,0));assert.equal(await past.page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await past.page.screenshot({path:`WIREFRAME/QA/screenshots/maid-past-readonly-oct22-${width}.png`});}
+  await past.page.locator('[data-action="live-cleaning-history-detail"]').click();await past.page.waitForFunction(()=>document.querySelector('[data-action="back"]'));await until(()=>past.calls.some(c=>c.path==='/v1/cleaning-history/'+submission.id));
+  await past.page.locator('[data-action="back"]').click();await card(past.page,0).waitFor();
+  for(const status of [403,409,410,503]){past.gate.failSummary=status;await past.page.evaluate(()=>__lazyQA.reload());assert.equal((await past.page.evaluate(()=>__lazyQA.get())).status,'ready');assert.equal(await past.page.locator('[data-maid-room-task]').count(),3);assert.equal(await card(past.page,0).count(),1);}
+  assert.deepEqual(past.errors,[]);assert.deepEqual(past.unexpected,[]);await past.page.close();
+  assignments.forEach((a,i)=>{a.serviceDate=oldDates[i];a.roomNumber=oldRooms[i];a.availableFrom=oldAvailable[i];});attempts.forEach((a,i)=>a.status=oldStatuses[i]);
+  console.log('[ok] past approved/scheduled history only, no performance calls/actions, isolated 403/409/410/503, four viewports');
   await page.evaluate(()=>__lazyQA.setup());await page.waitForFunction(()=>__lazyQA.get().done);gate.detail=0;await toggle(page,0).click();await until(()=>!!gate.release);
   await page.evaluate(()=>__lazyQA.invalidate());gate.release();gate.release=null;await pause(100);
   assert.equal((await page.evaluate(()=>__lazyQA.get())).photoUrls,0);assert.deepEqual((await page.evaluate(()=>__lazyQA.get())).reads,[]);

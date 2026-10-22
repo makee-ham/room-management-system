@@ -1,5 +1,23 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-22 · 남은 프런트 이슈와 릴리스 준비
+
+흐름: 종료 예약 열기 → 읽기 전용, 중복 예약 → 입력 보존/객실 재선택, 과거 승인·미종료 배정 → 이력/관리자 처리 필요. Browser plugin not available로 Playwright Chromium 151.0.7922.34, `http://127.0.0.1:4177`, 360/390/768/1440px에서 검증했다. 모든 업무 API는 합성 fixture이며 운영 쓰기 없음.
+
+| 확인 | 결과 |
+| --- | --- |
+| 예약 #168/#170 | PASS · 취소/체크아웃 완료는 bookability 0회·명령 없음. 사전 겹침/생성409 뒤 기간·인원·고객 이름/모달 DOM 유지, 안내 확인 뒤 객실 포커스, 다른 객실 재시도. 503은 기존 같은 key 결과 확인 유지 |
+| 사진 #188/#189 | PASS · 5MiB -1/정확히/+1, 미지원 MIME. 거부 입력 업로드 0회·안전한 용량/형식·미전송 문구. 정상 입력 bytes, 서버 오류/requestId, accepted/null snapshot·수동 같은 key/Blob/item·직렬 큐 회귀 |
+| 메이드 #202 | PASS · 같은 과거 날짜 approved+scheduled, 승인 이력 cleaning-history 상세, 수행 photo-slots/submissions 0회·시작/업로드/제출 버튼 없음. 객실별 403/409/410/503이 목록을 대체하지 않음 |
+| 구조 #194 | PASS · 같은 scope 중복 함수 26종 제거, 정적 재발 차단. demo 유지, live 직접 URL·새로고침·Back/Forward·역할 가드·0건/오류 분리 |
+| UI 품질 | PASS · 페이지 식별·의미 있는 렌더·오류 overlay 없음·가로 넘침 없음, 44px 주 버튼/이름·키보드·포커스/모달·사진 확대/Back·app warning/error 및 page error 없음. 의도된 HTTP 오류 fixture 제외 |
+| 계약 #142 | PASS · npm ci·결정적 생성·154/166·34 CAS·20 cursor·필수 Idempotency·error/민감 필드·기존 breaking 회귀. 잘못된 base ref는 실패하며 실제 snapshot 없는 초기 base만 허용 |
+| 기존 회귀 | PASS · reservation-bookability, lazy-cleaning, photo-performance (벤치 제외), cleaning-workflow 30그룹, live-navigation, backend-handoff-oct13 |
+
+대표 PNG: `reservation-readonly-oct22-{360,390,768,1440}.png`, `reservation-conflict-oct22-{360,390,768,1440}.png`, `maid-past-readonly-oct22-{360,390,768,1440}.png` (`WIREFRAME/QA/screenshots/`). 기존 같은 역할 카드와 목적지/모달을 비교했다. 중복 예약 알림에 중첩되던 toast는 제거하고 기존 모달 inline alert와 확인 버튼을 사용한다. 과거 판정은 선택 조회일이 아니라 실제 KST 현재일과 비교한다.
+
+한계: 실제 계정 protected GET/물리 PIN·Drive·실사진 업로드·실기기 HEIC/카메라/PWA·운영 p50/p95는 미검증. Preview 배포/원격 CI/main 병합은 이 절 작성 시 대기이며 실제 결과는 후속 기록한다. 정책/이슈별 미완료 범위는 `DOCS/36_FRONTEND_RELEASE_READINESS.md`를 따른다.
+
 ## 2026-10-22 · 이슈 후속: 사진 재시도·계획일·PIN Excel 분리
 
 기준 `origin/dev 29bafc9`. 흐름: 관리자 객실 내보내기 → PIN Excel 다운로드/Drive 잠금 → 메이드 사진 실패·동일 요청 재시도 → 오늘·내일 배정·KST 자정. Browser plugin not available로 기존 번들 Playwright Chromium 151.0.7922.34를 사용했다. 로컬 origin `http://127.0.0.1:4177`, 360/390/768/1440px. 업무 API는 합성 fixture로 가로챘으며 실제 PIN·사진·예약·배정·급여는 변경하지 않았다.

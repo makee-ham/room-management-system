@@ -32,7 +32,7 @@
 | `RMS_ROOM_PIN_EXPORT` | `true` | 관리자 전용 앱→Excel |
 | `RMS_ROOM_PIN_TRANSFER` | `false` | Drive→앱 preview/apply 잠금 |
 
-명시적 환경변수 → `.env.local` → 기본값 순서다. 이전 환경에 남은 `false` 값은 자동으로 덮어쓰지 않는다. 이전 서버 rollback 시 계획일·Excel을 각각 `false`로 빌드한다. `roomPinTransfer=true`는 기존 후보 설정과의 호환상 가져오기와 내보내기를 모두 허용하므로, 가져오기 준비 전에는 계속 false를 유지한다. `demo`는 운영 설정을 사용하지 않는다.
+명시적 환경변수 → `.env.local` → 기본값 순서다. 이전 환경에 남은 `false` 값은 자동으로 덮어쓰지 않는다. v0.9.5 호환 서버 복구 시 계획일·Excel을 각각 `false`로 빌드할 수 있다. 임의 문자열 PIN을 숫자 전용 v0.9.4로 되돌리지 않는다. `roomPinTransfer=true`는 기존 후보 설정과의 호환상 가져오기와 내보내기를 모두 허용하므로, 가져오기 준비 전에는 계속 false를 유지한다. `demo`는 운영 설정을 사용하지 않는다.
 
 Drive 가져오기는 [백엔드 #463](https://github.com/wrongstory/room-management-system-backend/issues/463)의 인증·시트 접근 확인이 남아 있다. 또한 import 후 mismatch 객실에서 일반 reveal이 차단되지만 `ACTUAL_PIN_REENTRY` prepare는 `expectedPinVersion`이 필요하고 `RoomProjection`에는 해당 version이 없다. 추측값이나 0을 보내는 복구 경로를 만들지 않는다. 기존 앱→Drive 업데이트는 별도 기능이며 가져오기를 대체하지 않는다.
 
@@ -55,3 +55,5 @@ Drive 가져오기는 [백엔드 #463](https://github.com/wrongstory/room-manage
 - `node scripts/check-operational-api.mjs`
 
 실행은 `python3 scripts/serve.py --port 4177`, 브라우저 회귀 origin은 `http://127.0.0.1:4177`이다. Browser plugin not available이므로 기존 번들 Playwright Chromium을 사용했다. Node 패키지 검색 경로와 `RMS_QA_PYTHON`은 사용 환경의 설치 경로를 지정하며 개인 컴퓨터 경로를 저장소에 고정하지 않는다. 실제 결과·화면 비교·한계는 `WIREFRAME/QA.md` 최신 절에 기록한다.
+
+후속 열린 이슈 처리·계약 CI·배포 검증 경계는 [릴리스 준비](36_FRONTEND_RELEASE_READINESS.md)를 따른다. 위 미배포 표기는 PR #222 작업 당시 기록이다.

@@ -925,7 +925,6 @@ for (const removedQuickCalendarContract of ['.quick-day-header.weekend','weekend
   if (html.includes(removedQuickCalendarContract)) throw new Error(`Combined red weekend styling returned: ${removedQuickCalendarContract}`);
 }
 for (const businessWeekContract of [
-  'offset=(d.getDay()+6)%7',
   'mondayOffset=-((date.getUTCDay()+6)%7)',
   '날짜를 누르면 그 날짜가 포함된 월요일–일요일 주차를 선택합니다.',
 ]) {
@@ -2793,3 +2792,10 @@ for(const contract of ['/v1/payroll/start','/v1/payroll/adjustments/corrections'
 }
 if(!html.includes('정정 버전 API 미제공'))throw new Error('Payroll adjustment version blocker must be explicit instead of guessed.');
 console.log('Payroll, complaint, Web Push, and room primary-status adapter contracts: passed');
+
+const entryHtml=readFileSync(resolve(root,'WIREFRAME/index.html'),'utf8');
+const entryNames=[...entryHtml.matchAll(/^      (?:async )?function (\w+)\(/gm)].map(match=>match[1]);
+const duplicateEntries=[...new Set(entryNames.filter((name,index)=>entryNames.indexOf(name)!==index))];
+if(duplicateEntries.length)throw new Error(`Duplicate app entry functions: ${duplicateEntries.join(', ')}`);
+if(entryHtml.includes('업무 API 연결 대기'))throw new Error('Obsolete maid fallback must not return.');
+console.log('Single live/demo entrypoint declarations: passed');
