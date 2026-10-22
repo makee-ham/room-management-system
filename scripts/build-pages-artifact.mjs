@@ -87,7 +87,7 @@ if (runtimeMode === "demo") {
     supabasePublishableKey: value("SUPABASE_PUBLISHABLE_KEY"),
     sessionPersistence: value("RMS_SESSION_PERSISTENCE", "session").toLowerCase(),
     deploymentChannel,
-    featureFlags: { optionalCleaningWorkflow: true, photoUploadSnapshot: value("RMS_PHOTO_UPLOAD_SNAPSHOT", "true") === "true", assignmentPlanningDate: value("RMS_ASSIGNMENT_PLANNING_DATE", "false") === "true", roomPinTransfer: value("RMS_ROOM_PIN_TRANSFER", "false") === "true" },
+    featureFlags: { optionalCleaningWorkflow: true, photoUploadSnapshot: value("RMS_PHOTO_UPLOAD_SNAPSHOT", "true") === "true", assignmentPlanningDate: value("RMS_ASSIGNMENT_PLANNING_DATE", "true") === "true", roomPinExport: value("RMS_ROOM_PIN_EXPORT", "true") === "true", roomPinTransfer: value("RMS_ROOM_PIN_TRANSFER", "false") === "true" },
   };
   const refs = [
     projectRef(config.apiBaseUrl, "/functions/v1/api"),

@@ -4,6 +4,394 @@
  */
 
 export interface paths {
+    "/v1/cleaning-history/submissions/{sourceSubmissionId}/supplemental-room-issues/source": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 추가 특이사항 신고 대상과 접근 권한 조회
+         * @description 활성·비밀번호 변경 완료 업무 관리자 또는 본인 실제 통보 배정 이력이 있는 메이드만 접근한다. 메이드는 원 수행 여부와 무관하게 같은 target의 본인 실제 통보 배정 이력이 필요하며 original_performer/notified_assignee는 응답 ownership 구분이지 별도 접근 권한이 아니다. DB가 매 응답마다 actor/session/source에 묶어 확인하며 내부 근거는 공개 응답과 저장된 처리 결과에 포함하지 않는다. v0.9.0에서 운영 배포된 계약이며 실제 업무 UAT 완료를 뜻하지 않는다. 7일은 신고 마감이 아니며 현재 객실·검수·수익·주급을 변경하지 않는다.
+         */
+        get: operations["getPostApprovalRoomIssueSource"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/cleaning-history/submissions/{sourceSubmissionId}/supplemental-room-issues/drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 추가 특이사항 신고 초안 저장
+         * @description 활성·비밀번호 변경 완료 업무 관리자 또는 본인 실제 통보 배정 이력이 있는 메이드만 접근한다. 메이드는 원 수행 여부와 무관하게 같은 target의 본인 실제 통보 배정 이력이 필요하며 original_performer/notified_assignee는 응답 ownership 구분이지 별도 접근 권한이 아니다. DB가 매 응답마다 actor/session/source에 묶어 확인하며 내부 근거는 공개 응답과 저장된 처리 결과에 포함하지 않는다. v0.9.0에서 운영 배포된 계약이며 실제 업무 UAT 완료를 뜻하지 않는다. 7일은 신고 마감이 아니며 현재 객실·검수·수익·주급을 변경하지 않는다.
+         */
+        post: operations["savePostApprovalRoomIssueDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/cleaning-history/submissions/{sourceSubmissionId}/supplemental-room-issues/drafts/{clientReportId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 추가 특이사항 신고 초안과 증빙 상태 복구
+         * @description 활성·비밀번호 변경 완료 업무 관리자 또는 본인 실제 통보 배정 이력이 있는 메이드만 접근한다. 메이드는 원 수행 여부와 무관하게 같은 target의 본인 실제 통보 배정 이력이 필요하며 original_performer/notified_assignee는 응답 ownership 구분이지 별도 접근 권한이 아니다. DB가 매 응답마다 actor/session/source에 묶어 확인하며 내부 근거는 공개 응답과 저장된 처리 결과에 포함하지 않는다. v0.9.0에서 운영 배포된 계약이며 실제 업무 UAT 완료를 뜻하지 않는다. 7일은 신고 마감이 아니며 현재 객실·검수·수익·주급을 변경하지 않는다. 활성 관리자는 sourceSubmissionId/clientReportId로 같은 초안을 공동 조회한다. 메이드는 본인 작성 초안만 복구한다. 현재 evidence CAS·봉인 reportId만 반환하며 provider locator는 반환하지 않는다.
+         */
+        get: operations["getPostApprovalRoomIssueDraft"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/cleaning-history/submissions/{sourceSubmissionId}/supplemental-room-issues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 원 제출에 연결된 추가 특이사항 신고 목록 조회
+         * @description 활성·비밀번호 변경 완료 업무 관리자 또는 본인 실제 통보 배정 이력이 있는 메이드만 접근한다. 메이드는 원 수행 여부와 무관하게 같은 target의 본인 실제 통보 배정 이력이 필요하며 original_performer/notified_assignee는 응답 ownership 구분이지 별도 접근 권한이 아니다. DB가 매 응답마다 actor/session/source에 묶어 확인하며 내부 근거는 공개 응답과 저장된 처리 결과에 포함하지 않는다. v0.9.0에서 운영 배포된 계약이며 실제 업무 UAT 완료를 뜻하지 않는다. 7일은 신고 마감이 아니며 현재 객실·검수·수익·주급을 변경하지 않는다. 같은 source의 최신50개를 reportedAt DESC/reportId DESC로 조회한다. client query/cursor/version을 받지 않으며 새 날짜 마감/타 메이드/초안 권한을 만들지 않는다.
+         */
+        get: operations["listPostApprovalRoomIssueReports"];
+        put?: never;
+        /**
+         * 새 증빙으로 추가 특이사항 신고 확정
+         * @description 활성·비밀번호 변경 완료 업무 관리자 또는 본인 실제 통보 배정 이력이 있는 메이드만 접근한다. 메이드는 원 수행 여부와 무관하게 같은 target의 본인 실제 통보 배정 이력이 필요하며 original_performer/notified_assignee는 응답 ownership 구분이지 별도 접근 권한이 아니다. DB가 매 응답마다 actor/session/source에 묶어 확인하며 내부 근거는 공개 응답과 저장된 처리 결과에 포함하지 않는다. v0.9.0에서 운영 배포된 계약이며 실제 업무 UAT 완료를 뜻하지 않는다. 7일은 신고 마감이 아니며 현재 객실·검수·수익·주급을 변경하지 않는다. 새 typed accepted evidence의 정확한 CAS·불변 seal·receipt·typed notification/outbox를 하나의 transaction으로 저장한다. 이후 수정본의 운영 반영은 별도 릴리스 절차를 따른다.
+         */
+        post: operations["finalizePostApprovalRoomIssueReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/cleaning-history/submissions/{sourceSubmissionId}/supplemental-room-issues/{reportId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 추가 특이사항 신고 상세 조회
+         * @description 활성·비밀번호 변경 완료 업무 관리자 또는 본인 실제 통보 배정 이력이 있는 메이드만 접근한다. 메이드는 원 수행 여부와 무관하게 같은 target의 본인 실제 통보 배정 이력이 필요하며 original_performer/notified_assignee는 응답 ownership 구분이지 별도 접근 권한이 아니다. DB가 매 응답마다 actor/session/source에 묶어 확인하며 내부 근거는 공개 응답과 저장된 처리 결과에 포함하지 않는다. v0.9.0에서 운영 배포된 계약이며 실제 업무 UAT 완료를 뜻하지 않는다. 7일은 신고 마감이 아니며 현재 객실·검수·수익·주급을 변경하지 않는다.
+         */
+        get: operations["getPostApprovalRoomIssueReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/cleaning-history/submissions/{sourceSubmissionId}/supplemental-room-issues/{reportId}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 관리자가 추가 특이사항 신고 종결
+         * @description 활성·비밀번호 변경 완료 업무 관리자 또는 본인 실제 통보 배정 이력이 있는 메이드만 접근한다. 메이드는 원 수행 여부와 무관하게 같은 target의 본인 실제 통보 배정 이력이 필요하며 original_performer/notified_assignee는 응답 ownership 구분이지 별도 접근 권한이 아니다. DB가 매 응답마다 actor/session/source에 묶어 확인하며 내부 근거는 공개 응답과 저장된 처리 결과에 포함하지 않는다. v0.9.0에서 운영 배포된 계약이며 실제 업무 UAT 완료를 뜻하지 않는다. 7일은 신고 마감이 아니며 현재 객실·검수·수익·주급을 변경하지 않는다.
+         */
+        post: operations["closePostApprovalRoomIssueReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/cleaning-history/submissions/{sourceSubmissionId}/supplemental-room-issues/drafts/{clientReportId}/evidence/{evidenceId}/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 추가 특이사항 신고의 새 증빙 사진 업로드
+         * @description 활성·비밀번호 변경 완료 상태와 실제 통보 배정 이력 또는 관리자 권한이 필요하다. 메이드의 초안 소유권과 업로드 실행자 권한은 별도로 검증하며 다른 메이드의 업로드 실행 권한을 주지 않는다. 모든 DB 경계에서 최신 session/source ownership을 검증하며 query와 caller authority 입력은 금지한다. 본문 읽기/decoder 전에 durable admission·공유30/min·inflight8·quota를 검증한다. 최대5MiB 원본을 방향 보정·metadata 제거 후 최대307200 bytes JPEG/WebP로 저장한다. accepted replay는 같은 key/payload를 다시 검증하며 새 provider identity를 만들지 않는다. 응답 유실/불확실 업로드는 동일 immutable identity를 reconcile하고 즉시 orphan 삭제하지 않는다.
+         */
+        post: operations["uploadPostApprovalRoomIssueEvidence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/post-approval-room-issue-evidence-uploads/{operationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 추가 특이사항 증빙 업로드 상태 조회
+         * @description 활성·비밀번호 변경 완료 상태와 실제 통보 배정 이력 또는 관리자 권한이 필요하다. 메이드의 초안 소유권과 업로드 실행자 권한은 별도로 검증하며 다른 메이드의 업로드 실행 권한을 주지 않는다. 모든 DB 경계에서 최신 session/source ownership을 검증하며 query와 caller authority 입력은 금지한다.
+         */
+        get: operations["getPostApprovalRoomIssueEvidenceUpload"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/post-approval-room-issue-evidence/{evidenceId}/versions/{revision}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 추가 특이사항 증빙 사진의 특정 버전 열람
+         * @description 활성·비밀번호 변경 완료 상태와 실제 통보 배정 이력 또는 관리자 권한이 필요하다. 메이드의 초안 소유권과 업로드 실행자 권한은 별도로 검증하며 다른 메이드의 업로드 실행 권한을 주지 않는다. 모든 DB 경계에서 최신 session/source ownership을 검증하며 query와 caller authority 입력은 금지한다. provider read 이후 응답 직전에도 같은 증빙·버전·session·권한·purge 상태를 재검증한다. 원본 locator/hash/PIN을 HTTP header에 넣지 않는다.
+         */
+        get: operations["getPostApprovalRoomIssueEvidenceContent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/post-approval-room-issue-evidence-uploads/{operationId}/handover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 관리자가 증빙 업로드 실행 권한 인계
+         * @description 활성·비밀번호 변경 완료 관리자만 기존 업로드를 본인에게 인계한다. 원 업로더·수행자 이력은 보존한다. 최신 DB session·권한·lease CAS와 공유 제한을 재검증한다. 같은 키와 요청의 재시도는 receipt를 재사용한다. 기존 provider identity만 inspect하며 새 사진을 생성하거나 삭제하지 않는다. query와 호출자 지정 actor/session/fence는 금지한다. 전용 영속 키와 복구 adapter가 없으면 503으로 거부한다.
+         */
+        post: operations["handoverPostApprovalRoomIssueEvidenceUpload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/rooms/pins/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 객실 번호·비밀번호 Excel 내보내기
+         * @description active admin 전용. 시트 1의 B/C열에 문자열로 저장합니다. 미설정 PIN은 빈 셀입니다. 현재 저장값이며 도어락 확인을 의미하지 않습니다. no-store 다운로드만 허용하며 원본 Drive에 쓰지 않습니다.
+         */
+        get: operations["exportRoomPins"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/rooms/pins/import/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 지정 Drive 시트 객실 비밀번호 검증
+         * @description active admin 전용. 서버 설정의 정확한 시트 1 B2:C1001만 읽습니다. PIN 원문 없이 행 번호·오류 코드·건수 및 5분 유효 previewToken을 반환합니다. 요일·특이사항은 읽지 않습니다. 최대 300실/1000행이며 숫자나 수식 PIN 셀을 거절합니다.
+         */
+        post: operations["previewRoomPinImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/rooms/pins/import/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 검증한 Drive 비밀번호를 원자 적용
+         * @description active admin 전용. 동일 actor/session의 previewToken과 Idempotency-Key가 필요합니다. 원본·객실/PIN 버전 변경 또는 5분 만료 시 409로 재검증합니다. 동일 요청 재시도는 receipt를 반환합니다. 변경한 객실은 물리 확인 전 mismatch이며 기존 ACTUAL_PIN_REENTRY 절차로 도어락 확인을 완료합니다. 자동 Sheet 쓰기 없음.
+         */
+        post: operations["applyRoomPinImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/rooms/{roomId}/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 등록된 청소 신고와 증빙 조회
+         * @description active business admin 전용 읽기 API입니다. 제출 전부터 실제 등록된 room_issue·bomb_room 신고만 조회하며 미신고 업로드는 제외합니다. 기존 room issue ID를 재사용합니다. reportedAt,id 내림차순, limit 기본 5·최대 10, actor/room/stream별 서명 cursor입니다. 해결·판정 뒤에도 이력을 보존하며 빈 items는 등록된 신고 없음입니다. readState는 증빙 열람 가능/만료/삭제/미준비 상태이고 provider 장애는 content 요청에서 별도 오류로 반환합니다. 사진은 기존 GET /v1/photos/{photoId}/content로 읽습니다. 조회만으로 제출·검수·수익이 생성되지 않습니다.
+         */
+        get: operations["listRoomReports"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/payroll/remittance-markers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 주차별 송금 표시 일괄 조회 (최대 10명)
+         * @description 관리자는 최대 10명, 메이드는 본인만 조회합니다. maidProfileIds는 쉼표로 구분한 UUID이며 중복(대소문자 포함)·빈 값·반복 query는 거부합니다. 입력 순서를 유지하고 내부 조회 동시성은 3입니다. 각 항목은 기존 세션·권한 검사와 basisFingerprint/version/needsReconfirmation을 유지합니다. 항목 간 동일 DB snapshot은 보장하지 않으며 DB RPC 개수는 인원수와 같습니다. 한 항목이라도 실패하면 전체 오류이며 미조회 항목을 marked=false로 추측하지 마세요. 기존 단건 GET은 유지합니다. 조회는 지급·표시를 변경하지 않고 128KiB/no-store를 적용합니다.
+         */
+        get: operations["listPayrollRemittanceMarkers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/payroll/remittance-marker": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 주차별 송금 표시 조회
+         * @description 관리자 또는 본인 메이드 조회. cycle.status/PAID와 독립된 표시이며, 기존 PAID에서 표시를 추측하지 않습니다. canSet/canClear/canReconfirm은 advisory이고 메이드는 모두 false입니다. basis 중 lockedAmount metadata를 제외한 7개 금액 근거의 변화는 on을 유지하며 needsReconfirmation으로 표시합니다. 지급 시작·book/cycle version 변화 자체는 재확인 사유가 아닙니다. 읽기는 원장·표시·receipt를 만들지 않습니다. 별칭·HEAD·중복 query는 거부하고 JSON 128KiB 상한을 적용합니다.
+         */
+        get: operations["getPayrollRemittanceMarker"];
+        /**
+         * 송금 표시 on/off 저장
+         * @description 관리자 전용. 새로운 on은 종료된 KST 주차·양수 (lockedAmount ?? payableAmount)에서만 허용합니다. off는 오표시 정정이며 실제 PAID/지급 잠금/원장/재지급 가능 상태는 변경하지 않습니다. 참조번호·확인창을 요구하지 않고 이체/provider를 호출하지 않습니다. 조회한 표시 expectedVersion과 expectedBasisFingerprint를 재검증하며 충돌 409 후 GET을 재조회합니다. 같은 값은 새 revision 없이 no-op receipt입니다. 같은 key 재시도는 당시 응답만 반환하므로 성공/replay 뒤 GET을 갱신합니다. 금액 변동 경고는 이 endpoint의 동일 on 요청으로 지우지 않고 별도 reconfirm을 사용합니다.
+         */
+        put: operations["setPayrollRemittanceMarker"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/payroll/remittance-marker/reconfirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * on 유지 상태에서 금액 근거 재확인
+         * @description 표시가 on이고 금액 근거가 달라졌을 때 관리자만 현재 basis를 확인한 새 불변 revision을 저장합니다. on 및 lastChangedBy/At은 유지하고 confirmedBy/At과 확인 근거·표시 version만 갱신합니다. 추가 이체/PAID 기록이 아니며 지금 0원이어도 기존 표시 재확인은 가능합니다. off는 PAYROLL_REMITTANCE_MARKER_NOT_SET, 변화 없음은 PAYROLL_REMITTANCE_RECONFIRM_NOT_REQUIRED 409입니다. 표시 CAS·basis fingerprint·멱등성·최신 역할/세션을 재검증합니다.
+         */
+        post: operations["reconfirmPayrollRemittanceMarker"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/payroll/remittance-marker/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 송금 표시 불변 이력 조회
+         * @description 관리자 또는 본인 메이드만 marked/cleared/reconfirmed 이력을 version ASC keyset으로 조회합니다. HMAC cursor는 actor·role·live session·maid·주차에 묶이고 기존 payroll cursor와 호환되지 않습니다. 기본20/최대100, 128KiB/no-store이며 전체 페이지에 걸친 영구 snapshot은 보장하지 않습니다. raw session/token/은행 참조번호는 반환하지 않습니다.
+         */
+        get: operations["listPayrollRemittanceMarkerHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/attempts/{attemptId}/room-issues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 담당 청소의 특이사항 신고
+         * @description 제출 전 담당 메이드가 별도 issue-proof 사진 1~10장과 메모를 등록합니다. 일반 청소 필수 사진을 대신하지 않습니다.
+         */
+        post: operations["reportAttemptRoomIssue"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/attempts/{attemptId}/bomb-room-reports": {
         parameters: {
             query?: never;
@@ -57,7 +445,7 @@ export interface paths {
         };
         /**
          * 검수 대상 목록 조회
-         * @description current submitted version만 오래된 제출부터 최대 100건 반환합니다. 각 항목에는 immutable 검수 reviewContext가 포함됩니다. developer/maid는 관리자 전체 queue를 볼 수 없습니다. 100건 초과 cursor pagination은 후속 hardening 범위입니다.
+         * @description current submitted version만 submittedAt, id 오름차순 keyset으로 반환합니다. limit 기본 50, 최대 100이며 opaque cursor는 관리자 ID·역할·검수 queue·고정 정렬에 서명됩니다. 각 항목에는 immutable 검수 reviewContext가 포함되고 전체 응답은 UTF-8 JSON 128 KiB로 제한됩니다. developer/maid, 비활성·비밀번호 변경 필요·폐기 session은 관리자 queue를 볼 수 없습니다.
          */
         get: operations["listPendingInspections"];
         put?: never;
@@ -178,8 +566,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 검증된 JPEG/WebP 사진을 슬롯에 업로드
-         * @description multipart/base64가 아닌 raw binary body입니다. Content-Length 유무와 무관하게 원문 307200 bytes(300KiB)까지 허용하고 307201번째 byte에서 취소합니다. JPEG/WebP magic·전체 decode·단일 frame·자원상한을 검사하고 EXIF 등 metadata 제거 후 output decode/크기/SHA를 다시 검증합니다. assignmentId/assignmentRevision/expectedPhotoRevision의 3개 query만 허용합니다. Idempotency-Key는 같은 최종 효과 재시도에 재사용하며 DB에는 scoped digest만 저장합니다. quota/현재 권한 admission은 디코딩과 Drive 호출 전입니다. 업로드 응답 유실 시 같은 key 재시도 또는 operation status 조회를 사용하고 새 파일을 임의 생성하지 않습니다. accepted만 current 사진 연결 완료이며 provider_succeeded/불확실 상태는 완료가 아닙니다. Google createdTime의 KST 날짜와 사전예약 폴더 날짜가 다르면 PHOTO_PROVIDER_DATE_MISMATCH로 fail-closed합니다. 실제 운영 OAuth/배포 준비가 없으면 503이며 이 source 문서만으로 운영 활성화가 되지 않습니다.
+         * 스마트폰 JPEG/WebP/HEIC/HEIF 사진을 슬롯에 업로드
+         * @description multipart/base64가 아닌 raw binary body입니다. Content-Length 유무와 무관하게 JPEG/WebP/HEIC/HEIF 원문 최대 5242880 bytes(5MiB)를 허용하고 초과 byte에서 취소합니다. 원본 magic·전체 decode·자원상한을 검사하고 방향 보정·EXIF 등 metadata 제거·축소/품질 조정 후 JPEG/WebP 최종본 307200 bytes(300KiB) 이하와 output decode/SHA를 다시 검증합니다. HEIC/HEIF는 JPEG로 저장합니다. assignmentId/assignmentRevision/expectedPhotoRevision 및 선택 includePhotoSlots=true query만 허용합니다. Idempotency-Key는 같은 최종 효과 재시도에 재사용하며 DB에는 scoped digest만 저장합니다. quota/현재 권한 admission은 디코딩과 Drive 호출 전입니다. 업로드 응답 유실 시 같은 key 재시도 또는 operation status 조회를 사용하고 새 파일을 임의 생성하지 않습니다. accepted만 current 사진 연결 완료이며 provider_succeeded/불확실 상태는 완료가 아닙니다. Google createdTime의 KST 날짜와 사전예약 폴더 날짜가 다르면 PHOTO_PROVIDER_DATE_MISMATCH로 fail-closed합니다. 실제 운영 OAuth/배포 준비가 없으면 503이며 이 source 문서만으로 운영 활성화가 되지 않습니다.
          */
         post: operations["uploadAttemptPhoto"];
         delete?: never;
@@ -198,8 +586,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * extra-proof 사진 추가 또는 교체
-         * @description v8+ extra-proof 전용 raw binary 업로드입니다. 새 UUID와 expectedItemRevision=0은 append, 기존 UUID와 최신 item revision은 replace입니다. expectedCollectionRevision도 함께 일치해야 하며 active item 10장 상태에서 append는 PHOTO_COLLECTION_LIMIT_EXCEEDED로 실패합니다. 일반 슬롯과 pre-A snapshot에는 사용할 수 없습니다.
+         * 사진 컬렉션 추가 또는 교체
+         * @description v9+ cleaning-proof는 최대 20장, bomb-proof와 issue-proof는 각각 최대 10장입니다. 기존 v8+ extra-proof는 최대 10장을 유지합니다. raw binary 업로드에서 새 UUID와 expectedItemRevision=0은 append, 기존 UUID와 최신 item revision은 replace입니다. expectedCollectionRevision도 일치해야 하며 상한을 초과하는 append는 PHOTO_COLLECTION_LIMIT_EXCEEDED로 실패합니다. 단일 사진 슬롯에는 사용할 수 없습니다.
          */
         post: operations["uploadAttemptPhotoCollectionItem"];
         delete?: never;
@@ -219,8 +607,8 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * extra-proof 사진 개별 삭제
-         * @description v8+ extra-proof current collection의 한 item만 tombstone 처리합니다. collection/item CAS와 Idempotency-Key가 필수이며 형제 item 및 이미 봉인된 제출 binding은 변경하지 않습니다.
+         * 사진 컬렉션 개별 삭제
+         * @description cleaning-proof, bomb-proof, issue-proof 및 기존 extra-proof current collection의 한 item만 tombstone 처리합니다. collection/item CAS와 Idempotency-Key가 필수이며 형제 item 및 이미 봉인된 제출 binding은 변경하지 않습니다.
          */
         delete: operations["deleteAttemptPhotoCollectionItem"];
         options?: never;
@@ -257,7 +645,7 @@ export interface paths {
         };
         /**
          * 권한을 다시 확인한 사진 원본 proxy
-         * @description 비밀번호 변경을 완료한 active business admin 또는 본인의 현재 유효 회차에 속한 active maid만 허용합니다. developer와 upload_only/deactivation_pending/과거 인계 회차의 원본 읽기는 금지합니다. provider bytes를 bounded download/SHA 검증한 뒤 응답 첫 byte 전에 session/ownership/7일 만료를 다시 확인합니다. redirect/Range/공개 URL은 지원하지 않으며 Cache-Control:no-store, nosniff, 서버 고정 filename만 반환합니다.
+         * @description 비밀번호 변경을 완료한 active business admin 또는 본인의 현재 유효 회차에 속한 active maid만 허용합니다. developer와 upload_only/deactivation_pending/과거 인계 회차의 원본 읽기는 금지합니다. provider bytes를 bounded download/SHA 검증한 뒤 응답 첫 byte 전에 session/ownership/보존 만료를 다시 확인합니다. redirect/Range/공개 URL은 지원하지 않으며 Cache-Control:no-store, nosniff, 서버 고정 filename만 반환합니다. 새 사진의 불변 날짜·유형·호실·순번 이름은 UTF-8 filename*로 제공하고 legacy는 photo.jpg/webp를 유지합니다. client가 파일명을 지정할 수 없습니다.
          */
         get: operations["getPhotoContent"];
         put?: never;
@@ -801,7 +1189,7 @@ export interface paths {
         };
         /**
          * 현재 주간 가능일 조회
-         * @description 비밀번호 변경을 완료한 active maid 또는 active business admin 전용입니다. maid는 본인 자료만 조회할 수 있으며, admin만 maidProfileId로 특정 메이드를 선택할 수 있습니다. weekStart는 조회할 주의 월요일 날짜입니다.
+         * @description 비밀번호 변경을 완료한 active maid 또는 active business admin 전용입니다. maid는 본인 자료만 조회할 수 있으며, admin만 maidProfileId로 특정 메이드를 선택할 수 있습니다. weekStart는 조회할 주의 월요일 날짜입니다. 최대 1,000건의 전체 결과만 성공하며 DB 행 제한으로 잘리거나 7일 상세가 불완전하면 500 AVAILABILITY_COMMAND_FAILED로 거부합니다. 오류를 미제출이나 근무 불가로 해석하지 않습니다.
          */
         get: operations["listAvailability"];
         put?: never;
@@ -841,7 +1229,7 @@ export interface paths {
         };
         /**
          * 가능일 변경 요청 목록 조회
-         * @description active maid는 본인 요청만, active business admin은 전체 요청을 조회합니다. status·weekStart·maidProfileId 필터는 모두 선택이며 maid가 다른 profile ID를 전달하면 403입니다.
+         * @description active maid는 본인 요청만, active business admin은 전체 요청을 조회합니다. status·weekStart·maidProfileId 필터는 모두 선택이며 maid가 다른 profile ID를 전달하면 403입니다. 최대 1,000건의 전체 결과만 성공하며 DB 행 제한으로 잘리거나 전체 건수를 확인할 수 없으면 500 AVAILABILITY_COMMAND_FAILED입니다. 필요하면 기존 주차·상태·메이드 필터로 범위를 좁힙니다. 오류를 요청 0건으로 해석하지 않습니다.
          */
         get: operations["listAvailabilityChangeRequests"];
         put?: never;
@@ -885,7 +1273,7 @@ export interface paths {
         };
         /**
          * 날짜별 배정 가능 메이드 후보 조회
-         * @description 비밀번호 변경을 완료한 active business admin 전용입니다. 해당 날짜가 가능하다고 제출한 현재 version의 active maid만 반환하며 developer와 maid는 조회할 수 없습니다.
+         * @description 비밀번호 변경을 완료한 active business admin 전용입니다. 해당 날짜가 가능하다고 제출한 현재 version의 active maid만 반환하며 developer와 maid는 조회할 수 없습니다. 최대 1,000건의 전체 결과만 성공하며 DB 행 제한으로 잘리거나 전체 건수를 확인할 수 없으면 500 AVAILABILITY_COMMAND_FAILED입니다. 오류를 후보 없음으로 해석하지 않습니다.
          */
         get: operations["listAvailabilityCandidates"];
         put?: never;
@@ -930,6 +1318,26 @@ export interface paths {
          * @description active 역할·최신 session·비밀번호 변경 완료를 검증합니다. non-superseded attempt가 있으면 ASSIGNMENT_ALREADY_STARTED입니다. expectedCurrentAssignmentId와 expectedAssignmentVersion을 함께 전달합니다. 변경은 새 immutable revision이며 draft는 통보하지 않고 notified는 알림/outbox를 원자적으로 기록합니다. 예정 checkout identity와 실행 금지 경계를 유지합니다. 같은 key/본문 재시도는 동일 결과, 다른 본문은 IDEMPOTENCY_KEY_REUSED입니다.
          */
         post: operations["unassignCleaningAssignmentPrestart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/assignments/{cleaningTargetId}/unavailable-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 수행 불가 메이드 담당 종료 및 일반 재배정 대기
+         * @description active business admin이 현재 assignment/target/attempt CAS를 확인한 뒤 퇴사·부상·기타 수행 불가 담당을 종료합니다. scheduled attempt는 superseded, in_progress attempt는 interrupted로 보존하며 PIN·offline·제한 capability를 회수합니다. 일반 작업은 같은 target을 unassigned로 유지하고, 0원 inspection reclean은 과거 원장을 취소 보존한 뒤 정상 fee snapshot을 가진 별도 미배정 replacement target을 만듭니다. 후임자는 이 명령에서 정하지 않으며 기존 draft/commit 경로로 배정합니다. 이전 메이드 earning은 만들지 않고 관리자에게 재배정 알림을 남깁니다.
+         */
+        post: operations["cancelUnavailableCleaningAssignment"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1136,6 +1544,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/limited/attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 기존 로그인 세션의 본인 제한 업무 찾기
+         * @description 최초 제한 전환 때 동결한 기존 live Supabase session만 허용합니다. 새 로그인·bearer 복구 credential·TTL 연장은 없으며 일반 login/me는 active-only입니다. 본인 live capability의 최소 ID/version/status/kind/actions/발급·만료 metadata만 UUID 오름차순으로 반환합니다. query는 없으며 1000건 초과는 partial response 대신 안전하게 실패합니다. 적격 세션에 live grant가 없으면 items=[]입니다. PIN·객실·고객정보·raw grant/session/digest를 반환하지 않습니다. 프런트 cold-boot 복원 구현·운영 제공은 별도입니다.
+         */
+        get: operations["listLimitedAttempts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/limited/attempts/{attemptId}": {
         parameters: {
             query?: never;
@@ -1145,7 +1573,7 @@ export interface paths {
         };
         /**
          * 본인 제한 수행 범위 조회
-         * @description 기존 Supabase Auth 사용자와 유효 세션, 최신 maid profile, 정확한 attempt/revision, 미만료 DB capability를 모두 확인합니다. active(인계 뒤 증빙 범위)·deactivation_pending·upload_only만 후보이며 상태만으로 허용하지 않습니다. 별도 bearer capability token을 발급하지 않고 PIN·사진·현재 target 상세를 노출하지 않습니다. upload/validate/submit allowedActions는 후속 계약이며 실행 endpoint가 아닙니다.
+         * @description 기존 Supabase Auth 사용자와 최초 제한 전환 때 동결한 유효 세션, 최신 maid profile, 정확한 attempt/revision, 미만료 DB capability를 모두 확인합니다. active(인계 뒤 증빙 범위)·deactivation_pending·upload_only만 후보이며 상태만으로 허용하지 않습니다. 별도 bearer capability token을 발급하지 않고 PIN·사진·현재 target 상세를 노출하지 않습니다. 이 조회는 실행 endpoint가 아닙니다. upload/validate/submit은 각각 현재 photo/submission 전용 경로에서 다시 검증하며 evidence_upload로 전체 제출하거나 사진 원본을 읽을 수 없습니다.
          */
         get: operations["getLimitedAttempt"];
         put?: never;
@@ -1256,6 +1684,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/checkout-incidents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 관리자 미해결 퇴실 미진행 사건 목록
+         * @description active/password-complete business admin만 현재 open 사건을 조회합니다. roomId·cleaningTargetId·serviceDate를 조합하여 필터링하며 serviceDate는 신고에 연결된 불변 assignment 날짜입니다. reportedAt·incidentId 내림차순의 서명 cursor는 actor와 모든 필터에 바인딩되고 microsecond를 보존합니다. 페이지마다 현재 open 상태를 읽으므로 새 신고는 첫 페이지를 새로고침합니다. allowedDecisions는 메뉴 안내일 뿐 권한이나 확정 snapshot이 아닙니다. 결정 전 기존 상세 조회에서 최신 version·impactFingerprint를 받아야 합니다. 조회는 사건 freeze·coordination·원장·알림을 변경하지 않습니다. 고객·신고자·예약 정보와 PIN은 반환하지 않습니다. 모든 응답은 no-store입니다.
+         */
+        get: operations["listCheckoutIncidents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/checkout-incidents/{incidentId}": {
         parameters: {
             query?: never;
@@ -1305,7 +1753,7 @@ export interface paths {
         };
         /**
          * 서비스 날짜별 청소 배정 조회
-         * @description 비밀번호 변경을 완료한 active business admin은 날짜 전체를, active maid는 본인에게 실제 통보된 revision만 조회합니다. includeHistory=false가 기본이며 현재 통보 배정만 반환합니다. true이면 본인의 과거 실제 통보된 superseded revision도 포함하지만 미통보 draft와 다른 메이드의 revision은 숨깁니다. 카드에는 target 생성 당시 종류·객실 타입·구역·요금·nullable 예상시간과 assignment별 이월·attempt·submission 상태를 함께 반환합니다. developer는 업무 배정을 조회할 수 없습니다.
+         * @description 비밀번호 변경을 완료한 active business admin은 날짜 전체를, active maid는 본인에게 실제 통보된 revision만 조회합니다. includeHistory=false가 기본이며 현재 통보 배정만 반환합니다. true이면 본인의 과거 실제 통보된 superseded revision도 포함하지만 미통보 draft와 다른 메이드의 revision은 숨깁니다. 카드에는 target 생성 당시 종류·객실 타입·구역·요금·nullable 예상시간과 assignment별 이월·attempt·submission 상태를 함께 반환합니다. scheduleSnapshot은 해당 revision의 불변 일정이며 legacy 부재는 null입니다. currentDeparture는 현재 목록의 exact current notified 업무만 별도로 관찰하며 includeHistory=true에서는 모든 행이 null입니다. 예정/실제 퇴실·다음 guest check-in·객실 이동 시각을 구분하고 일정 표시만으로 수행 권한을 부여하지 않습니다. developer는 업무 배정을 조회할 수 없습니다.
          */
         get: operations["listAssignments"];
         put?: never;
@@ -1325,7 +1773,7 @@ export interface paths {
         };
         /**
          * 청소 대상의 배정 revision 이력 조회
-         * @description active business admin은 전체 revision을 조회하고 active maid는 본인에게 실제 통보된 revision만 조회합니다. 과거 superseded revision도 통보 사실이 있으면 읽기 전용으로 보존합니다. 한 번 통보받은 target이라도 미통보 draft·다른 메이드의 revision·현재 target version은 공개하지 않습니다. 객실 ID/번호는 당시 notified snapshot이고 타입·요금·template은 target 생성 snapshot이므로 현재 master-data로 덮지 않습니다. 본인의 실제 통보 이력이 없으면 ASSIGNMENT_ACCESS_REQUIRED입니다.
+         * @description active business admin은 전체 revision을 조회하고 active maid는 본인에게 실제 통보된 revision만 조회합니다. 과거 superseded revision도 통보 사실이 있으면 읽기 전용으로 보존합니다. 한 번 통보받은 target이라도 미통보 draft·다른 메이드의 revision·현재 target version은 공개하지 않습니다. 객실 ID/번호는 당시 notified snapshot이고 타입·요금·template은 target 생성 snapshot이므로 현재 master-data로 덮지 않습니다. scheduleSnapshot도 해당 통보 revision에 고정되며 현재 다른 담당자의 예약/일정으로 재수화하지 않습니다. currentDeparture는 현재 행을 포함해 항상 null입니다. 본인의 실제 통보 이력이 없으면 ASSIGNMENT_ACCESS_REQUIRED입니다.
          */
         get: operations["getAssignmentHistory"];
         put?: never;
@@ -1367,7 +1815,7 @@ export interface paths {
         put?: never;
         /**
          * 배정 가능 수·요금 균형·동선 기반 배정 초안 계산
-         * @description 비밀번호 변경을 완료한 active business admin 전용이며 KST 오늘/내일만 허용합니다. 예상 시간 정책은 폐기되어 없어도 실행되며 template durationMinutes, 객실 타입 기본값, 임의 1분을 판단에 사용하지 않습니다. availableFrom/dueAt과 실제 예약 구간처럼 명시된 사실만 검증하고 가상 종료시각을 만들지 않습니다. 성공 preview는 assignment/attempt/audit/receipt/알림을 만들지 않습니다. 배정 가능 target 수 → 요금 격차/편차와 기존/reclean 제약 → 구역/호수 → 결정적 동률 순서로 비교합니다. previewSeed는 상관관계 호환 필드이며 동률 결정을 바꾸지 않습니다. 저장과 통보는 기존 draft/commit API에서 CAS를 다시 검증해야 합니다.
+         * @description 비밀번호 변경을 완료한 active business admin 전용이며 KST 오늘/내일만 허용합니다. 예상 시간 정책은 폐기되어 없어도 실행되며 template durationMinutes, 객실 타입 기본값, 임의 1분을 판단에 사용하지 않습니다. availableFrom/dueAt과 실제 예약 구간처럼 명시된 사실만 검증하고 가상 종료시각을 만들지 않습니다. 진행 중인 메이드도 현재 업무를 고정한 채 당일 후속 sequence의 계획 후보가 될 수 있으나 동시 현장 시작은 허용하지 않습니다. 성공 preview는 assignment/attempt/audit/receipt/알림을 만들지 않습니다. 배정 가능 target 수 → 요금 격차/편차와 기존/reclean 제약 → 구역/호수 → 결정적 동률 순서로 비교합니다. previewSeed는 상관관계 호환 필드이며 동률 결정을 바꾸지 않습니다. 저장과 통보는 기존 draft/commit API에서 CAS를 다시 검증해야 합니다.
          */
         post: operations["previewAssignments"];
         delete?: never;
@@ -1417,7 +1865,7 @@ export interface paths {
         put?: never;
         /**
          * 퇴실 청소 템플릿의 불변 새 버전 게시
-         * @description active business admin/live session 전용 command입니다. 한 객실 유형의 current published version을 expectedVersion(최초 0)으로 CAS 검증하고, 기존 published를 retired로 보존한 뒤 A-contract v8 이상 immutable version과 normalized slot rows를 원자 게시합니다. 기존 maxPhotos 없는 pre-A v7+ snapshot은 재작성하지 않습니다. 같은 actor/command/Idempotency-Key와 canonical request hash는 replay되고 다른 payload 재사용은 409입니다. 게시 자체는 수신자의 행동을 요구하지 않아 notification/outbox를 만들지 않습니다.
+         * @description active business admin/live session 전용 command입니다. 한 객실 유형의 current published version을 expectedVersion(최초 0)으로 CAS 검증하고, 기존 published를 retired로 보존한 뒤 immutable version과 normalized slot rows를 원자 게시합니다. 기본 v9 요청은 cleaning-proof/bomb-proof/issue-proof의 정규 3개 사진 모음이며 사진 3장이나 업로드 순서를 뜻하지 않습니다. 기존 v8 A-contract 게시도 호환되고, maxPhotos 없는 pre-A 요청은 완료 receipt 재생만 허용하며 과거 snapshot은 재작성하지 않습니다. 같은 actor/command/Idempotency-Key와 canonical request hash는 replay되고 다른 payload 재사용은 409입니다. #382에 따라 역할별 정규 객체의 배열 위치만 다른 6개 순서를 모두 허용합니다. 서버는 displayOrder로 정렬해 canonical request hash·저장·응답을 유지하고 역할별 key/order/label/필수 여부/최대 수 및 중복·누락 검증은 바꾸지 않습니다. 게시 자체는 수신자의 행동을 요구하지 않아 notification/outbox를 만들지 않습니다.
          */
         post: operations["publishCleaningTemplate"];
         delete?: never;
@@ -1446,6 +1894,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/cleaning-history/{submissionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 청소 이력 사진·제출 상세 조회
+         * @description 관리자 또는 실제 수행자만 조회합니다. 사진은 인증된 content API로 별도 조회하며 일반 사진은 검수 결정 후 168시간 보관합니다. 이력과 정산 metadata는 보존합니다.
+         */
+        get: operations["getCleaningHistorySubmission"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/work-history": {
         parameters: {
             query?: never;
@@ -1455,7 +1923,7 @@ export interface paths {
         };
         /**
          * 주간 업무 기록 조회
-         * @description active/password-complete admin과 maid의 live session 전용입니다. KST 월요일부터 일요일까지 current availability의 가능일, immutable notified assignment 이력, fieldCompletedAt의 실제 KST 완료일을 독립 flag로 반환합니다. 같은 메이드·날짜의 여러 작업은 1일로 집계합니다. maidDisplayName은 과거 snapshot이 아니라 현재 profile 표시명입니다.
+         * @description active/password-complete admin과 maid의 live session 전용입니다. KST 월요일부터 일요일까지 current availability의 가능일, immutable notified assignment 이력, fieldCompletedAt의 실제 KST 완료일을 독립 flag로 반환합니다. 같은 메이드·날짜의 여러 작업은 1일로 집계합니다. maidDisplayName은 과거 snapshot이 아니라 현재 profile 표시명입니다. 잘못된 query/cursor는 각각 INVALID_WORK_HISTORY_QUERY/INVALID_WORK_HISTORY_CURSOR로 반환하며 Fastify와 Edge가 같은 stable 오류 계약을 사용합니다.
          */
         get: operations["listWorkHistory"];
         put?: never;
@@ -1621,7 +2089,7 @@ export interface paths {
         put?: never;
         /**
          * 승인된 원 청소 컴플레인 접수
-         * @description active business admin이 원 수익 ID만 전달하면 서버가 room/target/attempt/submission/approved inspection/maid를 실제 FK로 확정합니다. 승인 후 30일 경계를 포함하며 자유문·고객정보·PIN·사진 locator는 입력할 수 없습니다.
+         * @description active business admin이 원 수익 ID만 전달하면 서버가 room/target/attempt/submission/approved inspection/maid를 실제 FK로 확정합니다. 승인 후 경과 시간은 접수를 차단하지 않으며 자유문·고객정보·PIN·사진 locator는 입력할 수 없습니다.
          */
         post: operations["createComplaint"];
         delete?: never;
@@ -1701,7 +2169,7 @@ export interface paths {
         put?: never;
         /**
          * 컴플레인 최초 판정
-         * @description active business admin이 finding, 평가 전용 penaltyScore 0..10, reworkRequired를 불변 decision version으로 기록합니다. 벌점은 수익·주급·정정 원장을 자동 변경하지 않으며 최초 판정부터 7일 응답 창이 열립니다.
+         * @description active business admin이 finding, 평가 전용 penaltyScore 0..10, reworkRequired를 불변 decision version으로 기록합니다. 벌점은 수익·주급·정정 원장을 자동 변경하지 않습니다. responseDeadline은 관리자 주의 기준이며 응답 권한을 만료시키지 않습니다.
          */
         post: operations["decideComplaint"];
         delete?: never;
@@ -1721,7 +2189,7 @@ export interface paths {
         put?: never;
         /**
          * 담당 메이드 판정 확인 또는 이의
-         * @description active 원 담당 maid만 최초 current decision 후 7일 경계를 포함해 정확히 한 번 acknowledged 또는 source-controlled appeal을 제출합니다. finding·벌점·재작업 판정은 변경할 수 없습니다.
+         * @description active 원 담당 maid만 최초 current decision에 정확히 한 번 acknowledged 또는 source-controlled appeal을 제출합니다. 경과 시간은 이 권한을 만료시키지 않으며 finding·벌점·재작업 판정은 변경할 수 없습니다.
          */
         post: operations["respondComplaint"];
         delete?: never;
@@ -1741,7 +2209,7 @@ export interface paths {
         put?: never;
         /**
          * 컴플레인 종결
-         * @description active business admin만 확인 완료 사건, correction으로 해결된 이의 사건, 또는 7일 응답 창이 지난 미응답 사건을 종결합니다. closed 사건을 reopen하는 API는 존재하지 않습니다.
+         * @description active business admin만 메이드가 확인한 사건 또는 correction으로 해결된 이의 사건을 종결합니다. 시간 경과만으로 미응답 사건을 종결할 수 없고 closed 사건을 reopen하는 API는 존재하지 않습니다.
          */
         post: operations["closeComplaint"];
         delete?: never;
@@ -1798,7 +2266,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 종료 주차의 메이드별 주급 조회
+         * 현재·과거 주차의 메이드별 주급 조회
          * @description 비밀번호 변경을 완료한 active admin은 전체 또는 선택 메이드를, active maid는 본인만 조회합니다. cycle이 아직 없으면 쓰기 없이 cycleId=null, version=0인 conceptual OPEN을 반환합니다. admin 전체 조회는 maidProfileId 오름차순 keyset cursor이며 page 최대 10개입니다. opaque cursor는 actor 역할/ID, weekStart, 적용된 maid filter, 고정 sort와 stream kind에 묶여 있으므로 저장한 URL 전체를 그대로 이어서 사용해야 합니다. 각 cycle의 items/lateEarnings는 최대 10개 preview이며 정확한 count/amount 합계와 별도 continuation을 제공합니다. 모든 payroll HTTP 응답은 UTF-8 JSON 128 KiB 상한을 초과하면 실패합니다. totalAmount는 현재 OPEN에 편입 가능한 확정 수익이며 검수 대기 예상액을 포함하지 않습니다. PAYING 이후 늦게 확정된 수익은 lateEarnings로 분리하며 lockedAmount를 바꾸지 않습니다.
          */
         get: operations["listPayrollCycles"];
@@ -1842,6 +2310,46 @@ export interface paths {
          * @description cycle preview의 itemsNextCursor 또는 lateEarningsNextCursor를 사용해 earnedOn, earningId 오름차순 keyset으로 이어서 조회합니다. limit 기본 25, 최대 50이며 OFFSET을 사용하지 않습니다. cursor는 actor 역할/ID, weekStart, maidProfileId, kind와 고정 sort에 서명되어 scope가 달라지거나 위변조되면 거부됩니다. 전체 응답은 UTF-8 JSON 128 KiB 상한을 적용합니다.
          */
         get: operations["listPayrollEntries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/payroll/adjustment-book": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 관리자 주급 조정 원장의 최신 CAS 버전 조회
+         * @description active/password-complete 관리자와 정확한 현재 Auth 세션을 DB에서 재검증한 read-only 조회입니다. 원장은 maidProfileId별 전역 CAS이며 weekStart는 KST 기준 현재 또는 과거 월요일의 화면 문맥일 뿐 원장 identity가 아닙니다. 같은 메이드의 다른 유효 주차도 같은 currentBookVersion을 반환합니다. 유효한 메이드의 원장이 없을 때만 서버가 0을 반환하고 원장을 생성하지 않습니다. 기존 adjustment.bookVersion은 생성 당시 불변 버전이므로 최신 CAS로 재사용하지 않습니다. 조회는 정정·반전 가능 여부나 이후 명령 성공을 보장하지 않으며 stale 409 뒤 이 조회를 다시 실행해야 합니다. query는 maidProfileId/weekStart 각 한 건만 허용합니다. HEAD·다른 method·slash alias는 404, 모든 응답은 no-store 및 UTF-8 JSON 128 KiB 상한입니다.
+         */
+        get: operations["getPayrollAdjustmentBook"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/payroll/work-details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 객실별 확정 수익과 미확정 청소 산출 상세
+         * @description 현재·과거 KST 월요일 주차의 read-only 조회입니다. active/password-complete 관리자 또는 본인 메이드의 정확한 live session 및 최신 DB role을 재검증합니다. earnings는 earnedOn 주차의 불변 수익이며 0원 보상과 이미 이월된 수익도 포함하고 합계는 summary.accrualAmount와 비교합니다. workflow는 earning이 없는 실제 수행 회차이며 예상·검수 대기 기여액만 설명하고 확정 지급액이 아닙니다. 기존 totalAmount/lateEarningAmount/adjustment/carry/payable 산식을 변경하지 않습니다. 객실·타입·요금은 당시 snapshot만 사용하고 사진 7일 목록이나 현재 카탈로그로 재구성하지 않습니다. 기본25/최대50, entryDate ASC/entryId ASC의 별도 actor·role·session·주차·메이드·kind bound HMAC cursor를 사용합니다. 기존 entries cursor는 거부합니다. 각 요청 summary/page는 동일 SQL snapshot이지만 여러 HTTP 페이지 사이 영구 snapshot은 보장하지 않으므로 상태 변경 뒤 첫 페이지부터 다시 조회합니다. HEAD·다른 method·slash·encoded alias는404이고 모든 응답은 no-store, UTF-8 JSON128KiB 상한입니다.
+         */
+        get: operations["listPayrollWorkDetails"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2189,7 +2697,7 @@ export interface paths {
         put?: never;
         /**
          * 미착수 수동 청소 요청 soft cancel
-         * @description active business admin이 아직 미배정·미공개·미착수인 수동 요청만 expectedVersion CAS로 취소합니다. 자동 퇴실 의무나 이미 시작된 작업은 취소할 수 없습니다.
+         * @description active business admin이 연박·추가 수동 요청을 expectedVersion CAS로 soft cancel합니다. 배정·통보 또는 PIN 조회 여부와 무관하게 실제 착수 전이면 허용하며, 기존 통보 담당자에게 취소를 알리고 해당 배정의 이후 PIN 접근을 종료합니다. 자동 퇴실 의무나 이미 시작·현장 완료·제출·검수 단계인 작업은 취소할 수 없습니다.
          */
         post: operations["cancelManualCleaningRequest"];
         delete?: never;
@@ -2246,8 +2754,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 전체 객실 운영 projection 조회
-         * @description active business admin 전용입니다. `evaluatedAt`의 서버 시각을 기준으로 `reservationPhase`와 현재 점유·청소·배정 가능 축을 계산합니다. `occupied`, `cleaningRequired`, `allocationBlocked`, `allocationReady`는 서로 독립된 축이며 하나의 영구 status enum으로 합치지 않습니다. `allocationReady=false`의 근거는 `reasonCodes`로 표시하세요. `pinSyncStatus`는 별도 운영 경고이며 예약 등록 가능 여부에는 포함되지 않습니다.
+         * 날짜별 전체 객실 운영 projection 조회
+         * @description active business admin 전용입니다. `serviceDate`를 생략하면 오늘의 LIVE projection을 반환합니다. 과거 날짜는 Asia/Seoul 영업일 종료 시점, 미래 날짜는 영업일 시작 시점을 기준으로 계산합니다. `occupied`, `cleaningRequired`, `allocationBlocked`, `allocationReady`는 서로 독립된 축이며 하나의 영구 status enum으로 합치지 않습니다. `detailConditionCodes`는 관리자 객실 현황의 상세 조건 필터 계약입니다. `pinSyncStatus`는 별도 운영 경고이며 예약 등록 가능 여부에는 포함되지 않습니다.
          */
         get: operations["listRooms"];
         put?: never;
@@ -2313,7 +2821,7 @@ export interface paths {
         head?: never;
         /**
          * 객실 기준정보 변경
-         * @description expectedVersion은 현재 room.stateVersion입니다. 객실 타입·엘리베이터 구역·기준정보 확인 상태를 기존 DB CAS·감사·멱등성 command로 변경합니다. 비밀번호 변경을 완료한 active business admin만 실행할 수 있고, Idempotency-Key 재시도와 expected version CAS를 적용합니다.
+         * @description expectedVersion은 현재 room.stateVersion입니다. 객실 타입·엘리베이터 구역·기준정보 확인 상태를 기존 DB CAS·감사·멱등성 command로 변경합니다. 비밀번호 변경을 완료한 active admin만 실행할 수 있고, Idempotency-Key 재시도와 expected version CAS를 적용합니다.
          */
         patch: operations["changeRoomMasterData"];
         trace?: never;
@@ -2327,13 +2835,13 @@ export interface paths {
         };
         /**
          * 객실 운영 차단 조회
-         * @description 비밀번호 변경을 완료한 active business admin 전용입니다. actionable은 해제되지 않은 차단 전체를 뜻하며 미래 scheduled, 현재 active, 시간이 지난 expired 항목을 모두 반환합니다. 반환된 id와 roomStateVersion은 차단 해제 명령에 그대로 사용합니다.
+         * @description 비밀번호 변경을 완료한 active business admin 전용입니다. actionable은 해제되지 않은 차단 전체를 뜻하며 미래 scheduled, 현재 active, 시간이 지난 expired 항목을 모두 반환합니다. startsAt,id 내림차순 keyset으로 limit 기본 50·최대 100이며 opaque cursor는 actor·roomId·status·stream·sort에 서명됩니다. 반환된 id와 roomStateVersion은 차단 해제 명령에 그대로 사용합니다.
          */
         get: operations["listRoomOperationBlocks"];
         put?: never;
         /**
          * 객실 운영 차단 생성
-         * @description 객실 운영 차단을 append합니다. startsAt을 생략하면 DB 시각을 사용하며 endsAt은 null일 수 있습니다. 비밀번호 변경을 완료한 active business admin만 실행할 수 있고, Idempotency-Key 재시도와 expected version CAS를 적용합니다.
+         * @description 객실 운영 차단을 append합니다. startsAt을 생략하면 DB 시각을 사용하며 endsAt은 null일 수 있습니다. 비밀번호 변경을 완료한 active admin만 실행할 수 있고, Idempotency-Key 재시도와 expected version CAS를 적용합니다.
          */
         post: operations["createRoomOperationBlock"];
         delete?: never;
@@ -2353,7 +2861,7 @@ export interface paths {
         put?: never;
         /**
          * 객실 운영 차단 해제
-         * @description 기존 차단을 삭제하지 않고 release 이력과 객실 CAS version을 기록합니다. 비밀번호 변경을 완료한 active business admin만 실행할 수 있고, Idempotency-Key 재시도와 expected version CAS를 적용합니다.
+         * @description 기존 차단을 삭제하지 않고 release 이력과 객실 CAS version을 기록합니다. 비밀번호 변경을 완료한 active admin만 실행할 수 있고, Idempotency-Key 재시도와 expected version CAS를 적용합니다.
          */
         post: operations["releaseRoomOperationBlock"];
         delete?: never;
@@ -2373,7 +2881,7 @@ export interface paths {
         put?: never;
         /**
          * 객실 점유 상태 보정
-         * @description 예약·투숙 segment의 현재 점유 경계를 관리자 보정 이력으로 append합니다. UI 대표 status를 덮어쓰지 않으며 reasonCode, effectiveAt, room CAS, 멱등 receipt와 감사를 보존합니다. 비밀번호 변경을 완료한 active business admin만 실행할 수 있고, Idempotency-Key 재시도와 expected version CAS를 적용합니다.
+         * @description 예약·투숙 segment의 현재 점유 경계를 관리자 보정 이력으로 append합니다. UI 대표 status를 덮어쓰지 않으며 reasonCode, effectiveAt, room CAS, 멱등 receipt와 감사를 보존합니다. 비밀번호 변경을 완료한 active admin만 실행할 수 있고, Idempotency-Key 재시도와 expected version CAS를 적용합니다.
          */
         post: operations["correctRoomOccupancy"];
         delete?: never;
@@ -2393,9 +2901,29 @@ export interface paths {
         put?: never;
         /**
          * 객실 표시 분류 강제 조정
-         * @description 표시/운영 분류만 append-only override로 조정하거나 null로 해제합니다. canonicalPrimaryDisplayStatus와 점유·예약·readiness·bookability 원장은 바뀌지 않습니다. BLOCKED 표시만으로 실제 배정을 막지 않으며 실제 차단에는 operation-block command를 사용해야 합니다. 비밀번호 변경을 완료한 active business admin만 실행할 수 있고, Idempotency-Key 재시도와 expected version CAS를 적용합니다.
+         * @description 표시/운영 분류만 append-only override로 조정하거나 null로 해제합니다. canonicalPrimaryDisplayStatus와 점유·예약·readiness·bookability 원장은 바뀌지 않습니다. BLOCKED 표시만으로 실제 배정을 막지 않으며 실제 차단에는 operation-block command를 사용해야 합니다. 비밀번호 변경을 완료한 active admin만 실행할 수 있고, Idempotency-Key 재시도와 expected version CAS를 적용합니다.
          */
         post: operations["overrideRoomDisplayStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/rooms/candles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 객실 촛불 최소 정보 조회
+         * @description active/password-complete 관리자와 모든 메이드의 live session 전용. 담당·제출·승인·7일 조건 없이 객실 식별/현재 수량/CAS만 조회합니다. UUID 오름차순 keyset, 기본/최대 50건이며 nextCursor가 null일 때 종료합니다. roomId 단건 필터와 cursor는 함께 사용할 수 없습니다. 다른 객실 정보·이력·PIN 권한은 부여하지 않습니다.
+         */
+        get: operations["listRoomCandles"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2413,7 +2941,7 @@ export interface paths {
         put?: never;
         /**
          * 객실 촛불 수량 기록
-         * @description 현재 수량을 append-only event로 기록합니다. physicallyVerified를 생략하면 false이며 count는 0 이상입니다. 비밀번호 변경을 완료한 active business admin만 실행할 수 있고, Idempotency-Key 재시도와 expected version CAS를 적용합니다.
+         * @description active/password-complete 관리자와 모든 메이드가 live session으로 현재 수량을 조정합니다. 담당 여부·제출·승인·7일 제한이나 관리자 재승인은 없습니다. 감소/0 초기화는 실제 회수 확인인 physicallyVerified=true를 요구하며 관리자 승인 필드가 아닙니다. CAS와 기존 멱등 receipt를 유지합니다. 0은 촛불 사유만 해소하며 다른 차단·준비 조건과 제출/검수/수익 이력은 바꾸지 않습니다. 비밀번호 변경을 완료한 active admin/maid만 실행할 수 있고, Idempotency-Key 재시도와 expected version CAS를 적용합니다.
          */
         post: operations["setRoomCandleCount"];
         delete?: never;
@@ -2431,13 +2959,13 @@ export interface paths {
         };
         /**
          * 객실 미해결 이슈 조회
-         * @description 비밀번호 변경을 완료한 active business admin 전용입니다. status=open인 미해결 이슈만 반환하며 반환된 id와 roomStateVersion은 이슈 해결 명령에 그대로 사용합니다.
+         * @description 비밀번호 변경을 완료한 active business admin 전용입니다. status=open인 미해결 이슈를 reportedAt,id 내림차순 keyset으로 조회합니다. limit 기본 50·최대 100이며 opaque cursor는 actor·roomId·status·stream·sort에 서명됩니다. 반환된 id와 roomStateVersion은 이슈 해결 명령에 그대로 사용합니다.
          */
         get: operations["listRoomIssues"];
         put?: never;
         /**
          * 객실 이슈 등록
-         * @description 객실 이슈를 등록합니다. description에 전화번호나 이메일 등 연락처를 넣으면 SENSITIVE_TEXT_NOT_ALLOWED로 거부합니다. 비밀번호 변경을 완료한 active business admin만 실행할 수 있고, Idempotency-Key 재시도와 expected version CAS를 적용합니다.
+         * @description 객실 이슈를 등록합니다. description에 전화번호나 이메일 등 연락처를 넣으면 SENSITIVE_TEXT_NOT_ALLOWED로 거부합니다. 비밀번호 변경을 완료한 active admin만 실행할 수 있고, Idempotency-Key 재시도와 expected version CAS를 적용합니다.
          */
         post: operations["reportRoomIssue"];
         delete?: never;
@@ -2457,7 +2985,7 @@ export interface paths {
         put?: never;
         /**
          * 객실 이슈 해결
-         * @description 이슈 원장을 삭제하지 않고 해결 상태와 사유를 기록합니다. 비밀번호 변경을 완료한 active business admin만 실행할 수 있고, Idempotency-Key 재시도와 expected version CAS를 적용합니다.
+         * @description 이슈 원장을 삭제하지 않고 해결 상태와 사유를 기록합니다. 비밀번호 변경을 완료한 active admin만 실행할 수 있고, Idempotency-Key 재시도와 expected version CAS를 적용합니다.
          */
         post: operations["resolveRoomIssue"];
         delete?: never;
@@ -2478,7 +3006,7 @@ export interface paths {
         /**
          * 객실 PIN 동기화 상태 기록(legacy)
          * @deprecated
-         * @description 기존 클라이언트 호환용 상태 기록 endpoint입니다. current PIN을 생성하거나 초기화하지 않으므로 신규 프론트는 사용하지 말고 bootstrap/prepare/confirm/rollback API를 사용합니다. PIN 원문 필드는 허용하지 않습니다. 비밀번호 변경을 완료한 active business admin만 실행할 수 있고, Idempotency-Key 재시도와 expected version CAS를 적용합니다.
+         * @description 기존 클라이언트 호환용 상태 기록 endpoint입니다. current PIN을 생성하거나 초기화하지 않으므로 신규 프론트는 사용하지 말고 bootstrap/prepare/confirm/rollback API를 사용합니다. PIN 원문 필드는 허용하지 않습니다. 비밀번호 변경을 완료한 active admin만 실행할 수 있고, Idempotency-Key 재시도와 expected version CAS를 적용합니다.
          */
         post: operations["recordRoomPinSync"];
         delete?: never;
@@ -2538,7 +3066,7 @@ export interface paths {
         put?: never;
         /**
          * 물리 도어락 PIN 변경 준비
-         * @description 서버가 현재 roomNumber와 4~8자리 pinDigits를 결합해 암호화한 뒤 5분 이하 변경 lease를 만듭니다. current PIN version이 0인 최초 등록에서 admin client가 일반 수정 사유 ADMIN_PHYSICAL_CHANGE를 보내도 서버가 ADMIN_INITIAL_PIN으로 정규화하며, request hash와 감사 사유도 정규화된 값을 사용합니다. 이 단계는 current PIN을 바꾸지 않고 즉시 mismatch로 전환하므로 실제 체크인과 모든 PIN reveal이 차단되지만 예약 등록은 차단하지 않습니다. maid는 본인의 현재 통보 assignment·in_progress attempt·현재 pinVersion의 unrevoked accessLeaseId를 모두 보내야 합니다. 응답 유실 시 같은 Idempotency-Key와 같은 PIN을 재전송하며, 다른 PIN은 IDEMPOTENCY_KEY_REUSED입니다.
+         * @description 서버가 현재 roomNumber와 128 UTF-8 바이트 이하 pinDigits를 결합해 암호화한 뒤 5분 이하 변경 lease를 만듭니다. current PIN version이 0인 최초 등록에서 admin client가 일반 수정 사유 ADMIN_PHYSICAL_CHANGE를 보내도 서버가 ADMIN_INITIAL_PIN으로 정규화하며, request hash와 감사 사유도 정규화된 값을 사용합니다. 이 단계는 current PIN을 바꾸지 않고 즉시 mismatch로 전환하므로 실제 체크인과 admin 일반 reveal은 차단하지만 현재 통보된 담당 메이드의 일반 reveal과 예약 등록은 차단하지 않습니다. maid mismatch reveal은 authoritative current stored PIN을 반환하며 물리 도어락 일치를 의미하지 않습니다. maid는 본인의 현재 통보 assignment·in_progress attempt·현재 pinVersion의 unrevoked accessLeaseId를 모두 보내야 합니다. 응답 유실 시 같은 Idempotency-Key와 같은 PIN을 재전송하며, 다른 PIN은 IDEMPOTENCY_KEY_REUSED입니다.
          */
         post: operations["prepareRoomPinChange"];
         delete?: never;
@@ -2598,7 +3126,7 @@ export interface paths {
         put?: never;
         /**
          * 현재 객실 PIN 일시 표시
-         * @description 30초 이하의 private reveal lease로 복호화한 뒤 세션·비밀번호·current PIN revision과 maid의 exact current/notified assignment entitlement를 DB에서 최종 재검증하고 sensitive.read append가 성공한 경우에만 plaintext credential을 반환합니다. entitlement는 통보 delivery outbox와 함께 확정되어 availableFrom 전에도 유효하고 field completion·upload·submission·inspection pending 동안 유지되며, 최종 승인/반려·승인 취소·재배정·계정 비활성화 workflow의 최종 정리·PIN rotation 때 즉시 종료됩니다. deactivation_pending/upload_only 동안 원장 이력은 유지되지만 active가 아닌 계정의 실제 reveal은 차단됩니다. 클라이언트는 clearAfterSeconds와 expiresAt 중 더 이른 시점 또는 화면 이동·background·pagehide·device lock·assignment removal·relock 즉시 plaintext를 지워야 하며 URL, clipboard, cache, offline 또는 영구 저장소에 기록하면 안 됩니다.
+         * @description 30초 이하의 private reveal lease로 복호화한 뒤 세션·비밀번호·current PIN revision과 maid의 exact current/notified assignment entitlement를 DB에서 최종 재검증하고 sensitive.read append가 성공한 경우에만 plaintext credential을 반환합니다. 담당 메이드에게는 pinSyncStatus와 물리 도어락 확인이 reveal 권한 조건이 아니므로 mismatch에서도 현재 저장 PIN을 즉시 반환하며, 이 값이 물리 도어락과 일치한다는 의미는 아닙니다. admin 일반 reveal은 기존 verified sync 조건을 유지합니다. entitlement는 통보 delivery outbox와 함께 확정되어 availableFrom 전에도 유효하고 field completion·upload·submission·inspection pending 동안 유지되며, 최종 승인/반려·승인 취소·재배정·계정 비활성화 workflow의 최종 정리·PIN rotation 때 즉시 종료됩니다. deactivation_pending/upload_only 동안 원장 이력은 유지되지만 active가 아닌 계정의 실제 reveal은 차단됩니다. 클라이언트는 clearAfterSeconds와 expiresAt 중 더 이른 시점 또는 화면 이동·background·pagehide·device lock·assignment removal·relock 즉시 plaintext를 지워야 하며 URL, clipboard, cache, offline 또는 영구 저장소에 기록하면 안 됩니다.
          */
         post: operations["revealRoomPin"];
         delete?: never;
@@ -2611,6 +3139,84 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        PayrollRemittanceBatch: {
+            /** Format: date */
+            weekStart: string;
+            markers: components["schemas"]["PayrollRemittanceMarker"][];
+        };
+        PayrollRemittanceBasis: {
+            accrualAmount: number;
+            totalAmount: number;
+            adjustmentAmount: number;
+            carryInAmount: number;
+            carryOutAmount: number;
+            payableAmount: number;
+            lateEarningAmount: number;
+            lockedAmount: number | null;
+        };
+        PayrollRemittanceMarker: {
+            /** Format: uuid */
+            maidProfileId: string;
+            /** Format: date */
+            weekStart: string;
+            marked: boolean;
+            version: number;
+            /** Format: uuid */
+            lastChangedBy: string | null;
+            /** Format: date-time */
+            lastChangedAt: string | null;
+            /** Format: uuid */
+            confirmedBy: string | null;
+            /** Format: date-time */
+            confirmedAt: string | null;
+            needsReconfirmation: boolean;
+            basis: components["schemas"]["PayrollRemittanceBasis"];
+            confirmedBasis: components["schemas"]["PayrollRemittanceBasis"] | null;
+            basisFingerprint: string;
+            canSet: boolean;
+            canClear: boolean;
+            canReconfirm: boolean;
+            /** @enum {string|null} */
+            setBlockedReason: null | "ADMIN_REQUIRED" | "PAYROLL_WEEK_NOT_CLOSED" | "NO_PAYROLL_AMOUNT";
+        };
+        PayrollRemittanceSetInput: {
+            /** Format: uuid */
+            maidProfileId: string;
+            /** Format: date */
+            weekStart: string;
+            expectedVersion: number;
+            expectedBasisFingerprint: string;
+            marked: boolean;
+        };
+        PayrollRemittanceReconfirmInput: {
+            /** Format: uuid */
+            maidProfileId: string;
+            /** Format: date */
+            weekStart: string;
+            expectedVersion: number;
+            expectedBasisFingerprint: string;
+        };
+        PayrollRemittanceHistoryEvent: {
+            /** Format: uuid */
+            revisionId: string;
+            version: number;
+            /** @enum {string} */
+            eventType: "marked" | "cleared" | "reconfirmed";
+            marked: boolean;
+            /** Format: uuid */
+            actorProfileId: string;
+            /** Format: date-time */
+            occurredAt: string;
+            basis: components["schemas"]["PayrollRemittanceBasis"];
+        };
+        PayrollRemittanceHistory: {
+            /** Format: uuid */
+            maidProfileId: string;
+            /** Format: date */
+            weekStart: string;
+            entries: components["schemas"]["PayrollRemittanceHistoryEvent"][];
+            nextCursor: string | null;
+        };
         CheckoutIncidentReportRequest: {
             expectedExecutionVersion: number;
             /** Format: uuid */
@@ -2686,6 +3292,41 @@ export interface components {
             /** Format: uuid */
             nextAttemptId?: string;
         };
+        CheckoutIncidentListItem: {
+            /** Format: uuid */
+            incidentId: string;
+            /** @enum {string} */
+            status: "open";
+            /** Format: uuid */
+            roomId: string;
+            roomNumber: string;
+            /** Format: uuid */
+            cleaningTargetId: string;
+            /** Format: uuid */
+            assignmentId: string;
+            /** Format: uuid */
+            attemptId: string;
+            /**
+             * Format: date-time
+             * @description UTC 6자리 microsecond를 그대로 보존하는 seek anchor
+             */
+            reportedAt: string;
+            /**
+             * Format: date
+             * @description 신고에 연결된 assignment의 불변 service_date
+             */
+            serviceDate: string;
+            /** @description 이 순서의 메뉴 안내이며 결정 전에 최신 상세 version·impactFingerprint 조회 필수 */
+            allowedDecisions: [
+                "EXTEND_CHECKOUT",
+                "CONFIRM_DEPARTED",
+                "FALSE_REPORT"
+            ];
+        };
+        CheckoutIncidentListEnvelope: {
+            items: components["schemas"]["CheckoutIncidentListItem"][];
+            nextCursor: string | null;
+        };
         CheckoutIncidentEnvelope: {
             incident: components["schemas"]["CheckoutIncident"];
         };
@@ -2736,6 +3377,7 @@ export interface components {
             candleCount: number;
             /** Format: uuid */
             bombReportId?: string | null;
+            roomIssues?: components["schemas"]["SubmissionRoomIssues"];
             /** @enum {string|null} */
             bombDecision?: "approved" | "rejected" | null;
             /** @enum {string|null} */
@@ -2832,6 +3474,56 @@ export interface components {
             /** Format: uuid */
             maidProfileId: string;
         };
+        SubmissionRoomIssues: {
+            /** Format: uuid */
+            id?: string;
+            memo?: string;
+            /** Format: date-time */
+            reportedAt?: string;
+            evidencePhotoIds?: string[];
+        }[];
+        RoomIssueReportEnvelope: {
+            roomIssue: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                attemptId: string;
+                evidenceCount: number;
+            };
+        };
+        CleaningHistorySubmission: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            attemptId: string;
+            /** @enum {string} */
+            status: "submitted" | "superseded" | "approved" | "rejected";
+            roomIssues?: components["schemas"]["SubmissionRoomIssues"];
+            /** Format: date-time */
+            fieldCompletedAt: string | null;
+            /** Format: date-time */
+            submittedAt?: string;
+            candleCount?: number;
+            reviewContext: components["schemas"]["SubmissionReviewContext"];
+            bombReport?: {
+                /** Format: uuid */
+                id?: string;
+                memo?: string;
+                /** Format: date-time */
+                reportedAt?: string;
+                evidencePhotoIds?: string[];
+            } | null;
+            photos: {
+                /** Format: uuid */
+                photoId: string;
+                slotKey: string;
+                label: string | null;
+                /** @enum {string} */
+                mediaAvailability: "available" | "expired" | "purged" | "unavailable";
+                /** Format: date-time */
+                expiresAt: string | null;
+            }[];
+        };
         CleaningHistoryItem: {
             submissionId: string | null;
             /** Format: uuid */
@@ -2923,6 +3615,13 @@ export interface components {
         SubmissionListEnvelope: {
             submissions: components["schemas"]["CleaningSubmission"][];
         };
+        InspectionPageEnvelope: {
+            submissions: components["schemas"]["CleaningSubmission"][];
+            /** @description 후속 page가 존재하는지 여부 */
+            hasMore: boolean;
+            /** @description 다음 페이지가 있을 때만 반환하는 opaque signed cursor */
+            nextCursor: string | null;
+        };
         BombRoomReportEnvelope: {
             bombReport: {
                 /** Format: uuid */
@@ -2979,7 +3678,7 @@ export interface components {
                 required: boolean;
                 displayOrder: number;
                 /** @enum {integer} */
-                maxPhotos: 1 | 10;
+                maxPhotos: 1 | 10 | 20;
                 currentRevision: number;
                 collectionRevision: number | null;
                 photoCount: number;
@@ -3005,7 +3704,7 @@ export interface components {
                 mediaAvailability?: "available" | "purged" | "unavailable";
             }[];
         };
-        /** @description 초기 업로드와 동일 key 재시도 모두 quotaWarning을 반환합니다. quota raw 사용량/Google 계정 정보는 반환하지 않습니다. */
+        /** @description 초기 업로드와 동일 key 재시도 모두 quotaWarning을 반환합니다. includePhotoSlots=true일 때만 photoSlots를 포함합니다. accepted 이외 또는 후속 조회 실패·배정 변경이면 null입니다. 재시도의 photoSlots는 새 조회 시점 결과이며 불변 receipt가 아닙니다. quota raw 사용량/Google 계정 정보는 반환하지 않습니다. */
         PhotoUploadResponse: components["schemas"]["PhotoUploadOperation"] & Record<string, never>;
         AttemptPhotoItem: {
             photoItemId: string | null;
@@ -3071,26 +3770,22 @@ export interface components {
              * @description 호환 별칭입니다. 새 클라이언트는 expiresAt을 사용합니다.
              */
             purgeAfter: string | null;
-            /**
-             * @description 서버가 domain binding과 immutable 종료 사건으로 계산한 보존 정책입니다.
-             * @enum {string}
-             */
-            retentionPolicy: "cleaning_submission" | "room_issue" | "complaint" | "interruption" | "sync_conflict" | "mixed" | "orphan" | "legacy_upload";
+            /** @description reserved/reconciliation_pending에서 아직 보존 메타데이터가 없으면 null. mediaAvailability와 함께 null이며 저장 후에는 기존 정책 enum을 유지합니다. */
+            retentionPolicy: ("cleaning_submission" | "room_issue" | "complaint" | "interruption" | "sync_conflict" | "mixed" | "orphan" | "legacy_upload") | null;
             /** @description 보존 기산점입니다. 검수 대기 중인 청소 제출 사진은 null입니다. */
             retentionStartsAt: string | null;
             /** @description 원본 media 만료 시각입니다. null은 아직 최종 검사 결정을 기다리는 보존 상태입니다. */
             expiresAt: string | null;
             purgedAt: string | null;
-            /**
-             * @description 메타데이터는 영구 보존되며 원본 media의 현재 가용성만 별도로 나타냅니다.
-             * @enum {string}
-             */
-            mediaAvailability: "available" | "purged" | "unavailable";
+            /** @description 보존 메타데이터가 없는 미완료 operation에서만 null. 업로드 완료나 삭제 성공을 뜻하지 않습니다. */
+            mediaAvailability: ("available" | "purged" | "unavailable") | null;
             /** @description 내부 fenced worker용 상태 표시입니다. 이 값은 클라이언트 삭제 capability가 아니며 공개 delete/worker endpoint는 없습니다. */
             compensationAllowed: boolean;
             /** @description 업로드 응답에서 필수. admission 기준 decimal10GB 이상 경고이며 raw 사용량은 노출하지 않습니다. 상태 조회에는 생략됩니다. */
             quotaWarning?: boolean;
-        };
+            /** @description 업로드 includePhotoSlots=true 전용. 기존 photo-slots GET과 같은 권한·projection. null이면 별도 GET fallback. 다음 변경은 snapshot의 최신 collection/item revision을 사용하며 409를 처리해야 합니다. */
+            photoSlots?: components["schemas"]["AttemptPhotoSlots"] | null;
+        } & (unknown & unknown);
         AssignmentPreviewRequest: {
             /**
              * Format: date
@@ -3132,13 +3827,54 @@ export interface components {
             displayOrder: number;
             required: boolean;
             label: string;
-            /** @description Decision A v8+ 필수 메타데이터입니다. pre-A historical v7+ projection에는 없을 수 있습니다. */
+            /** @description 일반 청소 사진은 필수 1~20장, 별도 폭탄방·특이사항 증빙은 각 최대 10장입니다. 과거 슬롯은 기존 제한을 유지합니다. */
             maxPhotos?: number;
             description?: string;
             section?: string;
             instanceKey?: string;
         };
         CheckoutCleaningTemplateV8Slot: components["schemas"]["CleaningTemplateSlot"] & Record<string, never>;
+        /** @description v9 역할별 정규 슬롯 객체. stable slotKey와 displayOrder(0/1/2), required, label, maxPhotos의 결합을 유지하며 label 변경이나 선택 메타데이터 추가를 지원하지 않습니다. */
+        CheckoutCleaningTemplateV9Slot: {
+            /** @constant */
+            slotKey: "cleaning-proof";
+            /** @constant */
+            displayOrder: 0;
+            /** @constant */
+            required: true;
+            /** @constant */
+            label: "청소 사진";
+            /** @constant */
+            maxPhotos: 20;
+        } | {
+            /** @constant */
+            slotKey: "bomb-proof";
+            /** @constant */
+            displayOrder: 1;
+            /** @constant */
+            required: false;
+            /** @constant */
+            label: "폭탄방 증빙";
+            /** @constant */
+            maxPhotos: 10;
+        } | {
+            /** @constant */
+            slotKey: "issue-proof";
+            /** @constant */
+            displayOrder: 2;
+            /** @constant */
+            required: false;
+            /** @constant */
+            label: "특이사항 증빙";
+            /** @constant */
+            maxPhotos: 10;
+        };
+        /** @description 새 v9 일반 사진 계약. 역할별 정규 객체를 정확히 하나씩 보내며 배열 위치만 다른 6개 순서를 모두 허용합니다. 서버는 displayOrder로 정렬하며 역할/order 값, label, 필수 여부, 수량과 추가 필드 금지 계약은 바꾸지 않습니다. 중복/누락 역할은 contains의 정확히 한 번 조건으로 거부합니다. */
+        CheckoutCleaningTemplateV9Slots: components["schemas"]["CheckoutCleaningTemplateV9Slot"][] & (unknown & unknown & unknown);
+        /** @description 기존 v8 A-contract 호환 형식. 현재 RPC는 새 게시와 완료 receipt 재생 모두 허용합니다. 서버가 타입별 개수, slotKey/displayOrder 유일성, 필수 tv-on·entry-storage, entry-number 금지, 마지막 선택 extra-proof(10), 나머지 필수 슬롯(1)을 재검증합니다. 새 UI의 기본 형식은 v9입니다. */
+        CheckoutCleaningTemplateV8Slots: components["schemas"]["CheckoutCleaningTemplateV8Slot"][];
+        /** @description maxPhotos 없는 pre-A v7+ 요청의 완료 receipt 재생 전용. 원 actor·Idempotency-Key·정규 요청 hash가 일치해야 합니다. JSON Schema 통과는 새 게시 허용이 아니며 receipt가 없으면 DB가 INVALID_CLEANING_TEMPLATE_SLOTS로 거부합니다. 과거 version은 7보다 클 수 있습니다. */
+        CheckoutCleaningTemplateLegacyReplaySlots: (components["schemas"]["CleaningTemplateSlot"] & unknown)[];
         PublishCleaningTemplateRequest: {
             roomTypeCode: components["schemas"]["CleaningTemplateRoomTypeCode"];
             /** @constant */
@@ -3146,9 +3882,9 @@ export interface components {
             expectedVersion: number;
             /** @description 선택적인 과거 호환 메타데이터입니다. 미입력/null이어도 예약을 차단하지 않으며 실제 청소시간은 attempt.startedAt부터 fieldCompletedAt까지 계산합니다. 배정 Preview는 이 값을 사용하지 않습니다. */
             durationMinutes?: number | null;
-            /** @description v8+ checkout 계약: standard/premium/oceanPremium/oceanFamily 순으로 정확히 9/10/12/14개, 필수는 8/9/11/13개입니다. required tv-on과 entry-storage는 각각 정확히 한 개, 마지막 extra-proof는 선택·maxPhotos 10이며 entry-number는 금지됩니다. 나머지 슬롯은 maxPhotos 1이고 displayOrder는 0부터 연속입니다. */
-            slots: components["schemas"]["CheckoutCleaningTemplateV8Slot"][];
-        };
+            /** @description v9 신규 게시, v8 호환 게시, pre-A 완료 receipt 재생을 구별합니다. expectedVersion=0은 미설정 타입의 최초 게시이며, 기존 타입은 조회한 current version을 사용합니다. stale version과 key/hash 충돌은 409입니다. */
+            slots: components["schemas"]["CheckoutCleaningTemplateV9Slots"] | components["schemas"]["CheckoutCleaningTemplateV8Slots"] | components["schemas"]["CheckoutCleaningTemplateLegacyReplaySlots"];
+        } & (unknown & unknown & unknown & unknown);
         PublishedCleaningTemplate: {
             /** Format: uuid */
             id: string;
@@ -3157,7 +3893,7 @@ export interface components {
             status: "published";
             /** @description 미설정 가능. 실제 청소시간이나 배정 Preview 정책의 정본이 아닙니다. */
             durationMinutes: number | null;
-            /** @description maxPhotos 없는 pre-A historical v7+ template은 10/11/13/15개이고, 모든 slot에 metadata가 있는 A-contract v8+ template은 9/10/12/14개입니다. */
+            /** @description 새 v9 일반 사진·폭탄방·특이사항은 3개 collection입니다. 과거 v7/v8 snapshot도 읽을 수 있습니다. */
             slots: components["schemas"]["CleaningTemplateSlot"][];
             /** Format: date-time */
             publishedAt: string;
@@ -3184,15 +3920,46 @@ export interface components {
         PublishedCleaningTemplateEnvelope: {
             template: components["schemas"]["PublishedCleaningTemplate"];
         };
+        /** @description target 생성 snapshot의 whitelist입니다. legacy 누락 key는 null, 현재 객실 타입/구역 대체는 금지합니다. */
+        AssignmentRoomTypeSnapshot: {
+            code: string | null;
+            name: string | null;
+            elevatorZone: string | null;
+        };
         AssignmentPreviewRow: {
+            cleaningKind: string | null;
+            /** @description 실제 target.source입니다. cleaningKind로 추측하지 않습니다. */
+            sourceKind: string | null;
+            /** @description 생성 당시 타입·구역 정본입니다. 현재 catalog로 누락을 채우지 않습니다. 과거 receipt에 metadata가 없으면 null입니다. */
+            roomTypeSnapshot: components["schemas"]["AssignmentRoomTypeSnapshot"] | null;
+            /** @enum {string} */
+            roomTypeCode: "standard" | "premium" | "oceanPremium" | "oceanFamily" | "unknown";
+            roomTypeName: string | null;
+            elevatorZone: string;
+            feeSnapshot: number;
+            /** Format: date */
+            originalServiceDate: string | null;
+            /**
+             * Format: date
+             * @description impact/preview는 target 유효일, 카드는 조회한 assignment의 고정 서비스일입니다. 최상위 계획일과 구분합니다.
+             */
+            effectiveServiceDate: string | null;
+            /** @description carryover_count 상한과 조회 revision까지의 실제 ROLLED_OVER evidence를 함께 적용합니다. 단순 지연/날짜 변경은 0, 과거 receipt 미확인은 null입니다. */
+            rolloverCount: number | null;
+            /** @enum {string|null} */
+            rolloverReason: "ROLLED_OVER_UNASSIGNED" | "ROLLED_OVER_NOT_STARTED" | null;
+            /** @description 관리자의 수동 target 취소 안내입니다. 담당 해제 권한이 아니며 최신 command의 session/상태/CAS/멱등성 검사를 대체하지 않습니다. PIN 공개·기한·stale 일정으로 제한하지 않습니다. 완료 receipt replay의 안내는 당시 snapshot입니다. */
+            canCancel: boolean;
+            /**
+             * @description canCancel=true이면 null입니다. ADMIN_REQUIRED/ASSIGNMENT_NOT_CURRENT/CAPABILITY_UNAVAILABLE는 조회 UI의 적용불가 코드이며 POST의 HTTP error code를 약속하지 않습니다.
+             * @enum {string|null}
+             */
+            cancelReasonCode: "NOT_MANUAL_CLEANING_REQUEST" | "CLEANING_REQUEST_CANCEL_CONFLICT" | "ASSIGNMENT_NOT_CURRENT" | "ADMIN_REQUIRED" | "CAPABILITY_UNAVAILABLE" | null;
             /** Format: uuid */
             cleaningTargetId: string;
             /** Format: uuid */
             roomId: string;
             roomNumber: string;
-            /** @enum {string} */
-            roomTypeCode: "standard" | "premium" | "oceanPremium" | "oceanFamily" | "unknown";
-            elevatorZone: string;
             /** Format: uuid */
             maidProfileId: string;
             maidDisplayName: string;
@@ -3201,8 +3968,9 @@ export interface components {
             /** Format: date */
             serviceDate: string;
             expectedAssignmentVersion: number;
+            /** @description expectedAssignmentVersion과 같은 target CAS입니다. assignment row revision과 혼동하지 않습니다. */
+            targetAssignmentVersion: number;
             expectedAvailabilityVersion: number | null;
-            feeSnapshot: number;
             /** @description 과거 client 호환 필드이며 preview에서는 항상 null입니다. 예상 시간은 배정 판단에 사용하지 않습니다. */
             durationMinutes: null;
             /** Format: date-time */
@@ -3211,10 +3979,115 @@ export interface components {
             dueAt: string | null;
         };
         AssignmentPreviewBlockedTarget: {
+            cleaningKind: string | null;
+            /** @description 실제 target.source입니다. cleaningKind로 추측하지 않습니다. */
+            sourceKind: string | null;
+            /** @description 생성 당시 타입·구역 정본입니다. 현재 catalog로 누락을 채우지 않습니다. 과거 receipt에 metadata가 없으면 null입니다. */
+            roomTypeSnapshot: components["schemas"]["AssignmentRoomTypeSnapshot"] | null;
+            roomTypeCode: string | null;
+            roomTypeName: string | null;
+            elevatorZone: string | null;
+            /** @description 불변 target 요금입니다. 0원은 0원이며 과거 receipt의 미확인은 null입니다. */
+            feeSnapshot: number | null;
+            /** Format: date */
+            originalServiceDate: string | null;
+            /**
+             * Format: date
+             * @description impact/preview는 target 유효일, 카드는 조회한 assignment의 고정 서비스일입니다. 최상위 계획일과 구분합니다.
+             */
+            effectiveServiceDate: string | null;
+            /** @description carryover_count 상한과 조회 revision까지의 실제 ROLLED_OVER evidence를 함께 적용합니다. 단순 지연/날짜 변경은 0, 과거 receipt 미확인은 null입니다. */
+            rolloverCount: number | null;
+            /** @enum {string|null} */
+            rolloverReason: "ROLLED_OVER_UNASSIGNED" | "ROLLED_OVER_NOT_STARTED" | null;
+            /** @description 관리자의 수동 target 취소 안내입니다. 담당 해제 권한이 아니며 최신 command의 session/상태/CAS/멱등성 검사를 대체하지 않습니다. PIN 공개·기한·stale 일정으로 제한하지 않습니다. 완료 receipt replay의 안내는 당시 snapshot입니다. */
+            canCancel: boolean;
+            /**
+             * @description canCancel=true이면 null입니다. ADMIN_REQUIRED/ASSIGNMENT_NOT_CURRENT/CAPABILITY_UNAVAILABLE는 조회 UI의 적용불가 코드이며 POST의 HTTP error code를 약속하지 않습니다.
+             * @enum {string|null}
+             */
+            cancelReasonCode: "NOT_MANUAL_CLEANING_REQUEST" | "CLEANING_REQUEST_CANCEL_CONFLICT" | "ASSIGNMENT_NOT_CURRENT" | "ADMIN_REQUIRED" | "CAPABILITY_UNAVAILABLE" | null;
             /** Format: uuid */
             cleaningTargetId: string;
-            /** @description 서버의 source/capacity 고정 reason code */
+            /** Format: uuid */
+            roomId: string;
+            roomNumber: string;
+            /** Format: date */
+            serviceDate: string;
+            targetAssignmentVersion: number;
+            expectedAssignmentVersion: number;
+            durationMinutes: null;
+            /** Format: date-time */
+            availableFrom: string;
+            /** Format: date-time */
+            dueAt: string | null;
+            /** @description 서버의 target source/schedule 검증 reason code. 인원 제외와 별개 */
             reason: string;
+        };
+        AssignmentPreviewRemainingTarget: {
+            cleaningKind: string | null;
+            /** @description 실제 target.source입니다. cleaningKind로 추측하지 않습니다. */
+            sourceKind: string | null;
+            /** @description 생성 당시 타입·구역 정본입니다. 현재 catalog로 누락을 채우지 않습니다. 과거 receipt에 metadata가 없으면 null입니다. */
+            roomTypeSnapshot: components["schemas"]["AssignmentRoomTypeSnapshot"] | null;
+            roomTypeCode: string | null;
+            roomTypeName: string | null;
+            elevatorZone: string | null;
+            /** @description 불변 target 요금입니다. 0원은 0원이며 과거 receipt의 미확인은 null입니다. */
+            feeSnapshot: number | null;
+            /** Format: date */
+            originalServiceDate: string | null;
+            /**
+             * Format: date
+             * @description impact/preview는 target 유효일, 카드는 조회한 assignment의 고정 서비스일입니다. 최상위 계획일과 구분합니다.
+             */
+            effectiveServiceDate: string | null;
+            /** @description carryover_count 상한과 조회 revision까지의 실제 ROLLED_OVER evidence를 함께 적용합니다. 단순 지연/날짜 변경은 0, 과거 receipt 미확인은 null입니다. */
+            rolloverCount: number | null;
+            /** @enum {string|null} */
+            rolloverReason: "ROLLED_OVER_UNASSIGNED" | "ROLLED_OVER_NOT_STARTED" | null;
+            /** @description 관리자의 수동 target 취소 안내입니다. 담당 해제 권한이 아니며 최신 command의 session/상태/CAS/멱등성 검사를 대체하지 않습니다. PIN 공개·기한·stale 일정으로 제한하지 않습니다. 완료 receipt replay의 안내는 당시 snapshot입니다. */
+            canCancel: boolean;
+            /**
+             * @description canCancel=true이면 null입니다. ADMIN_REQUIRED/ASSIGNMENT_NOT_CURRENT/CAPABILITY_UNAVAILABLE는 조회 UI의 적용불가 코드이며 POST의 HTTP error code를 약속하지 않습니다.
+             * @enum {string|null}
+             */
+            cancelReasonCode: "NOT_MANUAL_CLEANING_REQUEST" | "CLEANING_REQUEST_CANCEL_CONFLICT" | "ASSIGNMENT_NOT_CURRENT" | "ADMIN_REQUIRED" | "CAPABILITY_UNAVAILABLE" | null;
+            /** Format: uuid */
+            cleaningTargetId: string;
+            /** Format: uuid */
+            roomId: string;
+            roomNumber: string;
+            /** Format: date */
+            serviceDate: string;
+            targetAssignmentVersion: number;
+            expectedAssignmentVersion: number;
+            durationMinutes: null;
+            /** Format: date-time */
+            availableFrom: string;
+            /** Format: date-time */
+            dueAt: string | null;
+            /** @enum {string} */
+            reason: "NO_ELIGIBLE_MAID" | "RECLEAN_MAID_UNAVAILABLE";
+            reasonCodes: ("NO_ACTIVE_MAID" | "AVAILABILITY_NOT_SUBMITTED" | "NO_AVAILABLE_MAID" | "FIXED_ASSIGNMENT_CONFLICT" | "RECLEAN_MAID_UNAVAILABLE" | "RECLEAN_MAID_FIXED_ASSIGNMENT_CONFLICT" | "NO_FEASIBLE_ASSIGNMENT")[];
+        };
+        /** @description 동일 RPC snapshot의 누적 필터 인원. eligible은 reclean 소유권 적용 전이며 target별 배정 보장이 아님 */
+        AssignmentPreviewDiagnostics: {
+            /** Format: date-time */
+            evaluatedAt: string;
+            activeMaidCount: number;
+            submittedAvailabilityMaidCount: number;
+            availableMaidCount: number;
+            fixedExcludedMaidCount: number;
+            eligibleMaidCount: number;
+            /** @description 가능일 후보의 기존 고정 업무 충돌. target별 복수 사유이며 인원 합계로 더하지 않음. 미래 scheduled 생략과 별개 */
+            fixedExclusions: {
+                /** Format: uuid */
+                maidProfileId: string;
+                /** Format: uuid */
+                cleaningTargetId: string;
+                reasonCodes: ("FIXED_SEQUENCE_CONFLICT" | "FIXED_SERVICE_DATE_MISMATCH" | "FIXED_ASSIGNMENT_VERSION_MISMATCH" | "FIXED_SCHEDULE_MISMATCH" | "FIXED_SOURCE_BLOCKED" | "FIXED_ATTEMPT_OWNER_MISMATCH" | "FIXED_ATTEMPT_WORKFLOW_UNRESOLVED")[];
+            }[];
         };
         AssignmentPreviewResult: {
             /** Format: date */
@@ -3231,7 +4104,8 @@ export interface components {
             inputFingerprint: string;
             fixedAssignments: components["schemas"]["AssignmentPreviewRow"][];
             proposedAssignments: components["schemas"]["AssignmentPreviewRow"][];
-            remainingUnassignedTargets: components["schemas"]["AssignmentPreviewBlockedTarget"][];
+            remainingUnassignedTargets: components["schemas"]["AssignmentPreviewRemainingTarget"][];
+            diagnostics: components["schemas"]["AssignmentPreviewDiagnostics"];
             blockedTargets: components["schemas"]["AssignmentPreviewBlockedTarget"][];
             maidSummaries: {
                 /** Format: uuid */
@@ -3270,7 +4144,7 @@ export interface components {
          * @description 프론트 분기용 안정적 코드입니다. 사용자 표시 문구는 message가 아니라 이 코드 기준으로 관리합니다.
          * @enum {string}
          */
-        ErrorCode: "VALIDATION_ERROR" | "INVALID_PHONE" | "REQUEST_TOO_LARGE" | "MISSING_ACCESS_TOKEN" | "INVALID_ACCESS_TOKEN" | "PROFILE_NOT_FOUND" | "ACCOUNT_INACTIVE" | "ACCOUNT_EXECUTION_LIFECYCLE_REQUIRED" | "ATTEMPT_ACCESS_REQUIRED" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_VERSION_CONFLICT" | "ASSIGNMENT_NOT_NOTIFIED" | "ATTEMPT_INVALID_TRANSITION" | "MAID_ALREADY_IN_PROGRESS" | "ATTEMPT_COMMAND_FAILED" | "CAPABILITY_ACCESS_REQUIRED" | "PHOTO_RETENTION_DELETE_PREPARED" | "ACCOUNT_VERSION_CONFLICT" | "CLEANING_WINDOW_NOT_EXPIRED" | "ASSIGNMENT_SCHEDULE_INVALID" | "ROLLOVER_NOT_ALLOWED" | "INVALID_ATTEMPT_COMMAND" | "ATTEMPT_ACTIVATION_NOT_ALLOWED" | "CLEANING_SERVICE_DATE_NOT_DUE" | "CLEANING_SERVICE_DATE_EXPIRED" | "CLEANING_WINDOW_NOT_OPEN" | "CLEANING_WINDOW_EXPIRED" | "CHECKOUT_NOT_MATERIALIZED" | "RECLEAN_MAID_IMMUTABLE" | "PREVIOUS_ROOM_WORKFLOW_ACTIVE" | "SESSION_REVOKED" | "INVALID_CREDENTIALS" | "ACCOUNT_LOCKED" | "LOGIN_RATE_LIMITED" | "LOGIN_CLIENT_ID_UNAVAILABLE" | "LOGIN_RATE_LIMIT_UNAVAILABLE" | "ACTIVITY_LOG_UNAVAILABLE" | "AUTH_LOOKUP_FAILED" | "LOGIN_STATE_UPDATE_FAILED" | "INVALID_CURRENT_PASSWORD" | "AUTH_PASSWORD_CHANGE_FAILED" | "PASSWORD_STATE_INCONSISTENT" | "PASSWORD_STATE_UPDATE_FAILED" | "PASSWORD_CHANGE_RECEIPT_FAILED" | "PASSWORD_CHANGE_IN_PROGRESS" | "PASSWORD_CHANGE_SESSION_MISMATCH" | "PASSWORD_VERIFICATION_RATE_LIMITED" | "PASSWORD_VERIFICATION_RATE_LIMIT_UNAVAILABLE" | "PASSWORD_VERIFICATION_SESSION_REVOKE_FAILED" | "PASSWORD_RESET_STATE_UPDATE_FAILED" | "PASSWORD_CHANGE_REQUIRED" | "ACCOUNT_MANAGER_REQUIRED" | "ADMIN_REQUIRED" | "ASSIGNMENT_ACCESS_REQUIRED" | "DEVELOPER_REQUIRED" | "DEVELOPER_PROJECTION_FAILED" | "DATABASE_UNREACHABLE" | "MIGRATION_DRIFT" | "RLS_CONFIGURATION_INVALID" | "SCHEDULER_NOT_CONFIGURED" | "SCHEDULER_ACTOR_INVALID" | "SCHEDULER_DEGRADED" | "SCHEDULER_HEARTBEAT_FAILED" | "DIAGNOSTIC_TIMEOUT" | "DIAGNOSTICS_RATE_LIMITED" | "ACCOUNT_NOT_FOUND" | "DEVELOPER_ACCOUNT_PROTECTED" | "LAST_ACTIVE_ADMIN_REQUIRED" | "ACCOUNT_MUST_BE_INACTIVE" | "DEPARTED_ACCOUNT_IMMUTABLE" | "IDEMPOTENCY_KEY_REUSED" | "RESERVED_IDEMPOTENCY_KEY" | "DEACTIVATION_MUST_BE_FINISHED" | "PHONE_ALREADY_REGISTERED" | "LOGIN_ID_CONFLICT" | "PHONE_REQUIRED_FOR_RESET" | "AUTH_USER_CREATE_FAILED" | "AUTH_USER_UPDATE_FAILED" | "AUTH_PASSWORD_RESET_FAILED" | "ACCOUNT_AUTH_STATE_INCONSISTENT" | "ACCOUNT_COMMAND_FAILED" | "FORBIDDEN" | "MAID_REQUIRED" | "AVAILABILITY_ACCESS_REQUIRED" | "ACTIVE_MAID_REQUIRED" | "CLEANING_TARGET_NOT_FOUND" | "ASSIGNMENT_VERSION_CONFLICT" | "ASSIGNMENT_TARGET_STATE_INVALID" | "ASSIGNMENT_SEQUENCE_CONFLICT" | "ASSIGNMENT_NOT_FOUND" | "ASSIGNMENT_IMPACT_CHANGED" | "ASSIGNMENT_DRAFT_STALE_SCHEDULE" | "ASSIGNMENT_AVAILABILITY_REQUIRED" | "ASSIGNMENT_AVAILABILITY_STALE" | "ASSIGNMENT_MAID_UNAVAILABLE" | "ASSIGNMENT_WINDOW_EXPIRED" | "ASSIGNMENT_COMMIT_NOT_ALLOWED" | "ASSIGNMENT_COMMAND_FAILED" | "ASSIGNMENT_PREVIEW_DATE_NOT_ALLOWED" | "ASSIGNMENT_DURATION_POLICY_RETIRED" | "ASSIGNMENT_PREVIEW_LIMIT_EXCEEDED" | "ASSIGNMENT_PREVIEW_FAILED" | "INVALID_ASSIGNMENT_DURATION_POLICY" | "ASSIGNMENT_DURATION_POLICY_VERSION_CONFLICT" | "ACTIVE_ADMIN_REQUIRED" | "AVAILABILITY_WEEK_OUT_OF_RANGE" | "PAST_AVAILABILITY_DATE_NOT_ALLOWED" | "CHANGE_REQUEST_BEFORE_DEADLINE" | "STALE_VERSION" | "PENDING_CHANGE_REQUEST_EXISTS" | "INVALID_TRANSITION" | "AVAILABILITY_NOT_FOUND" | "CHANGE_REQUEST_NOT_FOUND" | "WEEK_START_MUST_BE_MONDAY" | "AVAILABILITY_DATES_MUST_BE_UNIQUE" | "AVAILABILITY_DATE_OUTSIDE_WEEK" | "AVAILABILITY_COMMAND_FAILED" | "INVALID_GUEST_NAME" | "INVALID_GUEST_COUNT" | "INVALID_RESERVATION_SCHEDULE" | "STANDARD_RESERVATION_REQUIRES_END" | "RESERVATION_TYPE_IMMUTABLE" | "RESERVATION_END_IMMUTABLE" | "BOOKABILITY_RANGE_TOO_LARGE" | "INVALID_ROOM_TYPE_FILTER" | "EXCLUDE_RESERVATION_NOT_FOUND" | "EXCLUDE_RESERVATION_NOT_ELIGIBLE" | "INVALID_RESERVATION_RANGE" | "RESERVATION_RANGE_TOO_LARGE" | "INVALID_RESERVATION_CURSOR" | "RESERVATION_CURSOR_NOT_CONFIGURED" | "INVALID_MOVE_EFFECTIVE_AT" | "RESERVATION_OVERLAP" | "TARGET_ROOM_OVERLAP" | "TARGET_ROOM_BLOCKED" | "TARGET_ROOM_NOT_READY" | "PIN_LEASE_ACTIVE" | "OPEN_ENDED_STAY_REQUIRES_END" | "ROOM_ALLOCATION_BLOCKED" | "RESERVATION_NOT_FOUND" | "CLEANING_REQUEST_NOT_FOUND" | "CLEANING_TEMPLATE_NOT_CONFIGURED" | "INVALID_CLEANING_TEMPLATE" | "INVALID_CLEANING_TEMPLATE_SLOTS" | "CLEANING_TEMPLATE_VERSION_CONFLICT" | "CLEANING_TEMPLATE_COMMAND_FAILED" | "INVALID_MANUAL_CLEANING_REQUEST" | "ACTIVE_STAY_RESERVATION_REQUIRED" | "STAYOVER_ACCESS_WINDOW_INVALID" | "VACANT_ROOM_REQUIRED" | "RESERVATION_ROOM_MISMATCH" | "NOT_MANUAL_CLEANING_REQUEST" | "REPLAN_REQUIRED" | "SCHEDULE_LOCKED" | "CONFLICT" | "RESERVATION_COMMAND_FAILED" | "RESERVATION_PII_KEY_INVALID" | "RESERVATION_PII_KEYRING_INVALID" | "RESERVATION_PII_DECRYPT_FAILED" | "COMPLAINT_ACCESS_REQUIRED" | "COMPLAINT_MAID_MISMATCH" | "COMPLAINT_NOT_FOUND" | "INVALID_COMPLAINT_CATEGORY" | "INVALID_COMPLAINT_FINDING" | "INVALID_COMPLAINT_PENALTY" | "INVALID_REWORK_DECISION" | "INVALID_COMPLAINT_RESPONSE" | "COMPLAINT_APPEAL_REASON_REQUIRED" | "COMPLAINT_APPEAL_REASON_FORBIDDEN" | "COMPLAINT_PERIOD_INVALID" | "COMPLAINT_PAGE_LIMIT_INVALID" | "INVALID_COMPLAINT_CURSOR" | "INVALID_COMPLAINT_REWORK" | "COMPLAINT_COMPENSATION_AMOUNT_INVALID" | "COMPLAINT_INTAKE_WINDOW_CLOSED" | "COMPLAINT_SOURCE_NOT_APPROVED" | "COMPLAINT_RESPONSE_WINDOW_CLOSED" | "COMPLAINT_RESPONSE_WINDOW_OPEN" | "COMPLAINT_APPEAL_UNRESOLVED" | "COMPLAINT_RESPONSE_ALREADY_RECORDED" | "COMPLAINT_DECISION_REQUIRED" | "COMPLAINT_REWORK_MAID_UNAVAILABLE" | "COMPLAINT_REWORK_WINDOW_UNAVAILABLE" | "COMPLAINT_REWORK_NOT_CONFIRMED" | "COMPLAINT_REWORK_ALREADY_MATERIALIZED" | "COMPLAINT_REWORK_DECISION_STALE" | "COMPLAINT_REWORK_PRESTART_FROZEN" | "RECLEAN_TEMPLATE_NOT_CONFIGURED" | "COMPLAINT_INVALID_TRANSITION" | "COMPLAINT_COMMAND_FAILED" | "NOTIFICATION_ACCESS_REQUIRED" | "NOTIFICATION_NOT_FOUND" | "INVALID_NOTIFICATION_CURSOR" | "NOTIFICATION_CURSOR_NOT_CONFIGURED" | "NOTIFICATION_RESPONSE_TOO_LARGE" | "NOTIFICATION_QUERY_FAILED" | "PAYROLL_ACCESS_REQUIRED" | "PAYROLL_MAID_NOT_FOUND" | "PAYROLL_WEEK_MUST_START_MONDAY" | "PAYROLL_PAGE_LIMIT_INVALID" | "PAYROLL_PAGE_KIND_INVALID" | "PAYROLL_CURSOR_INVALID" | "PAYROLL_CURSOR_NOT_CONFIGURED" | "PAYROLL_RESPONSE_TOO_LARGE" | "INVALID_EXPECTED_VERSION" | "PAYROLL_WEEK_NOT_CLOSED" | "PAYROLL_CYCLE_NOT_OPEN" | "NO_PAYROLL_AMOUNT" | "PAYROLL_NONPOSITIVE_REQUIRES_CARRY" | "PAYROLL_POSITIVE_REQUIRES_START" | "PAYROLL_CYCLE_ECONOMICALLY_FROZEN" | "PAYROLL_SOURCE_PAYMENT_UNCERTAIN" | "PAYROLL_SOURCE_ALREADY_REVERSED" | "PAYROLL_ROOT_ENTITLEMENT_NEGATIVE" | "STALE_ADJUSTMENT_VERSION" | "PAYROLL_LATE_EARNING_ALREADY_CARRIED" | "PAYROLL_EARNING_NOT_LATE" | "PAYROLL_LATE_CARRY_TARGET_FROZEN" | "PAYROLL_EARLIER_CARRY_PENDING" | "PAYROLL_PRIOR_LATE_EARNING_PENDING" | "PAYROLL_SOURCE_NOT_FOUND" | "PAYROLL_ADJUSTMENT_INVALID" | "PAYROLL_PAYMENT_ATTEMPT_NOT_FOUND" | "PAYROLL_PAYMENT_ATTEMPT_TERMINAL" | "PAYROLL_PAYMENT_TRANSITION_INVALID" | "PAYROLL_PAYMENT_REFERENCE_ALREADY_USED" | "PAYROLL_PAYMENT_REFERENCE_INVALID" | "PAYROLL_PAYMENT_METHOD_INVALID" | "PAYROLL_PAYMENT_REASON_INVALID" | "PAYROLL_PAYMENT_REOPEN_REASON_INVALID" | "PAYROLL_PAYMENT_RESULT_AMOUNT_MISMATCH" | "PAYROLL_COMMAND_FAILED" | "ROOM_NOT_FOUND" | "ROOM_TYPE_NOT_FOUND" | "ROOM_TYPE_CAPACITY_INVALID" | "ROOM_TYPE_CAPACITY_ACTIVE_RESERVATION_CONFLICT" | "ROOM_TYPE_CAPACITY_PREVIEW_STALE" | "ROOM_TYPE_VERSION_CONFLICT" | "ROOM_NUMBER_ALREADY_EXISTS" | "ROOM_TYPE_INACTIVE" | "ROOM_INACTIVE" | "ROOM_ALREADY_INACTIVE" | "ROOM_DEACTIVATION_BLOCKED" | "ROOM_DEACTIVATION_PREVIEW_STALE" | "ROOM_VERSION_CONFLICT" | "GUEST_COUNT_EXCEEDS_ROOM_TYPE_CAPACITY" | "ROOM_OPERATION_NOT_FOUND" | "INVALID_ROOM_PIN" | "INVALID_PIN_BOOTSTRAP_LIMIT" | "INVALID_PIN_BOOTSTRAP" | "ROOM_PIN_BOOTSTRAP_CONFIG_INVALID" | "ROOM_PIN_BOOTSTRAP_FAILED" | "ROOM_PIN_KEY_UNAVAILABLE" | "ROOM_PIN_CRYPTO_CONFIG_INVALID" | "ROOM_PIN_DECRYPT_FAILED" | "ROOM_PIN_COMMAND_FAILED" | "STALE_PIN_VERSION" | "ROOM_NUMBER_CHANGED" | "ROOM_PIN_REISSUE_REQUIRED" | "ROOM_PIN_MISMATCH_UNRESOLVED" | "INVALID_PIN_CHANGE_REASON" | "PIN_CHANGE_IN_PROGRESS_REQUIRED" | "PIN_CHANGE_IN_PROGRESS" | "PIN_CHANGE_LEASE_EXPIRED" | "PIN_CHANGE_LEASE_NOT_RESOLVABLE" | "PIN_REVEAL_AUTHORIZATION_CHANGED" | "GENERATED_PIN_REVEAL_NOT_ALLOWED" | "GENERATED_PIN_CONFIRMATION_NOT_ALLOWED" | "ROOM_PIN_UNCONFIGURED" | "ROOM_PIN_SHEET_OPERATOR_REQUIRED" | "ROOM_PIN_SHEET_NOT_CONFIGURED" | "ROOM_PIN_SHEET_OPERATION_FAILED" | "ROOM_PIN_SHEET_RESPONSE_TOO_LARGE" | "ROOM_PIN_SHEET_FULL_RESYNC_STALE" | "ROOM_PIN_SHEET_WORKER_BUSY" | "ROOM_PIN_SHEET_FULL_RESYNC_PENDING" | "ROOM_PIN_SHEET_ROOM_MASTER_INVALID" | "PIN_ACCESS_LEASE_REQUIRED" | "PIN_ENTITLEMENT_REQUIRED" | "PIN_ACCESS_REQUIRED" | "SENSITIVE_TEXT_NOT_ALLOWED" | "PIN_MATERIAL_NOT_ALLOWED" | "ROOM_COMMAND_FAILED" | "ORIGIN_NOT_ALLOWED" | "ROUTE_NOT_FOUND" | "RUNTIME_NOT_CONFIGURED" | "INTERNAL_SERVER_ERROR";
+        ErrorCode: "VALIDATION_ERROR" | "INVALID_ROOM_ISSUE_REPORT" | "ROOM_ISSUE_EVIDENCE_INVALID" | "ROOM_ISSUE_REPORT_ACCESS_REQUIRED" | "INVALID_PHONE" | "REQUEST_TOO_LARGE" | "MISSING_ACCESS_TOKEN" | "INVALID_ACCESS_TOKEN" | "PROFILE_NOT_FOUND" | "ACCOUNT_INACTIVE" | "ACCOUNT_EXECUTION_LIFECYCLE_REQUIRED" | "ATTEMPT_ACCESS_REQUIRED" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_VERSION_CONFLICT" | "ASSIGNMENT_NOT_NOTIFIED" | "ATTEMPT_INVALID_TRANSITION" | "MAID_ALREADY_IN_PROGRESS" | "ATTEMPT_COMMAND_FAILED" | "CAPABILITY_ACCESS_REQUIRED" | "LIMITED_DISCOVERY_LIMIT_EXCEEDED" | "LIMITED_SESSION_LIMIT_EXCEEDED" | "PHOTO_RETENTION_DELETE_PREPARED" | "ACCOUNT_VERSION_CONFLICT" | "CLEANING_WINDOW_NOT_EXPIRED" | "ASSIGNMENT_SCHEDULE_INVALID" | "ROLLOVER_NOT_ALLOWED" | "INVALID_ATTEMPT_COMMAND" | "ATTEMPT_ACTIVATION_NOT_ALLOWED" | "CLEANING_SERVICE_DATE_NOT_DUE" | "CLEANING_SERVICE_DATE_EXPIRED" | "CLEANING_WINDOW_NOT_OPEN" | "CLEANING_WINDOW_EXPIRED" | "CHECKOUT_NOT_MATERIALIZED" | "RECLEAN_MAID_IMMUTABLE" | "PREVIOUS_ROOM_WORKFLOW_ACTIVE" | "SESSION_REVOKED" | "AUTH_CONTEXT_UNAVAILABLE" | "INVALID_CREDENTIALS" | "ACCOUNT_LOCKED" | "LOGIN_RATE_LIMITED" | "LOGIN_CLIENT_ID_UNAVAILABLE" | "LOGIN_RATE_LIMIT_UNAVAILABLE" | "ACTIVITY_LOG_UNAVAILABLE" | "AUTH_LOOKUP_FAILED" | "LOGIN_STATE_UPDATE_FAILED" | "INVALID_CURRENT_PASSWORD" | "AUTH_PASSWORD_CHANGE_FAILED" | "PASSWORD_STATE_INCONSISTENT" | "PASSWORD_STATE_UPDATE_FAILED" | "PASSWORD_CHANGE_RECEIPT_FAILED" | "PASSWORD_CHANGE_IN_PROGRESS" | "PASSWORD_CHANGE_SESSION_MISMATCH" | "PASSWORD_VERIFICATION_RATE_LIMITED" | "PASSWORD_VERIFICATION_RATE_LIMIT_UNAVAILABLE" | "PASSWORD_VERIFICATION_SESSION_REVOKE_FAILED" | "PASSWORD_RESET_STATE_UPDATE_FAILED" | "PASSWORD_CHANGE_REQUIRED" | "ACCOUNT_MANAGER_REQUIRED" | "ADMIN_REQUIRED" | "ASSIGNMENT_ACCESS_REQUIRED" | "DEVELOPER_REQUIRED" | "DEVELOPER_PROJECTION_FAILED" | "DATABASE_UNREACHABLE" | "MIGRATION_DRIFT" | "RLS_CONFIGURATION_INVALID" | "SCHEDULER_NOT_CONFIGURED" | "SCHEDULER_ACTOR_INVALID" | "SCHEDULER_DEGRADED" | "SCHEDULER_HEARTBEAT_FAILED" | "DIAGNOSTIC_TIMEOUT" | "DIAGNOSTICS_RATE_LIMITED" | "ACCOUNT_NOT_FOUND" | "DEVELOPER_ACCOUNT_PROTECTED" | "LAST_ACTIVE_ADMIN_REQUIRED" | "ACCOUNT_MUST_BE_INACTIVE" | "DEPARTED_ACCOUNT_IMMUTABLE" | "IDEMPOTENCY_KEY_REUSED" | "RESERVED_IDEMPOTENCY_KEY" | "DEACTIVATION_MUST_BE_FINISHED" | "PHONE_ALREADY_REGISTERED" | "LOGIN_ID_CONFLICT" | "PHONE_REQUIRED_FOR_RESET" | "AUTH_USER_CREATE_FAILED" | "AUTH_USER_UPDATE_FAILED" | "AUTH_PASSWORD_RESET_FAILED" | "ACCOUNT_AUTH_STATE_INCONSISTENT" | "ACCOUNT_COMMAND_FAILED" | "FORBIDDEN" | "MAID_REQUIRED" | "AVAILABILITY_ACCESS_REQUIRED" | "ACTIVE_MAID_REQUIRED" | "CLEANING_TARGET_NOT_FOUND" | "ASSIGNMENT_VERSION_CONFLICT" | "ASSIGNMENT_TARGET_STATE_INVALID" | "ASSIGNMENT_SEQUENCE_CONFLICT" | "ASSIGNMENT_NOT_FOUND" | "ASSIGNMENT_IMPACT_CHANGED" | "ASSIGNMENT_DRAFT_STALE_SCHEDULE" | "ASSIGNMENT_AVAILABILITY_REQUIRED" | "ASSIGNMENT_AVAILABILITY_STALE" | "ASSIGNMENT_MAID_UNAVAILABLE" | "ASSIGNMENT_WINDOW_EXPIRED" | "ASSIGNMENT_COMMIT_NOT_ALLOWED" | "ASSIGNMENT_COMMAND_FAILED" | "ASSIGNMENT_PREVIEW_DATE_NOT_ALLOWED" | "ASSIGNMENT_DURATION_POLICY_RETIRED" | "ASSIGNMENT_PREVIEW_LIMIT_EXCEEDED" | "ASSIGNMENT_PREVIEW_FAILED" | "INVALID_ASSIGNMENT_DURATION_POLICY" | "ASSIGNMENT_DURATION_POLICY_VERSION_CONFLICT" | "ACTIVE_ADMIN_REQUIRED" | "AVAILABILITY_WEEK_OUT_OF_RANGE" | "PAST_AVAILABILITY_DATE_NOT_ALLOWED" | "CHANGE_REQUEST_BEFORE_DEADLINE" | "STALE_VERSION" | "PENDING_CHANGE_REQUEST_EXISTS" | "INVALID_TRANSITION" | "AVAILABILITY_NOT_FOUND" | "CHANGE_REQUEST_NOT_FOUND" | "WEEK_START_MUST_BE_MONDAY" | "AVAILABILITY_DATES_MUST_BE_UNIQUE" | "AVAILABILITY_DATE_OUTSIDE_WEEK" | "AVAILABILITY_COMMAND_FAILED" | "INVALID_GUEST_NAME" | "INVALID_GUEST_COUNT" | "INVALID_RESERVATION_SCHEDULE" | "STANDARD_RESERVATION_REQUIRES_END" | "RESERVATION_TYPE_IMMUTABLE" | "RESERVATION_END_IMMUTABLE" | "BOOKABILITY_RANGE_TOO_LARGE" | "INVALID_ROOM_TYPE_FILTER" | "EXCLUDE_RESERVATION_NOT_FOUND" | "EXCLUDE_RESERVATION_NOT_ELIGIBLE" | "INVALID_RESERVATION_RANGE" | "RESERVATION_RANGE_TOO_LARGE" | "INVALID_RESERVATION_CURSOR" | "RESERVATION_CURSOR_NOT_CONFIGURED" | "INVALID_MOVE_EFFECTIVE_AT" | "RESERVATION_OVERLAP" | "TARGET_ROOM_OVERLAP" | "TARGET_ROOM_BLOCKED" | "TARGET_ROOM_NOT_READY" | "PIN_LEASE_ACTIVE" | "OPEN_ENDED_STAY_REQUIRES_END" | "ROOM_ALLOCATION_BLOCKED" | "RESERVATION_NOT_FOUND" | "CLEANING_REQUEST_NOT_FOUND" | "CLEANING_TEMPLATE_NOT_CONFIGURED" | "INVALID_CLEANING_TEMPLATE" | "INVALID_CLEANING_TEMPLATE_SLOTS" | "CLEANING_TEMPLATE_VERSION_CONFLICT" | "CLEANING_TEMPLATE_COMMAND_FAILED" | "INVALID_MANUAL_CLEANING_REQUEST" | "ACTIVE_STAY_RESERVATION_REQUIRED" | "STAYOVER_ACCESS_WINDOW_INVALID" | "VACANT_ROOM_REQUIRED" | "RESERVATION_ROOM_MISMATCH" | "NOT_MANUAL_CLEANING_REQUEST" | "REPLAN_REQUIRED" | "SCHEDULE_LOCKED" | "CONFLICT" | "RESERVATION_COMMAND_FAILED" | "RESERVATION_PII_KEY_INVALID" | "RESERVATION_PII_KEYRING_INVALID" | "RESERVATION_PII_DECRYPT_FAILED" | "COMPLAINT_ACCESS_REQUIRED" | "COMPLAINT_MAID_MISMATCH" | "COMPLAINT_NOT_FOUND" | "INVALID_COMPLAINT_CATEGORY" | "INVALID_COMPLAINT_FINDING" | "INVALID_COMPLAINT_PENALTY" | "INVALID_REWORK_DECISION" | "INVALID_COMPLAINT_RESPONSE" | "COMPLAINT_APPEAL_REASON_REQUIRED" | "COMPLAINT_APPEAL_REASON_FORBIDDEN" | "COMPLAINT_PERIOD_INVALID" | "COMPLAINT_PAGE_LIMIT_INVALID" | "INVALID_COMPLAINT_CURSOR" | "INVALID_COMPLAINT_REWORK" | "COMPLAINT_COMPENSATION_AMOUNT_INVALID" | "COMPLAINT_SOURCE_NOT_APPROVED" | "COMPLAINT_RESPONSE_REQUIRED" | "COMPLAINT_APPEAL_UNRESOLVED" | "COMPLAINT_RESPONSE_ALREADY_RECORDED" | "COMPLAINT_DECISION_REQUIRED" | "COMPLAINT_REWORK_MAID_UNAVAILABLE" | "COMPLAINT_REWORK_WINDOW_UNAVAILABLE" | "COMPLAINT_REWORK_NOT_CONFIRMED" | "COMPLAINT_REWORK_ALREADY_MATERIALIZED" | "COMPLAINT_REWORK_DECISION_STALE" | "COMPLAINT_REWORK_PRESTART_FROZEN" | "RECLEAN_TEMPLATE_NOT_CONFIGURED" | "COMPLAINT_INVALID_TRANSITION" | "COMPLAINT_COMMAND_FAILED" | "INVALID_INSPECTION_CURSOR" | "INSPECTION_CURSOR_NOT_CONFIGURED" | "INSPECTION_PAGE_LIMIT_INVALID" | "INSPECTION_RESPONSE_TOO_LARGE" | "INVALID_WORK_HISTORY_QUERY" | "INVALID_WORK_HISTORY_CURSOR" | "WORK_HISTORY_ACCESS_REQUIRED" | "WORK_HISTORY_MAID_SCOPE_REQUIRED" | "WORK_HISTORY_MAID_NOT_FOUND" | "WORK_HISTORY_QUERY_FAILED" | "INVALID_ROOM_OPERATION_QUERY" | "INVALID_ROOM_OPERATION_CURSOR" | "ROOM_OPERATION_CURSOR_NOT_CONFIGURED" | "ROOM_OPERATION_PAGE_LIMIT_INVALID" | "ROOM_OPERATION_RESPONSE_TOO_LARGE" | "NOTIFICATION_ACCESS_REQUIRED" | "NOTIFICATION_NOT_FOUND" | "INVALID_NOTIFICATION_CURSOR" | "NOTIFICATION_CURSOR_NOT_CONFIGURED" | "NOTIFICATION_RESPONSE_TOO_LARGE" | "NOTIFICATION_QUERY_FAILED" | "PAYROLL_ACCESS_REQUIRED" | "PAYROLL_MAID_NOT_FOUND" | "PAYROLL_WEEK_MUST_START_MONDAY" | "PAYROLL_PAGE_LIMIT_INVALID" | "PAYROLL_PAGE_KIND_INVALID" | "PAYROLL_CURSOR_INVALID" | "PAYROLL_CURSOR_NOT_CONFIGURED" | "PAYROLL_RESPONSE_TOO_LARGE" | "INVALID_EXPECTED_VERSION" | "PAYROLL_WEEK_NOT_CLOSED" | "PAYROLL_CYCLE_NOT_OPEN" | "NO_PAYROLL_AMOUNT" | "PAYROLL_NONPOSITIVE_REQUIRES_CARRY" | "PAYROLL_POSITIVE_REQUIRES_START" | "PAYROLL_CYCLE_ECONOMICALLY_FROZEN" | "PAYROLL_SOURCE_PAYMENT_UNCERTAIN" | "PAYROLL_SOURCE_ALREADY_REVERSED" | "PAYROLL_ROOT_ENTITLEMENT_NEGATIVE" | "STALE_ADJUSTMENT_VERSION" | "PAYROLL_LATE_EARNING_ALREADY_CARRIED" | "PAYROLL_EARNING_NOT_LATE" | "PAYROLL_LATE_CARRY_TARGET_FROZEN" | "PAYROLL_EARLIER_CARRY_PENDING" | "PAYROLL_PRIOR_LATE_EARNING_PENDING" | "PAYROLL_SOURCE_NOT_FOUND" | "PAYROLL_ADJUSTMENT_INVALID" | "PAYROLL_PAYMENT_ATTEMPT_NOT_FOUND" | "PAYROLL_PAYMENT_ATTEMPT_TERMINAL" | "PAYROLL_PAYMENT_TRANSITION_INVALID" | "PAYROLL_PAYMENT_REFERENCE_ALREADY_USED" | "PAYROLL_PAYMENT_REFERENCE_INVALID" | "PAYROLL_PAYMENT_METHOD_INVALID" | "PAYROLL_PAYMENT_REASON_INVALID" | "PAYROLL_PAYMENT_REOPEN_REASON_INVALID" | "PAYROLL_PAYMENT_RESULT_AMOUNT_MISMATCH" | "PAYROLL_COMMAND_FAILED" | "ROOM_NOT_FOUND" | "ROOM_TYPE_NOT_FOUND" | "ROOM_TYPE_CAPACITY_INVALID" | "ROOM_TYPE_CAPACITY_ACTIVE_RESERVATION_CONFLICT" | "ROOM_TYPE_CAPACITY_PREVIEW_STALE" | "ROOM_TYPE_VERSION_CONFLICT" | "ROOM_NUMBER_ALREADY_EXISTS" | "ROOM_TYPE_INACTIVE" | "ROOM_INACTIVE" | "ROOM_ALREADY_INACTIVE" | "ROOM_DEACTIVATION_BLOCKED" | "ROOM_DEACTIVATION_PREVIEW_STALE" | "ROOM_VERSION_CONFLICT" | "GUEST_COUNT_EXCEEDS_ROOM_TYPE_CAPACITY" | "ROOM_OPERATION_NOT_FOUND" | "INVALID_ROOM_PIN" | "INVALID_PIN_TRANSFER_REQUEST" | "ROOM_PIN_TRANSFER_NOT_CONFIGURED" | "ROOM_PIN_TRANSFER_STALE" | "ROOM_PIN_TRANSFER_BUSY" | "ROOM_PIN_IMPORT_SOURCE_UNAVAILABLE" | "ROOM_PIN_TRANSFER_FAILED" | "INVALID_PIN_BOOTSTRAP_LIMIT" | "INVALID_PIN_BOOTSTRAP" | "ROOM_PIN_BOOTSTRAP_CONFIG_INVALID" | "ROOM_PIN_BOOTSTRAP_FAILED" | "ROOM_PIN_KEY_UNAVAILABLE" | "ROOM_PIN_CRYPTO_CONFIG_INVALID" | "ROOM_PIN_DECRYPT_FAILED" | "ROOM_PIN_COMMAND_FAILED" | "STALE_PIN_VERSION" | "ROOM_NUMBER_CHANGED" | "ROOM_PIN_REISSUE_REQUIRED" | "ROOM_PIN_MISMATCH_UNRESOLVED" | "INVALID_PIN_CHANGE_REASON" | "PIN_CHANGE_IN_PROGRESS_REQUIRED" | "PIN_CHANGE_IN_PROGRESS" | "PIN_CHANGE_LEASE_EXPIRED" | "PIN_CHANGE_LEASE_NOT_RESOLVABLE" | "PIN_REVEAL_AUTHORIZATION_CHANGED" | "GENERATED_PIN_REVEAL_NOT_ALLOWED" | "GENERATED_PIN_CONFIRMATION_NOT_ALLOWED" | "ROOM_PIN_UNCONFIGURED" | "ROOM_PIN_SHEET_OPERATOR_REQUIRED" | "ROOM_PIN_SHEET_NOT_CONFIGURED" | "ROOM_PIN_SHEET_OPERATION_FAILED" | "ROOM_PIN_SHEET_RESPONSE_TOO_LARGE" | "ROOM_PIN_SHEET_FULL_RESYNC_STALE" | "ROOM_PIN_SHEET_WORKER_BUSY" | "ROOM_PIN_SHEET_FULL_RESYNC_PENDING" | "ROOM_PIN_SHEET_ROOM_MASTER_INVALID" | "PIN_ACCESS_LEASE_REQUIRED" | "PIN_ENTITLEMENT_REQUIRED" | "PIN_ACCESS_REQUIRED" | "SENSITIVE_TEXT_NOT_ALLOWED" | "PIN_MATERIAL_NOT_ALLOWED" | "ROOM_COMMAND_FAILED" | "ORIGIN_NOT_ALLOWED" | "ROUTE_NOT_FOUND" | "RUNTIME_NOT_CONFIGURED" | "INTERNAL_SERVER_ERROR" | "INVALID_PHOTO_BINARY" | "INVALID_POST_APPROVAL_ROOM_ISSUE" | "PHOTO_BODY_TIMEOUT" | "PHOTO_DECODER_UNAVAILABLE" | "PHOTO_DECODE_LIMIT_EXCEEDED" | "PHOTO_MEDIA_TYPE_UNSUPPORTED" | "PHOTO_PROVIDER_IDENTITY_CONFLICT" | "PHOTO_STORAGE_QUOTA_EXCEEDED" | "PHOTO_STORAGE_QUOTA_UNAVAILABLE" | "PHOTO_TOO_LARGE" | "PHOTO_UPLOAD_ADMISSION_EXPIRED" | "PHOTO_UPLOAD_FENCE_CONFLICT" | "PHOTO_UPLOAD_LIMIT_EXCEEDED" | "PHOTO_UPLOAD_RATE_LIMITED" | "PHOTO_UPLOAD_TIME_INVALID" | "POST_APPROVAL_ROOM_ISSUE_ACCESS_REQUIRED" | "POST_APPROVAL_ROOM_ISSUE_BODY_TOO_LARGE" | "POST_APPROVAL_ROOM_ISSUE_COMMAND_FAILED" | "POST_APPROVAL_ROOM_ISSUE_DRAFT_CONFLICT" | "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_COMMAND_FAILED" | "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_CONFLICT" | "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_INVALID" | "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_PROJECTION_INVALID" | "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_RETRY_REQUIRED" | "POST_APPROVAL_ROOM_ISSUE_MEDIA_PURGED" | "POST_APPROVAL_ROOM_ISSUE_MEDIA_TYPE_INVALID" | "POST_APPROVAL_ROOM_ISSUE_PROJECTION_INVALID" | "POST_APPROVAL_ROOM_ISSUE_REPORT_SEALED" | "POST_APPROVAL_ROOM_ISSUE_SOURCE_UNAVAILABLE" | "POST_APPROVAL_ROOM_ISSUE_UPLOAD_NOT_ACCEPTED";
         RoomChangeConflict: {
             reloadResources: ("reservation" | "sourceRoom" | "targetRoom" | "roomMovePreview")[];
             latestVersions: {
@@ -3400,7 +4274,7 @@ export interface components {
          * @description 운영 콘솔에 노출할 수 있도록 서버에서 고정한 감사 이벤트 allowlist
          * @enum {string}
          */
-        DeveloperAuditEventType: "account.bootstrap_developer_created" | "account.bootstrap_admin_created" | "account.created" | "account.role_changed" | "account.status_changed" | "account.unlocked" | "account.password_reset_requested" | "account.password_changed" | "availability.submitted" | "availability.change_requested" | "availability.change_decided" | "assignment.draft_saved" | "assignment.notified" | "assignment.prestart_changed" | "assignment.prestart_unassigned" | "assignment.cancellation_requested" | "assignment.cancellation_decided" | "assignment.attempt_activated" | "assignment.rolled_over" | "assignment.duration_policy_confirmed" | "cleaning_template.published" | "cleaning.attempt_started" | "cleaning.field_completed" | "cleaning.finish_current_allowed" | "cleaning.upload_only_allowed" | "cleaning.interrupted_handover" | "cleaning.scheduled_expired" | "cleaning.offline_event_resolved" | "photo.upload_accepted" | "photo.collection_item_deleted" | "reservation.created" | "reservation.changed" | "reservation.room_moved" | "reservation.cancelled" | "reservation.manual_checkout" | "reservation.scheduled_check_in" | "reservation.scheduled_checkout" | "reservation.guest_name_retention_purged" | "checkout.presence_reported" | "checkout.presence_decided" | "cleaning.manual_request.created" | "cleaning.manual_request.cancelled" | "room.master_data_changed" | "room.create_block" | "room.release_block" | "room.set_candle_count" | "room.report_issue" | "room.resolve_issue" | "room.record_pin_sync" | "room.occupancy_corrected" | "room.display_status_overridden" | "room.pin_change_prepared" | "room.pin_change_confirmed" | "room.pin_mismatch_resolved" | "room.pin_generated" | "room.generated_pin_confirmed" | "room_pin_sheet.full_resync_requested" | "room_pin_sheet.full_resync_succeeded" | "submission.bomb_reported" | "submission.created" | "inspection.bomb_decided" | "inspection.approved" | "inspection.rejected" | "complaint.rework_materialized" | "compensation.earned" | "payroll.adjustment_recorded" | "payroll.adjustment_reversed" | "payroll.offset_settled" | "payroll.late_earning_carried" | "payroll.payment_started" | "payroll.payment_check_recorded" | "payroll.payment_paid" | "payroll.payment_reopened";
+        DeveloperAuditEventType: "account.bootstrap_developer_created" | "account.bootstrap_admin_created" | "account.created" | "account.role_changed" | "account.status_changed" | "account.unlocked" | "account.password_reset_requested" | "account.password_changed" | "availability.submitted" | "availability.change_requested" | "availability.change_decided" | "assignment.draft_saved" | "assignment.notified" | "assignment.prestart_changed" | "assignment.prestart_unassigned" | "assignment.cancellation_requested" | "assignment.cancellation_decided" | "assignment.unavailability_cancelled" | "assignment.attempt_activated" | "assignment.rolled_over" | "assignment.duration_policy_confirmed" | "cleaning_template.published" | "cleaning.attempt_started" | "cleaning.field_completed" | "cleaning.finish_current_allowed" | "cleaning.upload_only_allowed" | "cleaning.interrupted_handover" | "cleaning.scheduled_expired" | "cleaning.offline_event_resolved" | "photo.upload_accepted" | "photo.collection_item_deleted" | "reservation.created" | "reservation.changed" | "reservation.room_moved" | "reservation.cancelled" | "reservation.manual_checkout" | "reservation.scheduled_check_in" | "reservation.scheduled_checkout" | "reservation.guest_name_retention_purged" | "checkout.presence_reported" | "checkout.presence_decided" | "cleaning.manual_request.created" | "cleaning.manual_request.cancelled" | "room.master_data_changed" | "room.create_block" | "room.release_block" | "room.set_candle_count" | "room.report_issue" | "room.resolve_issue" | "room.record_pin_sync" | "room.occupancy_corrected" | "room.display_status_overridden" | "room.pin_change_prepared" | "room.pin_change_confirmed" | "room.pin_mismatch_resolved" | "room.pin_generated" | "room.generated_pin_confirmed" | "room_pin_sheet.full_resync_requested" | "room_pin_sheet.full_resync_succeeded" | "submission.bomb_reported" | "submission.created" | "inspection.bomb_decided" | "inspection.approved" | "inspection.rejected" | "complaint.rework_materialized" | "compensation.earned" | "payroll.adjustment_recorded" | "payroll.adjustment_reversed" | "payroll.offset_settled" | "payroll.late_earning_carried" | "payroll.payment_started" | "payroll.payment_check_recorded" | "payroll.payment_paid" | "payroll.payment_reopened";
         DeveloperRuntimeStatus: {
             /** @constant */
             adapter: "supabase-edge";
@@ -3464,10 +4338,16 @@ export interface components {
                 PHOTO_PURGE_INVOKE_SECRET: {
                     configured: boolean;
                 };
+                POST_APPROVAL_ROOM_ISSUE_HANDOVER_KEY_BASE64: {
+                    configured: boolean;
+                };
                 PAYROLL_CURSOR_HMAC_SECRET: {
                     configured: boolean;
                 };
                 NOTIFICATION_CURSOR_HMAC_SECRET: {
+                    configured: boolean;
+                };
+                INSPECTION_CURSOR_HMAC_SECRET: {
                     configured: boolean;
                 };
                 WEB_PUSH_SUBSCRIPTION_KEY_BASE64: {
@@ -3739,6 +4619,8 @@ export interface components {
                 /** Format: uuid */
                 assignmentId?: string;
                 /** Format: uuid */
+                replacementTargetId?: string;
+                /** Format: uuid */
                 previousAssignmentId?: string;
                 /** Format: uuid */
                 previousMaidProfileId?: string;
@@ -3979,6 +4861,11 @@ export interface components {
             expectedAssignmentVersion: number;
             /** @enum {string} */
             reasonCode: "MAID_UNAVAILABLE" | "SCHEDULE_CHANGED" | "SEQUENCE_CHANGED" | "OPERATIONAL_CHANGE";
+            /**
+             * Format: date
+             * @description 오늘/내일 배정 탭에서 선택한 KST 계획일. 과거 업무 담당 변경 시 반드시 전달. 생략은 기존 통보 계획일/원 날짜 호환이며 생성일·통보일이 아님. #446 미배포 후보.
+             */
+            serviceDate?: string;
             /** Format: uuid */
             maidProfileId: string;
             sequenceNumber: number;
@@ -3999,6 +4886,46 @@ export interface components {
             expectedAssignmentVersion: number;
             /** @enum {string} */
             reasonCode: "MAID_UNAVAILABLE" | "SCHEDULE_CHANGED" | "SEQUENCE_CHANGED" | "OPERATIONAL_CHANGE";
+        };
+        AssignmentUnavailabilityCancellationRequest: {
+            /** Format: uuid */
+            expectedCurrentAssignmentId: string;
+            expectedAssignmentVersion: number;
+            /** @enum {string} */
+            reasonCode: "MAID_DEPARTED" | "MAID_INJURED" | "MAID_UNAVAILABLE";
+            /**
+             * Format: uuid
+             * @description attempt가 아직 없으면 null. 현재 scheduled/in_progress attempt면 exact ID.
+             */
+            expectedAttemptId: string | null;
+            /** @description expectedAttemptId가 null이면 null, 아니면 exact execution version. */
+            expectedExecutionVersion: number | null;
+        };
+        AssignmentUnavailabilityCancellation: {
+            /** Format: uuid */
+            cancellationId: string;
+            /** Format: uuid */
+            cleaningTargetId: string;
+            /** Format: uuid */
+            assignmentId: string;
+            /** Format: uuid */
+            attemptId: string | null;
+            /** Format: uuid */
+            maidProfileId: string;
+            /** @enum {string} */
+            reasonCode: "MAID_DEPARTED" | "MAID_INJURED" | "MAID_UNAVAILABLE";
+            /**
+             * Format: uuid
+             * @description inspection reclean 예외에서만 생성되는 정상 유상 대체 target
+             */
+            replacementTargetId: string | null;
+            /** @constant */
+            status: "unassigned";
+            targetAssignmentVersion: number;
+            /** Format: date-time */
+            effectiveAt: string;
+            /** Format: date-time */
+            recordedAt: string;
         };
         AssignmentCancellationRequest: {
             /** Format: uuid */
@@ -4047,7 +4974,7 @@ export interface components {
             requests: components["schemas"]["AssignmentChangeRequest"][];
             nextCursor: string | null;
         };
-        /** @description action별 payload/reason은 고정 계약입니다. raw body·자유문·session ID·capability token·TTL은 입력하지 않습니다. */
+        /** @description action별 payload/reason은 고정 계약입니다. 예정 기한 경과만으로 업무를 종료하는 expire_scheduled는 허용하지 않습니다. raw body·자유문·session ID·capability token·TTL은 입력하지 않습니다. */
         AttemptLifecycleRequest: {
             expectedExecutionVersion: number;
             /** Format: uuid */
@@ -4069,17 +4996,6 @@ export interface components {
             action: "allow_upload";
             /** @enum {string} */
             reasonCode: "DEACTIVATION_UPLOAD_ONLY";
-            payload: Record<string, never>;
-        } | {
-            expectedExecutionVersion: number;
-            /** Format: uuid */
-            expectedAssignmentId: string;
-            expectedAssignmentRevision: number;
-            expectedProfileVersion: number;
-            /** @constant */
-            action: "expire_scheduled";
-            /** @enum {string} */
-            reasonCode: "SCHEDULE_EXPIRED";
             payload: Record<string, never>;
         } | {
             expectedExecutionVersion: number;
@@ -4123,6 +5039,31 @@ export interface components {
             expiresAt: string;
             /** Format: date-time */
             revokedAt: string | null;
+        };
+        LimitedAttemptDiscoveryItem: {
+            /** Format: uuid */
+            attemptId: string;
+            /** Format: uuid */
+            assignmentId: string;
+            assignmentRevision: number;
+            executionVersion: number;
+            /** @enum {string} */
+            status: "in_progress" | "field_completed" | "upload_pending" | "interrupted";
+            /** @enum {string} */
+            kind: "finish_current" | "upload_submit" | "evidence_upload";
+            /** @description kind별 고정 순서: finish_current=[complete_field_work], upload_submit=[upload_evidence,validate_evidence,submit], evidence_upload=[upload_evidence,validate_evidence]. */
+            allowedActions: ("complete_field_work" | "upload_evidence" | "validate_evidence" | "submit")[];
+            /** Format: date-time */
+            issuedAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        LimitedAttemptDiscovery: {
+            /** @enum {string} */
+            profileStatus: "active" | "deactivation_pending" | "upload_only";
+            /** Format: date-time */
+            evaluatedAt: string;
+            items: components["schemas"]["LimitedAttemptDiscoveryItem"][];
         };
         LimitedAttempt: {
             attempt: components["schemas"]["AttemptExecution"];
@@ -4347,6 +5288,11 @@ export interface components {
             sequenceNumber: number;
             revision: number;
             isCurrent: boolean;
+            /**
+             * Format: date
+             * @description 불변 통보/변경 근거의 배정 계획일. 원 serviceDate와 구분하며 메이드 오늘/내일 목록 및 실행일 판정에 사용. #446 미배포 후보.
+             */
+            planningDate?: string;
             /** @description admin은 현재 target의 expectedAssignmentVersion CAS 값입니다. maid는 본인 통보 revision에 고정된 version이며 다른 담당의 현재 target version을 노출하지 않습니다. 과거 이력 조회는 mutation 권한이 아닙니다. */
             targetAssignmentVersion: number;
             /** Format: date-time */
@@ -4360,8 +5306,94 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
-        /** @description 배정 카드용 additive projection입니다. 객실·타입·요금·template은 업무 snapshot을 사용하고 PIN·고객 PII·사진 locator를 포함하지 않습니다. */
+        /** @description 불변 계획 snapshot과 통보 당시 알려진 실제 사실입니다. 예약 없는 요청·종료 미정의 시각은 null로 유지하며 고객명·연락처·PIN·내부 lineage ID를 노출하지 않습니다. */
+        AssignmentScheduleSnapshot: {
+            /** Format: date-time */
+            capturedAt: string;
+            /** @description 실제 cleaning_target_schedule_revisions의 revision입니다. assignment CAS나 현재 예약 version에서 추측하지 않습니다. */
+            scheduleRevision: number;
+            /** @description 해당 불변 schedule revision의 source-controlled 사유 코드입니다. */
+            scheduleReasonCode: string;
+            /** @description snapshot 캡처 당시 연결 source 예약의 version입니다. 고객 정보·예약 상세 접근 권한을 제공하지 않습니다. */
+            sourceReservationVersion: number | null;
+            /**
+             * Format: date-time
+             * @description source 예약의 예정 퇴실입니다. 실제 퇴실·접근 가능 시각과 구분합니다.
+             */
+            plannedCheckoutAt: string | null;
+            /**
+             * Format: date-time
+             * @description 최초 통보 write의 DB 캡처 시 확인된 source 예약의 실제 퇴실입니다. 계획 capturedAt/notifiedAt과 구분하며 이후 사실로 덮지 않습니다.
+             */
+            actualCheckoutAt: string | null;
+            /**
+             * Format: date-time
+             * @description 해당 객실의 예정 점유 종료입니다. 투숙 중 이동이면 이동 effective time이며 예약의 최종 checkout과 다를 수 있습니다.
+             */
+            plannedRoomDepartureAt: string | null;
+            /**
+             * Format: date-time
+             * @description 최초 통보 write의 DB 캡처 시 확인된 해당 객실의 실제 점유 종료입니다. 미래 객실 이동은 실제 퇴실로 표시하지 않습니다.
+             */
+            actualRoomDepartureAt: string | null;
+            /**
+             * Format: date-time
+             * @description 다음 객실 점유 source의 예약 예정 guest check-in입니다. segment 시작/객실 이동 시각이 아니며 dueAt에서 역산하지 않습니다.
+             */
+            nextCheckInAt: string | null;
+            /**
+             * Format: date-time
+             * @description canonical stay segment에 근거한 다음 객실 점유 시작입니다.
+             */
+            nextRoomArrivalAt: string | null;
+            /** @enum {string|null} */
+            nextArrivalKind: "check_in" | "room_move" | null;
+            /** @description nextArrivalKind=check_in의 예정 nextCheckInAt이 KST 16:00보다 빠른지 표시합니다. room_move 또는 근거 없음은 null입니다. */
+            isEarlyCheckIn: boolean | null;
+            /** @description 연결 source 예약의 예정 plannedCheckoutAt이 KST 11:00보다 늦은지 표시합니다. 청소 종류로 제한하지 않으며 room_move/해당 근거 없음은 null입니다. */
+            isLateCheckout: boolean | null;
+            /** @description 실제 이전 schedule의 날짜/접근/마감 차이와 명시적 일정 변경 사유가 함께 증명될 때만 true입니다. CAS 증가나 시각 경과 자체는 변경 근거가 아닙니다. */
+            isScheduleUpdated: boolean;
+        };
+        /** @description 현재 목록의 exact current notified assignment에만 허용하는 source-bound 실제 퇴실 관찰입니다. history/includeHistory는 항상 null이며 점유 재개로 무효화된 퇴실을 현재 사실로 반환하지 않습니다. 계획 snapshot이나 수행 권한을 변경하지 않습니다. */
+        AssignmentCurrentDeparture: {
+            /** Format: date-time */
+            evaluatedAt: string;
+            /** Format: date-time */
+            actualCheckoutAt: string | null;
+            /** Format: date-time */
+            actualRoomDepartureAt: string | null;
+        };
+        /** @description 배정 카드용 additive projection입니다. 객실·타입·요금·template·일정은 업무 snapshot을 사용하고 PIN·고객 PII·사진 locator를 포함하지 않습니다. 일정 표시는 수행/PIN 권한이 아니며 현재 실제 퇴실 관찰과 불변 통보 snapshot을 구분합니다. */
         AssignmentCard: {
+            /** @enum {string} */
+            cleaningKind: "checkout" | "stayover" | "additional" | "reclean";
+            /** @description 실제 target.source입니다. cleaningKind로 추측하지 않습니다. */
+            sourceKind: string | null;
+            /** @description 생성 당시 타입·구역 정본입니다. 현재 catalog로 누락을 채우지 않습니다. 과거 receipt에 metadata가 없으면 null입니다. */
+            roomTypeSnapshot: components["schemas"]["AssignmentRoomTypeSnapshot"] | null;
+            roomTypeCode: string | null;
+            roomTypeName: string | null;
+            elevatorZone: string | null;
+            feeSnapshot: number;
+            /** Format: date */
+            originalServiceDate: string;
+            /**
+             * Format: date
+             * @description impact/preview는 target 유효일, 카드는 조회한 assignment의 고정 서비스일입니다. 최상위 계획일과 구분합니다.
+             */
+            effectiveServiceDate: string | null;
+            /** @description target carryoverCount를 상한으로 삼아 해당 assignment revision까지 확인된 ROLLED_OVER schedule evidence만 센 값입니다. 예약 일정 변경이나 근거 없는 날짜 차이는 0입니다. */
+            rolloverCount: number;
+            /** @description 이월된 revision의 schedule reason code입니다. 이월이 아니거나 legacy 근거가 없으면 null입니다. */
+            rolloverReason: string | null;
+            /** @description 관리자의 수동 target 취소 안내입니다. 담당 해제 권한이 아니며 최신 command의 session/상태/CAS/멱등성 검사를 대체하지 않습니다. PIN 공개·기한·stale 일정으로 제한하지 않습니다. 완료 receipt replay의 안내는 당시 snapshot입니다. */
+            canCancel: boolean;
+            /**
+             * @description canCancel=true이면 null입니다. ADMIN_REQUIRED/ASSIGNMENT_NOT_CURRENT/CAPABILITY_UNAVAILABLE는 조회 UI의 적용불가 코드이며 POST의 HTTP error code를 약속하지 않습니다.
+             * @enum {string|null}
+             */
+            cancelReasonCode: "NOT_MANUAL_CLEANING_REQUEST" | "CLEANING_REQUEST_CANCEL_CONFLICT" | "ASSIGNMENT_NOT_CURRENT" | "ADMIN_REQUIRED" | "CAPABILITY_UNAVAILABLE" | null;
             /** Format: uuid */
             assignmentId: string;
             /** Format: uuid */
@@ -4383,20 +5415,13 @@ export interface components {
             isCurrent: boolean;
             /** @description admin은 현재 target CAS 값입니다. maid는 본인 통보 revision에 고정된 값이며 과거 조회는 mutation 권한이 아닙니다. */
             targetAssignmentVersion: number;
-            /** @enum {string} */
-            cleaningKind: "checkout" | "stayover" | "additional" | "reclean";
-            roomTypeCode: string | null;
-            roomTypeName: string | null;
-            elevatorZone: string | null;
-            feeSnapshot: number;
+            /**
+             * Format: date
+             * @description 통보/담당 변경 근거의 계획일. 원 serviceDate를 덮어쓰지 않으며 생성일·통보일과 다릅니다. #446 미배포 후보.
+             */
+            planningDate?: string;
             /** @description target 생성 당시 template snapshot 값입니다. 예상시간 미확정 checkout은 null이며 임의 기본값을 넣지 않습니다. */
             durationMinutes: number | null;
-            /** Format: date */
-            originalServiceDate: string;
-            /** @description target carryoverCount를 상한으로 삼아 해당 assignment revision까지 확인된 ROLLED_OVER schedule evidence만 센 값입니다. 예약 일정 변경이나 근거 없는 날짜 차이는 0입니다. */
-            rolloverCount: number;
-            /** @description 이월된 revision의 schedule reason code입니다. 이월이 아니거나 legacy 근거가 없으면 null입니다. */
-            rolloverReason: string | null;
             /**
              * @description admin은 현재 target 상태를 봅니다. maid 과거 revision은 새 계획을 노출하지 않도록 null입니다.
              * @enum {string|null}
@@ -4406,6 +5431,10 @@ export interface components {
             attemptStatus: "scheduled" | "in_progress" | "field_completed" | "upload_pending" | "submitted" | "approved" | "rejected" | "interrupted" | "superseded" | null;
             /** @enum {string|null} */
             submissionStatus: "submitted" | "superseded" | "approved" | "rejected" | null;
+            /** @description 생성 schedule에 고정한 계획 및 최초 통보의 실제 사실입니다. 명시적 재계획/재통보는 새 revision으로만 반영하고 legacy 부재는 전체 null이며 현재 예약으로 재수화/backfill하지 않습니다. */
+            scheduleSnapshot: components["schemas"]["AssignmentScheduleSnapshot"] | null;
+            /** @description 현재 목록에서만 exact current notified source의 실제 퇴실을 별도 관찰합니다. history/includeHistory에서는 항상 null입니다. */
+            currentDeparture: components["schemas"]["AssignmentCurrentDeparture"] | null;
             /** Format: date-time */
             availableFrom: string | null;
             /** Format: date-time */
@@ -4426,6 +5455,34 @@ export interface components {
             expectedAssignmentVersion: number;
         };
         AssignmentCommitCandidate: {
+            cleaningKind: string | null;
+            /** @description 실제 target.source입니다. cleaningKind로 추측하지 않습니다. */
+            sourceKind: string | null;
+            /** @description 생성 당시 타입·구역 정본입니다. 현재 catalog로 누락을 채우지 않습니다. 과거 receipt에 metadata가 없으면 null입니다. */
+            roomTypeSnapshot: components["schemas"]["AssignmentRoomTypeSnapshot"] | null;
+            roomTypeCode: string | null;
+            roomTypeName: string | null;
+            elevatorZone: string | null;
+            /** @description 불변 target 요금입니다. 0원은 0원이며 과거 receipt의 미확인은 null입니다. */
+            feeSnapshot: number | null;
+            /** Format: date */
+            originalServiceDate: string | null;
+            /**
+             * Format: date
+             * @description impact/preview는 target 유효일, 카드는 조회한 assignment의 고정 서비스일입니다. 최상위 계획일과 구분합니다.
+             */
+            effectiveServiceDate: string | null;
+            /** @description carryover_count 상한과 조회 revision까지의 실제 ROLLED_OVER evidence를 함께 적용합니다. 단순 지연/날짜 변경은 0, 과거 receipt 미확인은 null입니다. */
+            rolloverCount: number | null;
+            /** @enum {string|null} */
+            rolloverReason: "ROLLED_OVER_UNASSIGNED" | "ROLLED_OVER_NOT_STARTED" | null;
+            /** @description 관리자의 수동 target 취소 안내입니다. 담당 해제 권한이 아니며 최신 command의 session/상태/CAS/멱등성 검사를 대체하지 않습니다. PIN 공개·기한·stale 일정으로 제한하지 않습니다. 완료 receipt replay의 안내는 당시 snapshot입니다. */
+            canCancel: boolean;
+            /**
+             * @description canCancel=true이면 null입니다. ADMIN_REQUIRED/ASSIGNMENT_NOT_CURRENT/CAPABILITY_UNAVAILABLE는 조회 UI의 적용불가 코드이며 POST의 HTTP error code를 약속하지 않습니다.
+             * @enum {string|null}
+             */
+            cancelReasonCode: "NOT_MANUAL_CLEANING_REQUEST" | "CLEANING_REQUEST_CANCEL_CONFLICT" | "ASSIGNMENT_NOT_CURRENT" | "ADMIN_REQUIRED" | "CAPABILITY_UNAVAILABLE" | null;
             /** Format: uuid */
             assignmentId: string;
             /** Format: uuid */
@@ -4448,6 +5505,34 @@ export interface components {
             dueAt: string | null;
         };
         AssignmentCommitBlockedCandidate: {
+            cleaningKind: string | null;
+            /** @description 실제 target.source입니다. cleaningKind로 추측하지 않습니다. */
+            sourceKind: string | null;
+            /** @description 생성 당시 타입·구역 정본입니다. 현재 catalog로 누락을 채우지 않습니다. 과거 receipt에 metadata가 없으면 null입니다. */
+            roomTypeSnapshot: components["schemas"]["AssignmentRoomTypeSnapshot"] | null;
+            roomTypeCode: string | null;
+            roomTypeName: string | null;
+            elevatorZone: string | null;
+            /** @description 불변 target 요금입니다. 0원은 0원이며 과거 receipt의 미확인은 null입니다. */
+            feeSnapshot: number | null;
+            /** Format: date */
+            originalServiceDate: string | null;
+            /**
+             * Format: date
+             * @description impact/preview는 target 유효일, 카드는 조회한 assignment의 고정 서비스일입니다. 최상위 계획일과 구분합니다.
+             */
+            effectiveServiceDate: string | null;
+            /** @description carryover_count 상한과 조회 revision까지의 실제 ROLLED_OVER evidence를 함께 적용합니다. 단순 지연/날짜 변경은 0, 과거 receipt 미확인은 null입니다. */
+            rolloverCount: number | null;
+            /** @enum {string|null} */
+            rolloverReason: "ROLLED_OVER_UNASSIGNED" | "ROLLED_OVER_NOT_STARTED" | null;
+            /** @description 관리자의 수동 target 취소 안내입니다. 담당 해제 권한이 아니며 최신 command의 session/상태/CAS/멱등성 검사를 대체하지 않습니다. PIN 공개·기한·stale 일정으로 제한하지 않습니다. 완료 receipt replay의 안내는 당시 snapshot입니다. */
+            canCancel: boolean;
+            /**
+             * @description canCancel=true이면 null입니다. ADMIN_REQUIRED/ASSIGNMENT_NOT_CURRENT/CAPABILITY_UNAVAILABLE는 조회 UI의 적용불가 코드이며 POST의 HTTP error code를 약속하지 않습니다.
+             * @enum {string|null}
+             */
+            cancelReasonCode: "NOT_MANUAL_CLEANING_REQUEST" | "CLEANING_REQUEST_CANCEL_CONFLICT" | "ASSIGNMENT_NOT_CURRENT" | "ADMIN_REQUIRED" | "CAPABILITY_UNAVAILABLE" | null;
             /** Format: uuid */
             assignmentId: string;
             /** Format: uuid */
@@ -4471,6 +5556,34 @@ export interface components {
             dueAt: string | null;
         };
         AssignmentCommitUnassignedTarget: {
+            cleaningKind: string | null;
+            /** @description 실제 target.source입니다. cleaningKind로 추측하지 않습니다. */
+            sourceKind: string | null;
+            /** @description 생성 당시 타입·구역 정본입니다. 현재 catalog로 누락을 채우지 않습니다. 과거 receipt에 metadata가 없으면 null입니다. */
+            roomTypeSnapshot: components["schemas"]["AssignmentRoomTypeSnapshot"] | null;
+            roomTypeCode: string | null;
+            roomTypeName: string | null;
+            elevatorZone: string | null;
+            /** @description 불변 target 요금입니다. 0원은 0원이며 과거 receipt의 미확인은 null입니다. */
+            feeSnapshot: number | null;
+            /** Format: date */
+            originalServiceDate: string | null;
+            /**
+             * Format: date
+             * @description impact/preview는 target 유효일, 카드는 조회한 assignment의 고정 서비스일입니다. 최상위 계획일과 구분합니다.
+             */
+            effectiveServiceDate: string | null;
+            /** @description carryover_count 상한과 조회 revision까지의 실제 ROLLED_OVER evidence를 함께 적용합니다. 단순 지연/날짜 변경은 0, 과거 receipt 미확인은 null입니다. */
+            rolloverCount: number | null;
+            /** @enum {string|null} */
+            rolloverReason: "ROLLED_OVER_UNASSIGNED" | "ROLLED_OVER_NOT_STARTED" | null;
+            /** @description 관리자의 수동 target 취소 안내입니다. 담당 해제 권한이 아니며 최신 command의 session/상태/CAS/멱등성 검사를 대체하지 않습니다. PIN 공개·기한·stale 일정으로 제한하지 않습니다. 완료 receipt replay의 안내는 당시 snapshot입니다. */
+            canCancel: boolean;
+            /**
+             * @description canCancel=true이면 null입니다. ADMIN_REQUIRED/ASSIGNMENT_NOT_CURRENT/CAPABILITY_UNAVAILABLE는 조회 UI의 적용불가 코드이며 POST의 HTTP error code를 약속하지 않습니다.
+             * @enum {string|null}
+             */
+            cancelReasonCode: "NOT_MANUAL_CLEANING_REQUEST" | "CLEANING_REQUEST_CANCEL_CONFLICT" | "ASSIGNMENT_NOT_CURRENT" | "ADMIN_REQUIRED" | "CAPABILITY_UNAVAILABLE" | null;
             /** Format: uuid */
             cleaningTargetId: string;
             /** Format: uuid */
@@ -5116,6 +6229,16 @@ export interface components {
          */
         RoomReasonCode: "OCCUPIED" | "RESERVATION_CURRENT" | "CLEANING_REQUIRED" | "CANDLE_PRESENT" | "OPERATION_BLOCKED" | "ROOM_ISSUE_BLOCKED" | "DATA_UNCONFIRMED";
         /**
+         * @description 선택 날짜의 projection 평가 방식입니다. 오늘은 요청 시점 LIVE, 과거는 영업일 종료, 미래는 영업일 시작 시점을 사용합니다.
+         * @enum {string}
+         */
+        RoomProjectionMode: "LIVE" | "PAST_END_OF_DAY" | "FUTURE_START_OF_DAY";
+        /**
+         * @description 프런트 와이어프레임의 객실 현황 상세 조건과 직접 대응하는 서버 계산 코드입니다. 수동 퇴실점검 완료 workflow는 포함하지 않습니다.
+         * @enum {string}
+         */
+        RoomDetailConditionCode: "CHECKOUT_INSPECTION_REQUIRED" | "EXTRA_GUESTS" | "VACANT" | "CANDLE_PRESENT" | "ROOM_ISSUE_PRESENT" | "EARLY_CHECK_IN" | "LATE_CHECK_OUT" | "DATA_VERIFICATION_REQUIRED" | "PIN_SYNC_WARNING";
+        /**
          * @description 실제 check-in/out 이력 기준 현재 점유 축입니다.
          * @enum {string}
          */
@@ -5310,8 +6433,16 @@ export interface components {
             /** @description 후속 객실 변경 command에서 expectedVersion으로 사용할 CAS version */
             stateVersion: number;
             /**
+             * Format: date
+             * @description 요청 또는 서버 기본값으로 확정된 Asia/Seoul 영업일
+             */
+            serviceDate: string;
+            projectionMode: components["schemas"]["RoomProjectionMode"];
+            /** @description 해당 평가 시점에 성립하는 관리자 객실 현황 상세 조건 목록 */
+            detailConditionCodes: components["schemas"]["RoomDetailConditionCode"][];
+            /**
              * Format: date-time
-             * @description 이 projection의 모든 현재 시각 판정에 사용한 서버 RFC 3339 timestamp
+             * @description 선택한 영업일 규칙에 따라 객실 상태 판정에 사용한 RFC 3339 timestamp
              */
             evaluatedAt: string;
             /**
@@ -5321,7 +6452,7 @@ export interface components {
             reservationPhase: "none" | "upcoming" | "current";
             /**
              * Format: date-time
-             * @description evaluatedAt과 byte-for-byte 같은 서버 snapshot timestamp입니다.
+             * @description 응답을 계산한 실제 서버 snapshot timestamp입니다. 오늘 LIVE projection에서는 evaluatedAt과 같고 과거·미래 조회에서는 다를 수 있습니다.
              */
             serverTime: string;
             occupancyStatus: components["schemas"]["RoomOccupancyStatus"];
@@ -5334,13 +6465,26 @@ export interface components {
             displayStatusOverride: components["schemas"]["RoomPrimaryDisplayStatus"] | null;
             /**
              * Format: uuid
-             * @description serverTime 뒤 가장 이른 future active 예약 ID. 현재 예약 자체는 포함하지 않습니다.
+             * @description evaluatedAt 뒤 가장 이른 future active 예약 ID. 현재 예약 자체는 포함하지 않습니다.
              */
             nextReservationId: string | null;
             /** Format: date-time */
             nextCheckInAt: string | null;
             /** Format: date-time */
             nextCheckOutAt: string | null;
+            /**
+             * Format: uuid
+             * @description 선택 시점의 현재 예약 또는 다음 예약 중 객실 카드에 표시할 예약 ID
+             */
+            displayReservationId: string | null;
+            /** Format: date-time */
+            displayCheckInAt: string | null;
+            /** Format: date-time */
+            displayCheckOutAt: string | null;
+            /** @description 표시 예약의 투숙 인원. 고객 식별정보는 포함하지 않습니다. */
+            displayGuestCount: number | null;
+            /** @description 현재 객실 타입의 기준 인원. 표시 예약이 있으면 EXTRA_GUESTS 계산에 사용합니다. */
+            displayBaseOccupancy: number;
             /** @description 청소·점유·예약 임박과 분리된 현재 운영/입실 차단 사유입니다. */
             blockingReasonCodes: components["schemas"]["RoomBlockingReasonCode"][];
             /** @description readinessStatus의 근거입니다. PIN 경고는 current check-in일 때만 여기에 나타납니다. */
@@ -5349,7 +6493,7 @@ export interface components {
             occupied: boolean;
             /** @description evaluatedAt 기준 현재 활성화된 청소 의무 존재 여부. 미래 예약의 준비 의무만으로 true가 되지 않습니다. */
             cleaningRequired: boolean;
-            /** @description 현재 서버 projection의 촛불 수량 */
+            /** @description evaluatedAt 기준 촛불 수량 */
             candleCount: number;
             /**
              * @description 객실 PIN 동기화 경고 상태. PIN 원문은 포함하지 않으며 mismatch/unconfigured만으로 예약 등록을 막지 않습니다. 실제 체크인과 PIN 접근은 verified 전까지 차단됩니다.
@@ -5426,6 +6570,19 @@ export interface components {
             /** Format: date-time */
             evaluatedAt: string;
             items: components["schemas"]["RoomOperationBlock"][];
+            hasMore: boolean;
+            nextCursor: string | null;
+        };
+        RoomCandleItem: {
+            /** Format: uuid */
+            roomId: string;
+            roomNumber: string;
+            count: number;
+            roomStateVersion: number;
+        };
+        RoomCandlePage: {
+            items: components["schemas"]["RoomCandleItem"][];
+            nextCursor: string | null;
         };
         RoomCandleRequest: {
             expectedRoomVersion: number;
@@ -5457,6 +6614,49 @@ export interface components {
             /** Format: date-time */
             reportedAt: string;
         };
+        RegisteredReportEvidence: {
+            /** Format: uuid */
+            photoId: string;
+            /** @enum {string} */
+            readState: "available" | "expired" | "purged" | "unavailable";
+            /** @enum {string} */
+            retentionPolicy: "legacy_upload" | "cleaning_submission" | "room_issue" | "complaint" | "interruption" | "sync_conflict" | "mixed" | "orphan";
+            /** Format: date-time */
+            retentionStartsAt: string | null;
+            /** Format: date-time */
+            expiresAt: string | null;
+            /** Format: date-time */
+            purgedAt: string | null;
+            /** @enum {string} */
+            mediaAvailability: "available" | "purged" | "unavailable";
+        };
+        /** @description kind=room_issue의 status는 open/resolved입니다. kind=bomb_room의 reported는 제출에 미봉인, pending은 제출 봉인 후 판정 대기, approved/rejected는 기존 검수 흐름에서 기록된 폭탄방 판정입니다. 조회 API는 판정을 수행하지 않습니다. sealedSubmissionId는 폭탄방의 최초 봉인 제출에만 연결되며 room_issue는 null입니다. */
+        RegisteredRoomReport: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            attemptId: string;
+            /** @enum {string} */
+            kind: "room_issue" | "bomb_room";
+            memo: string;
+            /** Format: date-time */
+            reportedAt: string;
+            /** @enum {string} */
+            status: "open" | "resolved" | "reported" | "pending" | "approved" | "rejected";
+            /** Format: uuid */
+            sealedSubmissionId: string | null;
+            evidence: components["schemas"]["RegisteredReportEvidence"][];
+        };
+        RoomReportsEnvelope: {
+            /** Format: uuid */
+            roomId: string;
+            roomStateVersion: number;
+            /** Format: date-time */
+            evaluatedAt: string;
+            items: components["schemas"]["RegisteredRoomReport"][];
+            hasMore: boolean;
+            nextCursor: string | null;
+        };
         RoomIssuesEnvelope: {
             /** Format: uuid */
             roomId: string;
@@ -5464,6 +6664,8 @@ export interface components {
             /** Format: date-time */
             evaluatedAt: string;
             items: components["schemas"]["RoomIssue"][];
+            hasMore: boolean;
+            nextCursor: string | null;
         };
         /** @enum {string} */
         RoomEventSource: "room_command" | "occupancy";
@@ -5543,7 +6745,7 @@ export interface components {
         };
         /** @description admin은 work binding을 생략하며 maid는 assignmentId/attemptId/accessLeaseId를 모두 보내야 합니다. */
         RoomPinChangePrepareRequest: {
-            /** @description 선행 0을 보존하는 숫자 문자열. roomNumber 접두사는 서버만 추가합니다. */
+            /** @description 선행 0과 원문을 보존하는 문자열. 숙박 유형별 길이/숫자 제한 없음. 공백만 있는 값, 제어문자, 잘못된 Unicode를 거절하며 UTF-8 128바이트 이하. roomNumber 접두사는 서버가 추가합니다. */
             pinDigits: string;
             expectedPinVersion: number;
             /**
@@ -5839,7 +7041,10 @@ export interface components {
             currentDecisionId: string | null;
             /** Format: date-time */
             firstDecidedAt: string | null;
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description 관리자 주의 알림 기준 시각입니다. 이 시각이 지나도 메이드의 최초 응답 권한은 만료되지 않습니다.
+             */
             responseDeadline: string | null;
             /** Format: date-time */
             receivedAt: string;
@@ -6016,6 +7221,13 @@ export interface components {
             /** Format: date-time */
             paymentStartedAt: string | null;
             itemCount: number;
+            /** @description 선택 주차 귀속 승인 수익 합계. 지급 잠금 금액과 별도입니다. */
+            accrualAmount?: number | null;
+            /** @description 승인 수익과 통보된 유상 청소 예상액. 반려·재청소·취소는 제외합니다. */
+            expectedAmount?: number | null;
+            /** @description 검수 대기 제출의 고정 단가 합계 */
+            pendingAmount?: number | null;
+            pendingCount?: number | null;
             /** @description OPEN이면 현재 편입 가능한 확정 수익 합계, PAYING 이후에는 lockedAmount 합계 */
             totalAmount: number;
             items: components["schemas"]["PayrollItem"][];
@@ -6184,6 +7396,133 @@ export interface components {
         PayrollCycleEnvelope: {
             payroll: components["schemas"]["PayrollCycle"];
         };
+        PayrollWorkSummary: {
+            /** Format: uuid */
+            cycleId: string | null;
+            cycleStatus: components["schemas"]["PayrollStatus"];
+            cycleVersion: number;
+            accrualAmount: number;
+            expectedAmount: number;
+            pendingAmount: number;
+            pendingCount: number;
+            totalAmount: number;
+            lateEarningAmount: number;
+            adjustmentAmount: number;
+            carryInAmount: number;
+            carryOutAmount: number;
+            payableAmount: number;
+            offsetSettled: boolean;
+            lockedAmount: number | null;
+        };
+        PayrollWorkEarning: {
+            /** Format: uuid */
+            entryId: string;
+            /** Format: date */
+            entryDate: string;
+            /** Format: uuid */
+            cleaningTargetId: string;
+            /** Format: uuid */
+            assignmentId: string;
+            /** Format: uuid */
+            attemptId: string;
+            /** Format: uuid */
+            submissionId: string | null;
+            /** Format: uuid */
+            inspectionDecisionId: string | null;
+            roomNumber: string | null;
+            roomTypeCode: string | null;
+            roomTypeName: string | null;
+            /** @enum {string} */
+            cleaningKind: "checkout" | "stayover" | "additional" | "reclean";
+            /** @enum {string} */
+            sourceKind: "scheduled_checkout" | "manual_checkout" | "stayover_request" | "manual_room_request" | "inspection_reclean" | "post_approval_complaint_reclean";
+            /** Format: date-time */
+            fieldCompletedAt: string | null;
+            feeSnapshot: number;
+            /** @enum {string} */
+            attemptStatus: "scheduled" | "in_progress" | "field_completed" | "upload_pending" | "submitted" | "approved" | "rejected" | "interrupted" | "superseded";
+            /** @enum {string|null} */
+            submissionStatus: "submitted" | "superseded" | "approved" | "rejected" | null;
+            /** @enum {string|null} */
+            inspectionDecision: "approved" | "rejected" | null;
+            /** Format: uuid */
+            earningId: string;
+            /** Format: date */
+            earnedOn: string;
+            /** @enum {string} */
+            earningSource: "cleaning" | "compensation";
+            baseAmount: number;
+            bombRoomBonus: number;
+            totalAmount: number;
+            itemContributionAmount: number;
+            lateContributionAmount: number;
+            /** @description payroll item membership를 뜻하며 실제 송금 완료 표시가 아닙니다. */
+            alreadyClaimed: boolean;
+            lateCarried: boolean;
+        };
+        PayrollWorkWorkflow: {
+            /** Format: uuid */
+            entryId: string;
+            /** Format: date */
+            entryDate: string;
+            /** Format: uuid */
+            cleaningTargetId: string;
+            /** Format: uuid */
+            assignmentId: string;
+            /** Format: uuid */
+            attemptId: string;
+            /** Format: uuid */
+            submissionId: string | null;
+            /** Format: uuid */
+            inspectionDecisionId: string | null;
+            roomNumber: string | null;
+            roomTypeCode: string | null;
+            roomTypeName: string | null;
+            /** @enum {string} */
+            cleaningKind: "checkout" | "stayover" | "additional" | "reclean";
+            /** @enum {string} */
+            sourceKind: "scheduled_checkout" | "manual_checkout" | "stayover_request" | "manual_room_request" | "inspection_reclean" | "post_approval_complaint_reclean";
+            /** Format: date-time */
+            fieldCompletedAt: string | null;
+            feeSnapshot: number;
+            /** @enum {string} */
+            attemptStatus: "scheduled" | "in_progress" | "field_completed" | "upload_pending" | "submitted" | "approved" | "rejected" | "interrupted" | "superseded";
+            /** @enum {string|null} */
+            submissionStatus: "submitted" | "superseded" | "approved" | "rejected" | null;
+            /** @enum {string|null} */
+            inspectionDecision: "approved" | "rejected" | null;
+            earningId: null;
+            baseAmount: null;
+            bombRoomBonus: null;
+            totalAmount: null;
+            expectedContributionAmount: number;
+            pendingContributionAmount: number;
+            includedInPendingCount: boolean;
+            expectedBaseContributionAmount: number;
+            expectedBombContributionAmount: number;
+        };
+        PayrollWorkDetailsEnvelope: {
+            /** Format: date */
+            weekStart: string;
+            /** Format: uuid */
+            maidProfileId: string;
+            /** @enum {string} */
+            kind: "earnings" | "workflow";
+            summary: components["schemas"]["PayrollWorkSummary"];
+            entries: (components["schemas"]["PayrollWorkEarning"] | components["schemas"]["PayrollWorkWorkflow"])[];
+            nextCursor: string | null;
+        };
+        PayrollAdjustmentBook: {
+            /** Format: uuid */
+            maidProfileId: string;
+            /** Format: date */
+            weekStart: string;
+            /** @description 메이드 전역 원장의 최신 CAS 버전. 과거 조정 row 생성 버전이나 주차별 버전이 아닙니다. */
+            currentBookVersion: number;
+        };
+        PayrollAdjustmentBookEnvelope: {
+            adjustmentBook: components["schemas"]["PayrollAdjustmentBook"];
+        };
         PayrollAdjustmentEnvelope: {
             adjustment: components["schemas"]["PayrollAdjustment"];
         };
@@ -6196,6 +7535,2485 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getPostApprovalRoomIssueSource: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sourceSubmissionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 본인 또는 관리자 source projection */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        source: {
+                            /** Format: uuid */
+                            sourceSubmissionId: string;
+                            /** Format: uuid */
+                            originalPerformerProfileId: string;
+                            /**
+                             * @description 원 제출의 현재 상태. 반려·대체 후에도 기존 신고 조회·증빙 열람·관리자 종결은 유지하며 신규 신고 가능 여부를 뜻하지 않는다.
+                             * @enum {string}
+                             */
+                            sourceStatus: "submitted" | "approved" | "rejected" | "superseded";
+                            /** @enum {string} */
+                            ownership: "original_performer" | "notified_assignee" | "admin";
+                        };
+                    };
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            403: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            409: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            413: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            415: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    savePostApprovalRoomIssueDraft: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                sourceSubmissionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uuid */
+                    clientReportId: string;
+                    expectedDraftRevision: number;
+                    /** @description JS UTF-16 code unit 기준 1..500이다. 공백만 있는 메모는 거부하며 문자열을 임의 trim하지 않는다. */
+                    memo: string;
+                };
+            };
+        };
+        responses: {
+            /** @description CAS로 저장한 draft 또는 동일 key/payload 성공 receipt */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        source: {
+                            /** Format: uuid */
+                            sourceSubmissionId: string;
+                            /** Format: uuid */
+                            originalPerformerProfileId: string;
+                            /**
+                             * @description 원 제출의 현재 상태. 반려·대체 후에도 기존 신고 조회·증빙 열람·관리자 종결은 유지하며 신규 신고 가능 여부를 뜻하지 않는다.
+                             * @enum {string}
+                             */
+                            sourceStatus: "submitted" | "approved" | "rejected" | "superseded";
+                            /** @enum {string} */
+                            ownership: "original_performer" | "notified_assignee" | "admin";
+                        };
+                        draft: {
+                            /** Format: uuid */
+                            clientReportId: string;
+                            /** Format: uuid */
+                            sourceSubmissionId: string;
+                            draftRevision: number;
+                            evidenceRevision: number;
+                            evidenceCount: number;
+                            /** @description JS UTF-16 code unit 기준 1..500이다. 공백만 있는 메모는 거부하며 문자열을 임의 trim하지 않는다. */
+                            memo: string;
+                        };
+                    };
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            403: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            409: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            413: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            415: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    getPostApprovalRoomIssueDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sourceSubmissionId: string;
+                clientReportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 정확한 current typed 증빙 ID/revision/order; provider locator 없음 */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        source: {
+                            /** Format: uuid */
+                            sourceSubmissionId: string;
+                            /** Format: uuid */
+                            originalPerformerProfileId: string;
+                            /**
+                             * @description 원 제출의 현재 상태. 반려·대체 후에도 기존 신고 조회·증빙 열람·관리자 종결은 유지하며 신규 신고 가능 여부를 뜻하지 않는다.
+                             * @enum {string}
+                             */
+                            sourceStatus: "submitted" | "approved" | "rejected" | "superseded";
+                            /** @enum {string} */
+                            ownership: "original_performer" | "notified_assignee" | "admin";
+                        };
+                        draft: {
+                            /** Format: uuid */
+                            clientReportId: string;
+                            /** Format: uuid */
+                            sourceSubmissionId: string;
+                            draftRevision: number;
+                            evidenceRevision: number;
+                            evidenceCount: number;
+                            /** @description JS UTF-16 code unit 기준 1..500이다. 공백만 있는 메모는 거부하며 문자열을 임의 trim하지 않는다. */
+                            memo: string;
+                        };
+                        /** @description 서로 다른 새 evidenceId만 허용하며 displayOrder는 배열 순서대로 0..n-1이다. 기존 제출 사진은 사용할 수 없다. */
+                        evidence: {
+                            /** Format: uuid */
+                            evidenceId: string;
+                            revision: number;
+                            displayOrder: number;
+                        }[];
+                        reportId: string | null;
+                    };
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            403: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            409: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            413: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            415: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    listPostApprovalRoomIssueReports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sourceSubmissionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 같은 원 source의 불변 신고와 현재 종결 상태 */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        source: {
+                            /** Format: uuid */
+                            sourceSubmissionId: string;
+                            /** Format: uuid */
+                            originalPerformerProfileId: string;
+                            /**
+                             * @description 원 제출의 현재 상태. 반려·대체 후에도 기존 신고 조회·증빙 열람·관리자 종결은 유지하며 신규 신고 가능 여부를 뜻하지 않는다.
+                             * @enum {string}
+                             */
+                            sourceStatus: "submitted" | "approved" | "rejected" | "superseded";
+                            /** @enum {string} */
+                            ownership: "original_performer" | "notified_assignee" | "admin";
+                        };
+                        reports: ({
+                            /** Format: uuid */
+                            reportId: string;
+                            /** Format: uuid */
+                            clientReportId: string;
+                            /** Format: uuid */
+                            sourceSubmissionId: string;
+                            /** Format: uuid */
+                            originalPerformerProfileId: string;
+                            /** Format: uuid */
+                            reportedByProfileId: string;
+                            /** Format: date-time */
+                            reportedAt: string;
+                            /** @description JS UTF-16 code unit 기준 1..500이다. 공백만 있는 메모는 거부하며 문자열을 임의 trim하지 않는다. */
+                            memo: string;
+                            /** @description 서로 다른 새 evidenceId만 허용하며 displayOrder는 배열 순서대로 0..n-1이다. 기존 제출 사진은 사용할 수 없다. */
+                            evidence: {
+                                /** Format: uuid */
+                                evidenceId: string;
+                                revision: number;
+                                displayOrder: number;
+                            }[];
+                            /** @enum {integer} */
+                            closureRevision: 0 | 1;
+                            closedAt: string | null;
+                            closedByProfileId: string | null;
+                        } & ({
+                            /** @constant */
+                            closureRevision?: 0;
+                            closedAt?: null;
+                            closedByProfileId?: null;
+                        } | {
+                            /** @constant */
+                            closureRevision?: 1;
+                            /** Format: date-time */
+                            closedAt?: string;
+                            /** Format: uuid */
+                            closedByProfileId?: string;
+                        }))[];
+                    };
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            403: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            409: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            413: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            415: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    finalizePostApprovalRoomIssueReport: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                sourceSubmissionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uuid */
+                    clientReportId: string;
+                    expectedDraftRevision: number;
+                    expectedEvidenceRevision: number;
+                    /** @description JS UTF-16 code unit 기준 1..500이다. 공백만 있는 메모는 거부하며 문자열을 임의 trim하지 않는다. */
+                    memo: string;
+                    /** @description 서로 다른 새 evidenceId만 허용하며 displayOrder는 배열 순서대로 0..n-1이다. 기존 제출 사진은 사용할 수 없다. */
+                    evidence: {
+                        /** Format: uuid */
+                        evidenceId: string;
+                        revision: number;
+                        displayOrder: number;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description typed evidence 검증·immutable seal·receipt/outbox commit */
+            201: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        source: {
+                            /** Format: uuid */
+                            sourceSubmissionId: string;
+                            /** Format: uuid */
+                            originalPerformerProfileId: string;
+                            /**
+                             * @description 원 제출의 현재 상태. 반려·대체 후에도 기존 신고 조회·증빙 열람·관리자 종결은 유지하며 신규 신고 가능 여부를 뜻하지 않는다.
+                             * @enum {string}
+                             */
+                            sourceStatus: "submitted" | "approved" | "rejected" | "superseded";
+                            /** @enum {string} */
+                            ownership: "original_performer" | "notified_assignee" | "admin";
+                        };
+                        report: {
+                            /** Format: uuid */
+                            reportId: string;
+                            /** Format: uuid */
+                            clientReportId: string;
+                            /** Format: uuid */
+                            sourceSubmissionId: string;
+                            /** Format: uuid */
+                            originalPerformerProfileId: string;
+                            /** Format: uuid */
+                            reportedByProfileId: string;
+                            /** Format: date-time */
+                            reportedAt: string;
+                            /** @description JS UTF-16 code unit 기준 1..500이다. 공백만 있는 메모는 거부하며 문자열을 임의 trim하지 않는다. */
+                            memo: string;
+                            /** @description 서로 다른 새 evidenceId만 허용하며 displayOrder는 배열 순서대로 0..n-1이다. 기존 제출 사진은 사용할 수 없다. */
+                            evidence: {
+                                /** Format: uuid */
+                                evidenceId: string;
+                                revision: number;
+                                displayOrder: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            403: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            409: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            413: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            415: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    getPostApprovalRoomIssueReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sourceSubmissionId: string;
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 실제 통보 배정 이력이 있는 메이드/관리자의 불변 신고와 현재 종결 상태 */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        source: {
+                            /** Format: uuid */
+                            sourceSubmissionId: string;
+                            /** Format: uuid */
+                            originalPerformerProfileId: string;
+                            /**
+                             * @description 원 제출의 현재 상태. 반려·대체 후에도 기존 신고 조회·증빙 열람·관리자 종결은 유지하며 신규 신고 가능 여부를 뜻하지 않는다.
+                             * @enum {string}
+                             */
+                            sourceStatus: "submitted" | "approved" | "rejected" | "superseded";
+                            /** @enum {string} */
+                            ownership: "original_performer" | "notified_assignee" | "admin";
+                        };
+                        /** @description 현재 종결 상태. 미종결은 revision0/시각·처리자 null, 종결은 revision1/시각·실제 처리자 UUID다. 확정 명령의 역사 receipt는 변경하지 않는다. */
+                        report: {
+                            /** Format: uuid */
+                            reportId: string;
+                            /** Format: uuid */
+                            clientReportId: string;
+                            /** Format: uuid */
+                            sourceSubmissionId: string;
+                            /** Format: uuid */
+                            originalPerformerProfileId: string;
+                            /** Format: uuid */
+                            reportedByProfileId: string;
+                            /** Format: date-time */
+                            reportedAt: string;
+                            /** @description JS UTF-16 code unit 기준 1..500이다. 공백만 있는 메모는 거부하며 문자열을 임의 trim하지 않는다. */
+                            memo: string;
+                            /** @description 서로 다른 새 evidenceId만 허용하며 displayOrder는 배열 순서대로 0..n-1이다. 기존 제출 사진은 사용할 수 없다. */
+                            evidence: {
+                                /** Format: uuid */
+                                evidenceId: string;
+                                revision: number;
+                                displayOrder: number;
+                            }[];
+                            /** @enum {integer} */
+                            closureRevision: 0 | 1;
+                            closedAt: string | null;
+                            closedByProfileId: string | null;
+                        } & ({
+                            /** @constant */
+                            closureRevision?: 0;
+                            closedAt?: null;
+                            closedByProfileId?: null;
+                        } | {
+                            /** @constant */
+                            closureRevision?: 1;
+                            /** Format: date-time */
+                            closedAt?: string;
+                            /** Format: uuid */
+                            closedByProfileId?: string;
+                        });
+                    };
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            403: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            409: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            413: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            415: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    closePostApprovalRoomIssueReport: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                sourceSubmissionId: string;
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @constant */
+                    expectedClosureRevision: 0;
+                };
+            };
+        };
+        responses: {
+            /** @description immutable 종결 event; 연결된 새 증빙만 종결+180일 보존, 원 제출/검수/수익 불변 */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        reportId: string;
+                        /** @constant */
+                        closureRevision: 1;
+                        /** Format: date-time */
+                        closedAt: string;
+                    };
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            403: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            409: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            413: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            415: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code; raw provider/SQL/token은 반환하지 않는다. */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    uploadPostApprovalRoomIssueEvidence: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "If-Draft-Revision": string;
+                "If-Evidence-Revision": string;
+                "If-Item-Revision": string;
+            };
+            path: {
+                sourceSubmissionId: string;
+                clientReportId: string;
+                evidenceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "image/jpeg": string;
+                "image/webp": string;
+                "image/heic": string;
+                "image/heif": string;
+            };
+        };
+        responses: {
+            /** @description DB acceptance 또는 같은 key/payload의 accepted replay. provider ID/session/fence/locator 없음 */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        operationId: string;
+                        /** @enum {string} */
+                        status: "reserved" | "provider_succeeded" | "accepted" | "reconciliation_pending" | "compensation_pending" | "compensated";
+                        leaseVersion: number;
+                        /** Format: uuid */
+                        evidenceId: string;
+                        itemRevision: number;
+                        evidenceRevision: number;
+                        /** @enum {string} */
+                        mimeType: "image/jpeg" | "image/webp";
+                        sizeBytes: number;
+                        sha256: string;
+                    };
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            403: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            408: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            409: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            410: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            413: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            415: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            429: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    getPostApprovalRoomIssueEvidenceUpload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 메이드는 본인 초안 작성자·현재 실행자 조건을 모두 충족한 operation만 조회하며, 관리자는 안전한 상태·leaseVersion을 공동 조회한다. 원 제출이 rejected/superseded(반려·대체)되어도 조회 권한만 유지한다. 실제 인계·provider 쓰기 권한은 별도이며 조회로 실행자·fence를 변경하지 않는다. 최신 session·role/status 권한 재검증은 유지한다. */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        operationId: string;
+                        /** @enum {string} */
+                        status: "reserved" | "provider_succeeded" | "accepted" | "reconciliation_pending" | "compensation_pending" | "compensated";
+                        leaseVersion: number;
+                        /** Format: uuid */
+                        evidenceId: string;
+                        itemRevision: number;
+                        evidenceRevision: number;
+                        /** @enum {string} */
+                        mimeType: "image/jpeg" | "image/webp";
+                        sizeBytes: number;
+                        sha256: string;
+                    };
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            403: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            408: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            409: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            410: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            413: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            415: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            429: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    getPostApprovalRoomIssueEvidenceContent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                evidenceId: string;
+                revision: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 서버 중계 JPEG/WebP binary만 반환; Cache-Control:no-store */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                    "image/webp": string;
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            403: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            408: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            409: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            410: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            413: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            415: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            429: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    handoverPostApprovalRoomIssueEvidenceUpload: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                operationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    expectedLeaseVersion: number;
+                };
+            };
+        };
+        responses: {
+            /** @description operationId는 요청과 같고 leaseVersion은 expectedLeaseVersion보다 크다. 내부 fence/provider 정보는 반환하지 않는다. */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        operationId: string;
+                        /** @enum {string} */
+                        status: "reserved" | "provider_succeeded" | "accepted" | "reconciliation_pending" | "compensation_pending" | "compensated";
+                        leaseVersion: number;
+                        /** Format: uuid */
+                        evidenceId: string;
+                        itemRevision: number;
+                        evidenceRevision: number;
+                        /** @enum {string} */
+                        mimeType: "image/jpeg" | "image/webp";
+                        sizeBytes: number;
+                        sha256: string;
+                    };
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            403: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            408: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            409: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            410: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            413: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            415: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            429: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 고정 safe error code만 반환한다. SQL/provider locator/token/PIN/원문 예외는 반환하지 않는다. */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    exportRoomPins: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Excel 파일 */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            /** @description 세션 만료 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 관리자 권한 필요 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 객실 변경 또는 미해결 PIN 변경 lease */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 설정 오류 */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    previewRoomPinImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description no-store 검증 결과 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        preview: {
+                            valid: boolean;
+                            total: number;
+                            changed: number;
+                            unchanged: number;
+                            ignored: number;
+                            /** Format: date-time */
+                            expiresAt: string;
+                            previewToken: string | null;
+                            issues: {
+                                row: number;
+                                /** @enum {string} */
+                                code: "INVALID_SHEET_HEADER" | "UNKNOWN_ROOM" | "DUPLICATE_ROOM" | "INVALID_ROOM_CREDENTIAL" | "NO_ROOM_ROWS";
+                            }[];
+                        };
+                    };
+                };
+            };
+            /** @description 요청 형식 오류 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 세션 만료 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 관리자 권한 필요 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 객실 정보 변경/lease 충돌 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Google 연결·시트 형식·서버 설정 확인 필요 */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    applyRoomPinImport: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    previewToken: string;
+                };
+            };
+        };
+        responses: {
+            /** @description no-store 적용 결과 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        imported: {
+                            updated: number;
+                            unchanged: number;
+                        };
+                    };
+                };
+            };
+            /** @description 잘못된 token/요청 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 세션 만료 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 관리자 권한 필요 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 미리보기 만료·변경·lease 충돌·멱등키 재사용 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Google 연결/서버 설정 오류 */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    listRoomReports: {
+        parameters: {
+            query?: {
+                status?: "registered";
+                limit?: number;
+                cursor?: string;
+            };
+            header?: never;
+            path: {
+                /** @description 불변 객실 ID */
+                roomId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 등록 신고의 immutable evidence와 현재 보존 상태 */
+            200: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoomReportsEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    listPayrollRemittanceMarkers: {
+        parameters: {
+            query: {
+                maidProfileIds: string;
+                /** @description 실제 달력의 KST 월요일. 현재·과거 조회 가능, 미래 주차는 409입니다. */
+                weekStart: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 표시 전용 결과입니다. 은행 이체나 실제 지급 원장 변경을 뜻하지 않습니다. */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollRemittanceBatch"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            403: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            404: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            409: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    getPayrollRemittanceMarker: {
+        parameters: {
+            query: {
+                maidProfileId: string;
+                /** @description 실제 달력의 KST 월요일. 현재·과거 조회 가능, 미래 주차는 409입니다. */
+                weekStart: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 표시 전용 결과입니다. 은행 이체나 실제 지급 원장 변경을 뜻하지 않습니다. */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollRemittanceMarker"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            403: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            404: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            409: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    setPayrollRemittanceMarker: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description 응답 유실 시 같은 본문·key로 재시도합니다. 다른 본문은 새 key를 사용합니다. */
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayrollRemittanceSetInput"];
+            };
+        };
+        responses: {
+            /** @description 표시 전용 결과입니다. 은행 이체나 실제 지급 원장 변경을 뜻하지 않습니다. */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollRemittanceMarker"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            403: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            404: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            409: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    reconfirmPayrollRemittanceMarker: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description 응답 유실 시 같은 본문·key로 재시도합니다. 다른 본문은 새 key를 사용합니다. */
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayrollRemittanceReconfirmInput"];
+            };
+        };
+        responses: {
+            /** @description 표시 전용 결과입니다. 은행 이체나 실제 지급 원장 변경을 뜻하지 않습니다. */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollRemittanceMarker"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            403: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            404: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            409: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    listPayrollRemittanceMarkerHistory: {
+        parameters: {
+            query: {
+                maidProfileId: string;
+                /** @description 실제 달력의 KST 월요일. 현재·과거 조회 가능, 미래 주차는 409입니다. */
+                weekStart: string;
+                limit?: number;
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 표시 전용 결과입니다. 은행 이체나 실제 지급 원장 변경을 뜻하지 않습니다. */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollRemittanceHistory"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            403: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            404: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            409: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description error.code로 분기하며 원문 DB 오류·민감 정보를 반환하지 않습니다. */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    reportAttemptRoomIssue: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description 사용자 동작 한 번마다 생성합니다. 네트워크 오류로 **같은 요청 본문을 재시도할 때만 같은 값**을 재사용하고, 다른 본문에는 새 값을 사용합니다. `crypto.randomUUID()`를 권장합니다. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                attemptId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    evidencePhotoIds: string[];
+                    memo: string;
+                };
+            };
+        };
+        responses: {
+            /** @description 검증된 current version의 안전한 projection */
+            201: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoomIssueReportEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 제출·검수 상태 충돌. provider 삭제 permit 이후 증빙 binding 경합은 PHOTO_RETENTION_DELETE_PREPARED로 반환합니다. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     reportBombRoom: {
         parameters: {
             query?: never;
@@ -6279,6 +10097,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     listAttemptSubmissions: {
@@ -6351,6 +10180,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -6446,7 +10286,11 @@ export interface operations {
     };
     listPendingInspections: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: number;
+                /** @description 직전 응답 nextCursor의 opaque 서명값. 다른 관리자·queue·정렬에 재사용하거나 수정하지 않습니다. */
+                cursor?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -6461,7 +10305,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SubmissionListEnvelope"];
+                    "application/json": components["schemas"]["InspectionPageEnvelope"];
                 };
             };
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
@@ -6512,6 +10356,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -6590,6 +10445,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -6681,6 +10547,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     approveSubmission: {
@@ -6760,6 +10637,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -6851,6 +10739,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     getAttemptPhotoSlots: {
@@ -6869,6 +10768,8 @@ export interface operations {
                 headers: {
                     /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
                     "Cache-Control"?: "no-store";
+                    /** @description 인증된 성공 응답의 요청별 고정 단계 duration(ms). photo_total은 인증 후 서비스 범위이며 전체 사용자 대기시간이 아닙니다. 사용자/파일/Drive ID·URL·비밀정보는 포함하지 않습니다. */
+                    "Server-Timing"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -6970,6 +10871,8 @@ export interface operations {
     uploadAttemptPhoto: {
         parameters: {
             query: {
+                /** @description 선택적 true만 허용. accepted 후 같은 actor/session으로 조회한 photoSlots를 반환합니다. 조회 실패·배정 변경이면 null이며 accepted를 취소하지 않습니다. null/미지원은 GET photo-slots로 복구하고 새 key로 업로드하지 않습니다. snapshot은 별도 조회 시점이며 다음 CAS 성공 보장이 아닙니다. */
+                includePhotoSlots?: true;
                 assignmentId: string;
                 assignmentRevision: number;
                 /** @description 슬롯 조회의 currentRevision. 최초는0, 교체는 최신CAS revision. */
@@ -6989,6 +10892,8 @@ export interface operations {
             content: {
                 "image/jpeg": string;
                 "image/webp": string;
+                "image/heic": string;
+                "image/heif": string;
             };
         };
         responses: {
@@ -6997,6 +10902,8 @@ export interface operations {
                 headers: {
                     /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
                     "Cache-Control"?: "no-store";
+                    /** @description 인증된 성공 응답의 요청별 고정 단계 duration(ms). photo_total은 인증 후 서비스 범위이며 전체 사용자 대기시간이 아닙니다. 사용자/파일/Drive ID·URL·비밀정보는 포함하지 않습니다. */
+                    "Server-Timing"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -7107,6 +11014,8 @@ export interface operations {
     uploadAttemptPhotoCollectionItem: {
         parameters: {
             query: {
+                /** @description 선택적 true만 허용. accepted 후 같은 actor/session으로 조회한 photoSlots를 반환합니다. 조회 실패·배정 변경이면 null이며 accepted를 취소하지 않습니다. null/미지원은 GET photo-slots로 복구하고 새 key로 업로드하지 않습니다. snapshot은 별도 조회 시점이며 다음 CAS 성공 보장이 아닙니다. */
+                includePhotoSlots?: true;
                 assignmentId: string;
                 assignmentRevision: number;
                 expectedCollectionRevision: number;
@@ -7127,6 +11036,8 @@ export interface operations {
             content: {
                 "image/jpeg": string;
                 "image/webp": string;
+                "image/heic": string;
+                "image/heif": string;
             };
         };
         responses: {
@@ -7135,6 +11046,8 @@ export interface operations {
                 headers: {
                     /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
                     "Cache-Control"?: "no-store";
+                    /** @description 인증된 성공 응답의 요청별 고정 단계 duration(ms). photo_total은 인증 후 서비스 범위이며 전체 사용자 대기시간이 아닙니다. 사용자/파일/Drive ID·URL·비밀정보는 포함하지 않습니다. */
+                    "Server-Timing"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -7259,6 +11172,8 @@ export interface operations {
                 headers: {
                     /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
                     "Cache-Control"?: "no-store";
+                    /** @description 인증된 성공 응답의 요청별 고정 단계 duration(ms). photo_total은 인증 후 서비스 범위이며 전체 사용자 대기시간이 아닙니다. 사용자/파일/Drive ID·URL·비밀정보는 포함하지 않습니다. */
+                    "Server-Timing"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -7373,6 +11288,8 @@ export interface operations {
                 headers: {
                     /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
                     "Cache-Control"?: "no-store";
+                    /** @description 인증된 성공 응답의 요청별 고정 단계 duration(ms). photo_total은 인증 후 서비스 범위이며 전체 사용자 대기시간이 아닙니다. 사용자/파일/Drive ID·URL·비밀정보는 포함하지 않습니다. */
+                    "Server-Timing"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -7482,12 +11399,16 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 검증 완료된 원본 JPEG/WebP. Drive 응답 header/Location/filename은 전달하지 않습니다. */
+            /** @description 검증 완료된 저장본 JPEG/WebP(최대 300KiB). 스마트폰 입력 원본은 저장하지 않으며 Drive 응답 header/Location/filename은 전달하지 않습니다. */
             200: {
                 headers: {
                     /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
                     "Cache-Control"?: "no-store";
+                    /** @description 권한 재검증 성공 후 photo_db/photo_drive/photo_total의 duration(ms)만 제공. */
+                    "Server-Timing"?: string;
                     "X-Content-Type-Options"?: "nosniff";
+                    /** @description 서버 검증 이름만 사용합니다. 새 사진은 날짜_유형_호실_번호 UTF-8 filename*, legacy는 photo.jpg/webp이며 Drive 원문 헤더나 locator를 전달하지 않습니다. */
+                    "Content-Disposition"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -7579,6 +11500,8 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             503: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -7765,6 +11688,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     changePassword: {
@@ -7850,6 +11784,8 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             503: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -7892,6 +11828,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             403: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -7970,6 +11917,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             502: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -8064,6 +12022,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     changeAccountStatus: {
@@ -8146,6 +12115,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             502: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -8236,6 +12216,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     resetAccountPassword: {
@@ -8320,6 +12311,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     getDeveloperRoomCatalog: {
@@ -8365,6 +12367,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -8456,6 +12469,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -8558,6 +12582,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     createDeveloperRoom: {
@@ -8651,6 +12686,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     previewDeveloperRoomDeactivation: {
@@ -8734,6 +12780,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -8834,6 +12891,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     getDeveloperOverview: {
@@ -8885,6 +12953,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     getDeveloperRuntimeStatus: {
@@ -8921,6 +13000,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             403: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -8978,6 +13068,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     getDeveloperSchedulerStatus: {
@@ -9023,6 +13124,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -9083,6 +13195,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -9159,6 +13282,8 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             503: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -9230,6 +13355,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -9312,6 +13448,8 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             503: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -9388,6 +13526,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     listAvailability: {
@@ -9447,6 +13596,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -9529,6 +13689,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     listAvailabilityChangeRequests: {
@@ -9590,6 +13761,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -9675,6 +13857,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -9769,6 +13962,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     listAvailabilityCandidates: {
@@ -9826,6 +14030,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -9917,6 +14132,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     unassignCleaningAssignmentPrestart: {
@@ -9996,6 +14222,113 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    cancelUnavailableCleaningAssignment: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description 사용자 동작 한 번마다 생성합니다. 네트워크 오류로 **같은 요청 본문을 재시도할 때만 같은 값**을 재사용하고, 다른 본문에는 새 값을 사용합니다. `crypto.randomUUID()`를 권장합니다. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                cleaningTargetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignmentUnavailabilityCancellationRequest"];
+            };
+        };
+        responses: {
+            /** @description 명령 완료 */
+            200: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssignmentUnavailabilityCancellation"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -10087,6 +14420,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     decideAssignmentCancellationRequest: {
@@ -10172,6 +14516,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     listAssignmentChangeRequests: {
@@ -10231,6 +14586,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -10308,6 +14674,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -10457,6 +14834,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     getOfflineQuarantine: {
@@ -10520,6 +14908,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -10602,6 +15001,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     getAttemptLifecycleImpact: {
@@ -10672,6 +15082,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     manageAttemptLifecycle: {
@@ -10702,6 +15123,84 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AttemptLifecycleResult"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    listLimitedAttempts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 현재 scope의 안전한 수명주기 결과. credential·PIN·원문 snapshot은 반환하지 않습니다. */
+            200: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LimitedAttemptDiscovery"];
                 };
             };
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
@@ -10960,6 +15459,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     startCleaning: {
@@ -11040,6 +15550,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -11132,6 +15653,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     reportCheckoutNotCompleted: {
@@ -11208,6 +15740,92 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    listCheckoutIncidents: {
+        parameters: {
+            query?: {
+                roomId?: string;
+                cleaningTargetId?: string;
+                serviceDate?: string;
+                limit?: number;
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 최대 limit개의 open 사건과 마지막 반환 행에 연결된 nullable cursor */
+            200: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutIncidentListEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     getCheckoutIncident: {
@@ -11262,6 +15880,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -11353,6 +15982,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     listAssignments: {
@@ -11414,6 +16054,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -11486,6 +16137,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -11577,6 +16239,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     previewAssignments: {
@@ -11595,6 +16268,7 @@ export interface operations {
             /** @description 저장되지 않은 배정 초안 */
             200: {
                 headers: {
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -11604,6 +16278,8 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             400: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -11613,6 +16289,8 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             401: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -11622,6 +16300,8 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             403: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -11631,6 +16311,8 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             409: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -11640,6 +16322,8 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             422: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -11649,6 +16333,19 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -11705,6 +16402,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -11771,6 +16479,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     listCleaningTemplates: {
@@ -11824,6 +16543,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -11902,6 +16632,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     listCleaningHistory: {
@@ -11970,6 +16711,90 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    getCleaningHistorySubmission: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                submissionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 본인 또는 관리자 청소 이력 상세 */
+            200: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        submission: components["schemas"]["CleaningHistorySubmission"];
+                    };
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     listWorkHistory: {
@@ -12030,6 +16855,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -12108,6 +16944,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     commitAndNotifyAssignments: {
@@ -12178,6 +17025,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -12270,6 +17128,8 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             503: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -12345,6 +17205,8 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             503: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -12431,6 +17293,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -12590,6 +17463,17 @@ export interface operations {
             };
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
                 headers: {
                     /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
                     "Cache-Control"?: "no-store";
@@ -12780,6 +17664,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     getComplaint: {
@@ -12839,6 +17734,17 @@ export interface operations {
             };
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
                 headers: {
                     /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
                     "Cache-Control"?: "no-store";
@@ -13040,6 +17946,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     decideComplaint: {
@@ -13128,6 +18045,17 @@ export interface operations {
             };
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
                 headers: {
                     /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
                     "Cache-Control"?: "no-store";
@@ -13234,6 +18162,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     closeComplaint: {
@@ -13322,6 +18261,17 @@ export interface operations {
             };
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
                 headers: {
                     /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
                     "Cache-Control"?: "no-store";
@@ -13428,6 +18378,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     materializeComplaintRework: {
@@ -13525,12 +18486,23 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     listPayrollCycles: {
         parameters: {
             query: {
-                /** @description KST 기준 월요일인 종료 주차 시작일 */
+                /** @description KST 기준 월요일인 현재 또는 과거 주차 시작일. 현재 주 조회는 가능하지만 지급 시작은 주차 종료 후에만 가능합니다. */
                 weekStart: string;
                 /** @description admin 선택 필터. maid는 본인 ID만 허용됩니다. */
                 maidProfileId?: string;
@@ -13613,6 +18585,8 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             503: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -13701,6 +18675,8 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             503: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -13712,7 +18688,7 @@ export interface operations {
     listPayrollEntries: {
         parameters: {
             query: {
-                /** @description KST 기준 월요일인 종료 주차 시작일 */
+                /** @description KST 기준 월요일인 현재 또는 과거 주차 시작일 */
                 weekStart: string;
                 /** @description 조회 대상 메이드. maid는 본인 ID만 허용됩니다. */
                 maidProfileId: string;
@@ -13788,6 +18764,194 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             503: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    getPayrollAdjustmentBook: {
+        parameters: {
+            query: {
+                /** @description 조회할 메이드 profile UUID. 비활성·퇴사한 메이드의 과거 원장도 조회할 수 있습니다. */
+                maidProfileId: string;
+                /** @description 실제 달력의 0001~9999년 YYYY-MM-DD, 현재 또는 과거 KST 월요일. 미래 주차는 409입니다. */
+                weekStart: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 현재 메이드 전역 조정 원장 CAS 버전 (없는 원장은 0) */
+            200: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollAdjustmentBookEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    listPayrollWorkDetails: {
+        parameters: {
+            query: {
+                /** @description 현재 또는 과거 KST 월요일. 실제 달력 날짜만 허용하고 미래 주차는409입니다. */
+                weekStart: string;
+                maidProfileId: string;
+                kind: "earnings" | "workflow";
+                limit?: number;
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 합계와 독립된 확정 수익/미확정 업무 page */
+            200: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollWorkDetailsEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -13880,6 +19044,8 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             503: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -13969,6 +19135,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     reversePayrollSource: {
@@ -14052,6 +19229,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     carryForwardPayrollCycle: {
@@ -14129,6 +19317,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -14220,6 +19419,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     recordPayrollPaymentCheck: {
@@ -14299,6 +19509,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -14390,6 +19611,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     reopenPayrollPaymentAttempt: {
@@ -14475,6 +19707,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     listReservations: {
@@ -14536,6 +19779,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -14630,6 +19884,8 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             503: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -14725,6 +19981,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     getReservation: {
@@ -14800,6 +20067,8 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             503: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -14897,6 +20166,8 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             503: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -14988,6 +20259,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     commitReservationRoomMove: {
@@ -15070,6 +20352,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -15167,6 +20460,8 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             503: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -15264,6 +20559,8 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             503: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -15349,6 +20646,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -15443,6 +20751,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     processReservationTransitions: {
@@ -15515,6 +20834,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     listRoomTypes: {
@@ -15564,11 +20894,25 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     listRooms: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description 객실 현황 기준 영업일(YYYY-MM-DD). 생략=오늘 LIVE, 과거=Asia/Seoul 23:59:59.999999, 미래=Asia/Seoul 00:00:00 기준입니다. */
+                serviceDate?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -15586,6 +20930,15 @@ export interface operations {
                     "application/json": {
                         rooms: components["schemas"]["RoomProjection"][];
                     };
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
@@ -15609,6 +20962,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -15687,6 +21051,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     listRoomEvents: {
@@ -15754,6 +21129,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -15848,12 +21234,26 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     listRoomOperationBlocks: {
         parameters: {
             query?: {
                 status?: "actionable";
+                limit?: number;
+                /** @description 직전 응답 nextCursor의 opaque 서명값 */
+                cursor?: string;
             };
             header?: never;
             path: {
@@ -15914,6 +21314,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -16002,6 +21413,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -16098,6 +21520,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     correctRoomOccupancy: {
@@ -16180,6 +21613,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -16274,6 +21718,81 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    listRoomCandles: {
+        parameters: {
+            query?: {
+                roomId?: string;
+                cursor?: string;
+                limit?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 촛불 최소 조회 page */
+            200: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoomCandlePage"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     setRoomCandleCount: {
@@ -16362,12 +21881,26 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     listRoomIssues: {
         parameters: {
             query?: {
                 status?: "open";
+                limit?: number;
+                /** @description 직전 응답 nextCursor의 opaque 서명값 */
+                cursor?: string;
             };
             header?: never;
             path: {
@@ -16428,6 +21961,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -16516,6 +22060,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -16612,6 +22167,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     recordRoomPinSync: {
@@ -16700,6 +22266,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     bootstrapRoomPins: {
@@ -16777,6 +22354,8 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             503: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -16869,6 +22448,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     prepareRoomPinChange: {
@@ -16949,6 +22539,8 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             503: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -17043,6 +22635,17 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
         };
     };
     rollbackRoomPinChange: {
@@ -17125,6 +22728,17 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             500: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
@@ -17217,6 +22831,8 @@ export interface operations {
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             503: {
                 headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
