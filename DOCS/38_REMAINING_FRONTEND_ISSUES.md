@@ -1,5 +1,23 @@
 # 남은 프런트 이슈와 운영 연결 상태
 
+## 2026-10-29 재점검
+
+GitHub 열린 이슈6개와 PR2개, 최근 병합PR30개 및 각 이슈의 최신 댓글을 다시 확인했다. 기준 dev `c0a6bea`, 운영 main `da6acc1`. 아래 10월22일 기록은 당시 상태이며 현재 판단은 이 절과 릴리스 PR의 실제 배포 검증을 우선한다.
+
+| 항목 | 현재 프런트 판단·처리 | 남은 범위 |
+| --- | --- | --- |
+| #227 메모 단독 특이사항 | backend #474 완료·PR477/main `3e805249` API53/DB122 인계와 실제 운영 OpenAPI를 대조. snapshot/client를 갱신하고 production/preview 빌드·로컬 기본 `supplementalMemoOnly=true`로 활성화. 메모 필수·사진0~10·빈 배열/정수revision0·기존 사진CAS/동일키 재시도·관리자/메이드 목록·해결 회귀 | 실제 사용자0/1/10장·모바일·오류 UAT. 프런트 배포를 실제 업무 쓰기 성공으로 표시하지 않고 이슈OPEN 유지 |
+| #206 사진 | 현재 snapshot/메모리 큐/순차CAS/4조회/재시도 경로 유지. 1/5/20장·1/10/20배정·snapshot/null/유실/409·동일key/bytes·HEIC fallback 회귀 | 사용자가 직접 수행하는 실사진/실기기/실제 지연 UAT. API52 DB 최적화는 배포됐지만 프런트 재연결 변경 없음 |
+| #207 조회 | 기존 일괄 가능일·송금batch·첫페이지 우선·부분실패/금액 불일치/세대 차단12그룹 재검증 | 실제 동일 역할·기기·네트워크 p50/p95 |
+| #219 배정 | planningDate ON·대상일·CAS·사진큐 유지. 배정 연속 저장·미시작 변경·진행중 변경 차단 회귀 유지 | 실제 KST 자정 전후 관리자/메이드 업무 UAT |
+| #220 PIN | Excel ON, Drive 가져오기 OFF 유지. backend #463은 API50 배포·전용시트 접근 준비까지 완료로 종료됐으므로 더 이상 Google 인증 미완료로 단정하지 않음 | 운영 RoomProjection에는 pinVersion이 없고 mismatch의 일반 reveal은 차단됨. ACTUAL_PIN_REENTRY의 필수 expectedPinVersion을 원문 없이 얻을 공개 경로가 여전히 없음. 버전 추측·기존PIN 우회조회·Drive apply는 하지 않음. 실제 export/물리PIN UAT |
+| #194 메이드 | live 전용 경로와 역할 차단·본인 이력·새 특이사항의 합성 회귀 유지, 배포된 소스/설정 신원 대조 | 승인된 실제 메이드 계정·실기기/PWA/카메라 UAT |
+| PR #169/#171 | 현재 코드의 종료예약 읽기 전용·preview0회, 사전중복/생성409 입력/DOM/포커스 유지가 #223/#224에 통합돼 있음을 패치·코드·예약11그룹으로 대조. 검증 근거를 본문에 남겨 중복PR 종료 | 오래된 stacked branch는 재병합하지 않음 |
+
+고정 계약: 운영 OpenAPI154paths/166operations, snapshot SHA `94a412a9cd0336c7e09682acd8a2adebb81b5d931791c8e3752e410cddf26bc4`. 사진0장 응답3곳과 finalize oneOf 분기는 의도적인 계약 전환이므로 `contracts/reviewed-breaking-changes.json`에 이전/새 snapshot 해시와 정확한4개 차이만 기록했다. 다른 문서 바이트·다른 endpoint/차이는 기존 CI 실패를 유지한다. 일반 청소/폭탄방 사진 조건·권한·CAS·멱등 계약은 변경하지 않는다. 배포 결과는 구현/릴리스 PR에서 기록한다.
+
+---
+
 > 같은 날 후속으로 새로 등록된 #227의 프런트 준비·운영 비활성 상태는 [문서 39](39_SUPPLEMENTAL_MEMO_ONLY_HANDOFF.md)를 따른다. 아래 6개는 앞선 재점검 당시의 목록이다.
 
 2026-10-22에 열린 이슈 6개(#140/#194/#206/#207/#219/#220)의 본문·최신 댓글과 현재 코드를 다시 대조했다. 프런트 기준은 dev `6dee336`, 현재 운영 기준은 main `3482da8` 및 [PR #226](https://github.com/makee-ham/room-management-system/pull/226)이다. 이번 수정의 병합 SHA와 배포 신원은 최종 PR의 검증 기록에서 확인한다.

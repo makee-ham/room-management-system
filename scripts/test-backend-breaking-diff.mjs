@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 
 import { findBreakingChanges } from './openapi-breaking-diff-lib.mjs';
+import { partitionReviewedChanges } from './reviewed-contract-changes.mjs';
+import {createHash} from 'node:crypto';
+import assert from 'node:assert/strict';
 
 const schema = {
   openapi: '3.1.1',
@@ -161,3 +164,11 @@ if (!findBreakingChanges(referencedAnyOfBefore, referencedAnyOfAfter).some((diff
 }
 
 process.stdout.write('OpenAPI 3.1 breaking-diff regression tests passed.\n');
+
+// A reviewed transition must never hide unrelated contract changes or a different revision.
+const sha=text=>createHash('sha256').update(text).digest('hex');
+const transition=[{baseSha256:sha('before'),currentSha256:sha('after'),changes:['reviewed change']}];
+assert.deepEqual(partitionReviewedChanges('before','after',['reviewed change','unrelated change'],transition),{reviewed:['reviewed change'],unreviewed:['unrelated change']});
+for(const [before,after] of [['older','after'],['before','changed after']])assert.deepEqual(partitionReviewedChanges(before,after,['reviewed change'],transition),{reviewed:[],unreviewed:['reviewed change']});
+assert.deepEqual(partitionReviewedChanges('after','after',[],transition),{reviewed:[],unreviewed:[]});
+console.log('Reviewed transition exact-hash binding and unrelated-change rejection passed.');
