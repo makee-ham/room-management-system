@@ -182,3 +182,6 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 
 # 2026-10-22 supplemental memo-only readiness
 - DOCS/39_SUPPLEMENTAL_MEMO_ONLY_HANDOFF.md
+
+# 2026-10-29 compact management lists
+- scripts/check-compact-management-lists.mjs

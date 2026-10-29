@@ -160,17 +160,19 @@ try{
     for(const width of [360,390,768,1440]){await p.setViewportSize({width,height:900});assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await p.screenshot({path:`WIREFRAME/QA/screenshots/data-performance-${width}.png`,fullPage:false});}
     await p.locator('[data-action="live-payroll-detail"]').first().focus();await p.keyboard.press('Enter');await p.waitForFunction(()=>window.__dataQA.get().detail&&!window.__dataQA.get().detail.loading);await p.goBack();await p.waitForFunction(()=>!window.__dataQA.get().detail);await f.close();
   }
-  passed.push('360/390/768/1440px · 기존 카드/목적지 · Enter/Back · 의미 있는 화면/넘침/console 검사');
+  passed.push('360/390/768/1440px · 주급 목록/목적지 · Enter/Back · 의미 있는 화면/넘침/console 검사');
   {
     const before=await fixture({old:true,count:3}),after=await fixture({count:3});
     for(const f of [before,after]){await f.page.evaluate(()=>window.__dataQA.start());await f.page.waitForFunction(()=>window.__done);await sleep(100);}
     for(const width of [390,1440]){
-      const captures=[];for(const [label,f] of [['before',before],['after',after]]){await f.page.setViewportSize({width,height:900});captures.push(await f.page.screenshot({path:`WIREFRAME/QA/screenshots/v093-${label}-${width}.png`,animations:'disabled'}));}
-      assert(captures[0].equals(captures[1]),`Existing payroll UI differs at ${width}px`);
+      for(const [label,f] of [['before',before],['after',after]]){await f.page.setViewportSize({width,height:900});await f.page.screenshot({path:`WIREFRAME/QA/screenshots/v093-${label}-${width}.png`,animations:'disabled'});}
+      // The user authorized compact list styling; compare information and controls instead of pixels.
+      const semantic=page=>page.locator('.payroll-live').evaluate(root=>({text:root.textContent.replace(/\s+/g,' ').trim(),controls:[...root.querySelectorAll('button')].map(n=>[n.textContent.trim(),n.dataset.action,n.dataset.maid,n.disabled,n.getAttribute('aria-label'),n.getAttribute('aria-checked')])}));
+      assert.deepEqual(await semantic(after.page),await semantic(before.page),`Payroll information or controls differ at ${width}px`);
     }
     await before.close();await after.close();
   }
-  passed.push('변경 전/후 동일 fixture · 390/1440px 완료 화면 PNG byte 일치');
+  passed.push('변경 전/후 동일 fixture · 390/1440px 주급 문구·금액·버튼 목적지·비활성/송금 상태 동일 (사용자 요청 목록 레이아웃은 변경)');
   for(const version of ['before','after'])for(const count of [1,10,20]){const rows=bench.filter(r=>r.version===version&&r.count===count);if(!rows.length)continue;const q=(key,p)=>rows.map(r=>r[key]).sort((a,b)=>a-b)[Math.ceil(rows.length*p)-1];console.log(JSON.stringify({version,count,samples:rows.length,firstP50:q('first',.5),firstP95:q('first',.95),allP50:q('all',.5),allP95:q('all',.95),requests:rows[0].requests,maxMarkers:rows[0].maxMarkers}));}
   passed.forEach(text=>console.log('[ok] '+text));console.log('Playwright / Chromium '+await browser.version()+'; Browser plugin not available. Synthetic timing is not operational mobile performance.');
 }finally{await browser.close();}
