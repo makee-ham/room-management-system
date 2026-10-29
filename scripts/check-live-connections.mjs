@@ -10,7 +10,7 @@ const id=n=>`10000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const roomId=id(1),typeId=id(2),adminId=id(3),maidId=id(4),blockId=id(5),issueId=id(6),quarantineId=id(7);
 const now=()=>new Date().toISOString();
 const workDate='2026-09-27',targetId=id(11),assignmentId=id(12),attemptId=id(13),requestId=id(14),cycleId=id(15);
-let currentAssignment=true;
+let currentAssignment=true,correctionTarget='CLEANING_REQUIRED';
 const assignment={assignmentId,cleaningTargetId:targetId,roomId,roomNumber:'211',roomTypeCode:'standard',roomTypeName:'스탠다드',maidProfileId:maidId,maidDisplayName:'QA 메이드',serviceDate:workDate,isCurrent:true,notifiedAt:now(),sequenceNumber:1,revision:2,targetAssignmentVersion:7,feeSnapshot:16000};
 const cycle={cycleId,maidProfileId:maidId,weekStart:'2026-09-21',status:'open',version:0,itemCount:0,totalAmount:0,payableAmount:0,adjustmentAmount:0,carryInAmount:0,carryOutAmount:0,lateEarningAmount:0,lateEarningCount:0,items:[],adjustments:[],lateEarnings:[]};
 const room={id:roomId,roomNumber:'211',roomTypeCode:'standard',roomTypeName:'스탠다드',elevatorZone:'A',dataStatus:'verified',stateVersion:12,occupied:false,cleaningRequired:true,candleCount:0,pinSyncStatus:'verified',primaryDisplayStatus:'BLOCKED',allocationReady:false,reasonCodes:['OPERATION_BLOCKED']};
@@ -46,7 +46,7 @@ await page.route('**/*',async route=>{
   if(path===`/v1/rooms/${roomId}/issues`&&method==='GET')return fixture(route,{roomId,roomStateVersion:12,evaluatedAt:now(),items:issues,hasMore:false,nextCursor:null});
   if(path.endsWith('/release')){assert.equal(body.expectedRoomVersion,12);blocks=[];return fixture(route,{operation:{entityId:blockId}});}
   if(path.endsWith('/resolve')&&path.includes('/rooms/')){assert.equal(body.expectedRoomVersion,12);issues=[];return fixture(route,{operation:{entityId:issueId}});}
-  if(path.endsWith('/display-status-overrides')){assert.equal(body.expectedRoomVersion,12);assert.equal(body.targetStatus,'CLEANING_REQUIRED');return fixture(route,{operation:{roomId}});}
+  if(path.endsWith('/display-status-overrides')){assert.equal(method,'POST');assert.deepEqual(body,{expectedRoomVersion:12,reasonCode:'ADMIN_DISPLAY_STATUS_OVERRIDE',targetStatus:correctionTarget});assert(request.headers()['idempotency-key']);return fixture(route,{operation:{roomId}});}
   if(path==='/v1/reservations')return fixture(route,{reservations:[],nextCursor:null});
   if(path==='/v1/accounts')return fixture(route,{accounts,nextCursor:null});
   if(path==='/v1/notifications'){notificationPages++;return fixture(route,{notifications:[{id:id(notificationPages+20),title:'QA',body:'QA',category:'assignment',roomId:null,cleaningTargetId:null,deepLink:null,groupId:null,requiresAction:false,readAt:null,resolvedAt:null,occurredAt:now()}],nextCursor:url.searchParams.has('cursor')?null:'next-page'});}
@@ -93,7 +93,16 @@ try{
   await setup('admin');await page.evaluate(id=>__connectionQA.open(id),roomId);await page.getByText('QA 시설 확인',{exact:false}).waitFor();await responsive('room');
   await click('review-live-room-resolution');await confirmed();assert.equal(issues.length,0);
   await click('live-room-operations');await page.getByRole('heading',{name:'211호 운영 상태',exact:true}).waitFor();await click('review-live-room-resolution');await confirmed();assert.equal(blocks.length,0);
-  await click('live-room-operations');await click('live-room-correction');await page.locator('#room-correction-display').selectOption('CLEANING_REQUIRED');await click('live-room-correction-review');await confirmed();
+  const correctionWrites=()=>requests.filter(r=>r.path.endsWith('/display-status-overrides')).length;
+  await click('live-room-operations');await page.locator('[data-action="live-room-correction"]').press('Enter');await page.getByRole('heading',{name:'211호 상태 정정',exact:true}).waitFor();
+  assert.equal(await page.locator('#room-correction-kind,#room-correction-time').count(),0);assert.equal(await page.getByLabel('카드 표시 상태',{exact:true}).count(),1);assert.equal(await page.locator('#room-correction-display option').count(),7);assert(await page.locator('#modal-root button,#room-correction-display').evaluateAll(nodes=>nodes.every(n=>n.getBoundingClientRect().width>=44&&n.getBoundingClientRect().height>=44)));await responsive('correction');
+  await page.keyboard.press('Tab');assert(await page.evaluate(()=>!!document.activeElement.closest('#modal-root')));await close();await page.waitForFunction(()=>document.activeElement?.dataset.action==='live-room-operations');assert.equal(correctionWrites(),0);
+  await click('live-room-operations');await click('live-room-correction');await page.getByRole('heading',{name:'211호 상태 정정',exact:true}).waitFor();await page.goBack();await page.waitForFunction(()=>!document.body.classList.contains('modal-open'));assert.equal(correctionWrites(),0);
+  await click('live-room-operations');await click('live-room-correction');await page.locator('#room-correction-display').selectOption('CLEANING_REQUIRED');await click('live-room-correction-review');await page.getByText('카드 표시만 변경합니다. 예약·점유·입실 가능 여부는 유지됩니다.',{exact:true}).waitFor();assert.equal(correctionWrites(),0);await confirmed();assert.equal(correctionWrites(),1);
+  // An occupied room with a displayed reservation uses the same display-only correction; reset sends null.
+  room.occupied=true;room.displayReservationId=id(40);room.displayCheckInAt='2026-09-26T16:00:00+09:00';room.displayCheckOutAt='2026-09-28T11:00:00+09:00';correctionTarget=null;
+  await click('live-room-operations');await click('live-room-correction');assert.equal(await page.locator('#room-correction-kind,#room-correction-time').count(),0);assert.equal(await page.locator('#room-correction-display').inputValue(),'');await click('live-room-correction-review');await confirmed();assert.equal(correctionWrites(),2);assert(!requests.some(r=>r.path.endsWith('/occupancy-corrections')));room.occupied=false;delete room.displayReservationId;delete room.displayCheckInAt;delete room.displayCheckOutAt;
+
   await page.evaluate(()=>__connectionQA.view('rooms'));await click('live-room-export');await page.getByRole('heading',{name:'객실 현황 내보내기·동기화',exact:true}).waitFor();const downloading=page.waitForEvent('download');await click('live-export-csv');const download=await downloading;assert(download.suggestedFilename().endsWith('.csv'));assert(!String(await readFile(await download.path(),'utf8')).includes('PIN'));
   await click('live-room-export');await click('live-pin-sheet-review');await confirmed();assert(requests.some(r=>r.path.endsWith('full-resync')&&r.key));
   await page.evaluate(()=>__connectionQA.view('more'));assert.equal(await page.locator('[data-action="live-accounts-open"]').count(),0);await setup('developer');await page.evaluate(()=>__connectionQA.view('accounts'));await page.getByRole('heading',{name:'계정 관리',exact:true,level:2}).waitFor();await responsive('accounts');await setup('admin');
@@ -108,7 +117,7 @@ try{
   await setup('maid');const before=requests.length;await page.evaluate(()=>__connectionQA.guard());assert.equal(requests.length,before);assert.equal(await page.evaluate(()=>__connectionQA.gate()),false);
   assert.deepEqual(missing,[]);assert.deepEqual(errors,[]);assert.deepEqual(consoleProblems,[]);
   console.log('[ok] catalog: load, capacity preview/CAS/expiry/409, create, deactivate');
-  console.log('[ok] room: persisted events/issues/blocks, resolution, display correction');
+  console.log('[ok] room: persisted events/issues/blocks, resolution, display-only correction/reset, no occupancy mutation, modal keyboard/Back/focus');
   console.log('[ok] export CSV, PIN-sheet queued sync fence, developer-only accounts, template feature removal');
   console.log('[ok] audit/activity/diagnostics, offline quarantine, notification pagination, role guard');
   console.log('[ok] unavailable cancel exact CAS, notification target/date/request/week, maid historical assignment');
