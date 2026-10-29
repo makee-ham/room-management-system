@@ -148,7 +148,7 @@ def load_runtime_config() -> dict[str, object]:
                     ("assignmentPlanningDate", "RMS_ASSIGNMENT_PLANNING_DATE", "true"),
                     ("roomPinExport", "RMS_ROOM_PIN_EXPORT", "true"),
                     ("roomPinTransfer", "RMS_ROOM_PIN_TRANSFER", "false"),
-                    ("supplementalMemoOnly", "RMS_SUPPLEMENTAL_MEMO_ONLY", "false"),
+                    ("supplementalMemoOnly", "RMS_SUPPLEMENTAL_MEMO_ONLY", "true"),
                 )
             },
         },

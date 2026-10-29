@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
 import { findBreakingChanges } from './openapi-breaking-diff-lib.mjs';
+import { partitionReviewedChanges } from './reviewed-contract-changes.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const currentPath = resolve(root, 'contracts/backend-openapi.json');
@@ -35,8 +36,10 @@ if (!basePath) {
 }
 
 try {
-  const [base, current] = await Promise.all([readFile(basePath, 'utf8').then(JSON.parse), readFile(currentPath, 'utf8').then(JSON.parse)]);
-  const breaking = findBreakingChanges(base, current);
+  const [baseText,currentText,reviewRecord] = await Promise.all([readFile(basePath,'utf8'),readFile(currentPath,'utf8'),readFile(resolve(root,'contracts/reviewed-breaking-changes.json'),'utf8').then(JSON.parse)]);
+  const differences=findBreakingChanges(JSON.parse(baseText),JSON.parse(currentText));
+  const {reviewed,unreviewed:breaking}=partitionReviewedChanges(baseText,currentText,differences,reviewRecord.reviews);
+  if(reviewed.length)process.stdout.write(`Reviewed contract transition: ${reviewed.length} exact differences accepted for the pinned source hashes.\n`);
   if (breaking.length) throw new Error(`Breaking OpenAPI changes found:\n- ${breaking.join('\n- ')}`);
   process.stdout.write(`No breaking OpenAPI changes found against ${explicitBaseFile || baseRef}.\n`);
 } finally {
