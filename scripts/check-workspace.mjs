@@ -1046,7 +1046,6 @@ for (const contract of [
   if (!roomCardPolicy.includes(contract)) throw new Error(`Room-card extra-guest/filter policy missing: ${contract}`);
 }
 for (const contract of [
-  '체크인부터 체크아웃까지 한 고객의 일정을 입력합니다.',
   'reservationOverlaps(room.no,checkInAt,checkOutAt,id)',
   'quickReservationConflict(room.no,firstNight,lastNight,id,checkInAt,checkOutAt,registeringCurrentStay)',
   'reservationFingerprint(existing)',
@@ -2573,7 +2572,7 @@ for(const contract of [
   "data-action=\"live-room-operations\"",
   "data-action=\"open-live-cleaning-request\"",
   "data-action=\"open-live-room-detail\"",
-  '미래 예약 가능 여부는 기간 선택 후 서버에서 확인',
+  'room-list-actions',
 ]){
   if(!liveRoomRowSource.includes(contract))throw new Error(`Reservation room card contract missing: ${contract}`);
 }
@@ -2586,7 +2585,7 @@ for(const forbidden of ['reservationLifecycle','readinessStatus','allocationRead
   if(livePrimarySource.includes(forbidden))throw new Error(`Room primary status must not be recomputed from ${forbidden}.`);
 }
 const liveCalendarSource=html.slice(html.indexOf('function liveQuickActiveReservations'),html.indexOf('function liveKstIsoDate'));
-for(const contract of ["calendarRangeKey===range.key", "apiRequest(`/v1/reservations?${query.toString()}`)", "기간 선택 후 서버에서 예약 가능 여부 확인", "빈 기간은 선택 후 서버 확인"]){
+for(const contract of ["calendarRangeKey===range.key", "apiRequest(`/v1/reservations?${query.toString()}`)", "예약 기간 선택", 'data-bookable="true"']){
   if(!html.includes(contract))throw new Error(`Reservation range/calendar contract missing: ${contract}`);
 }
 if(liveCalendarSource.includes('if(room.allocationReady!==true)')||liveCalendarSource.includes("rowReason=room.allocationReady"))throw new Error('Current allocationReady must not lock future calendar cells.');
