@@ -79,7 +79,7 @@ export interface paths {
         put?: never;
         /**
          * 새 증빙으로 추가 특이사항 신고 확정
-         * @description 활성·비밀번호 변경 완료 업무 관리자 또는 본인 실제 통보 배정 이력이 있는 메이드만 접근한다. 메이드는 원 수행 여부와 무관하게 같은 target의 본인 실제 통보 배정 이력이 필요하며 original_performer/notified_assignee는 응답 ownership 구분이지 별도 접근 권한이 아니다. DB가 매 응답마다 actor/session/source에 묶어 확인하며 내부 근거는 공개 응답과 저장된 처리 결과에 포함하지 않는다. v0.9.0에서 운영 배포된 계약이며 실제 업무 UAT 완료를 뜻하지 않는다. 7일은 신고 마감이 아니며 현재 객실·검수·수익·주급을 변경하지 않는다. 새 typed accepted evidence의 정확한 CAS·불변 seal·receipt·typed notification/outbox를 하나의 transaction으로 저장한다. 이후 수정본의 운영 반영은 별도 릴리스 절차를 따른다.
+         * @description 활성·비밀번호 변경 완료 업무 관리자 또는 본인 실제 통보 배정 이력이 있는 메이드만 접근한다. 메이드는 원 수행 여부와 무관하게 같은 target의 본인 실제 통보 배정 이력이 필요하며 original_performer/notified_assignee는 응답 ownership 구분이지 별도 접근 권한이 아니다. DB가 매 응답마다 actor/session/source에 묶어 확인하며 내부 근거는 공개 응답과 저장된 처리 결과에 포함하지 않는다. v0.9.0에서 운영 배포된 계약이며 실제 업무 UAT 완료를 뜻하지 않는다. 7일은 신고 마감이 아니며 현재 객실·검수·수익·주급을 변경하지 않는다. 새 typed accepted evidence의 정확한 CAS·불변 seal·receipt·typed notification/outbox를 하나의 transaction으로 저장한다. 메모 전용 등록을 지원한다. 사진 없는 새 초안은 evidence: [], expectedEvidenceRevision: 0으로 확정한다. 사진이 있으면 현재 양수 revision과 전체 목록을 보낸다. 메모는 항상 필수다. 일반 청소 제출과 폭탄방 증빙의 사진 필수 조건은 변경하지 않는다.
          */
         post: operations["finalizePostApprovalRoomIssueReport"];
         delete?: never;
@@ -4863,7 +4863,7 @@ export interface components {
             reasonCode: "MAID_UNAVAILABLE" | "SCHEDULE_CHANGED" | "SEQUENCE_CHANGED" | "OPERATIONAL_CHANGE";
             /**
              * Format: date
-             * @description 오늘/내일 배정 탭에서 선택한 KST 계획일. 과거 업무 담당 변경 시 반드시 전달. 생략은 기존 통보 계획일/원 날짜 호환이며 생성일·통보일이 아님. #446 미배포 후보.
+             * @description 오늘/내일 배정 탭에서 선택한 KST 계획일. 과거 업무 담당 변경 시 반드시 전달. 생략은 기존 통보 계획일/원 날짜 호환이며 생성일·통보일이 아님.
              */
             serviceDate?: string;
             /** Format: uuid */
@@ -5290,7 +5290,7 @@ export interface components {
             isCurrent: boolean;
             /**
              * Format: date
-             * @description 불변 통보/변경 근거의 배정 계획일. 원 serviceDate와 구분하며 메이드 오늘/내일 목록 및 실행일 판정에 사용. #446 미배포 후보.
+             * @description 불변 통보/변경 근거의 배정 계획일. 원 serviceDate와 구분하며 메이드 오늘/내일 목록 및 실행일 판정에 사용.
              */
             planningDate?: string;
             /** @description admin은 현재 target의 expectedAssignmentVersion CAS 값입니다. maid는 본인 통보 revision에 고정된 version이며 다른 담당의 현재 target version을 노출하지 않습니다. 과거 이력 조회는 mutation 권한이 아닙니다. */
@@ -5417,7 +5417,7 @@ export interface components {
             targetAssignmentVersion: number;
             /**
              * Format: date
-             * @description 통보/담당 변경 근거의 계획일. 원 serviceDate를 덮어쓰지 않으며 생성일·통보일과 다릅니다. #446 미배포 후보.
+             * @description 통보/담당 변경 근거의 계획일. 원 serviceDate를 덮어쓰지 않으며 생성일·통보일과 다릅니다.
              */
             planningDate?: string;
             /** @description target 생성 당시 template snapshot 값입니다. 예상시간 미확정 checkout은 null이며 임의 기본값을 넣지 않습니다. */
@@ -8112,7 +8112,14 @@ export interface operations {
                         revision: number;
                         displayOrder: number;
                     }[];
-                };
+                } & ({
+                    /** @constant */
+                    expectedEvidenceRevision?: 0;
+                    evidence?: unknown;
+                } | {
+                    expectedEvidenceRevision?: unknown;
+                    evidence?: unknown;
+                });
             };
         };
         responses: {

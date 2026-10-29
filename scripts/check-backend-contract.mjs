@@ -212,7 +212,7 @@ const visitProperties = (value, location = '#') => {
 };
 visitProperties(document.components?.schemas);
 
-assert(manifest.backendSourceCommit === 'ad1b1a0ce54865a1b28f9eded2467c856241bf6f', 'Backend source commit identity changed without regeneration review.');
+assert(manifest.backendSourceCommit === '3e805249d768cc108bc365e63ae3503c7a9ac7f0', 'Backend source commit identity changed without regeneration review.');
 assert(manifest.snapshotSha256 === sha256(snapshotBytes), 'OpenAPI snapshot hash does not match the manifest.');
 assert(manifest.generatedSha256 === sha256(generated), 'Generated TypeScript hash does not match the manifest.');
 assert(manifest.pathCount === Object.keys(document.paths).length && manifest.operationCount === operations.length, 'Manifest inventory is stale.');

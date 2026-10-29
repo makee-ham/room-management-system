@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "reviews": [
+    {
+      "issue": "https://github.com/makee-ham/room-management-system/issues/227",
+      "backendRelease": "https://github.com/wrongstory/room-management-system-backend/pull/477",
+      "reason": "운영 API53/DB122의 메모 필수·사진0~10장 계약. 사진 없는 응답 배열과 finalize revision0/사진 있는 양수 revision 분기를 프런트가 명시적으로 처리하고 합성 회귀로 검증한다. 일반 청소/폭탄방 증빙 정책은 유지한다.",
+      "baseSha256": "929c0fc8af53f839d4464d29e99b1088df6d159a52420d9aab5b8a73e48e871c",
+      "currentSha256": "94a412a9cd0336c7e09682acd8a2adebb81b5d931791c8e3752e410cddf26bc4",
+      "changes": [
+        "GET /v1/cleaning-history/submissions/{sourceSubmissionId}/supplemental-room-issues response 200 application/json.reports[].evidence: minItems response guarantee was widened",
+        "POST /v1/cleaning-history/submissions/{sourceSubmissionId}/supplemental-room-issues request application/json.oneOf: exclusive alternatives changed",
+        "POST /v1/cleaning-history/submissions/{sourceSubmissionId}/supplemental-room-issues response 201 application/json.report.evidence: minItems response guarantee was widened",
+        "GET /v1/cleaning-history/submissions/{sourceSubmissionId}/supplemental-room-issues/{reportId} response 200 application/json.report.evidence: minItems response guarantee was widened"
+      ]
+    }
+  ]
+}

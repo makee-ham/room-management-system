@@ -1,5 +1,19 @@
 # 새 특이사항 메모 단독 등록 연동 준비
 
+## 2026-10-29 · 배포 계약 확인 및 프런트 활성화
+
+backend #474와 PR477의 완료 기록을 확인하고 실제 운영 `/openapi.json`을 읽어 메모1~500자 필수·사진0~10장·새 빈초안 evidence[]/expectedEvidenceRevision0·사진 있는 양수revision/전체목록 분기를 대조했다. 백엔드 source `3e805249d768cc108bc365e63ae3503c7a9ac7f0`, API53/DB122. 고정 snapshot과 전체 generated client를 최신화했고 cleaning client도 같은 정본으로 재생성해 byte 동일을 확인했다.
+
+production/preview 빌드 및 로컬 실행의 `supplementalMemoOnly` 기본값은 이제 **true**다. 환경 예시에도 `RMS_SUPPLEMENTAL_MEMO_ONLY=true`를 명시한다. 명시 false는 구형 서버로 되돌릴 때의 롤백 경로로 유지한다. runtime JSON 누락/문자열은 계속 false로 정규화해 명시되지 않은 클라이언트가 임의로 활성화되지 않는다. 실제 배포의 환경 설정·sourceCommit·SW 신원은 릴리스 PR에 남긴다.
+
+기존 후보 UI/명령은 재작성하지 않는다. 관리자·메이드0장 등록/목록·관리자 해결, 메이드1/10장, 빈메모/사진만/11장 차단, 0장 업로드0회·정수revision0, 누락revision 차단, 409복구·같은key finalize replay와 역할 차단을 합성 회귀했다. 360/390/768/1440px·Tab/Escape/Back/포커스·콘솔·메모 history 비저장과 rollback OFF의 사진필수도 유지한다. 실제 업무 신고/사진 생성·DB/API 백엔드 배포는 실행하지 않았다.
+
+사진 없는 응답3곳과 finalize oneOf는 기존 snapshot의 의도적 변경이므로 정확한 두 snapshot 해시/4개 차이만 검토 기록으로 허용한다. 해시가 달라지거나 다른 변경이 추가되면 CI가 실패한다. 일반 청소·폭탄방 증빙 필수 조건은 바꾸지 않는다. 실제 운영0/1/10장·실기기·실패복구 UAT는 #227에서 계속 추적하며 프런트 활성화만으로 이슈를 완전 종료하지 않는다.
+
+아래 2026-10-22의 OFF·미배포 표기는 당시 기록이며 현재 상태는 이 절을 우선한다.
+
+---
+
 2026-10-22 추가된 [프런트 #227](https://github.com/makee-ham/room-management-system/issues/227), [backend #474](https://github.com/wrongstory/room-management-system-backend/issues/474)의 후속이다. 기준 프런트 dev `6fc4d44`, 운영 main `d59a755`다.
 
 ## 현재 운영과 후보 구분
