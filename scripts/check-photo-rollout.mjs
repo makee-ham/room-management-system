@@ -40,7 +40,7 @@ try {
   for (const channel of ["production", "preview"]) {
     const config = await build({ RMS_DEPLOYMENT_CHANNEL: channel });
     const buildInfo=JSON.parse(await readFile(path.join(fixture,"_site/build-info.json"),"utf8"));
-    assert.equal(buildInfo.sourceCommit,env.VERCEL_GIT_COMMIT_SHA);assert.equal(buildInfo.deploymentChannel,channel);assert.equal(buildInfo.indexSha256.length,64);assert.equal(buildInfo.serviceWorkerVersion,"2026-10-29-6");
+    assert.equal(buildInfo.sourceCommit,env.VERCEL_GIT_COMMIT_SHA);assert.equal(buildInfo.deploymentChannel,channel);assert.equal(buildInfo.indexSha256.length,64);assert.equal(buildInfo.serviceWorkerVersion,"2026-10-29-7");
     assert.equal(config.mode, "live");
     assert.equal(config.deploymentChannel, channel);
     assert.equal(config.featureFlags.photoUploadSnapshot, true);
@@ -48,7 +48,8 @@ try {
     assert.equal(config.featureFlags.assignmentPlanningDate, true);
     assert.equal(config.featureFlags.roomPinExport, true);
     assert.equal(config.featureFlags.roomPinTransfer, false);
-    assert.equal(config.featureFlags.supplementalMemoOnly, false);
+    assert.equal(config.featureFlags.supplementalMemoOnly, true);
+    assert.equal((await build({ RMS_DEPLOYMENT_CHANNEL: channel, RMS_SUPPLEMENTAL_MEMO_ONLY: "false" })).featureFlags.supplementalMemoOnly, false);
     assert.equal((await build({ RMS_SUPPLEMENTAL_MEMO_ONLY: "true" })).featureFlags.supplementalMemoOnly, true);
     const rollback = await build({ RMS_DEPLOYMENT_CHANNEL: channel, RMS_ASSIGNMENT_PLANNING_DATE: "false", RMS_ROOM_PIN_EXPORT: "false" });
     assert.equal(rollback.featureFlags.assignmentPlanningDate, false);
@@ -64,7 +65,7 @@ try {
   const rollbackFlags = { RMS_ASSIGNMENT_PLANNING_DATE: "false", RMS_ROOM_PIN_EXPORT: "false", RMS_ROOM_PIN_TRANSFER: "true" };
   assert.deepEqual(serveConfig(rollbackFlags).featureFlags, (await build(rollbackFlags)).featureFlags);
   assert.deepEqual(await build({ RMS_RUNTIME_MODE: "demo" }), { mode: "demo" });
-  console.log("Rollout: production/preview photo snapshot, planning dates and PIN export on; Drive import off; rollback, precedence and demo isolation passed.");
+  console.log("Rollout: production/preview photo snapshot, planning dates and PIN export and memo-only reports on; Drive import off; rollback, precedence and demo isolation passed.");
 } finally {
   await rm(fixture, { recursive: true, force: true });
 }

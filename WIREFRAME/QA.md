@@ -1,5 +1,17 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-29 · 남은 이슈 재점검·메모 단독 특이사항 활성화
+
+열린 이슈 #194/#206/#207/#219/#220/#227과 PR #169/#171의 본문·최신 댓글·패치 및 최근 병합PR30개를 현재 dev `c0a6bea`와 대조했다. #227의 백엔드 API53/DB122 배포 완료 및 실제 운영 OpenAPI의0장/revision0/빈응답 배열을 확인해 snapshot/generated client를 최신화하고 빌드·서버·환경 예시의 기본값을 ON으로 전환했다. 기존 UI/명령·일반청소/폭탄방 사진 정책은 유지한다. PIN 인증 준비 완료와 secret-free 최신버전 경로 미제공을 구분해 Drive import는 계속OFF. 예약 두 PR은 #223/#224에 통합된 동작과11그룹 회귀 확인 후 중복 종료했다.
+
+검증 흐름: 관리자/메이드 청소 이력 → 새 특이사항 → 메모+사진0/1/10장 → 목록·사진없는 기록·관리자 해결, 빈메모/사진만/11장 차단, revision0/누락revision·409·finalize 유실 동일key/payload 재확인. `frontend-testing-debugging` 적용, Browser plugin not available → 기존 Playwright Chromium151, `http://127.0.0.1:4177`. 모든 업무 API는 합성 fixture로 가로챘고 운영 쓰기·백엔드/DB 변경은 하지 않았다.
+
+`check-backend-v090` 기본 ON 두 역할0장과 explicit OFF 사진필수, 목록·해결·권한·4개 너비를 통과했다. Tab 모달 내부·Escape/Back 닫기·트리거 포커스·입력 보존·history 메모 비저장, 가로넘침0·접근성 이름/44px·페이지예외/앱console warning/error0. 예약11그룹, 사진1/5/20장/1·10·20배정/snapshot/null/409/유실/HEIC fallback·4조회 제한, 조회성능12그룹, 연속배정·진행중 변경 차단 회귀를 통과했다. 합성 성능 숫자를 운영 개선율로 환산하지 않는다.
+
+운영 OpenAPI와 cleaning client 검사, 전체타입 재생성/TypeScript, contract check·검토된4개차이/정확한snapshot해시 한정 diff, 기존 breaking-diff 및 다른변경/다른해시 거절 회귀, rollout 기본ON/explicitfalse·server/build parity·demo격리를 확인했다. 새 API의 응답 evidence 최소개수0과 finalize oneOf는 기록된 계약 전환이며 다른계약 실패는 우회하지 않는다. 시스템 Python의 openpyxl 부재는 패키지 설치 없이 번들 Python을 사용해 후속 PIN/날짜 인계 검사(실제 XLSX 파싱·문자열/선행0·같은키 replay·역할/잠금·KST 주/월/연말)를 통과했다. 정적 workspace·PWA 포함 검사와 rollout·계약 검사도 통과했다.
+
+대표 증거: `QA/screenshots/pending-issues-memo-only-{admin,maid}-{360,390,768,1440}.png`, `pending-issues-memo-only-before-maid-{390,1440}.png`. 같은 역할/합성 시나리오의 OFF/ON을 비교했으며 변화는 사진 선택0~10장과 준비중 안내 제거다. `view_image`로 메이드390px·관리자1440px를 확인했다. 기존 회귀가 재생성한 타 화면PNG는 커밋에서 제외한다. 서비스워커 `2026-10-29-7`. 실제 신고0/1/10장·휴대폰/HEIC codec·PWA/OS종료·실패복구·물리PIN UAT는 미실시이고 배포 신원/운영 read-only 결과는 릴리스 PR에 기록한다.
+
 ## 2026-10-29 · 운영 알림 안내 박스 제거
 
 사용자 요청: `앱 내부 알림 목록입니다`로 시작하는 안내 박스 전체 삭제. 기준 dev `db60ce3`. 관리자·메이드가 공유하는 운영 알림 목록에서 해당 마크업만 제거하고 필터와 목록을 바로 연결했다. API 오류·빈 상태·읽음 상태·관련 화면의 최신 조회/권한 확인은 유지한다. 검증에서 기존 필터 높이38px와 필터 변경 후 닫을 때 끊긴 모달 내부 요소로 포커스를 돌리던 문제를 발견해 최소44px와 현재 알림함 버튼을 사용하도록 수정했다.
