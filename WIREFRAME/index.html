@@ -10156,7 +10156,8 @@
       }
       function liveAssignmentScheduleBadges(row){
         const snapshot=row.scheduleSnapshot;if(!snapshot)return '';
-        const timing=reservationTimeStatus(snapshot.isEarlyCheckIn===true?liveIsoToInput(snapshot.nextCheckInAt):null,snapshot.isLateCheckout===true?liveIsoToInput(snapshot.plannedCheckoutAt):null);
+        const date=row.effectiveServiceDate||row.serviceDate,checkin=liveIsoToInput(snapshot.nextCheckInAt),checkout=liveIsoToInput(snapshot.plannedCheckoutAt);
+        const timing=reservationTimeStatus(snapshot.isEarlyCheckIn===true&&checkin.slice(0,10)===date?checkin:null,snapshot.isLateCheckout===true&&checkout.slice(0,10)===date?checkout:null);
         const badges=reservationTimeBadges({...timing,checkinLabel:timing.checkin?`다음 입실 ${liveKstDateTimeLabel(snapshot.nextCheckInAt)}`:'',checkoutLabel:timing.checkout?liveKstDateTimeLabel(snapshot.plannedCheckoutAt):''});
         if(snapshot.isScheduleUpdated)badges.push(statusBadge('일정 변경','amber'));
         return badges.join('');
