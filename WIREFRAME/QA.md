@@ -1,5 +1,16 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-31 · 청소 당일의 앞뒤 투숙객 시간 배지 (#284)
+
+검증 흐름: 메이드 내 업무 → 10/31 청소 카드 → 당일 이전 고객 13시 퇴실/다음 고객 15시 입실은 두 배지 표시 → 전날 퇴실/다음 날 입실은 배지 없음 → 펼침/접힘. 관리자 배정 카드의 공통 판정도 같은 기준을 사용한다.
+
+- Browser plugin not available → 기존 Playwright Chromium 151.0.7922.34, 로컬 `http://127.0.0.1:4179`, 합성 API, 브라우저 America/New_York. 운영 고객 데이터나 계정을 사용하지 않았다.
+- `scripts/check-room-time-badges.mjs` 통과: 관리자·메이드 360/390/768/1440px에서 페이지 식별/본문·오류 overlay 부재·배지/가로 넘침·44px 토글·접근성 이름, 예약 현황/상세 목적 화면·Enter/Tab/Escape·모달 포커스·트리거 복귀·Back. 앱 console warning/error·페이지 예외·예상 외 API 요청 0건.
+- 배정의 `effectiveServiceDate` 우선/`serviceDate` 대체, 이월, 기준일 없음, 당일 두 배지/얼리만/레이트만/둘 다 다른 날, UTC와 KST 날짜가 다른 경계를 확인했다. 기존 레이트 퇴실·다음 입실 경계, 30분 단위, 필터 일치, 누락/잘못된 값·객실 이동 플래그 회귀도 통과했다.
+- 같은 역할·합성 객실·일정·뷰포트로 전후를 비교했다. 211호의 당일 두 배지는 유지되고, 350호의 전날 퇴실/다음 날 입실 배지는 제거됐다. 대표 PNG: `QA/screenshots/maid-cleaning-day-before-390.png` → `maid-cleaning-day-after-390.png`, 같은 이름의 1440px PNG. 기존 카드·버튼 목적지는 유지했다.
+- `node scripts/check-workspace.mjs`, `npm run contract:check`, `npm run contract:test-diff`, dev 기준 `npm run contract:diff`, `git diff --check` 통과. 최종 UX 감사 원문과 API 계약은 수정하지 않았다.
+- 실제 운영 로그인/업무 쓰기, 실기기 iOS/Android·설치 PWA 업데이트는 미실행이다. #279의 종합 회귀 및 오래된 fixture 한계는 아래 기록을 따른다. 서비스워커 `2026-10-31-8`; 배포 신원·호스팅 검증은 릴리스 PR에 기록한다.
+
 ## 2026-10-31 · 관리자·메이드 얼리·레이트 배지 (#279)
 
 검증 흐름: 관리자 객실 현황 → 현재 퇴실 13시·다음 입실 15시 객실 → `1인 추가` 옆 `얼리 1시간`·`레이트 2시간` → 얼리/레이트 필터 → 예약 현황·전체 상세·목록 복귀. 메이드는 내 업무 → 접힌 배정 카드의 두 배지 → 키보드 펼침/접힘을 확인했다.
