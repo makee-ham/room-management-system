@@ -2577,9 +2577,8 @@
         return Math.max(1,Math.round((end-start)/86400000));
       }
       function roomStayProgress(room,reservations=activeReservationsFor(state,room?.no||'')) {
-        if(room?.occupancy!=='occupied')return null;
-        const pivot=`${state.selectedDate}T${state.time}`,reservation=reservations.find(item=>item.checkInAt<=pivot&&pivot<item.checkOutAt);
-        if(reservationIsLongStay(reservation))return {day:null,total:null,reservationId:reservation.id,label:'장기',longStay:true};
+        const pivot=`${state.selectedDate}T${state.time}`,reservation=room?.occupancy==='occupied'?reservations.find(item=>item.checkInAt<=pivot&&pivot<item.checkOutAt):reservations.find(item=>item.checkInAt.slice(0,10)===state.selectedDate&&pivot<item.checkInAt);
+        if(reservationIsLongStay(reservation))return room?.occupancy==='occupied'?{day:null,total:null,reservationId:reservation.id,label:'장기',longStay:true}:null;
         const total=reservationNights(reservation);
         if(!reservation||total<2)return null;
         const day=Math.max(1,Math.min(total,Math.round((dateObject(state.selectedDate)-dateObject(reservation.checkInAt.slice(0,10)))/86400000)+1));
@@ -4391,7 +4390,7 @@
         const start=Date.parse(checkInAt||''),end=Date.parse(checkOutAt||''),pivot=Date.parse(evaluatedAt||'');
         if(!Number.isFinite(start)||!Number.isFinite(end)||end<=start)return {nights:null,day:null,label:''};
         const startDate=liveIsoToInput(checkInAt).slice(0,10),endDate=liveIsoToInput(checkOutAt).slice(0,10),nights=Math.round((Date.parse(endDate+'T00:00:00Z')-Date.parse(startDate+'T00:00:00Z'))/86400000),offset=Math.round((Date.parse(date+'T00:00:00Z')-Date.parse(startDate+'T00:00:00Z'))/86400000);
-        if(nights<2||!Number.isFinite(pivot)||pivot<start||pivot>=end||!Number.isInteger(offset))return {nights:nights>0?nights:null,day:null,label:''};
+        if(nights<2||!Number.isFinite(pivot)||pivot<Date.parse(startDate+'T00:00:00+09:00')||pivot>=end||!Number.isInteger(offset)||offset<0)return {nights:nights>0?nights:null,day:null,label:''};
         const day=Math.max(1,Math.min(nights,offset+1));return {nights,day,label:`${nights}박 ${day}일차`};
       }
       function liveRoomReservationSummary(room){
