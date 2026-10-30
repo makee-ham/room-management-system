@@ -195,6 +195,11 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 - scripts/check-cleaning-context.mjs
 - scripts/check-room-reservation-badges.mjs
 
+# 2026-10-30 assignment floor proximity
+- scripts/check-assignment-floor.mjs
+- WIREFRAME/QA/screenshots/assignment-floor-390.png
+- WIREFRAME/QA/screenshots/assignment-floor-1440.png
+
 # 2026-10-30 reservation card refresh
 
 - scripts/check-reservation-card-refresh.mjs

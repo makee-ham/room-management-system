@@ -9,9 +9,21 @@
 - `scripts/check-reservation-card-refresh.mjs` 통과: 등록 후 `입실 예정`·체크인/체크아웃, 수정 후 상세·목록 `1인 추가`, 취소 후 `배정 가능`·배지 제거. 1.8초 달력 지연 중에도 카드 갱신을 확인했다. 검색 유지·주요 버튼 목적지·44px 컨트롤·접근성 이름·Enter/Tab/Escape·모달 내부 포커스·상세 뒤로가기·가로 넘침 없음·페이지 식별/본문/오류 overlay 없음·예상하지 않은 console warning/error와 page error 0건을 확인했다.
 - projection 503은 오류·다시 조회로 표시한다. 실패를 유도한 HTTP resource 오류만 예상된 콘솔 메시지로 구분했다. 조회 중 날짜 변경과 로그인 세션 종료 뒤 늦은 응답이 새 상태를 덮지 않는지 확인했다.
 - 기존 `scripts/check-reservation-bookability.mjs` 통과: 중복/409 입력 보존, 종료 예약 읽기 전용, 장기 투숙, 예약 전·투숙 중 객실 이동, CAS·멱등 키·개인정보 비영속화. `node scripts/check-workspace.mjs`, `npm run contract:check`, `npm run contract:test-diff`, dev 기준 `npm run contract:diff` 통과.
-- 운영 릴리스는 `main` 기준으로 예약 카드 수정만 적용했다. 해당 소스에서 같은 브라우저 회귀 4개 폭, 정적 검증, 계약 검증·diff 테스트, `main` 기준 breaking diff를 다시 통과했다. 청소 층수 배정 변경은 별도 릴리스로 유지한다.
+- 운영 릴리스는 `main` 기준으로 예약 카드 수정만 적용했다. 해당 소스에서 같은 브라우저 회귀 4개 폭, 정적 검증, 계약 검증·diff 테스트, `main` 기준 breaking diff를 다시 통과했다. 배포 준비 중 별도 병합·배포된 층수 배정 릴리스도 최신 `main`에서 보존했다.
 - 같은 관리자·예약 등록 완료·검색·뷰포트의 수정 전후 PNG: `QA/screenshots/reservation-refresh-before-390.png`, `QA/screenshots/reservation-refresh-after-390.png`, `QA/screenshots/reservation-refresh-before-1440.png`, `QA/screenshots/reservation-refresh-after-1440.png`. 카드 구성·버튼 위치는 유지하고 상태·일정만 최신 서버 값으로 바뀐다.
 - 한계: 실제 운영 계정으로 예약 쓰기, 다중 기기 실시간 동기화, iOS/Android 실기기·기존 PWA 업데이트는 실행하지 않았다. 서비스워커 `2026-10-30-8`; 운영 배포 여부는 PR/릴리스 결과로 구분한다.
+
+## 2026-10-30 · 근거리 배정에 층수 반영
+
+사용자 결정에 따라 요금 점수 동률 시 엘리베이터 구역 → 같은 층/가까운 층 → 호수 거리 순으로 비교하도록 데모 계산과 설명을 갱신했다. 운영 계산은 백엔드 PR #530의 공유 Preview core 변경이 담당하며 화면에서 서버 결과를 덮어쓰지 않는다. 이번 변경에 DB migration은 없다. 서버 운영 승격 전에는 설명만 운영에 먼저 배포하지 않는다.
+
+- `check-assignment-floor.mjs`: 같은 층 120→199가 인접 층 201→199보다 우선, 요금·엘리베이터 우선순위 보존, 근무 후보·데모 마감 제약, 999/1001 경계·층 미포함 번호, 같은 비교 대상의 층/호수 점수 결합을 확인했다.
+- 관리자 내일 배정 → 배정 기준 설명 → 랜덤 초안 생성 → 되돌리기 → 청소 추가 모달/뒤로가기 흐름 통과. 기존 담당/순서 보존과 초안 복원, 360/390/768/1440px의 화면 식별·내용·오류 overlay·가로 넘침·툴팁 잘림·접근성 이름/설명·Enter/Escape·포커스 복귀·console warning/error 없음 확인. 768px에서 툴팁이 우측으로 넘치는 문제를 발견해 끝 정렬로 수정한 뒤 같은 검사를 통과했다.
+- `check-cleaning-assignment-continuity.mjs`: 부분 초안 실패/동일 키 재시도/통보/추가 배정/제안 0건 사유/인라인 담당/미시작 CAS/진행 중 변경 차단과 4개 폭 회귀 통과. 모든 API 쓰기는 fixture로 가로챘다.
+- Browser plugin not available. 기존 Playwright Chromium 151.0.7922.34, `http://127.0.0.1:4177` 사용. 대표 PNG 육안 확인 완료. 실제 운영 배정 실행·통보와 실기기 Safari/Android는 미검증이다.
+- 백엔드 로컬 검증: Node 22 전체 5,391테스트, Preview 72테스트, Deno 공유 core 7테스트 통과. Full DB NOT RUN이며 최종 릴리스 DB 실행은 백엔드 AGENTS/FINAL_DB_VALIDATION의 별도 승인 대상이다.
+
+대표 PNG: `QA/screenshots/assignment-floor-390.png`, `QA/screenshots/assignment-floor-1440.png`. 서비스워커 `2026-10-30-7`. 운영 반영 여부는 릴리스 PR의 실제 검증 결과로 구분한다.
 
 ## 2026-10-30 · 객실 추가 인원·연박 강조 및 CSV·엑셀 일치
 
