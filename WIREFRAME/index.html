@@ -4311,10 +4311,12 @@
       function liveRoomAxes(room){
         const matching=state.remote.roomProjection?.date===liveOperationalDate()&&state.remote.roomProjection?.status==='ready'?state.remote.roomProjection.items.find(item=>item.id===room?.id&&item.stateVersion===room?.stateVersion&&item.serviceDate===room?.serviceDate):null;if(!room?.roomWorkflow&&matching?.roomWorkflow)room={...room,roomWorkflow:matching.roomWorkflow};
         const occupied=typeof room?.occupied==='boolean'?room.occupied:null,arrival=liveRoomArrival(room),workflow=room?.roomWorkflow;
-        const blocked=room?.allocationBlocked===true||(room?.readinessReasonCodes||[]).some(code=>code!=='CLEANING_REQUIRED')?true:room?.allocationBlocked===false&&Array.isArray(room?.readinessReasonCodes)?false:null;
+        // 이미 투숙 중인 객실의 앱 PIN 미설정은 조회 경고이며 현재 운영 제한이 아니다.
+        const restrictionCodes=[...new Set([...(room?.blockingReasonCodes||[]),...(room?.readinessReasonCodes||[])].filter(code=>code!=='CLEANING_REQUIRED'&&!(occupied===true&&code==='PIN_UNCONFIGURED')))];
+        const blocked=room?.allocationBlocked===true||restrictionCodes.length>0?true:room?.allocationBlocked===false&&Array.isArray(room?.readinessReasonCodes)?false:null;
         const cleaning=workflow?workflow.incomplete:room?.cleaningRequired===true?true:null;
         const ready=occupied===true||blocked===true||cleaning===true?false:occupied===null||blocked===null||cleaning===null?null:typeof room?.allocationReady==='boolean'?room.allocationReady:null;
-        const blockReasons=[...new Set([...(room?.blockingReasonCodes||[]),...(room?.readinessReasonCodes||[])].filter(code=>code!=='CLEANING_REQUIRED'))].map(code=>LIVE_ROOM_REASON_LABELS[code]||'기타 운영 제한');
+        const blockReasons=restrictionCodes.map(code=>LIVE_ROOM_REASON_LABELS[code]||'기타 운영 제한');
         return {blockReasons,occupied,vacant:occupied===null?null:!occupied,arrival:arrival.due,arrivalAt:arrival.at,arrivalId:arrival.id,checkout:liveRoomCheckoutDue(room),cleaning,blocked,ready,stages:workflow?.stages||[],stageNotice:workflow?.notice||''};
       }
       function liveRoomPrimary(room){
