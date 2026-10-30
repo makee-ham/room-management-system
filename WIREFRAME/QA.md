@@ -1,5 +1,19 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-30 · 메이드 청소 유형·베딩 수와 유형별 객실 선택
+
+운영 메이드 `내 업무`는 배정 응답의 청소 종류를 받지만 카드에 표시하지 않았다. 접힌 카드와 펼친 업무 정보에 퇴실·연박·추가·재청소, 베딩 수를 표시했다. 사용자 확정 기준은 스탠다드·프리미어·파셜 오션뷰 프리미어 1개 / 패밀리 투룸 2개다. 배정 타입 스냅샷을 우선하고 현재 객실 마스터로 누락값을 채우지 않는다. 과거 타입 미제공은 `유형 확인 필요`다. 데모 업무 카드·상세도 같은 기준을 적용했다.
+
+관리자 청소 추가의 단순 호수 select를 검색 가능한 유형별 목록으로 바꿨다. 유형 제목은 굵게, 유형 내 호수는 숫자 오름차순이다. 선택 요약·빈 결과·선택 없는 경우 계속 비활성화·48px 선택 영역을 제공한다. 기존 `계속 → 선택 객실 청소 요청` 목적과 역할 제한은 유지했다. 첨부의 기존 select 및 변경 전 동일 역할·fixture·390px 화면과 새 화면을 비교했다.
+
+- `check-cleaning-context.mjs`: AssignmentCard 조회부터 메이드 목록/펼침까지 네 종류와 베딩 수, 현재 타입과 상충하는 스냅샷, 누락 타입, 검색·그룹·정렬·빈 목록·키보드 라디오 선택·선택 객실 요청 화면 연결 통과. 360/390/768/1440px 내용·가로 넘침·터치 영역·푸터 위치 확인, ESC/Back/포커스 복귀 확인. 앱 예외·console warning/error 없음.
+- `check-responsive-ui.mjs`: 기존 41개 화면/모달 × 360/390/768/1024/1280/1440px 회귀 통과.
+- `check-cleaning-workflow.mjs` 30그룹 및 `check-maid-photo-history-fixes.mjs` 6그룹 통과. 실제 운영 업무 쓰기는 실행하지 않았고 모든 업무 API는 fixture다.
+- Browser plugin not available. 기존 bundled Playwright Chromium 151.0.7922.34, 로컬 `http://127.0.0.1:4177`. 스크린샷을 직접 확인했다. 실기기 Safari/Android, 실제 메이드 로그인과 푸시 수신은 미검증이다.
+
+대표 PNG: `QA/screenshots/cleaning-context-picker-390.png`, `QA/screenshots/cleaning-context-picker-1440.png`, `QA/screenshots/cleaning-context-picker-search-390.png`, `QA/screenshots/cleaning-context-maid-390.png`, `QA/screenshots/cleaning-context-maid-1440.png`, `QA/screenshots/cleaning-context-maid-detail-390.png`.
+서비스워커 `2026-10-30-5`. 배포 후 sourceCommit·파일 해시·운영 설정 일치 근거는 릴리스 PR에 기록한다.
+
 ## 2026-10-30 · 공유 메타데이터의 데모 제목 제거
 
 실제 운영 HTML의 초기 `<title>`이 `CASTLE THE ART 객실관리 · 데모 와이어프레임`이고 공유 메타데이터가 없음을 확인했다. 기본 제목을 `객실관리 · CASTLE THE ART`, description을 `객실관리`로 변경했다. 초기 HTML에 Open Graph의 type/locale/site_name/title/description과 Twitter summary/title/description을 추가했다. 화면별 브라우저 제목은 기존 페이지명과 서비스명만 남기고 데모 접미사를 제거했다. 공개 공유 메타데이터는 정적인 서비스명·페이지명만 포함한다.
