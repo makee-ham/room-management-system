@@ -1,5 +1,18 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-30 · 예약 저장 뒤 객실 카드 자동 갱신
+
+검증 흐름: 관리자 객실 카드 → 예약 현황 → 새 예약 등록 → 수동 새로고침 없이 상태·일정 갱신 → 전체 상세에서 인원 수정 → 목록 복귀 → 예약 취소 후 카드 복원.
+
+- 원인: 예약 성공 뒤 `/v1/rooms`만 갱신하고 카드가 우선 사용하는 `/v1/rooms?serviceDate=` projection과 열려 있는 상세는 이전 값을 유지했다. 선택 날짜 projection을 즉시 재조회하고 현재 객실 상세도 갱신한다. 각 조회가 완료되는 대로 표시하므로 느린 예약 달력 응답이 카드 갱신을 지연시키지 않는다.
+- Playwright Chromium 151.0.7922.34, `http://127.0.0.1:4177`, 360/390/768/1440px. Browser plugin not available. 모든 업무 API는 데모 fixture로 가로챘다.
+- `scripts/check-reservation-card-refresh.mjs` 통과: 등록 후 `입실 예정`·체크인/체크아웃, 수정 후 상세·목록 `1인 추가`, 취소 후 `배정 가능`·배지 제거. 1.8초 달력 지연 중에도 카드 갱신을 확인했다. 검색 유지·주요 버튼 목적지·44px 컨트롤·접근성 이름·Enter/Tab/Escape·모달 내부 포커스·상세 뒤로가기·가로 넘침 없음·페이지 식별/본문/오류 overlay 없음·예상하지 않은 console warning/error와 page error 0건을 확인했다.
+- projection 503은 오류·다시 조회로 표시한다. 실패를 유도한 HTTP resource 오류만 예상된 콘솔 메시지로 구분했다. 조회 중 날짜 변경과 로그인 세션 종료 뒤 늦은 응답이 새 상태를 덮지 않는지 확인했다.
+- 기존 `scripts/check-reservation-bookability.mjs` 통과: 중복/409 입력 보존, 종료 예약 읽기 전용, 장기 투숙, 예약 전·투숙 중 객실 이동, CAS·멱등 키·개인정보 비영속화. `node scripts/check-workspace.mjs`, `npm run contract:check`, `npm run contract:test-diff`, dev 기준 `npm run contract:diff` 통과.
+- 운영 릴리스는 `main` 기준으로 예약 카드 수정만 적용했다. 해당 소스에서 같은 브라우저 회귀 4개 폭, 정적 검증, 계약 검증·diff 테스트, `main` 기준 breaking diff를 다시 통과했다. 배포 준비 중 별도 병합·배포된 층수 배정 릴리스도 최신 `main`에서 보존했다.
+- 같은 관리자·예약 등록 완료·검색·뷰포트의 수정 전후 PNG: `QA/screenshots/reservation-refresh-before-390.png`, `QA/screenshots/reservation-refresh-after-390.png`, `QA/screenshots/reservation-refresh-before-1440.png`, `QA/screenshots/reservation-refresh-after-1440.png`. 카드 구성·버튼 위치는 유지하고 상태·일정만 최신 서버 값으로 바뀐다.
+- 한계: 실제 운영 계정으로 예약 쓰기, 다중 기기 실시간 동기화, iOS/Android 실기기·기존 PWA 업데이트는 실행하지 않았다. 서비스워커 `2026-10-30-8`; 운영 배포 여부는 PR/릴리스 결과로 구분한다.
+
 ## 2026-10-30 · 근거리 배정에 층수 반영
 
 사용자 결정에 따라 요금 점수 동률 시 엘리베이터 구역 → 같은 층/가까운 층 → 호수 거리 순으로 비교하도록 데모 계산과 설명을 갱신했다. 운영 계산은 백엔드 PR #530의 공유 Preview core 변경이 담당하며 화면에서 서버 결과를 덮어쓰지 않는다. 이번 변경에 DB migration은 없다. 서버 운영 승격 전에는 설명만 운영에 먼저 배포하지 않는다.
