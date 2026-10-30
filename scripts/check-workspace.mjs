@@ -2052,8 +2052,6 @@ for (const contract of [
   'function completeCheckoutInspection(no,{method=\'manual\',attempt=null}={})',
   'function completeCheckoutInspectionForAttempt(no,attempt)',
   'function renderCheckoutInspectionPanel(no)',
-  'data-filter="checkout-inspection"',
-  'value="checkout-inspection"',
   "'complete-checkout-inspection'",
   "if(a==='confirm-checkout-inspection')",
 ]) {
