@@ -12,7 +12,7 @@ const date='2026-10-30',now=date+'T10:00:00+09:00',output='WIREFRAME/QA/screensh
 const before=process.env.RMS_QA_BASE_REF;
 const source=before?execFileSync('git',['show',before+':WIREFRAME/index.html'],{encoding:'utf8',maxBuffer:8*1024*1024}):await readFile('WIREFRAME/index.html','utf8');
 const boot='      void bootApplication();';assert.equal(source.split(boot).length,2);
-const base={serviceDate:date,projectionMode:'LIVE',evaluatedAt:now,serverTime:now,reservationPhase:'current',occupied:true,roomTypeCode:'standard',roomTypeName:'스탠다드',elevatorZone:'A',dataStatus:'verified',stateVersion:1,cleaningRequired:false,candleCount:0,pinSyncStatus:'verified',primaryDisplayStatus:'OCCUPIED',allocationReady:false,displayGuestCount:2,displayBaseOccupancy:2,displayCheckInAt:'2026-10-29T16:00:00+09:00',displayCheckOutAt:date+'T11:00:00+09:00',detailConditionCodes:[]};
+const base={serviceDate:date,projectionMode:'LIVE',evaluatedAt:now,serverTime:now,reservationPhase:'current',occupied:true,roomTypeCode:'standard',roomTypeName:'스탠다드',elevatorZone:'A',dataStatus:'verified',stateVersion:1,cleaningRequired:false,candleCount:0,pinSyncStatus:'verified',primaryDisplayStatus:'OCCUPIED',allocationBlocked:false,readinessReasonCodes:[],nextReservationId:null,nextCheckInAt:null,roomWorkflow:{incomplete:false,stages:[]},allocationReady:false,displayGuestCount:2,displayBaseOccupancy:2,displayCheckInAt:'2026-10-29T16:00:00+09:00',displayCheckOutAt:date+'T11:00:00+09:00',detailConditionCodes:[]};
 const rooms=[
  {roomNumber:'211'},
  {roomNumber:'350',roomTypeCode:'premium',roomTypeName:'프리미어',primaryDisplayStatus:'BLOCKED',allocationBlocked:true,displayCheckOutAt:date+'T13:00:00+09:00',detailConditionCodes:['LATE_CHECK_OUT']},
@@ -44,6 +44,7 @@ await page.route('**/*',async route=>{
   if(path==='/v1/room-pin-sheet-sync/status')return route.fulfill({json:{sync:{version:1,pending:0,failed:0,operatorBlocked:false,lastSuccessAt:now}}});
   if(path==='/v1/reservations')return route.fulfill({json:{reservations:[],nextCursor:null}});
   if(path==='/v1/rooms')return route.fulfill({json:{rooms,nextCursor:null}});
+  if(path==='/v1/assignments/commit-impact')return route.fulfill({json:{impact:{serviceDate:url.searchParams.get('serviceDate'),committableDrafts:[],blockedDrafts:[],remainingUnassignedTargets:[]}}});
   if(path==='/v1/assignments')return route.fulfill({json:{assignments:[],nextCursor:null}});
   if(path==='/v1/assignment-change-requests')return route.fulfill({json:{requests:[],nextCursor:null}});
   if(path==='/v1/inspections')return route.fulfill({json:{submissions:[],nextCursor:null}});
@@ -53,7 +54,7 @@ await page.route('**/*',async route=>{
  unexpected.push(req.method()+' '+path);return route.abort();
 });
 const action=name=>page.locator(`[data-action="${name}"]:visible`).first();
-const shortcut=()=>page.locator('.checkout-due-shortcut:visible');
+const shortcut=()=>page.locator('.checkout-due-shortcut[data-filter="checkout-due"]:visible');
 const card=no=>page.locator(`[data-live-room="${no}"]`);
 const shown=()=>page.locator('[data-live-room]').evaluateAll(es=>es.map(e=>e.dataset.liveRoom).sort());
 async function shot(name){await page.screenshot({path:`${output}/checkout-due-${name}.png`});}
@@ -66,8 +67,8 @@ try{
  else{
   assert.equal(await page.title(),'객실 현황 · CASTLE THE ART');assert.match(page.url(),/index.html/);
   assert.match(await shortcut().innerText(),/퇴실 예정 2개/);
-  assert.equal(await page.locator('.checkout-due-badge').count(),2);
-  assert.match(await card('350').innerText(),/배정 불가/);assert.match(await card('350').innerText(),/13:00/);
+  assert.equal(await page.locator('.checkout-due-badge').filter({hasText:'퇴실 예정'}).count(),2);
+  assert.match(await card('350').innerText(),/운영 제한/);assert.match(await card('350').innerText(),/13:00/);
   for(const width of [360,390,768,1440]){
    await page.setViewportSize({width,height:900});await page.evaluate(()=>scrollTo(0,0));
    assert(await page.locator('#main-content').innerText());assert.equal(await page.locator('vite-error-overlay,nextjs-portal').count(),0);

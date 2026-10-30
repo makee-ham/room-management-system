@@ -711,12 +711,10 @@ for (const contract of [
   if (!html.includes(contract)) throw new Error(`Long-stay contract missing: ${contract}`);
 }
 for (const contract of [
-  "key:'blocked',tone:'red',status:'배정 불가'",
-  "key:'cleaning',tone:'amber',status:'청소 필요'",
+  "key:'blocked',tone:'red',status:'운영 제한'",
+  "key:'cleaning',tone:'amber',status:'청소 미완료'",
   "key:'occupied',tone:'neutral',status:'투숙 중'",
-  "key:'arrival',tone:'blue',status:'입실 예정'",
-  "key:'reserved',tone:'neutral',status:'예약 있음'",
-  "key:'available',tone:'green',status:'배정 가능'",
+  "key:'available',tone:'green',status:'입실 가능'",
   'roomCleaningStageLabel(job)',
   'cardReservationStatus(no)',
   "{id:'reservation-demo-142'",
@@ -725,20 +723,20 @@ for (const contract of [
   if (!html.includes(contract)) throw new Error(`Four-state room card contract missing: ${contract}`);
 }
 const roomPresentationSource = html.slice(html.indexOf('function roomPresentation(no)'), html.indexOf('function renderPinRow', html.indexOf('function roomPresentation(no)')));
-const roomPresentationOrder = ["if(blockers.length)return", "if(room.occupancy==='occupied')return", "if(lifecycle.key==='arrival')return", "if(lifecycle.key==='reserved')return", "if(cleaning)return", "key:'available'"]
+const roomPresentationOrder = ["if(axes.blocked)return", "if(cleaning)return", "if(axes.ready)return", "if(axes.occupied)return"]
   .map((marker) => roomPresentationSource.indexOf(marker));
 if (roomPresentationOrder.some((index) => index < 0) || roomPresentationOrder.some((index, position) => position && index <= roomPresentationOrder[position - 1])) {
-  throw new Error(`Room card priority must remain blocked > occupied > arrival > reserved > cleaning > available: ${roomPresentationOrder.join(', ')}`);
+  throw new Error(`Room visual priority must be blocked > cleaning > ready > occupied: ${roomPresentationOrder.join(', ')}`);
 }
 for (const contract of [
   'function roomCleaningControl(no)',
   "label:'청소 요청'",
   "label:'청소 취소'",
   "confirmLabel:request?'청소 취소':'청소 대기열에 넣기'",
-  "if(['occupied','reserved','arrival','available','blocked'].includes(state.roomFilter))return p.key===state.roomFilter",
-  "if(state.roomFilter==='cleaning')return roomNeedsCleaningNow(r.no)",
+  'function demoRoomMatchesFilter(no,filter)',
+  "if(key)return axes[key]===true;",
   'data-room-cleaning-control=\"${no}\"',
-  "청소 필요 · ${p.cleaningKind||'청소'}",
+  "function roomAxisBadges(axes,primary)",
 ]) {
   if (!html.includes(contract)) throw new Error(`Room cleaning request contract missing: ${contract}`);
 }
@@ -1028,10 +1026,9 @@ for (const contract of [
   'function roomHasExtraGuests(no)',
   'const reservation=activeReservationsFor(state,String(no)).find(item=>!reservationRecordIsPast(item))||null;',
   'const cardGuestCount=closestReservation&&reservationHasExtraGuests(closestReservation)?reservationGuestCount(closestReservation):null;',
-  "if(state.roomFilter==='extra-guests')return roomHasExtraGuests(r.no);",
+  "if(filter==='extra-guests')return roomHasExtraGuests(no);",
   "'occupied','extra-guests','candle'",
-  'value="extra-guests"',
-  '>인원 추가</option>',
+  "['extra-guests','인원 추가']",
   'class="schedule-priority-badge guests" aria-label="기준 ${type.defaultGuestCount}명 · 총 ${cardGuestCount}명 · ${extraGuestCount}인 추가"',
   "${icon('user','icon-sm')}${extraGuestCount}인 추가",
 ]) {
@@ -1823,7 +1820,7 @@ for (const forbidden of ['<span>${esc(p.reason)}</span>', '${subBadges}', 'const
   }
 }
 for (const requiredContract of [
-  '<div class="concept-status-copy"><strong>${esc(p.status)}</strong></div>',
+  '<div class="concept-status-copy"><strong>${esc(p.status)}</strong>${roomAxisBadges(p.axes,p)}</div>',
   '${scheduleBadges}${detailBadges}',
   'class="badge-row room-schedule-badges"',
 ]) {
@@ -2036,7 +2033,7 @@ for (const contract of [
   'function latestCheckedOutReservationForRoom(roomNo,targetState=state)',
   'function roomCheckoutCleaningDue(no,targetState=state)',
   "reservation.checkInAt<=moment&&moment<reservation.checkOutAt",
-  '예약 상태는 체크인 전날부터 표시됩니다.',
+  '점유와 입퇴실 일정은 별도로 표시됩니다.',
 ]) {
   if (!html.includes(contract)) throw new Error(`Automatic occupancy contract missing: ${contract}`);
 }
@@ -2315,11 +2312,8 @@ console.log('All-maid lower account-management deactivation contracts: passed');
 for (const contract of [
   "function detailHeader(title,subtitle='')",
   "${subtitle?`<p>${subtitle}</p>`:''}",
-  '<h2 id="summary-title">오늘 객실 요약</h2></div></div><div class="today-summary">',
-  '<span>투숙 중</span><strong>${occupiedCount}</strong></button>',
-  '<span>청소 필요</span><strong>${cleaningCount}</strong></button>',
-  '<span>배정 가능</span><strong>${availableCount}</strong></button>',
-  '<span>배정 불가</span><strong>${blockedCount}</strong></button>',
+  'roomSummaryCards()',
+  "['occupied','투숙 중','neutral'],['vacant','공실','neutral'],['cleaning','청소 미완료','amber'],['blocked','운영 제한','red']",
   "detailHeader(`${active?.maid||'김민지1'} ${active?.type||'컴플레인'}`)",
   '.today-summary .metric-card { min-height:96px;',
 ]) {
@@ -2480,7 +2474,7 @@ if(!reservationConfigSource.includes("auxiliaryLabel:nextRegistration.canAdd?'�
 const roomConceptStart=html.indexOf('const catalogSummary=');
 const roomConceptSource=html.slice(roomConceptStart,html.indexOf('function renderRoomDetail',roomConceptStart));
 if(roomConceptSource.includes('data-control="room-type-filter"'))throw new Error('Room type select still duplicates the catalog tabs.');
-for(const expected of ['concept-filter-search','data-control="room-search"','optgroup label="상태 조건"']){
+for(const expected of ['concept-filter-search','data-control="room-search"','roomFilterOptions(state.roomFilter,false)']){
   if(!roomConceptSource.includes(expected))throw new Error(`Room status toolbar is missing ${expected}.`);
 }
 if(roomConceptSource.includes('상태 조건 · 중복 가능'))throw new Error('Room status group still contains the redundant 중복 가능 copy.');
@@ -2562,7 +2556,7 @@ for(const contract of [
 }
 const liveRoomRowSource=html.slice(html.indexOf('function liveRoomListRow'),html.indexOf('function renderLiveRooms'));
 for(const contract of [
-  'allocationReady=room.allocationReady===true',
+  'allocationReady=axes.ready===true',
   '체크인 <strong>일정 없음</strong>',
   '체크아웃 <strong>일정 없음</strong>',
   'room-list-badges',
@@ -2575,12 +2569,16 @@ for(const contract of [
   if(!liveRoomRowSource.includes(contract))throw new Error(`Reservation room card contract missing: ${contract}`);
 }
 if(liveRoomRowSource.includes('disabled aria-describedby='))throw new Error('Current readiness must not disable a future reservation button.');
-const livePrimarySource=html.slice(html.indexOf('const LIVE_ROOM_PRIMARY_DISPLAY'),html.indexOf('function liveRoomMatchesFilter'));
-for(const contract of ['BLOCKED:{label:', 'OCCUPIED:{label:', 'ARRIVAL_PENDING:{label:', 'RESERVATION_PRESENT:{label:', 'CLEANING_REQUIRED:{label:', 'READY:{label:', "LIVE_ROOM_PRIMARY_DISPLAY[String(room?.primaryDisplayStatus||'').toUpperCase()]"]){
-  if(!livePrimarySource.includes(contract))throw new Error(`Server primaryDisplayStatus contract missing: ${contract}`);
+const livePrimarySource=html.slice(html.indexOf('function liveRoomAxes'),html.indexOf('function roomAxisSummary'));
+for(const contract of ['occupied','roomWorkflow','allocationBlocked','allocationReady','liveRoomArrival','liveRoomCheckoutDue',"label:'청소 미완료'","label:'운영 제한'","label:'입실 가능'"]){
+  if(!livePrimarySource.includes(contract))throw new Error(`Independent room axes contract missing: ${contract}`);
 }
-for(const forbidden of ['reservationLifecycle','readinessStatus','allocationReady','cleaningRequired','allocationBlocked']){
-  if(livePrimarySource.includes(forbidden))throw new Error(`Room primary status must not be recomputed from ${forbidden}.`);
+for(const forbidden of ['primaryDisplayStatus','displayStatusOverride']){
+  if(livePrimarySource.includes(forbidden))throw new Error(`Cosmetic display override must not classify operational axes: ${forbidden}`);
+}
+if(html.includes('room-correction-display')||html.includes("/display-status"))throw new Error('Cosmetic room state override UI remains.');
+for(const contract of ['function roomWorkflowFromRecords','function fetchLiveRoomProjection',"plan.remainingUnassignedTargets","'검수 대기'","'업로드 대기'","'퇴실 대기'","'재청소'",'function refreshLiveRoomState']){
+  if(!html.includes(contract))throw new Error(`Independent cleaning workflow contract missing: ${contract}`);
 }
 const liveCalendarSource=html.slice(html.indexOf('function liveQuickActiveReservations'),html.indexOf('function liveKstIsoDate'));
 for(const contract of ["calendarRangeKey===range.key", "apiRequest(`/v1/reservations?${query.toString()}`)", "예약 기간 선택", 'data-bookable="true"']){
@@ -2657,8 +2655,8 @@ for(const [code,copy] of [
 for(const contract of [
   "if(Number(delta)<0){openLiveRoomOperationForm('candle'",
   'body.count<Number(room.candleCount)&&!body.physicallyVerified',
-  "if(kind==='candle'){closeModal();await loadLiveRooms({quiet:true});",
-  "catch(error){state.remote.rooms.status='ready';await loadLiveRooms({quiet:true});",
+  "if(kind==='candle'){closeModal();await refreshLiveRoomState({quiet:true});",
+  "catch(error){state.remote.rooms.status='ready';await refreshLiveRoomState({quiet:true});",
 ]){
   if(!html.includes(contract))throw new Error(`Live candle confirmation/recovery contract missing: ${contract}`);
 }
@@ -2784,7 +2782,7 @@ console.log('Production cleaning client types and enabled live runtime static co
 for(const contract of ['PayrollListEnvelope','PayrollPaymentPaidRequest','ComplaintListEnvelope','ComplaintDecisionRequest','WebPushSubscriptionRegisterRequest','WebPushSubscriptionRetireRequest']){
   if(!cleaningTypes.includes(`export type ${contract}`))throw new Error(`Operational API generated contract missing: ${contract}`);
 }
-for(const contract of ['/v1/payroll/start','/v1/payroll/adjustments/corrections',"/v1/complaints/${encodeURIComponent(id)}/${correction?'corrections':'decision'}",'/v1/push-subscriptions/config','function registerLivePushSubscription','function retireLivePushSubscription','primaryDisplayStatus','reservationLifecycle']){
+for(const contract of ['/v1/payroll/start','/v1/payroll/adjustments/corrections',"/v1/complaints/${encodeURIComponent(id)}/${correction?'corrections':'decision'}",'/v1/push-subscriptions/config','function registerLivePushSubscription','function retireLivePushSubscription','liveRoomAxes','reservationLifecycle']){
   if(!html.includes(contract))throw new Error(`Operational API adapter contract missing: ${contract}`);
 }
 if(!html.includes('정정 버전 API 미제공'))throw new Error('Payroll adjustment version blocker must be explicit instead of guessed.');
