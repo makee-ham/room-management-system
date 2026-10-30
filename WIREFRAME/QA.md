@@ -1,5 +1,15 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-31 · 퇴실점검 대상 필터 제거
+
+사용자 결정에 따라 운영·데모의 객실 상태 필터에서 `퇴실점검 대상`을 제거했다. 사용되지 않는 필터 바로가기와 판정 분기도 정리했다. 이전 URL 및 운영·데모 뒤로가기 기록의 필터 값은 `상태 전체`로 복원한다. 퇴실 예정 집계·필터, 기존 객실 상세의 점검 상태·완료 기록은 유지한다.
+
+- Browser plugin not available → Playwright Chromium 151.0.7922.34, `http://127.0.0.1:4179`, 합성 업무 API만 사용했다.
+- 기존 `scripts/check-checkout-due.mjs`의 임시 사본에 항목 부재·기존 URL/뒤로가기 복원 확인을 추가해 실행했다. 360/390/768/1440px의 퇴실 예정 집계·필터·검색·객실 유형·CSV, 예약 현황/전체 상세 목적지, Enter/Tab/Escape·포커스 복귀·모달·Back, 44px·접근성 이름, 가로 넘침 없음이 통과했다. console warning/error·페이지 예외·예상 외 API 요청 0건이다.
+- 운영/데모 선택지에서 제거됐고, 기존 live history·demo history·URL 모두 `상태 전체`로 복원되는 것을 확인했다. 같은 관리자·합성 객실·날짜·390/1440px에서 변경 전후를 비교했으며 필터 바깥 화면은 동일하다.
+- 대표 증거: `QA/screenshots/room-filter-without-inspection-390.png`, `QA/screenshots/room-filter-without-inspection-1440.png`. 네이티브 select의 항목 부재는 DOM으로 확인했다.
+- `node scripts/check-workspace.mjs`, `npm run contract:check`, dev 기준 `npm run contract:diff`, `git diff --check` 통과. 실제 운영 계정 로그인/업무 데이터 변경·실기기 및 설치 PWA 업데이트는 미실행이다. 서비스워커 `2026-10-31-2`.
+
 ## 2026-10-30 · 퇴실 예정 집계·필터
 
 검증 흐름: 관리자 오늘 객실 요약 → `퇴실 예정 N개` → 같은 날짜의 객실 필터 → 검색·유형 조건 → 예약 현황/전체 상세 → 뒤로가기. 객실 현황 상단에도 같은 전체 집계 바로가기를 두고 기존 체크아웃 일정 줄에 작은 표시를 추가했다. 기존 4개 요약 카드·주 상태·색·객실 버튼 목적지는 유지한다. 명칭은 이미 퇴실한 객실과 구분하는 `퇴실 예정`으로 통일했다.
