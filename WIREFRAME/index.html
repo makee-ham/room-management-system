@@ -12,7 +12,16 @@
   <link rel="manifest" href="./app.webmanifest">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2317314a'/%3E%3Ctext x='32' y='40' text-anchor='middle' font-family='Arial' font-size='24' font-weight='700' fill='white'%3ECA%3C/text%3E%3C/svg%3E">
-  <title>CASTLE THE ART 객실관리 · 데모 와이어프레임</title>
+  <title>객실관리 · CASTLE THE ART</title>
+  <meta name="description" content="객실관리">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="ko_KR">
+  <meta property="og:site_name" content="CASTLE THE ART">
+  <meta property="og:title" content="객실관리 · CASTLE THE ART">
+  <meta property="og:description" content="객실관리">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="객실관리 · CASTLE THE ART">
+  <meta name="twitter:description" content="객실관리">
   <style>
     :root {
       --canvas: #f4f7fa;
@@ -4689,7 +4698,7 @@
         if(liveMode())applyLiveCopyPolicy(app);else applyAdminCopyPolicy(app);
         document.body.classList.toggle('quick-booking-fullscreen',!!(state.loggedIn&&quickReservationViewActive()&&state.quickReservationFullscreen));
         document.documentElement.style.setProperty('--nav-count', nav.length);
-        document.title=`${titleForView()} · CASTLE THE ART${liveMode()?'':' 데모'}`;
+        document.title=`${titleForView()} · CASTLE THE ART`;
         syncUrlState();
         if(liveMode())syncLiveCleaningPhotoSurface();
         if(state.loggedIn&&quickReservationViewActive())restoreQuickGridViewport();
