@@ -1,5 +1,19 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-31 · 객실 현황 내보내기 복구 (#269)
+
+검증 흐름: 관리자 객실 현황 → 날짜/검색/유형/상태 선택 → 내보내기 → 최신 선택일 조회 → CSV/XLSX 다운로드. #259는 기존 내보내기 변경의 병합 PR이며 이번 오류는 #269에 해당한다. 원본 dev에서 31초 경과 후 CSV가 파일 없이 거절되고 객실 GET이 0회인 것을 재현했다.
+
+- `scripts/check-room-export.mjs`: 31초 경과, 오늘·과거·미래 serviceDate, rooms/projection 최신성 불일치 양방향, 실제 재조회 응답의 값·행수·파일 날짜, 검색/유형/주 상태/상세조건 및 필터 선택·해제 통과. 실제 CSV/XLSX를 Python CSV/ZIP/XML 파서로 읽어 내용 일치·선행 0·문자열 셀·수식 없음·고정 머리글·자동 필터·PIN/고객정보 제외를 확인했다. CSV의 수식 방어 접두사는 XLSX의 안전한 inline string 표현과 별도로 확인했다.
+- 팝업 상태 새로고침이 선택일 GET과 화면 갱신을 수행하고 필터 범위를 유지한다. 503/403/잘못된 날짜 응답은 성공이나 0건으로 처리하지 않는다. 정상 0건/필터 0건·선택 해제·실패 후 재시도 통과. PIN 상태 실패·운영자 확인·지연과 무관하게 일반 다운로드를 완료했다.
+- CSV/XLSX 연속 호출은 GET/다운로드 1회다. 요청 중 모달 닫기/Back/다시 열기, 날짜·필터 변경과 원래 필터 복귀, 로그아웃, 메이드/개발자 역할 변경 후 다운로드 0회를 확인했다. 메이드 직접 호출도 요청하지 않는다.
+- 360/390/768/1440px에서 페이지 제목·본문·오류 overlay 부재·가로 넘침 없음·44px 버튼·접근성 이름·Enter/Tab/Escape·포커스 복귀·Back·객실 예약 현황/전체 상세 목적지 통과. 앱 console warning/error·페이지 예외·예상 외 요청 0건(주입한 503/403 resource 오류는 별도 예상 오류).
+- `check-room-reservation-badges.mjs`의 인원/연박 카드·KST 경계·필터·실제 CSV/XLSX 회귀 통과. 재조회에 맞게 테스트의 선택일 GET fixture를 추가했다. `check-responsive-ui.mjs`의 관리자/메이드 41화면·모달 × 6폭(360/390/768/1024/1280/1440px)과 키보드·포커스·Back·콘솔 검사 통과. `check-backend-handoff-oct13.mjs`의 PIN 엑셀 실제 파싱·선행0·권한·중복/실패·모달 종료·Drive 분리 및 기존 날짜/배정 회귀 통과. PIN 검사의 첫 실행은 호스트 Python에 openpyxl이 없어 시작하지 못했으며 번들 Python으로 재실행했다.
+- 공유 projection 로더를 사용하는 `check-reservation-card-refresh.mjs`와 `check-checkout-due.mjs`도 통과했다. `node scripts/check-workspace.mjs`, `contract:check`, `contract:test-diff`, dev 기준 `contract:diff`, `git diff --check` 통과.
+- Browser plugin not available → 기존 Playwright Chromium 151.0.7922.34, `http://127.0.0.1:4177`, 합성 업무 API, 브라우저 America/New_York/Los_Angeles 시간대. 실제 운영값·인증정보를 fixture로 사용하지 않았다. 같은 역할/날짜/fixture/390·1440px의 before/after PNG를 직접 비교했다. 기존 버튼 순서·목적을 유지하고 조회 상태 한 줄을 추가했다.
+- 대표 PNG: `QA/screenshots/room-export-before-390.png`, `room-export-after-390.png`, 같은 이름의 1440px PNG, `room-export-error-390.png`.
+- 로컬 구현·브라우저 검증과 운영 배포/UAT는 구분한다. 배포 신원·runtime 보존·공개 파일 및 실제 관리자 다운로드 UAT는 릴리스 PR에 기록한다. 실기기 Safari/iOS/Android·설치 PWA 업데이트와 Excel/Numbers 앱 렌더는 미검증이다. 백엔드/API·DB migration 변경은 없다. 서비스워커 `2026-10-31-1`.
+
 ## 2026-10-30 · 퇴실 예정 집계·필터
 
 검증 흐름: 관리자 오늘 객실 요약 → `퇴실 예정 N개` → 같은 날짜의 객실 필터 → 검색·유형 조건 → 예약 현황/전체 상세 → 뒤로가기. 객실 현황 상단에도 같은 전체 집계 바로가기를 두고 기존 체크아웃 일정 줄에 작은 표시를 추가했다. 기존 4개 요약 카드·주 상태·색·객실 버튼 목적지는 유지한다. 명칭은 이미 퇴실한 객실과 구분하는 `퇴실 예정`으로 통일했다.
