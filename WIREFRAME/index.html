@@ -5148,7 +5148,7 @@
         if(quickCopy)quickCopy.innerHTML=`<span class="quick-booking-kicker">빠른 예약 등록</span><div class="help-title"><h2>간편 예약 · 8월 15일 기준</h2>${infoTip('quick-booking','간편 예약','빈 날짜를 클릭하거나 같은 객실 행에서 가로로 드래그하세요. 터치는 0.35초 길게 누른 뒤 드래그합니다. 한 번 선택한 범위는 예약 한 건으로 저장됩니다.')}</div>`;
         root.querySelectorAll('p').forEach(paragraph=>{if(!paragraph.closest('.notice')&&/서버 영속|fixture|스냅샷|불변 사용자 ID|PIN lease|식별값|이력 연결키|원장 비연결|예약 가능과 현재 입실 가능을 별도로 판단|사진 원본은 앱에 저장하지 않음/.test(paragraph.textContent))paragraph.remove();});
         root.querySelectorAll('.meta').forEach(meta=>{if(/데모|스냅샷|정본/.test(meta.textContent))meta.remove();});
-        addAdminHelp(root,'총 청소요금을 먼저 맞추고 가까운 객실로 배정','random-assignment','랜덤 배정','근무 가능한 메이드의 총 청소요금이 비슷해지도록 먼저 나누고, 같은 엘리베이터와 가까운 호수를 다음 기준으로 사용합니다. 결과는 저장 전에 객실별 담당을 확인하고 바꿀 수 있습니다.',{rename:'랜덤 배정'});
+        addAdminHelp(root,'총 청소요금을 먼저 맞추고 가까운 객실로 배정','random-assignment','랜덤 배정','근무 가능한 메이드의 총 청소요금이 비슷해지도록 먼저 나누고, 같은 엘리베이터, 같은 층·가까운 층과 호수를 다음 기준으로 사용합니다. 결과는 저장 전에 객실별 담당을 확인하고 바꿀 수 있습니다.',{rename:'랜덤 배정'});
         addAdminHelp(root,'메이드별 배정 요약','assignment-result','배정 요약','객실 표뿐 아니라 이 요약에서도 담당 메이드를 바꾼 뒤 담당이 정해진 객실만 저장·통보할 수 있습니다.');
         addAdminHelp(root,'내일 청소 배정','next-day-assignment','내일 청소 배정','근무 가능일을 제출한 메이드에게만 배정할 수 있습니다. 랜덤 배정 뒤 객실별 담당을 확인한 다음 저장·통보하세요.');
         addAdminHelp(root,'주간 근무 기록','work-history','주간 근무 기록','명은 해당 기록이 있는 메이드 수이고, 일은 메이드별 기록 날짜를 합한 값입니다. 가능 제출·담당 통보·실근무 완료를 서로 다른 표시로 확인합니다.');
@@ -7333,7 +7333,7 @@
         return renderAssignmentRandomView({eligibleCount:eligible.length,unassigned,summary,active,actions});
       }
       function renderAssignmentRandomView({eligibleCount,unassigned,summary,active,actions}){
-        return `<section class="card assignment-random" id="cleaning-section-random" tabindex="-1" aria-labelledby="assignment-random-title"><div class="assignment-random-copy"><span class="random-kicker">저장 전 랜덤 초안</span><div class="assignment-random-title-row"><h3 id="assignment-random-title">동선 고려 랜덤 배정</h3>${infoTip('random-assignment-rule','랜덤 배정 기준','근무 가능·마감을 먼저 확인하고 총 청소요금 균형을 우선합니다. 같은 점수에서는 같은 엘리베이터와 가까운 호수를 봅니다. 관리자는 객실별 담당을 최종 확인하며 실제 이동시간을 계산하는 경로 최적화는 아닙니다.')}</div><p>미배정 객실만 저장 전 초안으로 배정합니다.</p></div><div class="assignment-random-stats"><div><span>근무 가능</span><strong>${eligibleCount}명</strong></div><div><span>초안 배정</span><strong>${active?`${summary.assigned}객실`:'실행 전'}</strong></div><div><span>남은 미배정</span><strong>${active?`${summary.skipped}객실`:`${unassigned.length}객실`}</strong></div></div><div class="assignment-random-actions"><div class="random-live" aria-live="polite" ${active?'data-cleaning-preview':''}>${active?`${summary.assigned}건을 랜덤 배정했습니다. 아래에서 담당을 확인한 뒤 저장·통보하세요.`:'기존 통보와 관리자가 정한 담당은 유지하고 미배정 객실만 채웁니다.'}</div>${actions}</div></section>`;
+        return `<section class="card assignment-random" id="cleaning-section-random" tabindex="-1" aria-labelledby="assignment-random-title"><div class="assignment-random-copy"><span class="random-kicker">저장 전 랜덤 초안</span><div class="assignment-random-title-row"><h3 id="assignment-random-title">동선 고려 랜덤 배정</h3>${infoTip('random-assignment-rule','랜덤 배정 기준','근무 가능·마감을 먼저 확인하고 총 청소요금 균형을 우선합니다. 같은 점수에서는 같은 엘리베이터, 같은 층·가까운 층과 호수를 봅니다. 관리자는 객실별 담당을 최종 확인하며 실제 이동시간을 계산하는 경로 최적화는 아닙니다.','end')}</div><p>미배정 객실만 저장 전 초안으로 배정합니다.</p></div><div class="assignment-random-stats"><div><span>근무 가능</span><strong>${eligibleCount}명</strong></div><div><span>초안 배정</span><strong>${active?`${summary.assigned}객실`:'실행 전'}</strong></div><div><span>남은 미배정</span><strong>${active?`${summary.skipped}객실`:`${unassigned.length}객실`}</strong></div></div><div class="assignment-random-actions"><div class="random-live" aria-live="polite" ${active?'data-cleaning-preview':''}>${active?`${summary.assigned}건을 랜덤 배정했습니다. 아래에서 담당을 확인한 뒤 저장·통보하세요.`:'기존 통보와 관리자가 정한 담당은 유지하고 미배정 객실만 채웁니다.'}</div>${actions}</div></section>`;
       }
       function renderMaidOrderBoardContent() {
         const targets=assignmentTargets(),unassigned=targets.filter(item=>!assignmentFor(item).maidId),assignedMaidIds=new Set(targets.map(item=>assignmentFor(item).maidId).filter(Boolean)),isEditingBalance=targets.some(item=>assignmentFor(item).status==='draft');
@@ -7408,32 +7408,33 @@
         return ()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return (seed>>>0)/4294967296;};
       }
       function assignmentProximity(item,items) {
-        if(!items.length)return {zoneRank:1,roomDistance:0};
+        if(!items.length)return {zoneRank:1,floorDistance:0,roomDistance:0};
         const zone=assignmentTargetElevator(item),number=Number(item.room)||0,known=items.filter(other=>assignmentTargetElevator(other)),same=known.filter(other=>assignmentTargetElevator(other)===zone),pool=same.length?same:known.length?known:items;
-        return {zoneRank:zone&&same.length?0:zone&&known.length?2:3,roomDistance:Math.min(...pool.map(other=>Math.abs(number-(Number(other.room)||0))))};
+        const nearest=pool.map(other=>{const otherNumber=Number(other.room)||0;return {floorDistance:number>=100&&otherNumber>=100?Math.abs(Math.floor(number/100)-Math.floor(otherNumber/100)):0,roomDistance:Math.abs(number-otherNumber)};}).sort((left,right)=>left.floorDistance-right.floorDistance||left.roomDistance-right.roomDistance)[0];
+        return {zoneRank:zone&&same.length?0:zone&&known.length?2:3,...nearest};
       }
       function randomAssignmentTrial(eligible,targets,random) {
         const loads=new Map(eligible.map(maid=>{const items=orderedAssignmentsForMaid(maid.id);return [maid.id,{maid,total:items.reduce((sum,item)=>sum+assignmentTargetRate(item),0),items:[...items],finish:assignmentRouteFinish(items),newTargetIds:[]}];}));
         const ordered=targets.map(item=>({item,key:random()})).sort((left,right)=>assignmentTargetDueMinutes(left.item)-assignmentTargetDueMinutes(right.item)||assignmentTargetRate(right.item)-assignmentTargetRate(left.item)||left.key-right.key).map(entry=>entry.item);
-        const plan={},notes={};let assigned=0,skipped=0,zoneRankTotal=0,roomDistanceTotal=0;
+        const plan={},notes={};let assigned=0,skipped=0,zoneRankTotal=0,floorDistanceTotal=0,roomDistanceTotal=0;
         ordered.forEach(item=>{
           const rate=assignmentTargetRate(item),minutes=assignmentTargetMinutes(item),release=assignmentTargetReleaseMinutes(item),due=assignmentTargetDueMinutes(item),zone=assignmentTargetElevator(item),deadline=item.requestDue||item.deadline||item.accessEnd||'마감 미입력';
-          const candidates=eligible.map(maid=>{const load=loads.get(maid.id),start=Math.max(load.finish,release),finish=start+minutes;if(finish>due)return null;const totals=eligible.map(entry=>loads.get(entry.id).total+(entry.id===maid.id?rate:0)),pay=assignmentPayStats(totals),proximity=assignmentProximity(item,load.items);return {maid,load,start,finish,payGap:pay.gap,payDeviation:pay.deviation,...proximity,hadItems:load.items.length>0,tie:random()};}).filter(Boolean).sort((left,right)=>left.payGap-right.payGap||left.payDeviation-right.payDeviation||left.zoneRank-right.zoneRank||left.roomDistance-right.roomDistance||left.tie-right.tie);
+          const candidates=eligible.map(maid=>{const load=loads.get(maid.id),start=Math.max(load.finish,release),finish=start+minutes;if(finish>due)return null;const totals=eligible.map(entry=>loads.get(entry.id).total+(entry.id===maid.id?rate:0)),pay=assignmentPayStats(totals),proximity=assignmentProximity(item,load.items);return {maid,load,start,finish,payGap:pay.gap,payDeviation:pay.deviation,...proximity,hadItems:load.items.length>0,tie:random()};}).filter(Boolean).sort((left,right)=>left.payGap-right.payGap||left.payDeviation-right.payDeviation||left.zoneRank-right.zoneRank||left.floorDistance-right.floorDistance||left.roomDistance-right.roomDistance||left.tie-right.tie);
           const choice=candidates[0];
           if(!choice){notes[item.id]={maidId:null,reason:`배정 보류 · ${deadline}까지 완료 가능한 근무자 없음`};skipped+=1;return;}
-          plan[item.id]=choice.maid.id;choice.load.total+=rate;choice.load.finish=choice.finish;choice.load.items.push(item);choice.load.newTargetIds.push(item.id);assigned+=1;zoneRankTotal+=choice.zoneRank;roomDistanceTotal+=choice.roomDistance;
-          const location=!zone?'엘리베이터 미기재':!choice.hadItems?`${zone} 엘리베이터 동선 시작`:choice.zoneRank===0?`${zone} 엘리베이터 · 가까운 호수`:`${zone} 엘리베이터 기준 배치`;
+          plan[item.id]=choice.maid.id;choice.load.total+=rate;choice.load.finish=choice.finish;choice.load.items.push(item);choice.load.newTargetIds.push(item.id);assigned+=1;zoneRankTotal+=choice.zoneRank;floorDistanceTotal+=choice.floorDistance;roomDistanceTotal+=choice.roomDistance;
+          const location=!zone?'엘리베이터 미기재':!choice.hadItems?`${zone} 엘리베이터 동선 시작`:choice.zoneRank===0?`${zone} 엘리베이터 · 같은 층·가까운 층과 호수`:`${zone} 엘리베이터 기준 배치`;
           notes[item.id]={maidId:choice.maid.id,reason:`총 청소요금 균형 우선 · ${location}`};
         });
         const totals=eligible.map(maid=>loads.get(maid.id).total),pay=assignmentPayStats(totals),routes=Object.fromEntries(eligible.map(maid=>[maid.id,loads.get(maid.id).newTargetIds]));
-        return {plan,notes,routes,assigned,skipped,payGap:pay.gap,payDeviation:pay.deviation,zoneRankTotal,roomDistanceTotal,tie:random()};
+        return {plan,notes,routes,assigned,skipped,payGap:pay.gap,payDeviation:pay.deviation,zoneRankTotal,floorDistanceTotal,roomDistanceTotal,tie:random()};
       }
       function createRandomAssignment() {
         const eligible=eligibleAssignmentMaids(),targets=assignmentTargets().filter(item=>!assignmentFor(item).maidId&&!roomIsOnHold(item.room)&&item.kind!=='재청소'&&cleaningTargetCanAdjust(item));
         if(!eligible.length||!targets.length)return {assigned:0,skipped:0,eligible:eligible.length};
         state.randomAssignmentSnapshot={beforeAssignments:Object.fromEntries(targets.map(item=>[item.id,JSON.parse(JSON.stringify(state.assignments[item.id]||null))])),createdAt:state.time,contextSignature:randomAssignmentContextSignature()};
         const trials=targets.length<=24?96:targets.length<=60?48:24,random=assignmentRandomGenerator(),results=Array.from({length:trials},()=>randomAssignmentTrial(eligible,targets,random)),maxAssigned=Math.max(...results.map(result=>result.assigned));
-        const maximumCoverageResults=results.filter(result=>result.assigned===maxAssigned).sort((left,right)=>left.payGap-right.payGap||left.payDeviation-right.payDeviation||left.zoneRankTotal-right.zoneRankTotal||left.roomDistanceTotal-right.roomDistanceTotal||left.tie-right.tie);
+        const maximumCoverageResults=results.filter(result=>result.assigned===maxAssigned).sort((left,right)=>left.payGap-right.payGap||left.payDeviation-right.payDeviation||left.zoneRankTotal-right.zoneRankTotal||left.floorDistanceTotal-right.floorDistanceTotal||left.roomDistanceTotal-right.roomDistanceTotal||left.tie-right.tie);
         const best=maximumCoverageResults[0],targetById=new Map(targets.map(item=>[item.id,item]));
         eligible.forEach(maid=>{const baseCount=orderedAssignmentsForMaid(maid.id).length;(best.routes[maid.id]||[]).forEach((targetId,index)=>{const item=targetById.get(targetId),assignment=item?assignmentFor(item):null;if(!assignment)return;assignment.maidId=maid.id;assignment.order=baseCount+index+1;assignment.status='draft';});});
         state.randomAssignmentSnapshot.afterAssignments=Object.fromEntries(targets.map(item=>[item.id,JSON.parse(JSON.stringify(state.assignments[item.id]||null))]));
