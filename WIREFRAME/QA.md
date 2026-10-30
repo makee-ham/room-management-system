@@ -1,5 +1,17 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-30 · 입실 예정 연박 배지
+
+검증 흐름: 관리자 객실 현황 → 332호 검색 → 체크인 당일 오전의 `입실 예정` 카드 → `1인 추가` 옆 `4박 1일차` → CSV·엑셀 내보내기. 체크인 예정 시각부터만 표시하던 조건을 한국시간 체크인 날짜 00시부터로 바꿨다. 데모도 같은 날의 입실 예정 예약을 포함한다. 주 상태·점유·버튼 목적·레이아웃은 유지한다.
+
+- `scripts/check-room-reservation-badges.mjs` 통과. Browser plugin not available → Playwright Chromium 151.0.7922.34, 로컬 `http://127.0.0.1:4177`, 업무 API는 합성 fixture로 격리. 브라우저 시간대가 America/New_York여도 KST 기준으로 계산한다.
+- 360/390/768/1440px에서 인원/연박 배지의 같은 행·좌우 순서, 잘림·가로 넘침 없음, 주요 버튼 44px·접근성 이름, 페이지 제목·본문·오류 overlay 부재를 확인했다. 내보내기 Enter/Tab/Escape·모달 포커스·트리거 복귀·브라우저 뒤로가기를 확인했고 console warning/error·페이지 예외·예상 외 요청은 0건이다.
+- 10/30 16시~11/3 11시 예약은 당일 00시·오전에 `4박 1일차`, 다음 날은 `4박 2일차`다. 체크인 날짜 전/실제 체크아웃 경계/잘못된 시각/종료일 미정/1박은 연박 배지를 숨긴다. 기존 2박 1·2일차, 마지막 숙박 일차 유지, 기준인원·미제공값도 확인했다.
+- 실제 다운로드한 CSV와 XLSX의 모든 셀이 일치하며 332호의 `1인 추가`·총 4박·1일차·`4박 1일차`를 확인했다. 기존 열 너비·강조색·고정 머리글·필터 및 PIN/고객명 제외를 유지했다.
+- `scripts/check-reservation-card-refresh.mjs`도 4개 폭에서 통과했다. 등록·수정·취소 후 카드/상세 갱신, 검색·주요 버튼 목적지·모달/키보드/뒤로가기, 실패 재시도·날짜/세션 변경 중 오래된 응답 차단을 확인했다. `node scripts/check-workspace.mjs`, `npm run contract:check`, `npm run contract:test-diff`, dev 기준 `npm run contract:diff` 통과.
+- 같은 관리자·합성 예약·검색·뷰포트의 전후 PNG를 직접 비교했다: `QA/screenshots/room-reservation-arrival-before-390.png` → `room-reservation-arrival-after-390.png`, `room-reservation-arrival-before-1440.png` → `room-reservation-arrival-after-1440.png`.
+- 한계: 실제 운영 예약 쓰기·실기기 iOS/Android·기존 PWA 업데이트는 미실행이다. 서비스워커 `2026-10-30-9`; 운영 배포 결과는 릴리스 PR에 기록한다.
+
 ## 2026-10-30 · 예약 저장 뒤 객실 카드 자동 갱신
 
 검증 흐름: 관리자 객실 카드 → 예약 현황 → 새 예약 등록 → 수동 새로고침 없이 상태·일정 갱신 → 전체 상세에서 인원 수정 → 목록 복귀 → 예약 취소 후 카드 복원.
