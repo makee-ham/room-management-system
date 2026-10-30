@@ -189,3 +189,4 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 # 2026-10-30 responsive UI polish
 - scripts/check-responsive-ui.mjs
 - scripts/check-cleaning-context.mjs
+- scripts/check-room-reservation-badges.mjs
