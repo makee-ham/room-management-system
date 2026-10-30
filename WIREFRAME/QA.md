@@ -1,5 +1,19 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-30 · 전체 반응형 여백·버튼 정렬 점검
+
+사용자 첨부의 상태 선택 화살표가 테두리에 붙는 문제를 기준으로 기존 화면과 행동 목적을 유지하며 공통 컨트롤을 정리했다. 선택칸 화살표 오른쪽12px/본문40px 여백, 모바일 검색 전체 너비와 상태·내보내기 두 번째 행, 입력 사이8px 간격, 운영 상태 저장 버튼 오른쪽 정렬, 모달 단일 확인/닫기 전체 너비와 취소 왼쪽·확인 오른쪽을 적용했다. 1024px 객실 목록의 고정 열 넘침은 카드 전환 구간을1100px까지 확장해 해결했다. 청소 촬영 구역은 실제 가용 폭에 맞춰 열 수를 줄여 작은 데스크톱에서 촬영 버튼이44px 아래로 눌리는 문제를 해결했다. PIN 시트 내부 스크롤·본문/푸터 여백과 동적 화면 높이를 보완했다. 기존 문구·상태색·카드 역할·내비게이션·API 명령은 유지한다.
+
+`frontend-testing-debugging` 적용. Browser plugin not available → 번들 Playwright Chromium151.0.7922.34, 로컬 `http://127.0.0.1:4177`. `RMS_RUNTIME_MODE=demo python3 scripts/serve.py --port 4177` 뒤 Playwright가 있는 환경에서 `node scripts/check-responsive-ui.mjs`로 재현한다. Windows는 `python`을 사용한다. 테스트의 모달 호출 훅은 요청 가로채기로만 주입하며 제품 코드에는 추가하지 않는다. 업무 API는 합성 fixture로 격리했고 실제 운영 쓰기를 실행하지 않았다.
+
+`check-responsive-ui.mjs`의41개 화면/모달 ×6개 너비(246조합)가 통과했다. 새 화면 순회는 로그인 → 관리자 오늘/객실/검색 빈 상태/달력/내보내기/운영 상태/PIN/예약/객실 상세·수정/간편 예약·전체 화면/청소5탭·생성·검수/메이드4탭·상세/더보기·감사·단가·계정·알림 → 메이드 내 업무/일정/청소 내역/주급/더보기/청소 상세/주급 달력·펼침/알림 설정 → 공통 단일 확인 모달이다. 360/390/768/1024/1280/1440px에서 의미 있는 본문, 페이지 가로 넘침, 버튼·입력 이탈, 주요 컨트롤44px, 버튼 문구 잘림과 접근성 이름을 검사한다. 가로 스크롤이 설계된 달력·표 내부는 페이지 넘침과 구분한다. 각 모달의 하단 행동 위치, Tab/Shift+Tab 내부 이동, Escape 닫기, 브라우저 Back과 트리거 포커스를 확인한다. PIN/예약 모달은360×480·768×390에서도 본문 끝까지 스크롤과 하단 버튼 가림 여부를 추가 검사한다. breakpoint 변경 후 기존 컨트롤 전환이 끝난 상태를 검사한다.
+
+기존 기능 회귀: `check-live-connections`, `check-operational-api`, `check-cleaning-workflow`, `check-reservation-bookability`, `check-maid-photo-history-fixes`, `check-live-navigation`, `check-admin-cleaning-reads`를 실행했다. 객실 운영 저장·확인·오류/재시도, 객실/예약 버튼 목적 화면, 예약 가능일·이동·취소, 배정/검수/사진1~20장·이력·권한·주급/컴플레인과 알림을 확인했다. 의도한 HTTP 오류 fixture 외 앱 콘솔 warning/error·페이지 예외0. 실제로 실행한 합성 흐름에 한정한 결과이며 모든 운영 데이터 조합을 보증하지 않는다.
+
+변경 전후 동일 역할·시나리오·너비 PNG: `QA/screenshots/responsive-operations-before-{390,1440}.png` ↔ `responsive-operations-{390,1440}.png`, `responsive-rooms-before-{390,1024}.png` ↔ `responsive-rooms-{390,1024}.png`. 추가 대표 증거는 `responsive-reservation-*`, `responsive-maid-cleaning-*`, `responsive-maid-photo-1024.png`, `responsive-single-footer-true-*`다. `view_image`로 대표 화면을 비교했다. 첨부 대비 화살표 여백을 확보했고, 기존 토큰·폰트·닫기 위치는 유지하며 입력 아래 저장 행동과 모바일 푸터 정렬을 정리했다. 기존 회귀가 재생성한 무관한 PNG는 커밋에서 제외한다. 모든 증거는 데모/합성 데이터다.
+
+정적 `check-workspace.mjs`·`contract:check`·`contract:test-diff`·dev 기준 `contract:diff`도 통과했다. 서비스워커 `2026-10-30-3`. 실기기 iOS/Android, 소프트 키보드, OS 카메라, 실제 PWA 업데이트 UAT는 미실시다. 모바일 입력16px와 동적 뷰포트 처리는 코드·Chromium 렌더 수준에서 확인했다. 배포 커밋/정적 파일 일치와 운영 read-only 확인 결과는 릴리스 PR에 기록한다.
+
 ## 2026-10-30 · 객실 운영 모달 통합·컴플레인 하루 조회
 
 사용자 요청에 따라 객실 운영의 세 팝업을 하나로 합쳤다. 기존 네이비·흰색·회색 토큰, 제목/닫기 아이콘, 입력·버튼 체계를 재사용하는 제한된 모달 재구성이다. 시각 명세: `객실 상태 / 운영 중지 / 객실 이슈`를 전부 펼쳐 표시, 768px 이상 상태·운영 중지 두 열과 이슈 전체 너비, 작은 화면 한 열, 얇은 구분선, 내부 스크롤과 고정 헤더/닫기. 별도 카드·탭·장식 이미지는 추가하지 않는다. 저장·변경 확인은 같은 모달 상단에 표시하고 처리 후에도 모달과 다른 초안을 유지한다. `frontend-app-builder`의 기존 디자인 재사용 예외와 `frontend-testing-debugging`을 적용했다. Browser plugin not available → 번들 Playwright Chromium151, 로컬 `http://127.0.0.1:4177`. 모든 업무 API는 합성 fixture로 가로채며 실제 운영 쓰기는 하지 않았다.

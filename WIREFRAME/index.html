@@ -208,7 +208,14 @@
     .date-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
     .date-current { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-soft); font-weight: 800; }
     .select-control, .input-control, textarea.input-control { min-height: 44px; padding: 9px 12px; border: 1px solid var(--line-strong); border-radius: 10px; background: #fff; }
-    .select-control { padding-right: 32px; }
+    select.select-control {
+      appearance: none;
+      padding-right: 40px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23607085' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-position: right 12px center;
+      background-size: 16px;
+      background-repeat: no-repeat;
+    }
     .date-tools .filter-wrap { display: flex; align-items: center; gap: 8px; margin-left: auto; }
     .room-table { overflow: hidden; }
     .room-head, .room-row { display: grid; grid-template-columns: 56px minmax(145px, 1.35fr) 118px minmax(150px, 1.2fr) 128px 118px; gap: 8px; align-items: center; }
@@ -286,7 +293,7 @@
     .task-zone-progress strong { display:block; margin-top:4px; color:var(--navy); font-size:16px; font-variant-numeric:tabular-nums; }
     .task-zone-safety { display:flex; align-items:flex-start; gap:9px; margin:0 0 12px; padding:11px 12px; border:1px solid #ead6ad; border-radius:11px; color:#765018; background:#fff9ec; font-size:12px; line-height:1.45; }
     .task-zone-safety .icon { margin-top:1px; flex:0 0 auto; }
-    .task-zone-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .task-zone-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)); gap:10px; }
     .task-zone-card { min-width:0; padding:12px; border:1px solid var(--line); border-radius:13px; background:#fff; box-shadow:0 2px 7px rgba(26,52,78,.04); }
     .task-zone-card.complete { border-color:#a7d6c3; background:#fbfffd; }
     .task-zone-card.failed { border-color:#ee9ba2; background:#fffafa; }
@@ -393,7 +400,7 @@
     @keyframes shimmer { to { background-position: -200% 0; } }
 
     .modal-backdrop { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 18px; background: rgba(10, 25, 39, .58); }
-    .modal { display: flex; flex-direction: column; width: min(560px, 100%); max-height: min(760px, calc(100vh - 36px)); overflow: hidden; border-radius: 16px; background: #fff; box-shadow: 0 30px 90px rgba(0,0,0,.25); }
+    .modal { display: flex; flex-direction: column; width: min(560px, 100%); max-height: min(760px, calc(100vh - 36px)); max-height: min(760px, calc(100dvh - 36px)); overflow: hidden; border-radius: 16px; background: #fff; box-shadow: 0 30px 90px rgba(0,0,0,.25); }
     .modal-lg { width: min(760px, 100%); }
     .modal:has(.room-operations-editor) { width: min(960px, 100%); }
     .room-operations-grid { display: grid; grid-template-columns: minmax(0,1fr); gap: 24px; }
@@ -405,7 +412,7 @@
     .room-operations-section .rail-row > .btn { flex: 0 0 auto; }
     .room-operations-issues { border-top: 1px solid var(--line); padding-top: 20px; }
     .room-operations-editor .field { min-width: 0; }
-    .room-operations-editor .job-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .room-operations-editor .job-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 12px; }
     .room-operations-editor .job-actions > .btn { flex: 0 1 auto; }
     .room-operations-editor textarea { width: 100%; resize: vertical; }
     .room-operations-review { margin: 0 0 20px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-soft); overflow-wrap: anywhere; }
@@ -418,13 +425,16 @@
     .modal-head h2 { margin: 0; font-size: 1.18rem; }
     .modal-head p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
     .modal-head .icon-btn { margin-left: auto; }
+    .modal-head > div { min-width: 0; overflow-wrap: anywhere; }
     .modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 18px 20px; }
-    .modal-foot { z-index: 2; display: flex; flex: 0 0 auto; justify-content: flex-end; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--line); background: #fff; }
-    .modal-foot .btn { min-height: 44px; }
-    .modal-leading-actions { display:flex; align-items:center; gap:8px; margin-right:auto; }
+    .modal-foot { z-index: 2; display: flex; flex: 0 0 auto; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding: 16px 20px; border-top: 1px solid var(--line); background: #fff; }
+    .modal-foot .btn { min-width: 0; min-height: 44px; white-space: normal; overflow-wrap: anywhere; }
+    .modal-leading-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-right:auto; }
     .modal-leading-actions .btn { flex:0 0 auto; }
     .form-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
-    .field { display: grid; gap: 6px; }
+    .field { display: grid; min-width: 0; gap: 8px; }
+    .field :is(.input-control, .select-control) { width: 100%; min-width: 0; max-width: 100%; }
+    .field textarea { resize: vertical; }
     .field-full { grid-column: 1 / -1; }
     .field label, .field .label { font-size: 13px; font-weight: 750; }
     .field small { color: var(--muted); font-size: 12px; }
@@ -513,11 +523,13 @@
       .reservation-primary-row { grid-template-columns:minmax(0,1fr) 132px; gap:8px; }
       .info-grid { grid-template-columns: 1fr; }
       .modal-backdrop { align-items: end; padding: 0; }
-      .modal { width: 100%; max-height: 88vh; border-radius: 18px 18px 0 0; }
-      .modal-foot .btn { flex: 1; }
+      .modal { width: 100%; max-height: 88vh; max-height: 88dvh; border-radius: 18px 18px 0 0; }
+      .modal-foot { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+      .modal-foot > .btn { flex: 1 1 0; }
       .modal-foot.has-leading { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
       .modal-foot.has-leading .modal-leading-actions { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); grid-column:1 / -1; width:100%; margin-right:0; }
       .modal-foot.has-leading .modal-leading-actions .btn { width:100%; }
+      .modal-foot.has-leading > .btn:only-of-type { grid-column:1 / -1; }
       .reservation-list-head { display:none; }
       .reservation-list-row { grid-template-columns:minmax(0,1fr) auto 22px; grid-template-areas:"period meta arrow" "status status arrow"; gap:4px 8px; min-height:68px; padding:11px 12px; }
       .reservation-list-period { grid-area:period; }
@@ -1018,7 +1030,7 @@
     .room-quick-actions .icon { margin:0 auto 3px; width:18px; height:18px; }
     .room-quick-actions .btn { display:flex; flex-direction:column; }
     .pin-sheet { width:min(620px,100%); }
-    .pin-sheet-body { padding:18px 20px 14px; }
+    .pin-sheet-body { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:18px 20px 14px; }
     .pin-sheet-body h2 { margin:0; font-size:1.35rem; color:#142f53; }
     .pin-sheet-body > p { margin:5px 0 18px; color:var(--muted); font-size:13px; }
     .pin-sheet .pin-edit-preview { display:grid; grid-template-columns:minmax(0,1fr) 132px; gap:9px; }
@@ -1176,7 +1188,7 @@
       .room-list-actions { grid-template-columns:82px minmax(130px,.72fr) minmax(190px,1.1fr) minmax(185px,.95fr) minmax(205px,.9fr); }
       .room-list-cell { padding-inline:11px; }
     }
-    @media (max-width: 980px) {
+    @media (max-width: 1100px) {
       .room-list-header { display:none; }
       .room-list-main { grid-template-columns:minmax(0,1fr) minmax(0,1.12fr); grid-template-areas:"identity status" "type status" "schedule schedule" "pin pin"; }
       .room-list-cell { min-height:0; border-right:0; border-bottom:1px solid var(--line); }
@@ -1258,7 +1270,7 @@
       .complaint-row > :nth-child(2), .complaint-row > :nth-child(3), .complaint-row > :nth-child(4) { grid-column:1; }
       .schedule-row { grid-template-columns:60px minmax(0,1fr); }
       .schedule-time { grid-column:2; text-align:left; }
-      .modal::before { content:""; display:block; width:42px; height:5px; margin:8px auto 0; border-radius:99px; background:#c8d0d8; }
+      .modal::before { content:""; display:block; flex:0 0 5px; width:42px; height:5px; margin:8px auto 0; border-radius:99px; background:#c8d0d8; }
       .calendar-backdrop { align-items:end; padding:0; }
       .calendar-dialog { width:100%; border-radius:18px 18px 0 0; padding:15px 15px calc(16px + env(safe-area-inset-bottom)); }
       .concept-topbar { min-height:64px; padding:9px 13px 7px; }
@@ -1269,7 +1281,7 @@
       .room-concept-layout { gap:10px; }
       .concept-search { min-height:44px; font-size:15px; }
       .concept-filter-row { flex-wrap:nowrap; gap:7px; }
-      .concept-filter-row .select-control { min-height:44px; padding-inline:9px 30px; font-size:12px; }
+      .concept-filter-row .select-control { min-height:44px; padding-inline:12px 40px; font-size:14px; }
       .concept-filter-row .concept-search { min-height:44px; padding-right:9px; font-size:13px; }
       .demo-data-badge { flex:0 0 auto; margin-left:0; padding:7px 8px; white-space:nowrap; font-size:11px; }
       .room-export-trigger { margin-left:0; padding-inline:8px; font-size:11px; }
@@ -1291,15 +1303,15 @@
       .room-quick-actions { margin:0 13px 13px; }
       .room-quick-actions .btn { height:48px; min-height:48px; padding:4px 2px; line-height:1.08; font-size:11px; }
       .pin-backdrop { bottom:calc(var(--bottom-nav) + env(safe-area-inset-bottom)); }
-      .pin-sheet { max-height:calc(100vh - var(--bottom-nav) - 72px); }
-      .pin-sheet-body { padding:8px 20px 6px; }
+      .pin-sheet { max-height:calc(100vh - var(--bottom-nav) - 72px); max-height:calc(100dvh - var(--bottom-nav) - 72px - env(safe-area-inset-bottom)); }
+      .pin-sheet-body { padding:16px 20px; }
       .pin-sheet-body h2 { font-size:1.22rem; }
       .pin-sheet-body > p { margin:2px 0 6px; font-size:12px; }
       .pin-sheet .field label { font-size:12px; }
       .pin-sheet .pin-edit-preview { gap:7px; }
       .pin-sheet .pin-edit-preview input,.pin-sheet .pin-edit-preview .btn { min-height:46px; }
-      .pin-sheet .field small { font-size:11px; line-height:1.2; }
-      .pin-sheet .modal-foot { grid-template-columns:1fr 1fr; padding:7px 20px 8px; }
+      .pin-sheet .field small { font-size:12px; line-height:1.5; }
+      .pin-sheet .modal-foot { grid-template-columns:1fr 1fr; padding:14px 20px; }
       .pin-sheet .modal-foot .btn { min-height:46px; }
       .bottom-nav button[aria-current="page"] { color:var(--navy); }
     }
@@ -2232,6 +2244,10 @@
       .payroll-summary-row { grid-template-columns:minmax(0,1fr) minmax(220px,.8fr); grid-template-areas:"identity actions" "status actions" "facts facts"; }
     }
     @media(max-width:600px) {
+      .room-view-controls .concept-filter-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; }
+      .room-view-controls .concept-filter-search { grid-column:1 / -1; }
+      .room-view-controls .concept-filter-row :is(.select-control,.concept-search) { font-size:16px; }
+      .room-view-controls .room-export-trigger { min-height:44px; padding-inline:14px; font-size:14px; }
       .management-row { padding:12px 0; }
       .management-row .pay-stats { gap:8px; }
       .management-row .pay-stat span { font-size:11px; }
@@ -2246,6 +2262,12 @@
       .settings-grid > .setting-card { grid-template-columns:32px minmax(0,1fr); gap:8px 10px; padding:12px 0; }
       .setting-card .setting-icon { width:32px; height:32px; border-radius:8px; }
       .setting-actions { grid-column:2; justify-content:flex-start; }
+    }
+    @media(max-width:720px) {
+      .modal .field :is(input,select,textarea), #login-form .input-control, #live-password-form .input-control { font-size:16px; }
+    }
+    @media(forced-colors:active) {
+      select.select-control { appearance:auto; background-image:none; }
     }
 </style>
 </head>
@@ -9135,7 +9157,7 @@
         const room=editor.room,record=editor.record,locked=editor.loading||editor.busy||!!editor.error||!!editor.pending||!!uncertainLiveMutation,disabled=locked?'disabled':'',reservation=livePrimaryReservation(room),pending=editor.pending;
         const review=pending?`<div id="room-operations-review" class="room-operations-review" tabindex="-1" aria-labelledby="room-operations-review-title"><h3 id="room-operations-review-title">${esc(pending.label)} 확인</h3><p>${esc(pending.description)}</p>${editor.commandError?`<p role="alert">${esc(editor.commandError)}</p>`:''}<div class="job-actions">${!uncertainLiveMutation?button('돌아가기','room-operations-cancel','outline',editor.busy?'disabled':''):''}${button(editor.busy?'저장 중…':uncertainLiveMutation?'같은 요청 결과 확인':'확인 후 저장','room-operations-save',pending.kind==='block'?'danger':'primary',editor.busy?'disabled':'')}</div></div>`:'';
         const body=`<div class="room-operations-editor" aria-busy="${editor.loading||editor.busy}">${editor.loading?'<p role="status">객실 상태를 불러오는 중입니다.</p>':editor.error?`<div role="alert">${esc(apiErrorCopy(editor.error,'객실 상태를 불러오지 못했습니다.'))}${button('다시 불러오기','room-operations-retry','outline')}</div>`:''}${editor.message?`<p role="status">${esc(editor.message)}</p>`:''}${review}<div class="room-operations-grid">
-          <fieldset class="room-operations-section" ${disabled}><legend>객실 상태</legend><p>현재 표시 · <strong>${esc(LIVE_ROOM_DISPLAY_LABELS[room.primaryDisplayStatus]||'확인 필요')}</strong></p><div class="field"><label for="room-correction-display">카드 표시 상태</label><select id="room-correction-display" class="select-control"><option value="" ${editor.display===''?'selected':''}>자동 판정으로 복구</option>${Object.entries(LIVE_ROOM_DISPLAY_LABELS).map(([value,label])=>`<option value="${value}" ${editor.display===value?'selected':''}>${label}</option>`).join('')}</select><small>카드 표시만 변경하며 예약·점유·입실 가능 여부는 유지됩니다.</small></div>${button('상태 저장','room-operations-review','outline','data-kind="status"')}</fieldset>
+          <fieldset class="room-operations-section" ${disabled}><legend>객실 상태</legend><p>현재 표시 · <strong>${esc(LIVE_ROOM_DISPLAY_LABELS[room.primaryDisplayStatus]||'확인 필요')}</strong></p><div class="field"><label for="room-correction-display">카드 표시 상태</label><select id="room-correction-display" class="select-control"><option value="" ${editor.display===''?'selected':''}>자동 판정으로 복구</option>${Object.entries(LIVE_ROOM_DISPLAY_LABELS).map(([value,label])=>`<option value="${value}" ${editor.display===value?'selected':''}>${label}</option>`).join('')}</select><small>카드 표시만 변경하며 예약·점유·입실 가능 여부는 유지됩니다.</small></div><div class="job-actions">${button('상태 저장','room-operations-review','outline','data-kind="status"')}</div></fieldset>
           <fieldset class="room-operations-section" ${disabled}><legend>운영 중지</legend>${record?.blocks?.length?`<div class="rail-list">${record.blocks.map(item=>`<div class="rail-row"><div><strong>${item.status==='scheduled'?'운영 중지 예정':'운영 중지'}</strong><span>${esc(liveKstDateTimeLabel(item.startsAt))}</span></div>${button('해제','room-operations-review','outline',`data-kind="release" data-id="${esc(item.id)}"`)}</div>`).join('')}</div>`:!editor.loading&&!editor.error?'<p class="meta">운영 중지 기록이 없습니다.</p>':''}<div class="job-actions">${button('운영 중지 등록','room-operations-review','danger',`data-kind="block" ${record?.blocks?.some(item=>item.status==='active')?'disabled':''}`)}${reservation?button('대체 객실 이동','open-live-reservation-room-move','outline',`data-id="${esc(reservation.id)}"`):''}</div></fieldset>
           <fieldset class="room-operations-section room-operations-issues" ${disabled}><legend>객실 이슈</legend><div class="form-grid"><div class="field"><label for="live-room-issue-category">분류</label><select id="live-room-issue-category" class="select-control">${Object.entries(LIVE_ROOM_ISSUE_LABELS).map(([value,label])=>`<option value="${value}" ${editor.category===value?'selected':''}>${label}</option>`).join('')}</select></div><div class="field" style="grid-column:1/-1"><label for="live-room-issue-description">상세</label><textarea id="live-room-issue-description" class="input-control" maxlength="500" rows="3" aria-describedby="live-room-issue-description-help">${esc(editor.description)}</textarea><small id="live-room-issue-description-help">전화번호·이메일·고객 개인정보를 입력하지 마세요.</small></div></div><div class="job-actions">${button('이슈 저장','room-operations-review','primary','data-kind="issue"')}</div>${record?.issues?.length?`<div class="rail-list">${record.issues.map(item=>`<div class="rail-row"><div><strong>${esc(LIVE_ROOM_ISSUE_LABELS[item.category]||item.category)}</strong><span>${esc(item.description||'')} · ${esc(liveKstDateTimeLabel(item.reportedAt))}</span></div>${button('해결','room-operations-review','outline',`data-kind="resolve" data-id="${esc(item.id)}"`)}</div>`).join('')}</div>`:!editor.loading&&!editor.error?'<p class="meta">미해결 이슈가 없습니다.</p>':''}${renderLiveRegisteredReports(room,record)}</fieldset>
         </div></div>`;
