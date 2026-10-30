@@ -77,7 +77,7 @@ try{
    assert(await page.locator('.checkout-due-badge').evaluateAll(es=>es.every(e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&e.scrollWidth<=e.clientWidth+1;})));
    await page.locator('[data-control="live-room-filter"]').selectOption('checkout-due');assert.deepEqual(await shown(),['211','350']);
    await page.locator('#live-room-search').fill('350');assert.deepEqual(await shown(),['350']);assert.match(await shortcut().innerText(),/2개/);
-   await shortcut().focus();await page.keyboard.press('Enter');assert.deepEqual(await shown(),['211','350']);assert.equal(await page.locator('#live-room-search').inputValue(),'');
+   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));await shortcut().focus();await page.keyboard.press('Enter');assert.deepEqual(await shown(),['211','350']);assert.equal(await page.locator('#live-room-search').inputValue(),'');
    await page.waitForFunction(()=>document.activeElement?.dataset.control==='live-room-filter');
    await action('live-room-export').click();await page.getByRole('dialog').waitFor();await page.keyboard.press('Tab');assert(await page.getByRole('dialog').evaluate(e=>e.contains(document.activeElement)));await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'hidden'});
    await page.waitForFunction(()=>document.activeElement?.dataset.action==='live-room-export');

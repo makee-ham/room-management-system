@@ -1,5 +1,19 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-10-31 · 관리자·메이드 얼리·레이트 배지 (#279)
+
+검증 흐름: 관리자 객실 현황 → 현재 퇴실 13시·다음 입실 15시 객실 → `1인 추가` 옆 `얼리 1시간`·`레이트 2시간` → 얼리/레이트 필터 → 예약 현황·전체 상세·목록 복귀. 메이드는 내 업무 → 접힌 배정 카드의 두 배지 → 키보드 펼침/접힘을 확인했다.
+
+- Browser plugin not available → 기존 Playwright Chromium, 로컬 `http://127.0.0.1:4179`, 업무 API는 합성 fixture로 격리. 브라우저 시간대 America/New_York에서도 KST로 계산한다. 실제 예약·배정·PIN·사진 쓰기는 없다.
+- `scripts/check-room-time-badges.mjs`: 관리자·메이드 각각 360/390/768/1440px, 페이지 식별/본문/오류 overlay 부재, 배지 잘림·가로 넘침 없음, 44px 토글·접근성 이름, 예약 현황/상세 목적 화면, Enter/Tab/Escape·모달 포커스·트리거 복귀·Back 통과. 앱 console warning/error·페이지 예외·예상 외 요청 0건.
+- 레이트 13시 직전/정각 및 다음 입실 15시 경계, 다음 예약 없음, 얼리/레이트 필터와 카드 일치, UTC/KST 변환, 30분·1시간 30분, 기본 시각, null/잘못된 시각, 다음 예약 시간 누락 시 이전 고객 값 대입 금지, 배정 snapshot의 false/null/객실 이동 근거를 확인했다. 통보 snapshot을 고객 예약 상세 접근으로 대체하지 않는다.
+- 같은 역할·합성 객실·일정·뷰포트의 전후 화면을 직접 비교했다. `QA/screenshots/room-time-badges-admin-before-390.png` → `room-time-badges-admin-after-390.png`, `room-time-badges-maid-before-390.png` → `room-time-badges-maid-after-390.png` 및 각각의 1440px PNG. 기존 카드 구성·목적 버튼을 유지하고 배지 행만 추가했다.
+- `check-room-state-axes.mjs`, `check-room-reservation-badges.mjs`, `check-checkout-due.mjs`, `check-cleaning-context.mjs` 통과. 독립 상태/집계·필터, 인원·연박/CSV/XLSX, 취소·수동 퇴실·종료일 미정, 실제 AssignmentCard 조회·네 청소 종류·스냅샷 우선·업무 펼침/접힘을 회귀 확인했다. 퇴실 회귀의 검색 뒤 키보드 테스트는 앱의 예약된 포커스 복구가 끝난 후 실행하도록 두 프레임을 기다리게 했다.
+- 기존 `check-cleaning-workflow.mjs`는 홈 fixture가 날짜별 roomProjection을 설정하지 않아 조회 중인 점유 바로가기에서 중단했고, `check-backend-v090.mjs`는 이전 작업에서 제거한 필터 값을 선택하는 지점에서 중단했다. 두 오래된 종합 시나리오 전체 통과로 기록하지 않는다. 해당 구간의 현재 정책과 메이드 UI는 위 전용 회귀로 확인했다.
+- `check-responsive-ui.mjs` 통과: 관리자·메이드 41개 화면/모달 × 360/390/768/1024/1280/1440px, 주요 목적 화면·44px·라벨/가로 넘침·키보드/포커스/Back·콘솔 이상 없음. Chromium 151.0.7922.34.
+- `node scripts/check-workspace.mjs`, `npm run contract:check`, `npm run contract:test-diff`, dev 기준 `npm run contract:diff`, `git diff --check` 통과. 최종 UX 감사 원문과 API 계약은 변경하지 않았다.
+- 실제 운영 계정 로그인/업무 쓰기, 실기기 iOS/Android·설치 PWA 업데이트는 미실행이다. 서비스워커 `2026-10-31-5`; 배포 신원·호스팅 확인은 릴리스 PR에 기록한다.
+
 ## 2026-10-31 · 객실 현황 내보내기 복구 (#269)
 
 검증 흐름: 관리자 객실 현황 → 날짜/검색/유형/상태 선택 → 내보내기 → 최신 선택일 조회 → CSV/XLSX 다운로드. #259는 기존 내보내기 변경의 병합 PR이며 이번 오류는 #269에 해당한다. 원본 dev에서 31초 경과 후 CSV가 파일 없이 거절되고 객실 GET이 0회인 것을 재현했다.
