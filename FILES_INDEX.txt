@@ -194,3 +194,11 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 - scripts/check-responsive-ui.mjs
 - scripts/check-cleaning-context.mjs
 - scripts/check-room-reservation-badges.mjs
+
+# 2026-10-30 reservation card refresh
+
+- scripts/check-reservation-card-refresh.mjs
+- WIREFRAME/QA/screenshots/reservation-refresh-before-390.png
+- WIREFRAME/QA/screenshots/reservation-refresh-before-1440.png
+- WIREFRAME/QA/screenshots/reservation-refresh-after-390.png
+- WIREFRAME/QA/screenshots/reservation-refresh-after-1440.png

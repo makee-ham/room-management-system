@@ -3487,7 +3487,7 @@
       async function refreshLiveReservationRooms(){
         if(state.remote.auth.user?.role!=='admin')return null;
         const generation=LIVE_RUNTIME.authGeneration,{data,requestId}=await apiRequest('/v1/rooms');if(generation!==LIVE_RUNTIME.authGeneration)return null;
-        const items=Array.isArray(data?.rooms)?data.rooms:[];state.remote.rooms={...state.remote.rooms,status:'ready',items,error:null,requestId,lastSuccessAt:new Date().toISOString()};return items;
+        const items=Array.isArray(data?.rooms)?data.rooms:[];state.remote.rooms={...state.remote.rooms,status:'ready',items,error:null,requestId,lastSuccessAt:new Date().toISOString()};if(liveRoomDetail)liveRoomDetail=items.find(room=>room.id===liveRoomDetail.id)||liveRoomDetail;return items;
       }
       async function loadLiveRoomTypes({quiet=false}={}){
         if(state.remote.auth.user?.role!=='admin')return null;const generation=LIVE_RUNTIME.authGeneration,slice=state.remote.roomTypes;slice.status='loading';slice.error=null;if(!quiet)render();
@@ -9029,9 +9029,20 @@
       }
       function showLiveReservationMutationError(error,room=null){const overlap=error?.code==='RESERVATION_OVERLAP';const target=document.getElementById('live-reservation-submit-error');if(!target)return;const candidate=liveBookabilityCandidate(room?.id),reasons=candidate&&!candidate.intervalBookable?`<br>${esc(liveBookabilityReasonText(candidate))}<br><small>객실 상태 v${Number(candidate.roomStateVersion)}</small>`:'';target.innerHTML=`<div class="notice notice-danger" role="alert"><div><strong>${esc(overlap?'선택한 기간에 예약이 겹칩니다. 입력한 일정은 유지됩니다. 다른 객실을 선택하세요.':apiErrorCopy(error,'예약 변경을 완료하지 못했습니다.'))}</strong>${reasons}${error?.requestId?`<br><small>문의 번호 ${esc(error.requestId)}</small>`:''}${overlap?'<br><button class="btn btn-outline" type="button" data-reservation-conflict-dismiss>확인 · 객실 다시 선택</button>':''}</div></div>`;if(overlap)requestAnimationFrame(()=>target.querySelector('button')?.focus());}
       document.addEventListener('click',event=>{if(!event.target.closest?.('[data-reservation-conflict-dismiss]'))return;document.getElementById('live-reservation-submit-error')?.replaceChildren();document.getElementById('live-reservation-room')?.focus();});
-      let liveReservationRevalidationTimer=0;
       function scheduleLiveReservationRevalidation(){
-        clearTimeout(liveReservationRevalidationTimer);liveReservationRevalidationTimer=setTimeout(async()=>{liveReservationRevalidationTimer=0;if(!liveMode()||state.remote.auth.user?.role!=='admin')return;await Promise.allSettled([loadLiveReservations({quiet:true}),refreshLiveReservationRooms(),loadLiveReservationCalendar({quiet:true,force:true})]);if(!renderLiveSurface())render();},350);
+        if(!liveMode()||state.remote.auth.user?.role!=='admin')return;
+        const generation=LIVE_RUNTIME.authGeneration;
+        // Cards read the selected-date projection; refreshing only /rooms leaves them stale.
+        const reads=[loadLiveRoomProjection({quiet:true}),refreshLiveReservationRooms(),loadLiveReservations({quiet:true}),loadLiveReservationCalendar({quiet:true,force:true})];
+        return Promise.allSettled(reads.map(async read=>{
+          try{await read;}finally{
+            if(generation===LIVE_RUNTIME.authGeneration&&liveMode()&&state.remote.auth.user?.role==='admin'){
+              const active=document.activeElement,focus=historyFocusDescriptor(active),inMain=document.getElementById('main-content')?.contains(active);
+              if(!renderLiveSurface())render();
+              if(inMain)findHistoryFocusTarget(focus)?.focus({preventScroll:true});
+            }
+          }
+        }));
       }
       async function runLiveReservationMutation({path,method='POST',body,successLabel,allocationRoomId=''}){
         const generation=LIVE_RUNTIME.authGeneration,slice=state.remote.reservations,updateId=method==='PATCH'?decodeURIComponent(path.match(/^\/v1\/reservations\/([^/]+)$/)?.[1]||''):'',previous=updateId?liveReservationById(updateId):null,{guestName,...visibleBody}=body||{},optimistic=body?.roomId&&body?.checkInAt?{...(previous||{}),...visibleBody,id:previous?.id||`pending-${crypto.randomUUID()}`,status:previous?.status||'active',version:previous?.version||0,_syncState:'saving'}:null;slice.status='mutating';slice.mutationError=null;liveAccountMutationButtonDisabled(true);
