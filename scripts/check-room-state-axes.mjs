@@ -17,7 +17,7 @@ const rooms=[
  {roomNumber:'629',reservationPhase:'upcoming',allocationReady:false,cleaningRequired:true,primaryDisplayStatus:'ARRIVAL_PENDING',displayReservationId:'next-629',displayCheckInAt:date+'T16:00:00+09:00',displayCheckOutAt:'2026-11-01T11:00:00+09:00',nextReservationId:'next-629',nextCheckInAt:date+'T16:00:00+09:00'},
  {roomNumber:'117'},
  {roomNumber:'762',occupied:true,reservationPhase:'current',allocationReady:false,primaryDisplayStatus:'OCCUPIED',displayReservationId:'long-762',displayCheckInAt:'2026-10-01T16:00:00+09:00'}
-].map(r=>({...base,id:'room-'+r.roomNumber,...r}));
+].map(r=>({...base,...(r.occupied?{pinSyncStatus:'unconfigured',readinessReasonCodes:['PIN_UNCONFIGURED']}:{}),id:'room-'+r.roomNumber,...r}));
 const target=(no,status,extra={})=>({roomId:'room-'+no,cleaningTargetId:'target-'+no,serviceDate:date,effectiveServiceDate:date,cleaningKind:'checkout',targetStatus:status,revision:1,isCurrent:true,endedAt:null,availableFrom:date+'T11:00:00+09:00',...extra});
 let cards=[target('350','inspection_pending'),target('516','in_progress',{cleaningKind:'stayover'}),target('629','upload_pending')];
 let unassigned=[target('211','unassigned')],serverRooms=rooms,failWorkflow=false,delay=0;
@@ -57,12 +57,19 @@ const setup=async()=>{await page.evaluate(rooms=>__axesQA.setup(rooms),rooms);if
 const shot=async name=>page.screenshot({path:`${output}/room-state-axes-${name}.png`});
 try{
  await mkdir(output,{recursive:true});await page.goto(origin+'/index.html');await setup();
+ const reportedRooms=['332','211','455'].map(no=>({...rooms[0],id:'room-'+no,roomNumber:no,nextReservationId:null,nextCheckInAt:null,displayCheckOutAt:(no==='332'?'2026-11-03':date)+'T11:00:00+09:00',roomWorkflow:{incomplete:no!=='332',stages:no==='332'?[]:['퇴실 대기']}}));
+ await page.evaluate(rooms=>__axesQA.setup(rooms),reportedRooms);
+ for(const width of [390,1440]){await page.setViewportSize({width,height:900});await page.screenshot({path:`${output}/occupied-pin-${before?'before':'after'}-${width}.png`});}
+ await setup();
  for(const width of [390,1440]){await page.setViewportSize({width,height:900});await shot(`${before?'before':'after'}-${width}`);}
  if(before){console.log('[ok] Same synthetic rooms, date, role and viewports baseline');}
  else{
   assert.equal(await page.title(),'객실 현황 · CASTLE THE ART');assert.match(page.url(),/index.html/);
   const summaries=await page.evaluate(()=>Object.fromEntries(['occupied','vacant','arrival','checkout','cleaning','ready','blocked'].map(k=>[k,__axesQA.summary(k).count])));
   assert.deepEqual(summaries,{occupied:3,vacant:3,arrival:2,checkout:1,cleaning:4,ready:1,blocked:1});
+  for(const no of ['211','516','762']){
+   const text=await card(no).innerText();assert(!text.includes('운영 제한'));assert.equal(text.match(/PIN 미설정/g)?.length,1);assert(await card(no).getByRole('button',{name:'보기',exact:true}).isDisabled());
+  }
   assert.match(await card('211').innerText(),/투숙 중/);assert.match(await card('211').innerText(),/입실 예정/);assert.match(await card('211').innerText(),/퇴실 예정/);assert.match(await card('211').innerText(),/퇴실 대기/);assert.match(await card('350').innerText(),/운영 제한/);assert.match(await card('350').innerText(),/검수 대기/);
   const options=await page.locator('[data-control="live-room-filter"]').innerText();assert(!/예약 있음|퇴실점검 대상|배정 가능|배정 불가/.test(options));
   for(const width of [360,390,768,1440]){
@@ -80,6 +87,22 @@ try{
    await page.locator('[data-action="filter-rooms"][data-filter="cleaning"]').click();assert.deepEqual(await shown(),['211','350','516','629']);
   }
   console.log('[ok] Independent counts/filters overlap; 4 widths, destinations, keyboard/focus/modal/Back, 44px/accessibility/overflow');
+  const occupiedPinRoom={...rooms[0],nextReservationId:null,nextCheckInAt:null,roomWorkflow:{incomplete:true,stages:['퇴실 대기']}};
+  for(const no of ['332','211','455']){
+   const room={...occupiedPinRoom,id:'regression-'+no,roomNumber:no,displayCheckOutAt:(no==='332'?'2026-11-03':date)+'T11:00:00+09:00',roomWorkflow:{incomplete:no!=='332',stages:no==='332'?[]:['퇴실 대기']}};
+   const result=await page.evaluate(room=>({axes:__axesQA.axes(room),primary:__axesQA.primary(room)}),room);
+   assert.equal(result.axes.blocked,false);assert.deepEqual(result.axes.blockReasons,[]);assert.equal(result.axes.ready,false);assert.equal(result.axes.checkout,no!=='332');assert.equal(result.primary.key,no==='332'?'occupied':'cleaning');
+  }
+  for(const code of ['CANDLE_PRESENT','OPERATION_BLOCKED','ROOM_ISSUE_BLOCKED','DATA_UNCONFIRMED','PIN_MISMATCH']){
+   const result=await page.evaluate(room=>__axesQA.axes(room),{...occupiedPinRoom,readinessReasonCodes:['PIN_UNCONFIGURED',code]});
+   assert.equal(result.blocked,true,code);assert.equal(result.blockReasons.length,1,code);assert.equal(result.ready,false,code);
+  }
+  for(const occupied of [false,null]){
+   const result=await page.evaluate(room=>__axesQA.axes(room),{...occupiedPinRoom,occupied});assert.equal(result.blocked,true);assert.equal(result.ready,false);
+  }
+  assert.equal(await page.evaluate(room=>__axesQA.axes(room).blocked,{...occupiedPinRoom,allocationBlocked:true}),true,'server operation block remains authoritative');
+  assert.equal(await page.evaluate(room=>__axesQA.axes(room).blocked,{...occupiedPinRoom,allocationBlocked:undefined,readinessReasonCodes:undefined}),null,'missing readiness remains unknown');
+  console.log('[ok] Occupied PIN-unconfigured warning stays separate; 332/211/455 checkout, real blocks/mismatch, vacant/unknown readiness preserved');
   const workflow=async(row,changes={},options={complete:true})=>page.evaluate(([room,rows,options])=>__axesQA.workflow(room,rows,options),[{...rooms[0],...changes},Array.isArray(row)?row:[row],options]);
   for(const [status,label]of [['unassigned','퇴실 대기'],['draft_assigned','퇴실 대기'],['notified','퇴실 대기'],['in_progress','청소 중'],['upload_pending','업로드 대기'],['inspection_pending','검수 대기'],['rejected','재청소']]){const w=await workflow(target('211',status));assert.equal(w.incomplete,true);assert.deepEqual(w.stages,[label]);}
   assert.deepEqual((await workflow(target('211','notified',{currentDeparture:{actualCheckoutAt:date+'T09:00:00+09:00'}}))).stages,['청소 대기']);
