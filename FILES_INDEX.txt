@@ -203,3 +203,7 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 - WIREFRAME/QA/screenshots/reservation-refresh-before-1440.png
 - WIREFRAME/QA/screenshots/reservation-refresh-after-390.png
 - WIREFRAME/QA/screenshots/reservation-refresh-after-1440.png
+- WIREFRAME/QA/screenshots/room-reservation-arrival-before-390.png
+- WIREFRAME/QA/screenshots/room-reservation-arrival-before-1440.png
+- WIREFRAME/QA/screenshots/room-reservation-arrival-after-390.png
+- WIREFRAME/QA/screenshots/room-reservation-arrival-after-1440.png
