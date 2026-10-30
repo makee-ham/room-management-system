@@ -3058,14 +3058,66 @@
         const generation=LIVE_RUNTIME.authGeneration,navigation=liveHistoryRestoreSequence;
         try{const data=await readLivePhotoContent(photoId,()=>generation===LIVE_RUNTIME.authGeneration&&navigation===liveHistoryRestoreSequence);if(!data||generation!==LIVE_RUNTIME.authGeneration||navigation!==liveHistoryRestoreSequence)return;const url=URL.createObjectURL(data);LIVE_CLEANING_PHOTO_URLS.add(url);showModal({title:'메이드 신고 사진',large:true,trigger,historyKind:'photo-viewer',body:'<div class="photo-viewer-visual"><img src="'+esc(url)+'" alt="확대된 메이드 신고 사진"></div>'});}catch(error){if(generation===LIVE_RUNTIME.authGeneration)toast(apiErrorCopy(error,'사진을 불러오지 못했습니다.'),'error');}
       }
-      async function openLiveRoomExport(trigger=document.activeElement){
-        if(!liveRoleAllowed('admin'))return;const generation=LIVE_RUNTIME.authGeneration;await loadLivePinSheet();if(generation!==LIVE_RUNTIME.authGeneration)return;const slice=state.remote.pinSheet,sync=slice.data,rooms=state.remote.rooms.items;
-        showModal({title:'객실 현황 내보내기·동기화',trigger,body:`<div class="notice notice-info">객실 현황 CSV·엑셀에는 PIN과 고객 개인정보가 포함되지 않습니다.</div><label class="room-export-scope"><input id="export-filtered" type="checkbox"><span><strong>현재 검색·필터 결과만 내보내기</strong></span></label><div class="room-sheet-status"><div><strong>Google Drive 객실 비밀번호 시트</strong><span>${sync?`대기 ${sync.pending}건 · 실패 ${sync.failed}건 · 최근 성공 ${esc(liveKstDateTimeLabel(sync.lastSuccessAt))}`:'상태 조회 실패'}</span></div>${sync?statusBadge(sync.operatorBlocked?'운영자 확인 필요':sync.pending?'처리 대기':sync.failed?'실패 있음':'정상',sync.operatorBlocked||sync.failed?'red':sync.pending?'amber':'green'):''}</div>${slice.error?cleaningErrorMarkup(slice.error):''}<div class="room-export-options">${button('CSV 다운로드','live-export-csv','outline',rooms.length&&state.remote.rooms.status==='ready'?'':'disabled')}${button('엑셀(.xlsx) 다운로드','live-export-xlsx','outline',rooms.length&&state.remote.rooms.status==='ready'?'':'disabled')}${button('Google Drive 비밀번호 업데이트','live-pin-sheet-review','outline room-sheet-sync',slice.status==='ready'?'':'disabled')}${button('상태 새로고침','live-room-export','outline')}</div>${livePinTransferActions()}`});
+      let liveRoomExport=null;
+      function liveRoomExportScope(){
+        const rooms=state.remote.rooms;
+        return JSON.stringify([liveOperationalDate(),currentView(),rooms.query||'',rooms.typeFilter||'all',rooms.filter||'all']);
       }
-      function downloadLiveRoomExport(format){
-        if(!liveRoleAllowed('admin')||!liveSliceFresh(state.remote.rooms)){toast('최신 객실 현황을 다시 조회해 주세요.','error');return;}
-        const filtered=!!document.getElementById('export-filtered')?.checked,slice=state.remote.rooms,query=String(slice.query||'').trim().toLowerCase(),rooms=liveRoomsForDate().filter(room=>!filtered||((!query||String(room.roomNumber).toLowerCase().includes(query)||String(room.roomTypeName).toLowerCase().includes(query))&&(slice.typeFilter==='all'||room.roomTypeCode===slice.typeFilter)&&liveRoomMatchesFilter(room,slice.filter))),columns=['조회일','객실','객실 유형','엘리베이터','투숙 상태','카드 상태','촛불 수량','청소 필요','체크인','체크아웃',...ROOM_RESERVATION_EXPORT_COLUMNS],rows=rooms.map(room=>{const summary=liveRoomReservationSummary(room);return [liveOperationalDate(),room.roomNumber,LIVE_ROOM_TYPE_LABELS[room.roomTypeCode]||room.roomTypeName,room.elevatorZone||'미기재',room.occupied?'투숙':'공실',liveRoomPrimary(room).label,room.candleCount,room.cleaningRequired?'필요':'없음',summary.reservation?.checkInAt?liveIsoToInput(summary.reservation.checkInAt).replace('T',' '):'',summary.reservation?.checkOutAt?liveIsoToInput(summary.reservation.checkOutAt).replace('T',' '):'',...roomReservationExportCells(summary)];});
-        if(!rows.length){toast('내보낼 객실이 없습니다.');return;}const quote=value=>`"${spreadsheetSafeCell(value).replaceAll('"','""')}"`,blob=format==='csv'?new Blob(['\ufeff',[columns,...rows].map(row=>row.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}):createRoomXlsx([columns,...rows]),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=`castle-the-art_rooms_${liveOperationalDate()}.${format}`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);closeModal();
+      function liveRoomExportOpen(context){
+        return !!context&&context===liveRoomExport&&context.generation===LIVE_RUNTIME.authGeneration&&liveRoleAllowed('admin')&&context.root?.isConnected;
+      }
+      function updateLiveRoomExport(context,message,{error=false}={}){
+        if(!liveRoomExportOpen(context))return;
+        const status=context.root.querySelector('[data-room-export-status]');
+        if(message){status.textContent=message;status.setAttribute('role',error?'alert':'status');}
+        const busy=!!context.operation;
+        for(const control of context.root.querySelectorAll('#export-filtered,[data-action="live-export-csv"],[data-action="live-export-xlsx"],[data-action="live-room-export-refresh"]'))control.disabled=busy;
+        status.setAttribute('aria-busy',String(busy));
+      }
+      async function refreshLiveRoomExportPinStatus(context){
+        if(!liveRoomExportOpen(context)||context.pinBusy)return;
+        context.pinBusy=true;
+        const sync=await loadLivePinSheet();
+        context.pinBusy=false;
+        if(!liveRoomExportOpen(context))return;
+        const slice=state.remote.pinSheet;
+        context.root.querySelector('[data-room-export-pin-status]').innerHTML=`<div class="room-sheet-status"><div><strong>Google Drive 객실 비밀번호 시트</strong><span>${sync?`대기 ${sync.pending}건 · 실패 ${sync.failed}건 · 최근 성공 ${esc(liveKstDateTimeLabel(sync.lastSuccessAt))}`:'상태 조회 실패'}</span></div>${sync?statusBadge(sync.operatorBlocked?'운영자 확인 필요':sync.pending?'처리 대기':sync.failed?'실패 있음':'정상',sync.operatorBlocked||sync.failed?'red':sync.pending?'amber':'green'):''}</div>${slice.error?cleaningErrorMarkup(slice.error):''}`;
+        context.root.querySelector('[data-action="live-pin-sheet-review"]').disabled=slice.status!=='ready';
+      }
+      function openLiveRoomExport(trigger=document.activeElement){
+        if(!liveRoleAllowed('admin'))return;
+        if(liveRoomExportOpen(liveRoomExport))return;
+        showModal({title:'객실 현황 내보내기·동기화',trigger,body:`<div data-live-room-export><div class="notice notice-info">객실 현황 CSV·엑셀에는 PIN과 고객 개인정보가 포함되지 않습니다.</div><label class="room-export-scope"><input id="export-filtered" type="checkbox"><span><strong>현재 검색·필터 결과만 내보내기</strong></span></label><p class="meta" data-room-export-status role="status">${esc(liveOperationalDate())} · 다운로드 시 최신 객실 현황을 조회합니다.</p><div data-room-export-pin-status><div class="room-sheet-status"><div><strong>Google Drive 객실 비밀번호 시트</strong><span>상태 조회 중</span></div></div></div><div class="room-export-options">${button('CSV 다운로드','live-export-csv','outline')}${button('엑셀(.xlsx) 다운로드','live-export-xlsx','outline')}${button('Google Drive 비밀번호 업데이트','live-pin-sheet-review','outline room-sheet-sync','disabled')}${button('상태 새로고침','live-room-export-refresh','outline')}</div>${livePinTransferActions()}</div>`});
+        const context={generation:LIVE_RUNTIME.authGeneration,root:document.querySelector('[data-live-room-export]'),operation:null,pinBusy:false};
+        liveRoomExport=context;void refreshLiveRoomExportPinStatus(context);
+      }
+      async function readLiveRoomExportSnapshot(format=null){
+        const context=liveRoomExport;
+        if(!liveRoomExportOpen(context)||context.operation)return;
+        const slice=state.remote.rooms,operation={scope:liveRoomExportScope(),date:liveOperationalDate(),query:String(slice.query||'').trim().toLowerCase(),type:slice.typeFilter||'all',filter:slice.filter||'all',filtered:!!context.root.querySelector('#export-filtered').checked,cancelled:false};
+        context.operation=operation;updateLiveRoomExport(context,operation.date+' · 최신 객실 현황 조회 중…');
+        if(!format)void refreshLiveRoomExportPinStatus(context);
+        try{
+          const rooms=await fetchLiveRoomProjection(operation.date);
+          if(!liveRoomExportOpen(context))return;
+          if(operation.cancelled||operation.scope!==liveRoomExportScope()){updateLiveRoomExport(context,'조회 조건이 바뀌었습니다. 현재 조건으로 다시 다운로드해 주세요.',{error:true});return;}
+          // The displayed projection and file are built from this exact successful response, never the undated rooms cache.
+          state.remote.roomProjection={date:operation.date,status:'ready',items:rooms,error:null,lastSuccessAt:new Date().toISOString()};
+          render();modalTrigger=document.querySelector('[data-action="live-room-export"]')||modalTrigger;
+          const selected=rooms.map(room=>({...room,dateOnly:room.projectionMode!=='LIVE',dateStatus:'ready'})).filter(room=>!operation.filtered||((!operation.query||String(room.roomNumber).toLowerCase().includes(operation.query)||String(room.roomTypeName).toLowerCase().includes(operation.query))&&(operation.type==='all'||room.roomTypeCode===operation.type)&&liveRoomMatchesFilter(room,operation.filter)));
+          if(!selected.length){updateLiveRoomExport(context,rooms.length?'현재 검색·필터 결과에 내보낼 객실이 없습니다. 전체 객실은 선택을 해제해 내려받으세요.':operation.date+' · 내보낼 객실이 없습니다.');return;}
+          updateLiveRoomExport(context,operation.date+' · 최신 객실 '+selected.length+'개 확인');
+          if(!format)return;
+          const columns=['조회일','객실','객실 유형','엘리베이터','투숙 상태','카드 상태','촛불 수량','청소 필요','체크인','체크아웃',...ROOM_RESERVATION_EXPORT_COLUMNS],rows=selected.map(room=>{const summary=liveRoomReservationSummary(room);return [operation.date,room.roomNumber,LIVE_ROOM_TYPE_LABELS[room.roomTypeCode]||room.roomTypeName,room.elevatorZone||'미기재',room.occupied?'투숙':'공실',liveRoomPrimary(room).label,room.candleCount,room.cleaningRequired?'필요':'없음',summary.reservation?.checkInAt?liveIsoToInput(summary.reservation.checkInAt).replace('T',' '):'',summary.reservation?.checkOutAt?liveIsoToInput(summary.reservation.checkOutAt).replace('T',' '):'',...roomReservationExportCells(summary)];});
+          const quote=value=>`"${spreadsheetSafeCell(value).replaceAll('"','""')}"`,blob=format==='csv'?new Blob(['\ufeff',[columns,...rows].map(row=>row.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}):createRoomXlsx([columns,...rows]),url=URL.createObjectURL(blob),link=document.createElement('a');
+          link.href=url;link.download=`castle-the-art_rooms_${operation.date}.${format}`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);closeModal();
+        }catch(error){
+          if(liveRoomExportOpen(context))updateLiveRoomExport(context,apiErrorCopy(error,'객실 현황을 불러오지 못했습니다.')+' 상태 새로고침 또는 다운로드 버튼으로 다시 시도해 주세요.',{error:true});
+        }finally{context.operation=null;updateLiveRoomExport(context);}
+      }
+      async function downloadLiveRoomExport(format){
+        if(!['csv','xlsx'].includes(format))return;
+        await readLiveRoomExportSnapshot(format);
       }
       function livePinTransferAllowed(){return liveRoleAllowed('admin')&&state.remote.auth.user?.mustChangePassword===false&&LIVE_RUNTIME.config?.featureFlags?.roomPinTransfer===true;}
       function livePinExportAllowed(){return liveRoleAllowed('admin')&&state.remote.auth.user?.mustChangePassword===false&&(LIVE_RUNTIME.config?.featureFlags?.roomPinExport===true||livePinTransferAllowed());}
@@ -3185,12 +3237,13 @@
         showLiveConnectionReview({role:'admin',title:'담당 수행 불가 처리',body:`<p>${esc(assignment.roomNumber)}호 · ${esc(assignment.maidDisplayName)}</p><p>현재 담당을 종료하고 다시 배정할 대상으로 남깁니다. 시작된 작업은 중단되며, 후임자는 배정 화면에서 별도로 정합니다.</p>`,path:`/v1/assignments/${encodeURIComponent(targetId)}/unavailable-cancel`,payload:{expectedCurrentAssignmentId:assignment.assignmentId,expectedAssignmentVersion:impact?.targetAssignmentVersion??assignment.targetAssignmentVersion,expectedAttemptId:attempt?.attemptId||null,expectedExecutionVersion:attempt?.executionVersion??null,reasonCode:'MAID_UNAVAILABLE'},reload:()=>loadLiveCleaning({quiet:true}),variant:'danger'});
       }
       async function openLiveRoomCorrection(roomId,trigger){await openLiveRoomOperations(roomId,trigger);}
-      const liveConnectionActions=new Set(['live-connection-confirm','live-room-export','live-export-csv','live-export-xlsx','live-pin-sheet-review','refresh-live-room-records','review-live-room-resolution','live-accounts-open','refresh-live-catalog','live-capacity-review','live-catalog-create','live-catalog-deactivate','live-room-correction','live-room-correction-review','live-audit-open','live-activity-open','live-diagnostics','live-quarantines','live-quarantine-open','live-quarantine-review']);
+      const liveConnectionActions=new Set(['live-connection-confirm','live-room-export','live-room-export-refresh','live-export-csv','live-export-xlsx','live-pin-sheet-review','refresh-live-room-records','review-live-room-resolution','live-accounts-open','refresh-live-catalog','live-capacity-review','live-catalog-create','live-catalog-deactivate','live-room-correction','live-room-correction-review','live-audit-open','live-activity-open','live-diagnostics','live-quarantines','live-quarantine-open','live-quarantine-review']);
       async function handleLiveConnectionAction(action,el){
         try{
           if(action==='live-connection-confirm'){await commitLiveConnectionReview();return;}
           if(action==='live-room-export'){await openLiveRoomExport(el);return;}
-          if(action==='live-export-csv'||action==='live-export-xlsx'){downloadLiveRoomExport(action.endsWith('csv')?'csv':'xlsx');return;}
+          if(action==='live-room-export-refresh'){await readLiveRoomExportSnapshot();return;}
+          if(action==='live-export-csv'||action==='live-export-xlsx'){await downloadLiveRoomExport(action.endsWith('csv')?'csv':'xlsx');return;}
           if(action==='live-pin-sheet-review'){
             if(!liveRoleAllowed('admin'))return;const sync=await loadLivePinSheet();if(!sync)return;showLiveConnectionReview({role:'admin',title:'비밀번호 시트 전체 동기화',body:'<p>서버에 전체 동기화를 요청합니다. 접수 후 처리 상태를 확인하세요.</p>',path:'/v1/room-pin-sheet-sync/full-resync',payload:{expectedVersion:sync.version},reload:()=>loadLivePinSheet()});return;
           }
@@ -4369,10 +4422,15 @@
         if(projection?.date===liveOperationalDate()&&projection.status==='ready')return projection.items.map(room=>({...room,dateOnly:room.projectionMode!=='LIVE',dateStatus:'ready'}));
         return liveOperationalDate()===liveKstIsoDate()?state.remote.rooms.items||[]:[];
       }
+      async function fetchLiveRoomProjection(date){
+        const {data}=await apiRequest('/v1/rooms?'+new URLSearchParams({serviceDate:date}));
+        if(!Array.isArray(data?.rooms)||data.rooms.some(room=>!room||room.serviceDate!==date||!Array.isArray(room.detailConditionCodes)))throw new ApiRequestError('room projection invalid',{status:502,code:'INVALID_RESPONSE'});
+        return data.rooms;
+      }
       async function loadLiveRoomProjection({quiet=false}={}){
         if(!liveRoleAllowed('admin'))return;
         const date=liveOperationalDate(),generation=LIVE_RUNTIME.authGeneration,slice={date,status:'loading',items:[],error:null};state.remote.roomProjection=slice;if(!quiet)render();
-        try{const {data}=await apiRequest('/v1/rooms?'+new URLSearchParams({serviceDate:date}));if(!Array.isArray(data?.rooms)||data.rooms.some(room=>room.serviceDate!==date||!Array.isArray(room.detailConditionCodes)))throw new ApiRequestError('room projection invalid',{status:502,code:'INVALID_RESPONSE'});if(generation!==LIVE_RUNTIME.authGeneration||state.remote.roomProjection!==slice)return;Object.assign(slice,{status:'ready',items:data.rooms,lastSuccessAt:new Date().toISOString()});}
+        try{const rooms=await fetchLiveRoomProjection(date);if(generation!==LIVE_RUNTIME.authGeneration||state.remote.roomProjection!==slice)return;Object.assign(slice,{status:'ready',items:rooms,lastSuccessAt:new Date().toISOString()});}
         catch(error){if(generation===LIVE_RUNTIME.authGeneration&&state.remote.roomProjection===slice)Object.assign(slice,{status:'error',error});}
         if(!quiet&&generation===LIVE_RUNTIME.authGeneration)render();
       }
@@ -4748,6 +4806,7 @@
       }
 
       function render() {
+        if(liveRoomExport?.operation&&liveRoomExport.operation.scope!==liveRoomExportScope())liveRoomExport.operation.cancelled=true;
         const verifyDurable=!liveMode(),durableRenderSameState=verifyDurable&&durableRenderStateRef===state,durableBefore=verifyDurable?durableLedgerFingerprint(state):'';
         syncAuthState(state);
         if(!liveMode())projectReservationState(state);
@@ -4974,7 +5033,7 @@
       }
       function rawCloseModal({restoreFocus=false,restoreScroll=true}={}) {
         const root=document.getElementById('modal-root'),wasPin=!!root?.querySelector('.pin-sheet'),trigger=modalTrigger;
-        liveRoomOperationsEditor=null;
+        liveRoomOperationsEditor=null;liveRoomExport=null;
         if(root)root.innerHTML='';restoreModalViewport({restore:restoreScroll});setModalBackgroundLocked(false);
         if(restoreFocus)trigger?.focus?.({preventScroll:true});modalTrigger=null;if(wasPin){pinCardTrigger=null;activePinModalSessionId=null;}
       }
