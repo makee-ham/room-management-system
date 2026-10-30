@@ -635,3 +635,7 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 `청소 미완료`는 현장 완료 후에도 업로드·검수 승인까지 유지한다. 운영 API가 제공하지 않는 과거 단계·내일 이후 미배정 대상은 확인 필요로 표시한다. 날짜별 객실 projection과 오늘·내일 청소 배정/미배정 조회를 합치며 운영 값을 fixture로 대체하지 않는다.
 
 합성 API 회귀 검사는 `node scripts/check-room-state-axes.mjs`로 실행한다. 로컬 서버는 `python3 scripts/serve.py --port 4179`이며 브라우저 의존성은 검사 환경에 별도로 준비되어 있어야 한다. 앱 실행에는 Node나 Playwright가 필요하지 않다.
+
+### 투숙 중 PIN 미설정 표시 수정 (2026-10-31)
+
+앱 PIN 미설정만 있는 투숙 객실을 운영 제한으로 표시하던 오류를 수정했다. 기존 PIN 경고·보기 잠금은 유지하고 투숙·퇴실 예정·청소 대기 표시와 같은 기준의 집계·필터·CSV/XLSX를 사용한다. 실제 PIN 불일치·촛불·이슈·운영 중지는 계속 제한한다. 서비스워커 `2026-10-31-6`; 회귀는 `scripts/check-room-state-axes.mjs`다.

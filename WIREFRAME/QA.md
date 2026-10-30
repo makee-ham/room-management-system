@@ -2983,3 +2983,14 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium으로 검
 대표 PNG: `QA/screenshots/room-state-axes-{before,after}-{390,1440}.png`, `room-state-axes-filtered-{390,1440}.png`, `room-state-axes-turnover-{390,1440}.png`, `room-state-axes-home-{390,1440}.png`. Before는 dev `c763ac9`의 동일 역할·날짜·fixture·뷰포트다. 의도한 차이는 독립 집계·보조 상태·다음 입실·조건 그룹이며 기존 카드·버튼·내비게이션 구조는 유지했다.
 
 한계: 실기기 Safari/카메라/도어락·실제 운영 로그인과 업무 변경·서버 동시 트랜잭션은 이번 UI 검사 범위가 아니다. 오늘·내일 외 미배정 청소 대상과 과거 상세 단계는 API 계약 한계로 확인 필요 안내를 유지한다.
+
+## 2026-10-31 · 투숙 객실 PIN 미설정의 운영 제한 오분류 수정
+
+- 운영 화면 읽기 확인: 332·211·455호에는 PIN 미설정만 제한 사유로 중복 표시됐다. 211·455호는 10/31 퇴실 예정, 332호는 11/3 퇴실 예정이었다. 실제 예약·PIN·업무 데이터는 변경하지 않았다.
+- 원인: `readinessReasonCodes`의 청소 외 사유를 전부 운영 제한으로 올려 이미 투숙 중인 객실의 `PIN_UNCONFIGURED`까지 제한으로 분류했다. 투숙 중 PIN 미설정만 제외하고 같은 사유 목록으로 카드·집계·필터·내보내기를 계산한다. PIN 경고·조회 잠금, 실제 `allocationBlocked`, 촛불·운영 중지·이슈·기준정보 미확인·PIN 불일치와 공실/점유 미확정 준비 판정은 유지한다.
+- 재현: 합성 API의 3개 투숙 객실에 PIN 미설정을 넣었을 때 수정 전 운영 제한 4개(실제 중지 1+잘못 분류한 3), 수정 후 1개. 별도 332·211·455호 합성 화면은 운영 제한 3→0, 332 투숙 중, 211·455 청소 미완료/퇴실 대기로 확인했다.
+- 환경: `http://127.0.0.1:4181`, Playwright Chromium 151.0.7922.34. Browser plugin not available. 운영 화면 원인 확인은 연결된 Chrome에서 읽기만 했고 자동 회귀의 API는 모두 fixture다.
+- `check-room-state-axes.mjs`: 360/390/768/1440px의 페이지 식별·내용·오류 overlay 없음·가로 넘침 없음·44px/접근성 이름·Enter/Tab/Escape·모달 포커스와 복귀·Back·예약/상세 목적지 통과. PIN 경고 한 번 표시·보기 잠금, 투숙/퇴실/청소/운영 집계와 필터, 실제 차단 유지, 누락값·API 실패·날짜/세션 경합 통과. 앱 console warning/error·page exception 0건.
+- `check-room-export.mjs`: CSV/XLSX 조회·필터·전체 셀 일치·민감정보 제외·조회 실패/경합·4개 폭·포커스/Back 회귀 통과. `node scripts/check-workspace.mjs` 통과.
+- 같은 날짜·역할·합성 fixture·390/1440px의 수정 전후 PNG를 눈으로 비교했다. 상태와 PIN 경고 중복만 달라지고 기존 카드·버튼·목적지는 유지된다. 대표 PNG: `QA/screenshots/occupied-pin-{before,after}-{390,1440}.png`.
+- 한계: 실기기 Safari/Android·도어락·운영 PIN 변경·예약 변경·청소 수행은 미실행. API 응답과 업무 권한을 변경하지 않았다. 운영 반영은 릴리스 배포 신원과 별도로 확인한다.
