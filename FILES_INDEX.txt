@@ -260,3 +260,7 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 - WIREFRAME/QA/screenshots/maid-cleaning-day-after-390.png
 - WIREFRAME/QA/screenshots/maid-cleaning-day-before-1440.png
 - WIREFRAME/QA/screenshots/maid-cleaning-day-before-390.png
+- WIREFRAME/QA/screenshots/late-before-early-admin-1440.png
+- WIREFRAME/QA/screenshots/late-before-early-admin-390.png
+- WIREFRAME/QA/screenshots/late-before-early-maid-1440.png
+- WIREFRAME/QA/screenshots/late-before-early-maid-390.png

@@ -2418,8 +2418,8 @@
       }
       function reservationTimeBadges(timing) {
         const badges=[];
-        if(timing.early){const label=`얼리 체크인 ${timing.checkinLabel||timing.checkin} · 기본 ${DEFAULT_CHECKIN_TIME}보다 ${timing.earlyOffset} 빠름`;badges.push(`<span class="schedule-priority-badge early" aria-label="${esc(label)}" title="${esc(label)}">${icon('clock','icon-sm')}얼리 ${esc(timing.earlyOffset)}</span>`);}
         if(timing.late){const label=`레이트 체크아웃 ${timing.checkoutLabel||timing.checkout} · 기본 ${DEFAULT_CHECKOUT_TIME}보다 ${timing.lateOffset} 늦음`;badges.push(`<span class="schedule-priority-badge late" aria-label="${esc(label)}" title="${esc(label)}">${icon('clock','icon-sm')}레이트 ${esc(timing.lateOffset)}</span>`);}
+        if(timing.early){const label=`얼리 체크인 ${timing.checkinLabel||timing.checkin} · 기본 ${DEFAULT_CHECKIN_TIME}보다 ${timing.earlyOffset} 빠름`;badges.push(`<span class="schedule-priority-badge early" aria-label="${esc(label)}" title="${esc(label)}">${icon('clock','icon-sm')}얼리 ${esc(timing.earlyOffset)}</span>`);}
         return badges;
       }
       function roomReservationStatus(room) {
