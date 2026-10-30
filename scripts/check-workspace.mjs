@@ -720,7 +720,7 @@ for (const contract of [
   'roomCleaningStageLabel(job)',
   'cardReservationStatus(no)',
   "{id:'reservation-demo-142'",
-  'label:`연박 ${day}/${total}일차`',
+  'label:`${total}박 ${day}일차`',
 ]) {
   if (!html.includes(contract)) throw new Error(`Four-state room card contract missing: ${contract}`);
 }
@@ -1032,15 +1032,15 @@ for (const contract of [
   "'occupied','extra-guests','candle'",
   'value="extra-guests"',
   '>인원 추가</option>',
-  'class="schedule-priority-badge guests" aria-label="숙박 인원 ${cardGuestCount}명"',
-  "${icon('user','icon-sm')}${cardGuestCount}명",
+  'class="schedule-priority-badge guests" aria-label="기준 ${type.defaultGuestCount}명 · 총 ${cardGuestCount}명 · ${extraGuestCount}인 추가"',
+  "${icon('user','icon-sm')}${extraGuestCount}인 추가",
 ]) {
   if (!html.includes(contract)) throw new Error(`Room-card extra-guest/filter contract missing: ${contract}`);
 }
 const roomCardPolicy = readFileSync(resolve(root, 'DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md'), 'utf8');
 for (const contract of [
   '기준인원보다 많을 때만',
-  '`+N명`처럼 초과분만 표시하지 않으며',
+  '기준 인원과의 차이를 `N인 추가`',
   '객실 상태 필터의 `인원 추가`는 이 동일한 조건',
 ]) {
   if (!roomCardPolicy.includes(contract)) throw new Error(`Room-card extra-guest/filter policy missing: ${contract}`);
