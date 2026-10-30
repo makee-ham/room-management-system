@@ -189,3 +189,6 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 
 # 2026-10-29 compact management lists
 - scripts/check-compact-management-lists.mjs
+
+# 2026-10-30 responsive UI polish
+- scripts/check-responsive-ui.mjs
