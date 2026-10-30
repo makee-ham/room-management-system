@@ -251,3 +251,12 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 - WIREFRAME/QA/screenshots/room-state-axes-home-390.png
 - WIREFRAME/QA/screenshots/room-state-axes-turnover-1440.png
 - WIREFRAME/QA/screenshots/room-state-axes-turnover-390.png
+- scripts/check-room-time-badges.mjs
+- WIREFRAME/QA/screenshots/room-time-badges-admin-after-1440.png
+- WIREFRAME/QA/screenshots/room-time-badges-admin-after-390.png
+- WIREFRAME/QA/screenshots/room-time-badges-admin-before-1440.png
+- WIREFRAME/QA/screenshots/room-time-badges-admin-before-390.png
+- WIREFRAME/QA/screenshots/room-time-badges-maid-after-1440.png
+- WIREFRAME/QA/screenshots/room-time-badges-maid-after-390.png
+- WIREFRAME/QA/screenshots/room-time-badges-maid-before-1440.png
+- WIREFRAME/QA/screenshots/room-time-badges-maid-before-390.png
