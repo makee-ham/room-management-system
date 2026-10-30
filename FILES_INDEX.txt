@@ -195,3 +195,11 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 - scripts/check-assignment-floor.mjs
 - WIREFRAME/QA/screenshots/assignment-floor-390.png
 - WIREFRAME/QA/screenshots/assignment-floor-1440.png
+
+# 2026-10-30 reservation card refresh
+
+- scripts/check-reservation-card-refresh.mjs
+- WIREFRAME/QA/screenshots/reservation-refresh-before-390.png
+- WIREFRAME/QA/screenshots/reservation-refresh-before-1440.png
+- WIREFRAME/QA/screenshots/reservation-refresh-after-390.png
+- WIREFRAME/QA/screenshots/reservation-refresh-after-1440.png
