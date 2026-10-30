@@ -33,7 +33,7 @@ async function fixture({width=390,failProjection=false,delayProjection=60,delayC
  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(['warning','error'].includes(m.type())&&!m.text().startsWith('Failed to load resource:'))errors.push(m.text());});
  const room=()=>{
   const active=reservation?.status==='active';
-  return {id:roomId,roomNumber:'350',roomTypeId:typeId,roomTypeCode:'standard',roomTypeName:'스탠다드 더블 로프트',elevatorZone:'C',dataStatus:'verified',stateVersion:version,evaluatedAt:now,serverTime:now,occupied:false,occupancyStatus:'VACANT',reservationPhase:active?'upcoming':'none',reservationLifecycle:active?'ARRIVAL_PENDING':'NONE',readinessStatus:'READY',primaryDisplayStatus:active?'ARRIVAL_PENDING':'READY',allocationReady:true,cleaningRequired:false,candleCount:0,pinSyncStatus:'verified',blockingReasonCodes:[],readinessReasonCodes:[],reasonCodes:[],nextReservationId:active?reservation.id:null,nextCheckInAt:active?reservation.checkInAt:null,nextCheckOutAt:active?reservation.checkOutAt:null,displayReservationId:active?reservation.id:null,displayGuestCount:active?reservation.guestCount:null,displayBaseOccupancy:2,displayCheckInAt:active?reservation.checkInAt:null,displayCheckOutAt:active?reservation.checkOutAt:null};
+  return {id:roomId,roomNumber:'350',roomTypeId:typeId,roomTypeCode:'standard',roomTypeName:'스탠다드 더블 로프트',elevatorZone:'C',dataStatus:'verified',stateVersion:version,evaluatedAt:now,serverTime:now,occupied:false,occupancyStatus:'VACANT',reservationPhase:active?'upcoming':'none',reservationLifecycle:active?'ARRIVAL_PENDING':'NONE',readinessStatus:'READY',primaryDisplayStatus:active?'ARRIVAL_PENDING':'READY',allocationReady:true,allocationBlocked:false,cleaningRequired:false,candleCount:0,pinSyncStatus:'verified',blockingReasonCodes:[],readinessReasonCodes:[],reasonCodes:[],nextReservationId:active?reservation.id:null,nextCheckInAt:active?reservation.checkInAt:null,nextCheckOutAt:active?reservation.checkOutAt:null,displayReservationId:active?reservation.id:null,displayGuestCount:active?reservation.guestCount:null,displayBaseOccupancy:2,displayCheckInAt:active?reservation.checkInAt:null,displayCheckOutAt:active?reservation.checkOutAt:null};
  };
  await page.route('**/*',async route=>{
   const req=route.request(),url=new URL(req.url()),method=req.method();
@@ -59,6 +59,8 @@ async function fixture({width=390,failProjection=false,delayProjection=60,delayC
    version++;reservation={...fields,id:reservationId,status:'active',version,actualCheckInAt:null,actualCheckoutAt:null,createdAt:now,updatedAt:now};return reply({reservation});
   }
   if(path===`/v1/reservations/${reservationId}/cancel`&&method==='POST'){version++;reservation={...reservation,status:'cancelled',version,cancelledAt:now};return reply({reservation});}
+  if(path==='/v1/assignments')return reply({assignments:[]});
+  if(path==='/v1/assignments/commit-impact')return reply({impact:{serviceDate:q.get('serviceDate'),committableDrafts:[],blockedDrafts:[],remainingUnassignedTargets:[]}});
   if(path==='/v1/notifications')return reply({notifications:[],nextCursor:null});
   if(path===`/v1/rooms/${roomId}/candle-events`)return reply({events:[]});
   if(['events','operation-blocks','issues','reports'].some(kind=>path===`/v1/rooms/${roomId}/${kind}`))return reply({roomId,roomStateVersion:version,items:[],nextCursor:null});
@@ -113,7 +115,7 @@ try{
   await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'hidden'});
   await card().locator('[data-action="open-live-room-reservation-status"]').click();await action('open-live-reservation-detail').click();await page.getByText('350호 예약 상세·변경',{exact:true}).waitFor();
   await action('live-reservation-cancel-review').click();await action('confirm-live-reservation-cancel').click();
-  await page.waitForFunction(()=>document.querySelector('[data-live-room="350"]')?.textContent.includes('배정 가능'));
+  await page.waitForFunction(()=>document.querySelector('[data-live-room="350"]')?.textContent.includes('입실 가능'));
   assert.equal(await card().locator('.guests').count(),0);assert(!((await card().innerText()).includes('입실 예정')));
   assert.equal(f.requests.filter(r=>r.path==='/v1/reservations'&&r.method==='POST').length,1);
   await sleep(1900);await f.close();console.log(`[ok] ${width}px: create → card, edit → detail/list, cancel → card, search, keyboard/modal, back, overflow, controls, console`);

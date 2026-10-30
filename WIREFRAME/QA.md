@@ -2946,3 +2946,33 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium으로 검
 - 실제 로그인 이후 업무 API 전체왕복, 실기기 갤러리/카메라/설치 앱 Back, 운영 승인/반려/송금 결과 기록은 미실행이다.
 
 대표 PNG: `QA/screenshots/live-home-tomorrow-390.png`, `QA/screenshots/live-home-tomorrow-1440.png`, `QA/screenshots/live-maid-detail-history-390.png`, `QA/screenshots/live-weekly-payroll-current-390.png`.
+
+## 2026-10-31 · 객실 점유·일정·청소·운영 제한 분리 (#276)
+
+- 환경: `http://127.0.0.1:4179/index.html`, Playwright Chromium 151.0.7922.34. Browser plugin not available. 운영 API 요청은 합성 fixture로 전부 대체했으며 실제 계정·객실·예약·PIN·사진·업무 데이터를 읽거나 변경하지 않았다.
+- 흐름: 관리자 홈 집계 → 객실 조건 선택 → 검색/유형 결합 → 예약 현황·전체 상세 → 뒤로가기 → CSV/XLSX. 기존 카드 구조·PIN 버튼·예약/운영/청소/상세 버튼 목적지를 유지했다.
+- 같은 6개 객실 fixture에서 `투숙 중 3 / 공실 3 / 입실 예정 2 / 퇴실 예정 1 / 청소 미완료 4 / 입실 가능 1 / 운영 제한 1`을 확인했다. 한 객실의 투숙·당일 퇴실·다음 입실·퇴실 대기 동시 표시, 운영 제한+검수 대기, 투숙 중 연박 청소를 검사했다. 각 축의 객실 ID 중복 집계는 없다.
+- 청소 단계: 퇴실 대기·청소 대기·청소 중·업로드 대기·검수 대기·재청소, 최종 승인/취소, 교체 revision, 여러 target, 이전 날짜 활성 의무를 검사했다. 데모의 투숙 중 추가 청소도 현장 완료→업로드→검수→재청소 동안 남고 승인 후 해제된다. 운영/촛불 제한은 점유를 미확정으로 바꾸지 않는다.
+- API 실패: 확인된 청소 객실은 계속 보이고 전체 수는 확인 필요로 표시한다. 미래 미배정 대상·과거 단계 미제공을 0건으로 채우지 않는다. 날짜 변경·세션 종료 후 지연 응답이 이전 화면을 복원하지 않는다.
+- 제거 확인: 예약 있음/퇴실점검 필터 없음, 옛 필터는 전체로 복원, 카드 표시 override 입력·명령 없음. 기존 override가 READY여도 실제 운영 제한·청소 미완료를 유지한다.
+- 360/390/768/1440px에서 문서 제목·본문·오류 overlay 없음·가로 넘침 없음·44px 컨트롤·접근성 이름·키보드 Enter/Tab/Escape·모달 포커스·브라우저 Back·카드 목적지를 통과했다. 앱 console warning/error 및 page exception 0건.
+- 넓은 회귀: 관리자/메이드 41개 화면·모달을 360/390/768/1024/1280/1440px에서 확인했다. 첫 실행의 메이드 재로그인 대기 timeout은 진단을 추가한 동일 시나리오 재실행에서 통과했고 앱 예외는 발견되지 않았다.
+- 운영 상태 편집: 실제 이슈 생성/해결, 운영 중지/해제, 403·409 입력 유지, 503 동일 키/본문 재시도, 닫힌 모달의 늦은 응답, 메이드 접근 거부를 통과했다. 화면 표시만 바꾸는 명령은 발생하지 않는다.
+- 예약 등록/수정/취소 후 목록·상세 동기화, 과거/미래 CSV/XLSX 내용 일치, 내보내기 최신 조회·검색·유형·조건·중복 요청·날짜/역할/세션 경합, 예약 인원/연박 배지, 퇴실 경계·KST·종료일 미정 회귀를 통과했다.
+- 정적 검사와 API 계약 검사/생성 타입/비호환 diff 검사를 통과했다. 최종 감사 원문은 변경하지 않았다.
+
+검증 명령:
+
+- `node scripts/check-room-state-axes.mjs`
+- `node scripts/check-checkout-due.mjs`
+- `node scripts/check-room-export.mjs`
+- `node scripts/check-room-reservation-badges.mjs`
+- `node scripts/check-reservation-card-refresh.mjs`
+- `node scripts/check-live-connections.mjs`
+- `node scripts/check-responsive-ui.mjs` (진단 재실행은 같은 시나리오의 임시 사본)
+- `node scripts/check-workspace.mjs`
+- `npm run contract:check`, `npm run contract:test-diff`, `CONTRACT_BASE_REF=origin/dev npm run contract:diff`
+
+대표 PNG: `QA/screenshots/room-state-axes-{before,after}-{390,1440}.png`, `room-state-axes-filtered-{390,1440}.png`, `room-state-axes-turnover-{390,1440}.png`, `room-state-axes-home-{390,1440}.png`. Before는 dev `c763ac9`의 동일 역할·날짜·fixture·뷰포트다. 의도한 차이는 독립 집계·보조 상태·다음 입실·조건 그룹이며 기존 카드·버튼·내비게이션 구조는 유지했다.
+
+한계: 실기기 Safari/카메라/도어락·실제 운영 로그인과 업무 변경·서버 동시 트랜잭션은 이번 UI 검사 범위가 아니다. 오늘·내일 외 미배정 청소 대상과 과거 상세 단계는 API 계약 한계로 확인 필요 안내를 유지한다.

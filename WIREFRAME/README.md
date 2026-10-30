@@ -627,3 +627,11 @@ Windows에서는 `python scripts/serve.py`를 사용합니다. 외부 CDN, 프�
 위 1차의 후속 계약 과제는 OpenAPI 0.6.0/백엔드 v0.7.0과 함께 배포했다. 일반 사진 1~20장, 모바일 한 번에 20장 선택과 남은 한도 추가, 별도 폭탄방/특이사항 증빙, 최근 7일 사진 상세, 현재 주 확정/예상/검수 대기 주급을 연결했다. 부분 업로드 오류 후 최신 장수 조회와 특이사항 작성 메모 유지도 적용했다.
 
 운영 주소는 https://room-management-system-prod.vercel.app 이다. 기존 승인 제출/사진은 보존하고 미시작 작업 17건만 새 방식으로 전환했다. 실제 배포 HTML hash, health/OpenAPI/CORS, 현재 주 주급 DB 조회, 네 가지 화면 너비를 확인했다. 운영 고객 업무 mutation 및 iOS/Android 실기기 검수는 미실행이며, 상세 증거와 한계는 `QA.md` 및 `DOCS/26_WIREFRAME_LIVE_WORKFLOW_ROLLOUT.md`를 따른다. 프런트 컨펌 뒤 남는 API 차이를 백엔드 이슈로 등록한다.
+
+### 객실 상태 분리 (2026-10-31)
+
+객실 상태는 점유·입퇴실 일정·청소 미완료·운영 제한을 독립적으로 표시하고 집계한다. 같은 객실이 입실 예정과 퇴실 예정, 청소 미완료에 동시에 포함될 수 있다. 홈 4칸과 기존 카드·버튼 위치는 유지하며 `예약 있음` 필터와 카드 상태 강제 지정은 제거했다. 정책 정본은 `DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md`의 2026-10-31 최신 결정이다.
+
+`청소 미완료`는 현장 완료 후에도 업로드·검수 승인까지 유지한다. 운영 API가 제공하지 않는 과거 단계·내일 이후 미배정 대상은 확인 필요로 표시한다. 날짜별 객실 projection과 오늘·내일 청소 배정/미배정 조회를 합치며 운영 값을 fixture로 대체하지 않는다.
+
+합성 API 회귀 검사는 `node scripts/check-room-state-axes.mjs`로 실행한다. 로컬 서버는 `python3 scripts/serve.py --port 4179`이며 브라우저 의존성은 검사 환경에 별도로 준비되어 있어야 한다. 앱 실행에는 Node나 Playwright가 필요하지 않다.
