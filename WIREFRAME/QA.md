@@ -3076,3 +3076,16 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium으로 검
 - 정적 검증: `node scripts/check-workspace.mjs`, `npm run contract:check`, `npm run contract:test-diff`, `CONTRACT_BASE_REF=origin/dev npm run contract:diff`, `git diff --check` 통과. 최종 UX 감사 원문 해시는 유지했다.
 - 대표 PNG: `QA/screenshots/candle-issues-before-390.png`, `QA/screenshots/candle-issues-after-390.png`, `QA/screenshots/candle-issues-before-1440.png`, `QA/screenshots/candle-issues-after-1440.png`.
 - 한계: 실제 촛불 회수·운영 쓰기·실기기 Safari/Android·서버 동시성은 검사하지 않았다. 촛불 수량 기록·현장 확인·기존 API 계약과 권한은 그대로 사용한다. 기존 데모 전용 운영 중지 폼의 정보 구조는 변경하지 않았다.
+
+## 2026-11-02 이번 주 근무가능일 변경 승인
+
+- 사용자 결정: 메이드도 이번 주를 수정 요청할 수 있으며 관리자 승인 후 반영. 다음 주 직접 제출은 유지한다. 정본 `DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md`에 반영했으며 FINAL_UX_AUDIT 원문은 변경하지 않았다.
+- 화면: 메이드 근무 일정과 관리자 주간 근무표의 이번 주/다음 주 선택, 오늘·이후 날짜 수정, 사유 선택, 승인 대기, 현재/요청 비교, 승인·반려. 데모와 live adapter 모두 구현했다. 기존 메이드 상세·이력과 뒤로가기 목적 화면을 유지한다.
+- 검증 환경: Browser plugin not available. 기존 Playwright Chromium 151을 사용했으며 모든 API 쓰기는 합성 fixture로 가로챘다. 운영 계정·업무는 변경하지 않았다.
+- `node scripts/check-availability-approval.mjs` PASS: 다음 주 제출, 이번 주 요청, 대기 중 원본 보존, 중복 요청/메이드 승인 차단, 반려 후 기존 값, 승인 후 새 값, 배정 충돌 응답 시 원본 보존, 미제출 sourceVersion 0 요청·승인, 데모 승인·반려, 관리자 상세 버튼·뒤로가기, 키보드·모달 포커스와 Escape, 콘솔 warning/error 0. 360/390/768/1440px 가로 넘침·44px 버튼·접근성 이름 확인.
+- 기존 `check-responsive-ui.mjs`의 화면 흐름을 임시 실행본으로 검증: 41개 화면/모달 × 360/390/768/1024/1280/1440px PASS. 관리자/메이드 내비게이션, 객실·예약·청소·주급·알림, 모달 버튼 정렬, 브라우저 Back·트리거 포커스, 콘솔 및 외부 업무 요청 0. 이 회귀 실행이 갱신한 기존 사진 PNG는 원래대로 복원했다.
+- `node scripts/check-workspace.mjs`, `npm run contract:check` PASS. 기존 배포 OpenAPI snapshot은 그대로 유지하고 신규 nullable source/최초 요청 계약은 백엔드 PR에서 별도로 관리한다.
+- 같은 역할·시나리오·390/1440px의 기존 다음 주 화면과 변경 화면을 비교했다. 기존 카드와 제출/상세 목적을 유지하고 주차 선택·승인 정보를 추가했다. 대표 PNG: `QA/screenshots/availability-before-maid-next-390.png`, `availability-maid-next-390.png`, `availability-maid-current-390.png`, `availability-maid-pending-390.png`, `availability-admin-current-390.png`, `availability-demo-admin-current-390.png` (같은 접두사의 1440px도 보존).
+- 서버 의존성: [백엔드 PR #556](https://github.com/wrongstory/room-management-system-backend/pull/556). 이번 주 직접 submit 차단, 미제출자의 sourceVersion 0, 승인 시 주차·지난 날짜 재검증은 후속 migration이 필요하다. 기존 배포 API의 관리자 승인 흐름과 새 서버 계약을 혼동하지 않는다. 새 UI가 보인다는 이유로 서버의 승인 우회 차단이나 최초 요청이 이미 운영 반영됐다고 간주하지 않는다.
+- 한계: Full DB NOT RUN. 백엔드 AGENTS.md에 따라 migration 적용/DB reset·release는 별도 승인 전 실행하지 않았다. 운영 배포·실기기·실제 동시 DB 경합은 미확인이다. 백엔드 단위 테스트 5,847개, availability Edge 33개와 development manifest는 통과했으며 CI/PR 상태를 최종 인계에서 별도로 확인한다.
+- PR 통합 검증: `dev`의 객실 작업 메모·운영 상태·촛불 변경을 보존해 병합했고, 충돌은 SHA/캐시 버전 메타데이터에서 해결했다. 통합 HTML에 workspace/contract 검사와 가능일 승인 브라우저 시나리오를 다시 실행해 통과했다. 작업 메모 전용 회귀도 4개 너비, 생략/삭제, 통보 전후, 400/409, 응답 유실 재시도, 권한·잠금·Back·포커스·민감값 비영속까지 PASS다. 다른 작업의 대표 PNG는 변경하지 않았다.
