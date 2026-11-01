@@ -2,11 +2,11 @@
 
 ## 2026-11-02 · 객실별 담당 작업 메모 (#292)
 
-검증 흐름: 관리자 객실별 담당 → 객실별 메모 작성/저장/삭제 → 초안 저장·통보 → 메이드 본인 카드·업무 상세 → 배정 이력/충돌 확인. 기존 5열·담당 선택·취소·업무 펼침 목적을 유지한다.
+검증 흐름: 관리자 객실별 담당 → 객실별 메모 작성/저장/삭제 → 초안 저장·통보 → 메이드 본인 카드·업무 상세 → 배정 이력/충돌 확인. 기존 5열·담당 선택·취소·업무 펼침 목적을 유지한다. 사용자 추가 지적에 따라 모바일 왼쪽 제목을 각 오른쪽 내용의 첫 줄/첫 컨트롤에 맞추고, 담당 메모 높이와 무관하게 상단 정렬한다.
 
 - Browser plugin not available → Playwright Chromium 151.0.7922.34, 로컬 `http://127.0.0.1:4187`. `scripts/check-assignment-instruction-memo.mjs`는 모든 업무 API 요청을 합성 데이터로 격리한다. 실제 운영 계정·예약·업무 쓰기는 하지 않았다.
 - 전용 회귀: 기존 메모 읽기, 미수정 필드 생략/빈값 null, 여러 객실 초안 분리, 메모만 전체 저장·통보, 개별 저장, 미통보 초안 후 통보, 400 입력 유지, 409 최신 메모 비교/재적용, 응답 유실 동일 body/key 재확인, 응답 필드 누락 성공 거부·재조회, 500 UTF-16 허용/501 거부, HTML 주입 방지, 줄바꿈·원문 보존, 날짜 전환 초안 폐기, 시작한 작업 잠금, 메이드 본인 읽기/쓰기 차단을 확인했다. 독립 데모에서 실제 로그인·담당 선택·저장·수정·삭제·메이드 로그인 후 표시도 확인했다.
-- 관리자·메이드 360/390/768/1440px 가로 넘침 없음, 메모 저장 44px 이상·접근성 이름, 입력 중 포커스 유지, Tab/Escape·충돌 모달 포커스 가둠, 배정 이력·브라우저 Back, 메모의 URL/스토리지/history 비저장을 확인했다. 앱 console warning/error·페이지 예외 0건이다. 의도한 실패 HTTP/응답 유실의 브라우저 네트워크 오류는 제외했다.
+- 관리자·메이드 360/390/768/1440px 가로 넘침 없음, 메모 저장 44px 이상·접근성 이름, 모바일 제목/첫 내용의 정렬, 입력 중 포커스 유지, Tab/Escape·충돌 모달 포커스 가둠, 배정 이력·브라우저 Back, 메모의 URL/스토리지/history 비저장을 확인했다. 앱 console warning/error·페이지 예외 0건이다. 의도한 실패 HTTP/응답 유실의 브라우저 네트워크 오류는 제외했다.
 - 같은 역할·날짜·합성 객실·390/1440px의 `QA/screenshots/assignment-memo-compare-{admin,maid}-{before,after}-*.png`를 나란히 비교했다. 담당 선택 아래 입력만 추가하고 기존 열·내비게이션·행 버튼 목적은 유지됐다. 대표 화면: `assignment-memo-admin-390.png`, `assignment-memo-admin-1440.png`, `assignment-memo-maid-390.png`, `assignment-memo-maid-1440.png`, 운영 미제공 상태 `assignment-memo-unavailable-390.png`.
 - `scripts/check-cleaning-assignment-continuity.mjs`의 미배정/랜덤 제안·부분 실패·재시도·추가 통보·인라인 담당 변경 CAS·시작 작업 차단·4개 폭 회귀가 통과했다. 기존 전체 `check-cleaning-workflow.mjs`는 오늘 화면 투숙 중 집계의 fixture가 조회 중 상태로 남아 197행에서 timeout했다. 변경 전 HTML에서도 같은 실패가 재현됐으므로 전체 통과로 기록하지 않는다. 이 실패 이전의 청소 시작·사진·검수 흐름만 실행됐다.
 - `node scripts/check-workspace.mjs`, `npm run contract:check`, `npm run contract:test-diff`, dev 기준 `npm run contract:diff`, `git diff --check` 통과. CI·배포 SHA와 에셋 일치는 PR 기록에 남긴다.

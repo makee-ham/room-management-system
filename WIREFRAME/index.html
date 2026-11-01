@@ -1768,8 +1768,9 @@
       .assignment-table, .assignment-table tbody, .assignment-table tr, .assignment-table td { display:block; width:100%; min-width:0; }
       .assignment-table thead { display:none; }
       .assignment-table tr { margin-bottom:10px; padding:12px; border:1px solid var(--line); border-radius:12px; background:#fff; }
-      .assignment-table td { display:grid; grid-template-columns:92px minmax(0,1fr); gap:8px; align-items:center; min-height:40px; padding:5px 0; border:0; }
-      .assignment-table td::before { content:attr(data-label); color:var(--muted); font-size:12px; font-weight:750; }
+      .assignment-table td { display:grid; grid-template-columns:92px minmax(0,1fr); gap:8px; align-items:start; min-height:40px; padding:5px 0; border:0; }
+      .assignment-table td::before { content:attr(data-label); align-self:start; padding-top:2px; color:var(--muted); font-size:12px; font-weight:750; line-height:18px; }
+      .assignment-table td[data-label="객실·타입·요금"]::before, .assignment-table td[data-label="담당 메이드"]::before { padding-top:13px; }
       .assignment-foot { align-items:stretch; flex-direction:column; }
       .assignment-foot .btn { width:100%; }
       .assignment-exception { grid-template-columns:62px minmax(0,1fr); }
@@ -2207,8 +2208,9 @@
       .assignment-table, .assignment-table tbody, .assignment-table tr, .assignment-table td { display:block; width:100%; min-width:0; }
       .assignment-table thead { display:none; }
       .assignment-table tr { margin-bottom:10px; padding:12px; border:1px solid var(--line); border-radius:12px; background:#fff; }
-      .assignment-table td { display:grid; grid-template-columns:92px minmax(0,1fr); gap:8px; align-items:center; min-height:40px; padding:5px 0; border:0; }
-      .assignment-table td::before { content:attr(data-label); color:var(--muted); font-size:12px; font-weight:750; }
+      .assignment-table td { display:grid; grid-template-columns:92px minmax(0,1fr); gap:8px; align-items:start; min-height:40px; padding:5px 0; border:0; }
+      .assignment-table td::before { content:attr(data-label); align-self:start; padding-top:2px; color:var(--muted); font-size:12px; font-weight:750; line-height:18px; }
+      .assignment-table td[data-label="객실·타입·요금"]::before, .assignment-table td[data-label="담당 메이드"]::before { padding-top:13px; }
       .assignment-table .assignment-room-number-link { display:inline-flex; align-items:center; width:max-content; min-height:44px; padding:7px 0; }
       .maid-order-assignee { grid-template-columns:1fr; gap:4px; }
 
