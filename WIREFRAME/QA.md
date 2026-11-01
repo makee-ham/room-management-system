@@ -10,7 +10,19 @@
 - 같은 역할·날짜·합성 객실·390/1440px의 `QA/screenshots/assignment-memo-compare-{admin,maid}-{before,after}-*.png`를 나란히 비교했다. 담당 선택 아래 입력만 추가하고 기존 열·내비게이션·행 버튼 목적은 유지됐다. 대표 화면: `assignment-memo-admin-390.png`, `assignment-memo-admin-1440.png`, `assignment-memo-maid-390.png`, `assignment-memo-maid-1440.png`, 운영 미제공 상태 `assignment-memo-unavailable-390.png`.
 - `scripts/check-cleaning-assignment-continuity.mjs`의 미배정/랜덤 제안·부분 실패·재시도·추가 통보·인라인 담당 변경 CAS·시작 작업 차단·4개 폭 회귀가 통과했다. 기존 전체 `check-cleaning-workflow.mjs`는 오늘 화면 투숙 중 집계의 fixture가 조회 중 상태로 남아 197행에서 timeout했다. 변경 전 HTML에서도 같은 실패가 재현됐으므로 전체 통과로 기록하지 않는다. 이 실패 이전의 청소 시작·사진·검수 흐름만 실행됐다.
 - `node scripts/check-workspace.mjs`, `npm run contract:check`, `npm run contract:test-diff`, dev 기준 `npm run contract:diff`, `git diff --check` 통과. CI·배포 SHA와 에셋 일치는 PR 기록에 남긴다.
-- 운영 공개 OpenAPI에는 `instructionMemo`가 없다. 백엔드 #539는 dev/source-only 검증이며 DB 적용·운영 배포 NOT RUN이다. 프런트는 `assignmentInstructionMemo=false`로 배포하며 입력을 `API 미제공` 사유로 비활성화한다. 실제 DB 저장/권한/RLS/경합·운영 알림·실기기/설치 PWA 업데이트는 미검증이다. 활성화 절차는 `DOCS/40_ASSIGNMENT_INSTRUCTION_MEMO_FRONTEND.md`. 서비스워커 `2026-11-02-2`.
+- 운영 공개 OpenAPI에는 `instructionMemo`가 없다. 백엔드 #539는 dev/source-only 검증이며 DB 적용·운영 배포 NOT RUN이다. 프런트는 `assignmentInstructionMemo=false`로 배포하며 입력을 `API 미제공` 사유로 비활성화한다. 실제 DB 저장/권한/RLS/경합·운영 알림·실기기/설치 PWA 업데이트는 미검증이다. 활성화 절차는 `DOCS/40_ASSIGNMENT_INSTRUCTION_MEMO_FRONTEND.md`. 서비스워커 `2026-11-02-3`.
+
+## 2026-11-02 · 날짜별 목록의 운영 상태 버튼·촛불 수량 표시
+
+검증 흐름: 관리자 객실 현황 → 이전/다음 날짜 → 현재 운영 상태 → 최신 객실·촛불·이슈 조회 → 닫기/뒤로가기. 추가 요청에 따라 촛불 배지는 아이콘·색을 유지하며 `촛불 N개`로 표시했다.
+
+- 원본 dev의 과거 날짜에서 운영 상태 버튼이 disabled인 것을 같은 합성 객실·뷰포트로 재현했다. 날짜별 조회와 현재 객실 조회를 분리하여, 선택일 촛불 1개와 현재 2개가 다를 때 카드는 조회일의 `촛불 1개`, 모달은 최신 `촛불 2개`를 중복 없이 표시함을 확인했다. 날짜 변경은 실제 버튼과 기존 API loader를 사용했다.
+- Browser plugin not available → Playwright Chromium 151.0.7922.34, 로컬 `http://127.0.0.1:4183`, America/New_York 시간대, 업무 API 전부 합성 응답. 임시 전용 스크립트로 과거/오늘/미래 × 360/390/768/1440px, 페이지 식별·본문·오류 overlay 부재, 가로 넘침·44px 버튼·접근성 이름, Enter/Tab/Escape·포커스 복귀·Back을 확인했다.
+- 모달 진입마다 현재 객실 GET 확인, 조회만으로 쓰기 0건, 실패 시 편집 잠금과 재시도, 닫은 뒤 지연 응답 무시, 날짜별 목록에만 있는 객실의 상세 재조회와 회수 화면 진입, 메이드 직접 진입 차단을 확인했다. 페이지 예외·console warning/error·예상 밖 요청 0건.
+- `check-live-connections.mjs`, `check-room-state-axes.mjs` 및 기존 촛불 이슈 임시 회귀를 실행했다. 종합 연결 검사는 상세 이슈 해결 뒤 포커스 대기에서 간헐 타임아웃이 있었으며 분리한 소스의 재실행은 통과했다. 전용 날짜별 키보드/포커스 검증은 모두 통과했다. 촛불 부분/전체 회수·현장 확인·409·다른 이슈 유지와 독립 상태 집계도 통과했다. 기존 증거를 덮어쓰지 않도록 종합 검사 PNG는 임시 경로로 저장했다.
+- 대표 증거: `QA/screenshots/operations-date-before-390.png` → `operations-date-after-390.png`, 같은 이름의 1440px PNG, `operations-date-modal-390.png`, `operations-date-modal-1440.png`. 같은 역할·객실·날짜·너비에서 버튼 활성화와 현재 상태 안내를 직접 비교했다.
+- `node scripts/check-workspace.mjs`, `npm run contract:check`, `npm run contract:test-diff`, dev 기준 `npm run contract:diff`, `git diff --check` 통과. API 계약·최종 UX 감사 원문은 변경하지 않았다. 실제 운영 업무 쓰기와 iOS/Android 실기기 설치 앱은 미검증이다. 서비스워커 `2026-11-02-2`; 병합한 코드의 운영 배포 신원과 로그인 화면은 배포 후 별도로 확인한다.
+
 
 ## 2026-10-31 · 레이트 → 얼리 배지 순서 (#287)
 
