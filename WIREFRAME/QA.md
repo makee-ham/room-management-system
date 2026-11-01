@@ -3023,3 +3023,15 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium으로 검
 - `check-room-export.mjs`: CSV/XLSX 조회·필터·전체 셀 일치·민감정보 제외·조회 실패/경합·4개 폭·포커스/Back 회귀 통과. `node scripts/check-workspace.mjs` 통과.
 - 같은 날짜·역할·합성 fixture·390/1440px의 수정 전후 PNG를 눈으로 비교했다. 상태와 PIN 경고 중복만 달라지고 기존 카드·버튼·목적지는 유지된다. 대표 PNG: `QA/screenshots/occupied-pin-{before,after}-{390,1440}.png`.
 - 한계: 실기기 Safari/Android·도어락·운영 PIN 변경·예약 변경·청소 수행은 미실행. API 응답과 업무 권한을 변경하지 않았다. 운영 반영은 릴리스 배포 신원과 별도로 확인한다.
+
+## 2026-11-02 · 촛불 경고·객실 이슈 가시성
+
+- 환경: `http://127.0.0.1:4183/index.html`, Playwright Chromium 151.0.7922.34, 360/390/768/1440px, 브라우저 America/New_York·표시 KST. Browser plugin not available. 기존 로컬 Playwright Core와 설치된 Chromium을 임시 실행 어댑터로 사용했으며 저장소 의존성은 변경하지 않았다. 모든 업무 API는 합성 응답이고 실제 운영 데이터는 읽거나 변경하지 않았다.
+- 흐름: 객실 카드 → 운영 상태 → 목록 첫 항목의 촛불 수량·회수 필요·입실 차단 확인 → 회수 기록 → 기존 현재 물리 수량·현장 확인 → 저장 → 객실 상태 재조회. 기존 예약·전체 상세·이슈 해결·운영 중지 버튼 목적을 유지했다.
+- 동일 역할·날짜·fixture·390/1440px의 dev `39291d6` 전후 PNG를 직접 비교했다. 수정 전에는 모든 보조 배지가 같은 붉은색이고 촛불은 목록에 없었다. 수정 후에는 촛불을 황금색과 아이콘으로, 다른 차단을 붉은색·경고 아이콘으로 구분하고 목록을 입력 폼 위에 표시한다. 공실·청소 배지도 각각 중립색·주황색으로 구분한다.
+- 임시 Playwright 시나리오: 촛불만 있는 512호, 촛불+파손 753호, 0개/1개/2개, 부분 회수·전체 회수, 다른 파손이 남은 경우 운영 제한 유지, 현장 미확인 감소 요청 0건, 확인 후 실제 `/candles` 명령·최신 version·idempotency key, 409 후 최신 수량 유지, 조회 중/실패를 이슈 없음으로 표시하지 않음, 재조회, 메이드 직접 진입 차단을 통과했다. 촛불 표시를 위해 이슈나 운영 중지 생성 요청은 보내지 않는다.
+- 페이지 URL·제목·본문, 오류 overlay 없음, 4개 너비의 가로 넘침 없음, 주요 버튼 44×44px 이상·접근성 이름, Enter·Tab/Shift+Tab 포커스 트랩, Escape·브라우저 Back·객실 운영 버튼 초점 복귀를 통과했다. 앱 console warning/error·page exception·예상 밖 API 요청 0건.
+- `scripts/check-live-connections.mjs` 전체 회귀: 실제 이슈 생성/해결·운영 중지/해제·예정 중지, 403/409 입력 유지, 503 동일 요청 재시도, 늦은 조회·권한, 예약/상세 목적지와 4개 너비 검사 통과. `scripts/check-room-state-axes.mjs`: 점유·일정·청소·운영 제한의 독립 집계/필터, PIN 경고, 날짜/세션 경합·부분 조회 실패 회귀 통과. 기존 스크린샷을 덮지 않도록 두 스크립트의 임시 사본에서 증거 출력 위치만 바꿨다.
+- 정적 검증: `node scripts/check-workspace.mjs`, `npm run contract:check`, `npm run contract:test-diff`, `CONTRACT_BASE_REF=origin/dev npm run contract:diff`, `git diff --check` 통과. 최종 UX 감사 원문 해시는 유지했다.
+- 대표 PNG: `QA/screenshots/candle-issues-before-390.png`, `QA/screenshots/candle-issues-after-390.png`, `QA/screenshots/candle-issues-before-1440.png`, `QA/screenshots/candle-issues-after-1440.png`.
+- 한계: 실제 촛불 회수·운영 쓰기·실기기 Safari/Android·서버 동시성은 검사하지 않았다. 촛불 수량 기록·현장 확인·기존 API 계약과 권한은 그대로 사용한다. 기존 데모 전용 운영 중지 폼의 정보 구조는 변경하지 않았다.
