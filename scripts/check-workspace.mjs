@@ -1099,7 +1099,7 @@ for (const contract of [
   'assignment.guestCountChanged===true||assignment.reservationChanged===true',
   'return {item:record.committedTarget,assignment}',
   'item.guestCount??\'\'',
-  'assignment.committedTarget={...item,type:snapshot.typeId,rateSnapshot:snapshot.rate,minutesSnapshot:snapshot.minutes,elevatorSnapshot:snapshot.elevator}',
+  'assignment.committedTarget={...item,instructionMemo:assignment.instructionMemo,type:snapshot.typeId,rateSnapshot:snapshot.rate,minutesSnapshot:snapshot.minutes,elevatorSnapshot:snapshot.elevator}',
   'assignment.guestCountChanged=false;assignment.reservationChanged=false;assignment.targetChanged=false',
 ]) {
   if (!html.includes(contract)) throw new Error(`Reservation guest assignment snapshot contract missing: ${contract}`);

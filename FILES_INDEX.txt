@@ -2,7 +2,31 @@
 
 Generated from the initial Git staging set. `.codex-remote-attachments/`, secrets, caches and OS files are intentionally excluded.
 
+
+# 2026-10-22 frontend release readiness
+
+# 2026-10-22 remaining frontend issues
+
+# 2026-10-22 supplemental memo-only readiness
+
+# 2026-10-29 compact management lists
+
+# 2026-10-30 responsive UI polish
+
+# 2026-10-30 assignment floor proximity
+
+# 2026-10-30 reservation card refresh
+
+
+# 2026-10-30 checkout due
+
+
+# 2026-10-31 객실 내보내기 회귀
+
+# 2026-10-31 remove checkout inspection filter
+
 - .gitattributes
+- .github/workflows/api-contract.yml
 - .gitignore
 - AGENTS.md
 - CASTLE_THE_ART_HANDOFF_SUMMARY_v13.md
@@ -27,6 +51,11 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 - DOCS/13_QA_REPORT.md
 - DOCS/14_CLICKABLE_WIREFRAME_HANDOFF.md
 - DOCS/15_TWO_PASS_AUDIT_RESULT.md
+- DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md
+- DOCS/36_FRONTEND_RELEASE_READINESS.md
+- DOCS/38_REMAINING_FRONTEND_ISSUES.md
+- DOCS/39_SUPPLEMENTAL_MEMO_ONLY_HANDOFF.md
+- DOCS/40_ASSIGNMENT_INSTRUCTION_MEMO_FRONTEND.md
 - DOCS/CODEX_PROMPT.md
 - DOCS/FINAL_UX_AUDIT.md
 - DOCS/WIREFRAME_TASK_PROMPT.md
@@ -53,6 +82,7 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 - FLOWCHARTS/07_date_history_correction.png
 - FLOWCHARTS/07_date_history_correction.svg
 - FLOWCHARTS/index.html
+- HISTORY/README.md
 - HISTORY/castle_room_manager_wireframe.html
 - HISTORY/castle_the_art_room_manager_wireframe_photo_review_soft_delete.html
 - HISTORY/castle_the_art_room_manager_wireframe_pre_v13_latest_snapshot.html
@@ -71,8 +101,6 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 - HISTORY/castle_the_art_room_manager_wireframe_v8.html
 - HISTORY/castle_the_art_room_manager_wireframe_v8_before_safety.html
 - HISTORY/castle_the_art_room_manager_wireframe_v9.html
-- HISTORY/README.md
-- manifest.json
 - OVERVIEW.png
 - QA/extended_v13/castle_the_art_v13_extended_qa_report.json
 - QA/extended_v13/qa_castle_v13_handoff.py
@@ -112,8 +140,6 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 - QA/screenshots_v13/castle_the_art_v13_handoff_screens/09_unavailable_candle_group.png
 - QA/screenshots_v13/castle_the_art_v13_handoff_screens/10_calendar.png
 - README.md
-- scripts/check-workspace.mjs
-- scripts/serve.py
 - SHA256SUMS.txt
 - TOOLS/ARCHIVE/build_castle_handoff_v12.py
 - TOOLS/ARCHIVE/build_castle_handoff_v13.py
@@ -121,98 +147,59 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 - TOOLS/ARCHIVE/patch_castle_v11.py
 - TOOLS/ARCHIVE/patch_castle_v12_snapshot.py
 - TOOLS/ARCHIVE/patch_v11_safety.py
+- TOOLS/README.md
 - TOOLS/patch_castle_v13.py
 - TOOLS/patch_v13_maid_candle_permissions.py
-- TOOLS/README.md
-- WIREFRAME/index.html
 - WIREFRAME/QA.md
 - WIREFRAME/QA/screenshots/admin-inspection-other-up-to-10-390.png
-- WIREFRAME/QA/screenshots/maid-other-up-to-10-320.png
-- WIREFRAME/QA/screenshots/quick-reservation-today-row-320.png
 - WIREFRAME/QA/screenshots/admin-mobile-calendar.png
 - WIREFRAME/QA/screenshots/admin-mobile-inspection-gallery.png
 - WIREFRAME/QA/screenshots/admin-mobile-inspection-photo.png
 - WIREFRAME/QA/screenshots/admin-mobile-pay-calendar.png
-- WIREFRAME/QA/screenshots/admin-mobile-pin-edit.png
 - WIREFRAME/QA/screenshots/admin-mobile-pin-edit-v2.png
 - WIREFRAME/QA/screenshots/admin-mobile-pin-edit-v3.png
-- WIREFRAME/QA/screenshots/admin-mobile-rooms.png
+- WIREFRAME/QA/screenshots/admin-mobile-pin-edit.png
 - WIREFRAME/QA/screenshots/admin-mobile-rooms-concept.png
 - WIREFRAME/QA/screenshots/admin-mobile-rooms-unified.png
 - WIREFRAME/QA/screenshots/admin-mobile-rooms-v2.png
 - WIREFRAME/QA/screenshots/admin-mobile-rooms-v3.png
+- WIREFRAME/QA/screenshots/admin-mobile-rooms.png
 - WIREFRAME/QA/screenshots/admin-mobile-today.png
-- WIREFRAME/README.md
-- WIREFRAME/reference/admin-desktop-concept.png
-- WIREFRAME/reference/maid-mobile-concept.png
-- WIREFRAME/reference/redesign-concepts/admin-calendar-open.png
-- WIREFRAME/reference/redesign-concepts/admin-cleaning-queue.png
-- WIREFRAME/reference/redesign-concepts/admin-complaints-penalties.png
-- WIREFRAME/reference/redesign-concepts/admin-inspection.png
-- WIREFRAME/reference/redesign-concepts/admin-payroll.png
-- WIREFRAME/reference/redesign-concepts/admin-rooms-pin.png
-- WIREFRAME/reference/redesign-concepts/admin-rooms-pin-v2.png
-- WIREFRAME/reference/redesign-concepts/admin-today.png
-- WIREFRAME/reference/redesign-concepts/maid-cleaning.png
-- WIREFRAME/reference/redesign-concepts/maid-my-work.png
-- WIREFRAME/reference/redesign-concepts/maid-payroll.png
-- WIREFRAME/screenshots/admin-desktop-1440.jpg
-- WIREFRAME/screenshots/admin-desktop-1440.png
-- WIREFRAME/screenshots/admin-mobile-390.jpg
-- WIREFRAME/screenshots/admin-mobile-390.png
-- WIREFRAME/screenshots/maid-mobile-390.jpg
-- WIREFRAME/screenshots/maid-mobile-390.png
-
-# 2026-10-22 frontend release readiness
-- .github/workflows/api-contract.yml
-- DOCS/36_FRONTEND_RELEASE_READINESS.md
-- contracts/backend-openapi.json
-- contracts/backend-openapi.manifest.json
-- package-lock.json
-- package.json
-- scripts/check-backend-breaking-diff.mjs
-- scripts/check-backend-contract.mjs
-- scripts/generate-backend-client.mjs
-- scripts/openapi-breaking-diff-lib.mjs
-- scripts/test-backend-breaking-diff.mjs
-
-# 2026-10-22 remaining frontend issues
-- DOCS/38_REMAINING_FRONTEND_ISSUES.md
-- scripts/check-admin-cleaning-reads.mjs
-
-# 2026-10-22 supplemental memo-only readiness
-- DOCS/39_SUPPLEMENTAL_MEMO_ONLY_HANDOFF.md
-
-# 2026-10-29 compact management lists
-- scripts/check-compact-management-lists.mjs
-
-# 2026-10-30 responsive UI polish
-- scripts/check-responsive-ui.mjs
-- scripts/check-cleaning-context.mjs
-- scripts/check-room-reservation-badges.mjs
-
-# 2026-10-30 assignment floor proximity
-- scripts/check-assignment-floor.mjs
-- WIREFRAME/QA/screenshots/assignment-floor-390.png
 - WIREFRAME/QA/screenshots/assignment-floor-1440.png
-
-# 2026-10-30 reservation card refresh
-
-- scripts/check-reservation-card-refresh.mjs
-- WIREFRAME/QA/screenshots/reservation-refresh-before-390.png
-- WIREFRAME/QA/screenshots/reservation-refresh-before-1440.png
-- WIREFRAME/QA/screenshots/reservation-refresh-after-390.png
-- WIREFRAME/QA/screenshots/reservation-refresh-after-1440.png
-- WIREFRAME/QA/screenshots/room-reservation-arrival-before-390.png
-- WIREFRAME/QA/screenshots/room-reservation-arrival-before-1440.png
-- WIREFRAME/QA/screenshots/room-reservation-arrival-after-390.png
-- WIREFRAME/QA/screenshots/room-reservation-arrival-after-1440.png
-
-# 2026-10-30 checkout due
-
-- DOCS/17_ROOM_CATALOG_LONG_STAY_DECISIONS.md
-- WIREFRAME/sw.js
-- scripts/check-checkout-due.mjs
+- WIREFRAME/QA/screenshots/assignment-floor-390.png
+- WIREFRAME/QA/screenshots/assignment-memo-admin-1440.png
+- WIREFRAME/QA/screenshots/assignment-memo-admin-390.png
+- WIREFRAME/QA/screenshots/assignment-memo-compare-admin-after-1440.png
+- WIREFRAME/QA/screenshots/assignment-memo-compare-admin-after-390.png
+- WIREFRAME/QA/screenshots/assignment-memo-compare-admin-before-1440.png
+- WIREFRAME/QA/screenshots/assignment-memo-compare-admin-before-390.png
+- WIREFRAME/QA/screenshots/assignment-memo-compare-maid-after-1440.png
+- WIREFRAME/QA/screenshots/assignment-memo-compare-maid-after-390.png
+- WIREFRAME/QA/screenshots/assignment-memo-compare-maid-before-1440.png
+- WIREFRAME/QA/screenshots/assignment-memo-compare-maid-before-390.png
+- WIREFRAME/QA/screenshots/assignment-memo-maid-1440.png
+- WIREFRAME/QA/screenshots/assignment-memo-maid-390.png
+- WIREFRAME/QA/screenshots/assignment-memo-unavailable-390.png
+- WIREFRAME/QA/screenshots/availability-admin-current-1440.png
+- WIREFRAME/QA/screenshots/availability-admin-current-390.png
+- WIREFRAME/QA/screenshots/availability-before-admin-next-1440.png
+- WIREFRAME/QA/screenshots/availability-before-admin-next-390.png
+- WIREFRAME/QA/screenshots/availability-before-maid-next-1440.png
+- WIREFRAME/QA/screenshots/availability-before-maid-next-390.png
+- WIREFRAME/QA/screenshots/availability-demo-admin-current-1440.png
+- WIREFRAME/QA/screenshots/availability-demo-admin-current-390.png
+- WIREFRAME/QA/screenshots/availability-demo-maid-current-1440.png
+- WIREFRAME/QA/screenshots/availability-demo-maid-current-390.png
+- WIREFRAME/QA/screenshots/availability-maid-current-1440.png
+- WIREFRAME/QA/screenshots/availability-maid-current-390.png
+- WIREFRAME/QA/screenshots/availability-maid-next-1440.png
+- WIREFRAME/QA/screenshots/availability-maid-next-390.png
+- WIREFRAME/QA/screenshots/availability-maid-pending-1440.png
+- WIREFRAME/QA/screenshots/availability-maid-pending-390.png
+- WIREFRAME/QA/screenshots/candle-issues-after-1440.png
+- WIREFRAME/QA/screenshots/candle-issues-after-390.png
+- WIREFRAME/QA/screenshots/candle-issues-before-1440.png
+- WIREFRAME/QA/screenshots/candle-issues-before-390.png
 - WIREFRAME/QA/screenshots/checkout-due-after-1440.png
 - WIREFRAME/QA/screenshots/checkout-due-after-390.png
 - WIREFRAME/QA/screenshots/checkout-due-before-1440.png
@@ -223,20 +210,31 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 - WIREFRAME/QA/screenshots/checkout-due-filtered-390.png
 - WIREFRAME/QA/screenshots/checkout-due-home-1440.png
 - WIREFRAME/QA/screenshots/checkout-due-home-390.png
-
-# 2026-10-31 객실 내보내기 회귀
-- scripts/check-room-export.mjs
+- WIREFRAME/QA/screenshots/late-before-early-admin-1440.png
+- WIREFRAME/QA/screenshots/late-before-early-admin-390.png
+- WIREFRAME/QA/screenshots/late-before-early-maid-1440.png
+- WIREFRAME/QA/screenshots/late-before-early-maid-390.png
+- WIREFRAME/QA/screenshots/maid-cleaning-day-after-1440.png
+- WIREFRAME/QA/screenshots/maid-cleaning-day-after-390.png
+- WIREFRAME/QA/screenshots/maid-cleaning-day-before-1440.png
+- WIREFRAME/QA/screenshots/maid-cleaning-day-before-390.png
+- WIREFRAME/QA/screenshots/maid-other-up-to-10-320.png
+- WIREFRAME/QA/screenshots/quick-reservation-today-row-320.png
+- WIREFRAME/QA/screenshots/reservation-refresh-after-1440.png
+- WIREFRAME/QA/screenshots/reservation-refresh-after-390.png
+- WIREFRAME/QA/screenshots/reservation-refresh-before-1440.png
+- WIREFRAME/QA/screenshots/reservation-refresh-before-390.png
 - WIREFRAME/QA/screenshots/room-export-after-1440.png
 - WIREFRAME/QA/screenshots/room-export-after-390.png
 - WIREFRAME/QA/screenshots/room-export-before-1440.png
 - WIREFRAME/QA/screenshots/room-export-before-390.png
 - WIREFRAME/QA/screenshots/room-export-error-390.png
-
-# 2026-10-31 remove checkout inspection filter
-
-- WIREFRAME/QA/screenshots/room-filter-without-inspection-390.png
 - WIREFRAME/QA/screenshots/room-filter-without-inspection-1440.png
-- scripts/check-room-state-axes.mjs
+- WIREFRAME/QA/screenshots/room-filter-without-inspection-390.png
+- WIREFRAME/QA/screenshots/room-reservation-arrival-after-1440.png
+- WIREFRAME/QA/screenshots/room-reservation-arrival-after-390.png
+- WIREFRAME/QA/screenshots/room-reservation-arrival-before-1440.png
+- WIREFRAME/QA/screenshots/room-reservation-arrival-before-390.png
 - WIREFRAME/QA/screenshots/room-state-axes-after-1440.png
 - WIREFRAME/QA/screenshots/room-state-axes-after-390.png
 - WIREFRAME/QA/screenshots/room-state-axes-before-1440.png
@@ -247,7 +245,6 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 - WIREFRAME/QA/screenshots/room-state-axes-home-390.png
 - WIREFRAME/QA/screenshots/room-state-axes-turnover-1440.png
 - WIREFRAME/QA/screenshots/room-state-axes-turnover-390.png
-- scripts/check-room-time-badges.mjs
 - WIREFRAME/QA/screenshots/room-time-badges-admin-after-1440.png
 - WIREFRAME/QA/screenshots/room-time-badges-admin-after-390.png
 - WIREFRAME/QA/screenshots/room-time-badges-admin-before-1440.png
@@ -256,15 +253,50 @@ Generated from the initial Git staging set. `.codex-remote-attachments/`, secret
 - WIREFRAME/QA/screenshots/room-time-badges-maid-after-390.png
 - WIREFRAME/QA/screenshots/room-time-badges-maid-before-1440.png
 - WIREFRAME/QA/screenshots/room-time-badges-maid-before-390.png
-- WIREFRAME/QA/screenshots/maid-cleaning-day-after-1440.png
-- WIREFRAME/QA/screenshots/maid-cleaning-day-after-390.png
-- WIREFRAME/QA/screenshots/maid-cleaning-day-before-1440.png
-- WIREFRAME/QA/screenshots/maid-cleaning-day-before-390.png
-- WIREFRAME/QA/screenshots/late-before-early-admin-1440.png
-- WIREFRAME/QA/screenshots/late-before-early-admin-390.png
-- WIREFRAME/QA/screenshots/late-before-early-maid-1440.png
-- WIREFRAME/QA/screenshots/late-before-early-maid-390.png
-- WIREFRAME/QA/screenshots/candle-issues-after-1440.png
-- WIREFRAME/QA/screenshots/candle-issues-after-390.png
-- WIREFRAME/QA/screenshots/candle-issues-before-1440.png
-- WIREFRAME/QA/screenshots/candle-issues-before-390.png
+- WIREFRAME/README.md
+- WIREFRAME/index.html
+- WIREFRAME/reference/admin-desktop-concept.png
+- WIREFRAME/reference/maid-mobile-concept.png
+- WIREFRAME/reference/redesign-concepts/admin-calendar-open.png
+- WIREFRAME/reference/redesign-concepts/admin-cleaning-queue.png
+- WIREFRAME/reference/redesign-concepts/admin-complaints-penalties.png
+- WIREFRAME/reference/redesign-concepts/admin-inspection.png
+- WIREFRAME/reference/redesign-concepts/admin-payroll.png
+- WIREFRAME/reference/redesign-concepts/admin-rooms-pin-v2.png
+- WIREFRAME/reference/redesign-concepts/admin-rooms-pin.png
+- WIREFRAME/reference/redesign-concepts/admin-today.png
+- WIREFRAME/reference/redesign-concepts/maid-cleaning.png
+- WIREFRAME/reference/redesign-concepts/maid-my-work.png
+- WIREFRAME/reference/redesign-concepts/maid-payroll.png
+- WIREFRAME/screenshots/admin-desktop-1440.jpg
+- WIREFRAME/screenshots/admin-desktop-1440.png
+- WIREFRAME/screenshots/admin-mobile-390.jpg
+- WIREFRAME/screenshots/admin-mobile-390.png
+- WIREFRAME/screenshots/maid-mobile-390.jpg
+- WIREFRAME/screenshots/maid-mobile-390.png
+- WIREFRAME/sw.js
+- contracts/backend-openapi.json
+- contracts/backend-openapi.manifest.json
+- manifest.json
+- package-lock.json
+- package.json
+- scripts/check-admin-cleaning-reads.mjs
+- scripts/check-assignment-floor.mjs
+- scripts/check-assignment-instruction-memo.mjs
+- scripts/check-availability-approval.mjs
+- scripts/check-backend-breaking-diff.mjs
+- scripts/check-backend-contract.mjs
+- scripts/check-checkout-due.mjs
+- scripts/check-cleaning-context.mjs
+- scripts/check-compact-management-lists.mjs
+- scripts/check-reservation-card-refresh.mjs
+- scripts/check-responsive-ui.mjs
+- scripts/check-room-export.mjs
+- scripts/check-room-reservation-badges.mjs
+- scripts/check-room-state-axes.mjs
+- scripts/check-room-time-badges.mjs
+- scripts/check-workspace.mjs
+- scripts/generate-backend-client.mjs
+- scripts/openapi-breaking-diff-lib.mjs
+- scripts/serve.py
+- scripts/test-backend-breaking-diff.mjs
