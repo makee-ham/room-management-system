@@ -1,0 +1,41 @@
+# 객실별 담당 작업 메모 프런트 인계
+
+기준: 2026-11-02 사용자 요청, 프런트 [#292](https://github.com/makee-ham/room-management-system/issues/292), 기존 API 인계 [#270](https://github.com/makee-ham/room-management-system/issues/270), 백엔드 [#539](https://github.com/wrongstory/room-management-system-backend/pull/539).
+
+## 화면과 저장 범위
+
+- 기존 청소 관리 → 객실별 담당 표의 담당 선택 아래에 객실별 `작업 메모 · 선택` 입력과 저장 버튼을 둔다. 기존 5열·객실 상세·담당 선택·취소 버튼의 목적은 유지한다.
+- 이 메모는 해당 청소 대상의 배정에 붙는다. 객실의 영구 메모, 예약 메모, 검수 후 특이사항과 구분하며 객실번호로 다른 청소에 복사하지 않는다.
+- 담당 선택 전에도 작성할 수 있지만 서버 저장에는 담당이 필요하다. 새 배정은 메모를 포함한 미통보 초안으로 저장하고 기존 배정 요약의 `저장·통보`로 전달한다. 이미 통보된 미시작 배정은 행의 `메모 저장·통보`로 변경한다.
+- 메이드의 본인 통보 업무 카드와 펼친 업무 정보에 줄바꿈을 보존한 읽기 전용 메모를 표시한다. 관리자 요약과 배정 이력도 해당 revision의 서버 값을 사용한다.
+- 500 UTF-16 단위를 제한한다. 빈값/공백은 명시 삭제, 손대지 않은 메모는 요청에서 생략한다. 개인정보·PIN·인증정보를 입력하지 않도록 안내한다.
+- 입력 초안은 날짜·청소 대상·원 배정 ID/버전에 묶어 메모리에만 둔다. 새로고침·날짜 전환·로그아웃 후 초안은 복원하지 않는다. 저장 실패 시 입력을 유지하고, 409 이후에는 최신 담당/메모를 확인한 뒤 다시 저장한다. 시작한 작업은 기존 lifecycle 절차를 따른다.
+- 메모 변경은 새 요청 키, 응답 유실 재확인은 같은 body/key를 사용한다. 서버 성공 응답에 메모가 없거나 다르면 성공으로 표시하지 않고 최신 배정을 다시 읽는다. 원문을 URL·브라우저 저장소·history·알림 문구에 추가하지 않는다.
+
+## 연결 계약과 운영 차단
+
+백엔드 dev 병합 `46e47ed0ddb080c293fa5e02152d1683ee8b5eee`의 `docs/ASSIGNMENT_INSTRUCTION_MEMO_534.md`를 확인했다.
+
+| 항목 | 연결 |
+| --- | --- |
+| 초안 | `POST /v1/assignments/drafts` 선택 `instructionMemo` |
+| 미시작 변경 | `POST /v1/assignments/{cleaningTargetId}/change` 선택 `instructionMemo`; 기존 CAS·담당·sequence 필수값 유지 |
+| 읽기 | Assignment/AssignmentCard/commit-impact의 대상별 `instructionMemo`; 이력은 각 과거 revision 값 |
+| 입력 거절 | `VALIDATION_ERROR`, `ASSIGNMENT_INSTRUCTION_INVALID`; 입력을 오류에 반사하지 않음 |
+| 충돌 | `ASSIGNMENT_VERSION_CONFLICT` 및 기존 lifecycle/권한 오류 |
+| 미제공 | `assignmentInstructionMemo !== true`이면 입력·저장 비활성, `API 미제공` 표시 |
+
+2026-11-02 공개 운영 OpenAPI에서 `instructionMemo`가 없는 것을 확인했다. 고정 운영 계약은 API53 / migration122를 유지하며 후보 계약으로 덮어쓰지 않았다. 백엔드 PR #539는 migration140을 포함한 feature→dev 통합이며 실제 SQL/RLS/DB 경합 및 운영 적용은 NOT RUN이라고 명시한다. 프런트 배포만으로 운영 저장·전달 완료라고 기록하지 않는다.
+
+`RMS_ASSIGNMENT_INSTRUCTION_MEMO=false`가 빌드·로컬 서버·Pages의 기본값이다. false에서는 기존 배정 API를 그대로 사용한다. 데모는 실제 서버/알림이 없는 메모리 시뮬레이션이다.
+
+## 활성화 후속 순서
+
+1. 백엔드의 최종 통합 DB 검증, 운영 pending migration 검토·적용, API/Swagger 배포를 해당 릴리스 절차로 완료한다. 프런트 작업에서 미검증 선행 migration123~140을 한꺼번에 적용하지 않는다.
+2. 실제 운영 health/OpenAPI와 배포 SHA를 확인하고 `contracts/backend-openapi.json`, manifest, 생성 client를 정식 절차로 갱신·검증한다.
+3. 보호된 검증 환경에서 관리자 작성/수정/삭제 → 통보 → 본인 메이드 읽기, 타인/미통보 차단, 재배정·새 청소 대상 분리, 응답 유실·409를 실제 API로 확인한다.
+4. `RMS_ASSIGNMENT_INSTRUCTION_MEMO=true`로 프런트를 재배포하고 허가된 운영 UAT를 수행한다. 실패 시 false로 되돌리며 서버 이력은 삭제하지 않는다.
+
+## 검증
+
+재현: `python3 scripts/serve.py --port 4187` (Windows는 `python`) 후 Playwright가 설치된 환경에서 `node scripts/check-assignment-instruction-memo.mjs`. 브라우저 합성 API 검증과 실제 운영 검증은 구분한다. 화면 비교 및 실행 결과는 `WIREFRAME/QA.md` 최신 절을 따른다.
