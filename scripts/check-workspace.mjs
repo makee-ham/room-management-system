@@ -285,7 +285,7 @@ if (html.includes('<span class="info-tip-mark" aria-hidden="true">!</span>')) {
 for (const contract of [
   "function availabilitySubmissionWindowLabel() { return '모든 요일 · 모든 시각 제출 가능'; }",
   '모든 요일 · 모든 시각 제출·수정 가능',
-  "mutationApiRequest('/v1/availability/submissions',{body})",
+  "mutationApiRequest(thisWeek?'/v1/availability/change-requests':'/v1/availability/submissions',{body})",
   "submittedAt=`${Number(state.selectedDate.slice(5,7))}/${Number(state.selectedDate.slice(8))} ${state.time}`",
 ]) {
   if (!html.includes(contract)) throw new Error(`Maid availability anytime submission contract missing: ${contract}`);
@@ -2411,10 +2411,10 @@ for (const contract of [
 ]) {
   if (!html.includes(contract)) throw new Error(`All-maid random-assignment contract missing: ${contract}`);
 }
-const workforceMatrixStart = html.indexOf('function renderAvailabilityMatrix()');
+const workforceMatrixStart = html.indexOf('function renderAvailabilityMatrix(');
 if (workforceMatrixStart < 0) throw new Error('Workforce availability matrix source could not be isolated.');
 const workforceMatrixSource = html.slice(workforceMatrixStart, workforceMatrixStart + 5000);
-if (!workforceMatrixSource.includes('const start=weekStartIso(state.assignmentDate)')) {
+if (!workforceMatrixSource.includes('start=weekStartIso(state.assignmentDate)')) {
   throw new Error('Workforce matrix must use the assignment date week.');
 }
 if (workforceMatrixSource.includes("const start='2026-08-17'")) {
@@ -2434,7 +2434,7 @@ const issue114SimulationContracts = [
   "workTargetId:startedTarget.id",
   'function assignmentRoomHoldReason(no,targetState=state)',
   "return `촛불 ${candleCount}개 회수 후 배정 가능`",
-  "const start=weekStartIso(state.assignmentDate)",
+  "start=weekStartIso(state.assignmentDate)",
 ];
 for (const contract of issue114SimulationContracts) {
   if (!html.includes(contract)) throw new Error(`Issue #114 assignment fixture contract missing: ${contract}`);
@@ -2544,7 +2544,7 @@ for(const contract of [
   'function loadLiveDeveloperStatus({quiet=false}={}){',
   "mutationApiRequest('/v1/reservations/cleaning-requests'",
   'pin-sync-events`',
-  "mutationApiRequest('/v1/availability/submissions',{body})",
+  "mutationApiRequest(thisWeek?'/v1/availability/change-requests':'/v1/availability/submissions',{body})",
   'function renderLivePendingView(view){',
   "if(view==='today')return renderLiveAdminToday();",
   "if(view==='quickReservation')return renderLiveReservations();",
@@ -2636,7 +2636,7 @@ const liveReservationDetailSource=liveReservationGuardSource.slice(liveReservati
 for(const contract of ['guestCount:reservation.guestCount',"auxiliaryLabel:active?'다음 예약 등록':'" ,'upsertLiveReservation(safeReservation)'])if(!liveReservationDetailSource.includes(contract))throw new Error(`Reservation detail modal API contract missing: ${contract}`);
 for(const [code,copy] of [
   ['ROOM_ALLOCATION_BLOCKED','선택 기간에 이 객실을 예약할 수 없습니다. 서버 판정 사유를 확인해 주세요.'],
-  ['STALE_VERSION','다른 변경이 먼저 반영됐습니다. 최신 객실 정보를 확인한 뒤 다시 시도하세요.'],
+  ['STALE_VERSION','다른 변경이 먼저 반영됐습니다. 최신 상태를 확인한 뒤 다시 시도하세요.'],
   ['RESERVATION_OVERLAP','같은 객실의 기존 예약과 시간이 겹칩니다.'],
 ]){
   if(!html.includes(`${code}:'${copy}'`))throw new Error(`Reservation API error copy missing: ${code}`);
