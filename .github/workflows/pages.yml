@@ -60,6 +60,7 @@ jobs:
           RMS_API_BASE_URL: ${{ vars.RMS_API_BASE_URL }}
           SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          RMS_ASSIGNMENT_INSTRUCTION_MEMO: ${{ vars.RMS_ASSIGNMENT_INSTRUCTION_MEMO || 'false' }}
           RMS_SESSION_PERSISTENCE: ${{ vars.RMS_APP_ORIGIN != '' && 'local' || 'session' }}
         run: node scripts/build-pages-artifact.mjs
 
