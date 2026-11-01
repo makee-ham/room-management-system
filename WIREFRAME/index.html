@@ -4314,7 +4314,7 @@
       }
       let durableRenderStateRef=null;
 
-      function statusBadge(label, tone='neutral', iconName='') { return `<span class="badge badge-${tone}">${iconName ? icon(iconName,'icon-sm') : ''}${esc(label)}</span>`; }
+      function statusBadge(label, tone='neutral', iconName='') { if(label==='공실')return '';return `<span class="badge badge-${tone}">${iconName ? icon(iconName,'icon-sm') : ''}${esc(label)}</span>`; }
       function button(label, action, variant='outline', extra='') { return `<button class="btn btn-${variant}" type="button" data-action="${action}" ${extra}>${esc(label)}</button>`; }
       function infoTip(id,label,text,align='start') {
         const safeId=String(id).replace(/[^a-zA-Z0-9_-]/g,'-'),panelId=`info-tip-${safeId}`;
@@ -4390,7 +4390,7 @@
       function roomAxisCount(key){const summary=roomAxisSummary(key);return summary.count===null?summary.label:summary.count;}
       function roomAxisBadges(axes,primary){
         const candleLabel=Number.isSafeInteger(axes.candleCount)&&axes.candleCount>0?`촛불 ${axes.candleCount}개`:'';
-        const badges=[{label:axes.occupied===null?'점유 확인 필요':axes.occupied?'투숙 중':'공실',tone:'neutral'},
+        const badges=[...(axes.occupied===false?[]:[{label:axes.occupied===null?'점유 확인 필요':'투숙 중',tone:'neutral'}]),
           ...(candleLabel?[{label:candleLabel,tone:'candle'}]:[]),
           ...(axes.cleaning===true?(axes.stages.length?axes.stages:['청소 미완료 · 단계 확인 필요']):axes.cleaning===null?['청소 상태 확인 필요']:[]).map(label=>({label,tone:'cleaning'})),
           ...(axes.blocked===true?(axes.blockReasons?.length?axes.blockReasons:['제한 사유 확인 필요']):[]).filter(label=>!candleLabel||!label.includes('촛불')).map(label=>({label,tone:label.includes('촛불')?'candle':'blocked'}))
