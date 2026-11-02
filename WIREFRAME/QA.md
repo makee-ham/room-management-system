@@ -3089,3 +3089,11 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium으로 검
 - 서버 의존성: [백엔드 PR #556](https://github.com/wrongstory/room-management-system-backend/pull/556). 이번 주 직접 submit 차단, 미제출자의 sourceVersion 0, 승인 시 주차·지난 날짜 재검증은 후속 migration이 필요하다. 기존 배포 API의 관리자 승인 흐름과 새 서버 계약을 혼동하지 않는다. 새 UI가 보인다는 이유로 서버의 승인 우회 차단이나 최초 요청이 이미 운영 반영됐다고 간주하지 않는다.
 - 한계: Full DB NOT RUN. 백엔드 AGENTS.md에 따라 migration 적용/DB reset·release는 별도 승인 전 실행하지 않았다. 운영 배포·실기기·실제 동시 DB 경합은 미확인이다. 백엔드 단위 테스트 5,847개, availability Edge 33개와 development manifest는 통과했으며 CI/PR 상태를 최종 인계에서 별도로 확인한다.
 - PR 통합 검증: `dev`의 객실 작업 메모·운영 상태·촛불 변경을 보존해 병합했고, 충돌은 SHA/캐시 버전 메타데이터에서 해결했다. 통합 HTML에 workspace/contract 검사와 가능일 승인 브라우저 시나리오를 다시 실행해 통과했다. 작업 메모 전용 회귀도 4개 너비, 생략/삭제, 통보 전후, 400/409, 응답 유실 재시도, 권한·잠금·Back·포커스·민감값 비영속까지 PASS다. 다른 작업의 대표 PNG는 변경하지 않았다.
+
+
+## 2026-11-02 이번 주 승인 요청 릴리스 계약 준비
+
+- 프런트 PR302는 운영 main 위에 이번 주 승인 요청 UI와 서비스워커 `2026-11-02-5`를 준비한 draft다. 운영 반영 증거가 아니다.
+- 백엔드 PR557의 로컬 후보 `68990a876ef3`에서 OpenAPI를 추출했다. 최초 요청의 `availabilityVersionId=null`/`sourceVersion=0`, 요청·결정 CAS0, 메이드 요청/관리자 결정 권한과 필수 멱등 키를 계약 검사로 확인한다.
+- `AVAILABILITY_APPROVAL_REQUIRED`가 기존 공통 오류 enum에 한 개 추가된다. 동일 enum을 참조하는1,061개 오류 응답과 최초 요청 응답6개 차이를 정확한 이전·이후 snapshot 해시에만 한정해 기록했다. 일반 breaking diff 기준은 유지한다. 기존 운영 API의 선택적 `floorDistance` 응답도 snapshot에 동기화했다.
+- 신규 계약은 배포 전 소스 후보이며, 운영 배포 후 실제 OpenAPI·main SHA·API 버전·migration 개수로 provenance를 갱신해야 한다. backend의 추가 검증 승인과 성공 증거 전에는 이 draft를 운영 배포하지 않는다.
