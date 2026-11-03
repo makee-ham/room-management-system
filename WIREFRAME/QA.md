@@ -3097,3 +3097,12 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium으로 검
 - 백엔드 PR557의 로컬 후보 `68990a876ef3`에서 OpenAPI를 추출했다. 최초 요청의 `availabilityVersionId=null`/`sourceVersion=0`, 요청·결정 CAS0, 메이드 요청/관리자 결정 권한과 필수 멱등 키를 계약 검사로 확인한다.
 - `AVAILABILITY_APPROVAL_REQUIRED`가 기존 공통 오류 enum에 한 개 추가된다. 동일 enum을 참조하는1,061개 오류 응답과 최초 요청 응답6개 차이를 정확한 이전·이후 snapshot 해시에만 한정해 기록했다. 일반 breaking diff 기준은 유지한다. 기존 운영 API의 선택적 `floorDistance` 응답도 snapshot에 동기화했다.
 - 신규 계약은 배포 전 소스 후보이며, 운영 배포 후 실제 OpenAPI·main SHA·API 버전·migration 개수로 provenance를 갱신해야 한다. backend의 추가 검증 승인과 성공 증거 전에는 이 draft를 운영 배포하지 않는다.
+
+## 2026-11-03 이번 주 승인 기능의 통합 릴리스 검증 확인
+
+- 정책 재확인: 메이드가 이번 주 변경을 요청해도 즉시 반영하지 않는다. 관리자 승인 후 새 가능일을 반영하며, 승인 대기·반려 상태에서는 기존 가능일을 유지한다. 다음 주 직접 제출은 기존 계약이다.
+- 백엔드 [PR553](https://github.com/wrongstory/room-management-system-backend/pull/553)이 main `a5b3e27124d0001b13f0727a6f2dc7be9fbff490`에 병합됐다. 이번 기능의 서비스·라우트·Edge 구현, 두 migration, 주간 가능일 SQL, SQL include 보완과 경합 fixture는 로컬 hotfix 후보 `416a624`와 원문이 같다. 프런트 후보와 main의 가능일 5개 경로 및 공통 오류 enum을 제외한 참조 계약 9개도 동일하며 `AVAILABILITY_APPROVAL_REQUIRED`를 포함한다. 전체 계약은 후보154경로와 main161경로로 다르므로 후보 snapshot을 main·운영 계약으로 재표기하지 않는다.
+- 통합 입력의 실제 [Full DB run41486433759](https://github.com/wrongstory/room-management-system-backend/actions/runs/41486433759)에서 fresh/upgrade/SQL/동시 요청/정리와 proof `36ab189dcf8dbbd84d0a68007c919c47c03173d2ca47f061c516ac4d6dfb4865` 성공을 GitHub step으로 확인했다. [main run41511733992](https://github.com/wrongstory/room-management-system-backend/actions/runs/41511733992)는 application/migration PASS이고 동일 PR·입력 증거를 재사용했다. 이는 이전 hotfix 실패를 PASS로 바꾸거나 다른 입력에 proof를 재사용한 것이 아니다.
+- 통합 릴리스가 기능과 수정본을 포함하므로 PR557 hotfix의 추가 push·전체 DB 재실행은 하지 않았다. 이번에 승인받은 추가 실행은 0회이며, 이전 실패 두 번은 그대로 실패 기록이다. 새로운 입력에 사용할 포괄 실행 권한으로 넘기지 않는다.
+- 운영 읽기 확인: migration history124건, API55 ACTIVE, health200/ok, 공개 OpenAPI154경로이며 새 승인 필요 오류는 아직 없다. 운영 DB/API는 이번 기능의 배포 완료 상태가 아니다. 통합 릴리스의 운영 이력 대조·정확 적용 목록 확정과 승인된 배포가 먼저 필요하다. 기존 두 migration만의 hotfix 계획을 통합 릴리스 전체 적용으로 확대하지 않았다.
+- 프런트 PR302는 배포 후보 draft로 유지한다. 백엔드 운영 배포 후 실제 계약/provenance를 갱신하고 프런트 보호 병합·배포·운영 smoke를 이어가야 한다. 이번 확인은 소스·CI·운영 읽기만 수행했으며 UI·업무 데이터·DB·API·Vercel 배포를 변경하지 않았다. 기존 합성 UI 회귀와 실기기/실사용 미확인 한계는 위 기록을 따른다.
