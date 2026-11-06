@@ -3082,3 +3082,21 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium으로 검
 - 서버 의존성: [백엔드 PR #556](https://github.com/wrongstory/room-management-system-backend/pull/556). 이번 주 직접 submit 차단, 미제출자의 sourceVersion 0, 승인 시 주차·지난 날짜 재검증은 후속 migration이 필요하다. 기존 배포 API의 관리자 승인 흐름과 새 서버 계약을 혼동하지 않는다. 새 UI가 보인다는 이유로 서버의 승인 우회 차단이나 최초 요청이 이미 운영 반영됐다고 간주하지 않는다.
 - 한계: Full DB NOT RUN. 백엔드 AGENTS.md에 따라 migration 적용/DB reset·release는 별도 승인 전 실행하지 않았다. 운영 배포·실기기·실제 동시 DB 경합은 미확인이다. 백엔드 단위 테스트 5,847개, availability Edge 33개와 development manifest는 통과했으며 CI/PR 상태를 최종 인계에서 별도로 확인한다.
 - PR 통합 검증: `dev`의 객실 작업 메모·운영 상태·촛불 변경을 보존해 병합했고, 충돌은 SHA/캐시 버전 메타데이터에서 해결했다. 통합 HTML에 workspace/contract 검사와 가능일 승인 브라우저 시나리오를 다시 실행해 통과했다. 작업 메모 전용 회귀도 4개 너비, 생략/삭제, 통보 전후, 400/409, 응답 유실 재시도, 권한·잠금·Back·포커스·민감값 비영속까지 PASS다. 다른 작업의 대표 PNG는 변경하지 않았다.
+
+## 2026-11-06 이번 주 승인 기능 운영 배포 사전 확인
+
+- 사용자에게 백엔드 배포 완료와 PR 병합·프런트 운영 배포 지시를 받았다. 읽기 확인에서 운영 API57 ACTIVE, history150건과 `current_week_availability_approval`/`availability_guard_unused_parameter` 적용을 확인했다. DB 적용·reset·백엔드 배포는 이번 작업에서 실행하지 않았다.
+- 운영 OpenAPI161경로/174operation은 backend main `00668f84e572efb9657ab42b3fed0e0bc83e1320`의 명세와 서버 URL 외에 동일하다. 공개 명세를 가져와 서버를 `.`으로 정규화하고 snapshot·TypeScript·청소 타입·source provenance를 갱신했다.
+- 계약 목록은161/174, CAS36, cursor20으로 대조했다. 새 READY 미리보기의 멱등 키 예외와 고정 메모/타입 단가 CAS 두 개를 정확한 operation ID로 검사한다. 기존 ErrorCode 보존 및14개 추가, 감사/객실 이벤트의 `room.ready_corrected` 추가 두 곳, 최초 가능일 요청 nullable ID/version0 여섯 변경을 검토했다. 이벤트 표시의 기존 escaped 값/객실 상태 변경 fallback을 확인했고 일반 breaking 검사 기준은 유지했다.
+- `contract:check`, `contract:test-diff`, main 대비 `contract:diff` PASS. 정확한 이전·이후 snapshot 해시의1069개 변경만 검토 기록으로 묶었다. workspace·PWA·diff 검사 PASS.
+- Browser plugin not available: 기존 Playwright로 가능일 회귀를 실행했다. 이번 주 변경 요청·대기 중 기존 값 보존·승인·반려·최초 제출·중복 방지·메이드 승인 차단·충돌·다음 주 직접 제출·360/390/768/1440px·뒤로가기·키보드·모달·콘솔 PASS. 모바일 메이드 대기 화면과 관리자 현재/요청 비교·승인/반려 화면도 시각 확인했다. API는 합성 응답이며 실제 업무 데이터는 변경하지 않았다. UI 원문은 이전에 검증한 후보와 동일하고 기존 대표 PNG를 보존했다.
+- 운영 Vercel은 확인 시 main `b2edb126`/SW `2026-11-02-4`였다. 이번 후보 SW `2026-11-02-5`를 main 보호 병합 후 배포한다. 현재 운영 runtime 설정과 featureFlags를 그대로 보존하며 배포 후 HTML/SW/build-info/설정 및 호스팅 화면을 검증한다. 이 사전 확인 기록 자체는 프런트 운영 배포 완료를 뜻하지 않는다. 실제 메이드·관리자 계정의 실사용 승인 UAT는 별도다.
+
+## 2026-11-06 이번 주 승인 기능 운영 배포 완료
+
+- PR302의 필수 api-contract CI42134084957 PASS 후 main `41983a6d8f3328e550eaf03f230c87ae0869a09f`로 squash 병합했다. 미해결 review thread0건을 확인했으며 보호 규칙을 우회하지 않았다.
+- 해당 main에서 만든 정적 artifact를 기존 Vercel production 프로젝트에 배포했다. 배포 ID `dpl_9N5pd9thR79823bYMpKoyDAiVttT`, 배포 URL `https://room-management-system-prod-p3kuknli4.vercel.app`, 운영 주소 `https://room-management-system-prod.vercel.app`이다.
+- 운영 HTML·SW·build-info·runtime-config bytes가 로컬 artifact와 일치한다. HTML SHA256 `51e5a9962d3fdf0c24ce436d4f371f00c3b947b2035acdb6355c5a7e38a38dd8`, SW `2026-11-02-5`, build-info sourceCommit은 위 main이다. 기존 featureFlags·프로젝트·로그인 저장 방식도 그대로 유지했다.
+- 운영 API health200 및 production Origin CORS PASS. Python 로컬 CA 저장소 문제로 최초 urllib 확인은 실패했고, TLS 검증을 끄지 않고 Node fetch로 재확인해 통과했다.
+- 배포본 Playwright smoke: 관리자6개/메이드4개 메뉴와360/390/768/1440px의 가로 넘침·페이지 예외·console warning/error0건 PASS. runtime을 데모로 가로채 실제 운영 업무 데이터는 접근·변경하지 않았다. 배포 HTML은 승인 요청/승인/반려 합성 회귀를 통과한 후보와 동일하다. 실제 계정의 승인 실사용 UAT와 실기기 Safari/Android는 미실행이다.
+- 개발 정본에도 운영 계약과 이 배포 기록을 반영한다. 이 기록 PR은 UI·운영 설정·배포물을 다시 변경하지 않는다.
