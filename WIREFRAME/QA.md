@@ -1,5 +1,16 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-11-06 · 통보 후 수행 생성 전 작업 메모 저장 오류
+
+- 재현: 관리자 청소 관리 → 내일 배정의 과거 업무일 객실 → 통보 완료·`attemptStatus=null` → 메모 입력 → 저장·통보. 이전 main에서는 관리자 `GET /v1/attempts/lifecycle-impact`가403 `ATTEMPT_ACCESS_REQUIRED`를 반환하여 메모 POST 전에 중단됐다. 사용자 화면과 같은 문구를 합성 API로 재현했고 수정 전 회귀 assertion은 실패했다.
+- 운영 읽기 근거: lifecycle RPC는 수행 회차가 없으면 동일403을 반환한다. 현재 통보29건 중26건에 수행 회차가 없었다. 메모 변경 RPC는 별도로 관리자 권한·현재 배정·CAS·청소 시작 여부를 잠금 안에서 검사한다. Supabase 로그 도구가 Unknown tool이어서 설치 CLI의 읽기 전용 함수 정의/집계로 확인했으며 개별 메모·이름·인증정보는 수집하지 않았다.
+- 수정: 현재 통보 배정에 서버가 명시적으로 `attemptStatus=null`을 반환한 경우 기존 변경 명령으로 저장한다. 수행이 존재하거나 값이 누락된 경우 기존 사전 조회·시작 후 인계 절차를 유지한다.403을 무시하거나 메모 변경 권한을 확대하지 않는다. 서비스워커 `2026-11-06-12`.
+- `check-assignment-instruction-memo.mjs` PASS: 수행 없는 내일 배정 메모 저장·통보/메이드 읽기, 저장 직전 착수409·입력보존, 사전 조회403에서 POST0회, 관리자/메이드 조회 경로 구분. 기존 작성/삭제/생략·초안/통보·CAS·동일키재시도·500 UTF-16·안전표시·이력/Back·역할·착수잠금·비영속 검증도 PASS. 테스트 관리자와 담당자 ID를 분리하고 mock이 실제 API처럼 수행 없음403/null을 구분하도록 보완했다.
+- `check-cleaning-assignment-continuity.mjs` PASS: 부분 실패/재시도/추가 통보·담당 변경·진행 중 차단·중복 객실 방어·내일 요금 회귀. workspace/OpenAPI/생성 client/contract diff 회귀 및 `git diff --check` PASS.
+- 환경: `http://127.0.0.1:4189`, Playwright Chromium151, Browser plugin not available.360/390/768/1440px 넘침 없음, 페이지 제목/본문·입력 포커스·모달 Tab/Escape/Back·접근성 이름·앱 콘솔 warning/error·pageerror0건. 의도한 오류 응답의 네트워크 메시지는 제외한다.
+- 같은 관리자·내일 배정·390px 전후 비교에서 기존 카드/담당 선택/메모 버튼 위치와 목적이 유지되고, 오류 대신 `저장됨 · 담당자에게 전달됨`으로 바뀌었다. 대표 PNG: `QA/screenshots/assignment-memo-no-attempt-before-390.png`, `assignment-memo-no-attempt-after-390.png`, `assignment-memo-no-attempt-after-1440.png`.
+- 한계: 업무 변경은 전부 합성 API로 검증했다. 실제 운영 메모 쓰기·메이드 기기 수신·Safari/Android 실기기는 미실행. 운영 DB 변경·migration 실행0회. 배포 완료 증거는 후속 기록으로 구분한다.
+
 ## 2026-11-06 · 청소 배정 작업 메모 활성화
 
 - 원인: 운영 DB/API 배포 후에도 runtime의 `assignmentInstructionMemo=false`가 유지되어 관리자 입력이 `메모 저장 준비 중 · API 미제공`으로 잠겼다. 빌드·로컬 서버·Pages·환경 예시 기본값을 true로 변경하고 명시 false 롤백을 보존했다. HTML의 카드·버튼·목적 화면·메모 저장 명령은 바꾸지 않았다. 서비스워커 `2026-11-06-11`.
