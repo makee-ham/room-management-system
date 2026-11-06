@@ -11,6 +11,14 @@
 - 같은 관리자·내일 배정·390px 전후 비교에서 기존 카드/담당 선택/메모 버튼 위치와 목적이 유지되고, 오류 대신 `저장됨 · 담당자에게 전달됨`으로 바뀌었다. 대표 PNG: `QA/screenshots/assignment-memo-no-attempt-before-390.png`, `assignment-memo-no-attempt-after-390.png`, `assignment-memo-no-attempt-after-1440.png`.
 - 한계: 업무 변경은 전부 합성 API로 검증했다. 실제 운영 메모 쓰기·메이드 기기 수신·Safari/Android 실기기는 미실행. 운영 DB 변경·migration 실행0회. 배포 완료 증거는 후속 기록으로 구분한다.
 
+### 통보 후 메모 저장 수정 운영 배포 완료
+
+- 개발 PR331/운영 PR332를 각각 필수 API contract CI 통과·미해결 review thread 없음 확인 후 squash 병합했다. 운영 main `3ed95def1c1739f3852570b4bd2561cafa4cc03c`; main API contract run42206501184/Pages run42206501064도 PASS.
+- Vercel `dpl_GJibq4BhF3jTz7ZJWP1FyjFZDJgi` READY, 배포 `https://room-management-system-prod-dozkxerw6.vercel.app`, 운영 alias `https://room-management-system-prod.vercel.app`. HTML SHA256 `e7f36e3a5fed28f6ad24d63b42ee3aad538d4bcfa507a198dce11e860cf55f46`, SW `2026-11-06-12`.
+- 운영 index/sw/runtime/build-info4개가 main artifact와 byte 일치. 기존 runtime 설정/feature flag 모두 유지. 업로드26개 파일에 QA/환경정보가 없으며 env/로컬 Vercel metadata/QA PNG 경로404를 확인했다.
+- 실제 익명 로그인 화면360/390/768/1440px·콘솔·새 SW shell5개/runtime 비캐시 PASS. 배포 HTML의 관리자6개·메이드4개 화면(데모 runtime), 배포 origin에서 메모 전체 합성 회귀도 PASS. 수행 없음 메모 저장/메이드 읽기·동시 착수 거절·권한403 차단을 배포본에서도 다시 확인했다.
+- 실제 운영 업무 쓰기·테스트 통보0회이며 메이드 실기기 수신 UAT는 미실행이다. 이 기록은 문서만 dev에 반영하며 운영 코드/DB를 다시 배포하지 않는다.
+
 ## 2026-11-06 · 청소 배정 작업 메모 활성화
 
 - 원인: 운영 DB/API 배포 후에도 runtime의 `assignmentInstructionMemo=false`가 유지되어 관리자 입력이 `메모 저장 준비 중 · API 미제공`으로 잠겼다. 빌드·로컬 서버·Pages·환경 예시 기본값을 true로 변경하고 명시 false 롤백을 보존했다. HTML의 카드·버튼·목적 화면·메모 저장 명령은 바꾸지 않았다. 서비스워커 `2026-11-06-11`.
