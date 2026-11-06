@@ -10400,6 +10400,10 @@
         if(!assignmentRoomConflicts([...rows.values()]).size)return true;
         toast(API_ERROR_COPY.ASSIGNMENT_ROOM_CONFLICT,'error');return false;
       }
+      function liveAssignmentInPlanningDay(row,planningDate){
+        // Earlier physical completion is history, not tomorrow's cleaning workload.
+        return !(planningDate===addIsoDays(liveKstIsoDate(),1)&&/^\d{4}-\d{2}-\d{2}$/.test(row.serviceDate||'')&&row.serviceDate<planningDate&&['field_completed','upload_pending','submitted'].includes(row.attemptStatus));
+      }
       function liveAssignmentRows(){
         const slice=cleaningState(),rows=new Map();
         for(const row of slice.commitImpact?.remainingUnassignedTargets||[])rows.set(row.cleaningTargetId,{...row,isCurrent:true});
@@ -10409,7 +10413,7 @@
           rows.set(proposal.cleaningTargetId,{...rows.get(proposal.cleaningTargetId),...proposal,targetAssignmentVersion:proposal.expectedAssignmentVersion,sequenceNumber:proposal.proposedSequenceNumber,isCurrent:true,localProposal:true});
         }
         for(const [id,edit] of slice.manualEdits||[])if(edit.serviceDate===slice.serviceDate)rows.set(id,{...rows.get(id),...edit,localProposal:true});
-        return [...rows.values()].map(row=>({...row,roomTypeCode:row.roomTypeSnapshot?.code??row.roomTypeCode,roomTypeName:row.roomTypeSnapshot?.name??row.roomTypeName,elevatorZone:row.roomTypeSnapshot?.elevatorZone??row.elevatorZone})).sort((a,b)=>String(a.roomNumber||'').localeCompare(String(b.roomNumber||''),undefined,{numeric:true}));
+        return [...rows.values()].filter(row=>liveAssignmentInPlanningDay(row,slice.serviceDate)).map(row=>({...row,roomTypeCode:row.roomTypeSnapshot?.code??row.roomTypeCode,roomTypeName:row.roomTypeSnapshot?.name??row.roomTypeName,elevatorZone:row.roomTypeSnapshot?.elevatorZone??row.elevatorZone})).sort((a,b)=>String(a.roomNumber||'').localeCompare(String(b.roomNumber||''),undefined,{numeric:true}));
       }
       function liveAssignmentScheduleBadges(row){
         const snapshot=row.scheduleSnapshot;if(!snapshot)return '';
