@@ -1,5 +1,16 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-11-06 · 객실 배정 수정 운영 확인
+
+- 프런트 기능 PR #310과 운영 반영 PR #313을 보호 병합했다. 뒤이어 함께 배포된 최신 main `7dde9761f4d583a5786bf2470af9d7bbc06823f8`에도 이번 중복 차단·호수 우선 배정이 포함된다. 같은 날 다른 화면 수정도 보존하며 이전 산출물을 재배포하지 않았다.
+- 운영 `index.html`, `sw.js`, `build-info.json`, `runtime-config.json`을 최신 main으로 생성한 산출물과 바이트 대조했다. HTML SHA256 `00821c56f93329f884f195ea8adebe15e47b9bda7f91bcc47d436b80273a97bf`, 서비스워커 `2026-11-06-6`. 기존 runtime 설정과 featureFlags는 유지됐다. 비공개 환경 파일·QA 원문·QA 스크린샷은 호스팅되지 않는다.
+- 최신 main으로 배정 우선순위·중복·기존 담당 보존 회귀와 청소 배정 연결 회귀를 다시 실행해 PASS. 운영 호스팅 화면은 runtime 설정만 데모로 가로채 관리자 6개·메이드 4개 메뉴를 검사했다. 360/390/768/1440px 가로 넘침·페이지 예외·console warning/error 0건. 별도 실제 익명 로그인 화면과 새 서비스워커 등록·캐시의 배정 수정 포함 여부도 PASS다.
+- 서버 [PR #594](https://github.com/wrongstory/room-management-system-backend/pull/594)의 승인된 격리 [CI 42139880583](https://github.com/wrongstory/room-management-system-backend/actions/runs/42139880583) 1회에서 application과 전체 DB 검사 PASS. fresh·누적 SQL·upgrade·정적 경고 호환·날짜 경계·경합·정리·증거 저장을 모두 통과했고 proof는 `1b0005e2484a0596d313d3a607ea2b861370e37cdd03ff3ee793e1dca6d59d51`이다.
+- 서버 main `575bf32816fa62bb6addf77b49bd79bb4bfdbfb1`의 입력 지문이 같은 proof와 일치한다. [main CI 42144653222](https://github.com/wrongstory/room-management-system-backend/actions/runs/42144653222)의 migration gate는 원 실행 attempt 1을 재사용했으며 추가 DB 재구축은 0회다. 운영에 적용할 migration은 없다.
+- main의 application/migration 필수 검사 통과 뒤 해당 코드의 `api`만 배포했다. API 58 ACTIVE, bundled release 1.0.1, health 200, 공개 OpenAPI 161경로의 exact main 명세 일치, 익명 배정/객실 유형 조회 401을 확인했다. 다운로드는 TypeScript를 JavaScript로 변환하므로 릴리스 모듈은 양쪽을 동일하게 변환한 코드로 대조하여 일치했다. 다른 4개 Function의 version/번들 해시는 그대로다. 운영 migration history는 전후 모두 150건/마지막 `20261104211056`이며 운영 migration 실행은 0건이다.
+- 검증 도중 후속 알림 UI 배포가 있어 최종 운영 main `d6f6e376d9d4430125ee843246c51b8142c6d0af`에서도 같은 검증을 완료했다. HTML SHA256 `c6ebdc55909c3b6dd03a438fd9098612c1ece2932838084be34998947625a672`, SW `2026-11-06-7`. 정적 산출물 4개 바이트 일치, 배정 우선순위/350호 중복/청소 연결, 호스팅 관리자·메이드 전 메뉴 네 너비, 실제 익명 로그인·새 SW 캐시 포함 검사 모두 PASS. 기존 운영 설정과 함께 후속 화면 변경을 보존했다.
+- 한계: 합성 화면 검증은 운영 계정의 배정 저장·통보나 실데이터 동시 저장 검증이 아니다. 실제 운영 업무 쓰기와 실기기 PWA 업데이트는 수행하지 않았다. 기존 담당·과거 청소 의무는 자동 삭제하거나 변경하지 않는다.
+
 ## 2026-11-06 · 중복 객실 차단·호수 우선 배정
 
 - 운영 DB 읽기 조회에서 350호의 서로 다른 과거 퇴실 청소 target 2건이 모두 미배정으로 남은 것을 확인했다. 담당·수행 회차가 없는 상태였으며 운영 업무 쓰기는 하지 않았다. 실제 target ID는 증거 문서에 저장하지 않는다.
