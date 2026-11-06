@@ -3217,3 +3217,13 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium으로 검
 - 과거 현장 완료(`field_completed/upload_pending/submitted`) 업무가 내일 계획의 합계와 객실 카드에 다시 포함되던 표시 문제를 수정했다. 서버와 같은 날짜·수행 상태 조건으로 계획 목록만 제외하며 원본 배정·통보 이력은 유지한다. 오늘 화면, 진행 중/미시작 작업과 날짜·상태 미제공 항목은 추정하여 제거하지 않는다.
 - `check-assignment-planning-day.mjs`와 `check-cleaning-assignment-continuity.mjs` PASS. 과거30,000원 업무 때문에32,000원으로 보이던 합계를 실제 내일 두 업무의2,000원 차이로 표시하고 이력이 남는 것을 검증했다. 기존 부분 실패/동일 키 재시도/통보/착수 차단/350호 중복 방어도 통과했다.
 - Chromium151/Playwright, 합성 API만 사용. 360/390/768/1440px 가로 넘침 및 콘솔 warning/error 없음. 대표 PNG: `QA/screenshots/assignment-tomorrow-fee-390.png`, `QA/screenshots/assignment-tomorrow-fee-1440.png`. 기존 카드와 담당 선택·저장 버튼 위치/목적은 유지했다. 서비스워커 `2026-11-06-10`.
+- 동일 합성 조건의 수정 전/후390·1440px 비교: `assignment-tomorrow-fee-before-{390,1440}.png` → `assignment-tomorrow-fee-{390,1440}.png`. 이전 main ea291ac는 지난30,000원을 내일 총액에 포함하여32,000원 차이를 표시했고, 수정본은2,000원을 표시했다. 이전 화면은 신규 상태 회귀 assertion을 이전 동작(3행/32,000원)에 맞춘 임시 비교 스크립트로 촬영했다. 구조·버튼 목적과 과거 이력은 보존했다.
+
+### 2026-11-06 엘리베이터 배정 운영 배포 완료
+
+- 화면 PR322/323·324/325, 운영 main `5b005e1f207fa6e58ee9764d139a1733227764a9`, Vercel `dpl_5jU7nsFJ2XvWP78ViH3cRsV3zbyp` READY. 서비스워커 `2026-11-06-10`, index SHA256 `ea290d2b5de5577f4f1993a84bb308c8a08971fdedf327c1d3947e5277a4fc22`. 기존 runtime와 모든 feature flag 유지.
+- backend PR610/tag v1.0.5/API62 ACTIVE. 사용자 승인 전체 DB run42163687634 attempt1 PASS(SQL/upgrade/KST clock/경합/cleanup 포함), main run42167968771은 동일 입력의 성공 증거만 재사용했다. 운영 migration0회, 기존152개 유지.
+- 배포 index/sw/build-info/runtime4개 byte 일치, health200/OpenAPI161경로·익명 권한401 확인. 익명 실제 로그인 화면·서비스워커5개 shell cache와 runtime 비캐시 확인. 배포 HTML에 demo runtime만 가로챈 관리자6/메이드4 화면, 360/390/768/1440px 넘침·콘솔 오류0 PASS. 실제 계정 업무 쓰기0건.
+- 실제 운영 읽기 snapshot의 내일26객실/9명 계산 재생은 엘리베이터 혼합0, 총요금48,000~60,000원(차이12,000원). 556/639/649호는 C,623호는 A 묶음이다. 350호는 정정 뒤 신규 읽기 snapshot과 별도 운영 탭에1건 확인했다.
+- 한계: 배포 후 실제 계정 미리보기 클릭은 브라우저 사용과 탭 제어 오류로 확인하지 못했다. 기존 사용자 탭의 저장 전 초안·담당 저장·통보는 변경하지 않았다. 새 화면에서 자동 배정을 다시 실행해야 새 로직이 적용된다. 운영 로그인/토큰을 복사하거나 테스트 fixture로 쓰지 않았다.
+- 이 기록과 수정 전 비교 PNG만 dev에 추가한다. 위 운영 배포 commit/HTML을 문서 변경 때문에 다시 배포하지 않는다.
