@@ -11,6 +11,14 @@
 - 대표 PNG: `QA/screenshots/cleaning-date-admin-{before,after}-{390,1440}.png`, `cleaning-date-maid-active-{before,after}-390.png`, `cleaning-date-maid-planned-after-390.png`. 원본/수정본의 카드·버튼 구조를 유지하고 청소일·당일 수행만 보정했다.
 - 한계: 실제 운영26건의 날짜는 읽기로 확인했으며, 운영 날짜 전환 worker·실계정 청소시작·메이드 실기기 수신·Safari/Android는 미실행이다. 운영 배포 완료는 후속 기록으로 구분한다.
 
+### 실제 청소일 기준 운영 배포 완료
+
+- 개발 PR334/운영 PR335를 각각 필수 CI 통과·미해결 review thread 없음 확인 후 squash 병합했다. 운영 main `6d539d6d7b93379970bb6c1a130929c1bc41d3f5`; main API contract run42221373250/Pages run42221373295도 PASS.
+- Vercel `dpl_FzsXWsBPorTytWGZbTp7WtkgdaSg` READY. 배포 `https://room-management-system-prod-1hhbnksr6.vercel.app`, 운영 alias `https://room-management-system-prod.vercel.app`. HTML SHA256 `9d27e99483a3fb1d9617acff50670032474edda97305817bdd89f3c389fa4d4d`, SW `2026-11-06-13`.
+- index/sw/runtime/build-info4개가 main artifact와 byte 일치하고 기존 운영 runtime 설정/feature flags는 모두 유지했다. 실제 익명 로그인·새 SW shell5개/runtime 비캐시·4개 폭·콘솔 PASS. 업로드26개 파일에 환경정보/QA 파일이 없는 것을 사전 확인했다.
+- 배포 origin의 실제 HTML로10/8퇴실→11/6배정→11/7청소 합성 회귀를 재실행해 관리자/메이드 계획일 표시·알림 이동·당일 시작·역사적 날짜 보존 PASS. 배포본 관리자6개/메이드4개 화면(데모 runtime),360/390/768/1440px 넘침·콘솔0건 PASS.
+- 운영 DB 날짜는 이미11/7로 저장돼 있어 변경하지 않았다. 실제 업무 시작·메모/통보 쓰기0회이며 운영 날짜전환 worker·실기기는 미실행이다. 이 기록은 dev 문서만 갱신하고 운영 코드를 재배포하지 않는다.
+
 ## 2026-11-06 · 통보 후 수행 생성 전 작업 메모 저장 오류
 
 - 재현: 관리자 청소 관리 → 내일 배정의 과거 업무일 객실 → 통보 완료·`attemptStatus=null` → 메모 입력 → 저장·통보. 이전 main에서는 관리자 `GET /v1/attempts/lifecycle-impact`가403 `ATTEMPT_ACCESS_REQUIRED`를 반환하여 메모 POST 전에 중단됐다. 사용자 화면과 같은 문구를 합성 API로 재현했고 수정 전 회귀 assertion은 실패했다.
