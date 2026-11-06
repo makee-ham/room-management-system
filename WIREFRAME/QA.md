@@ -3185,3 +3185,14 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium으로 검
 - `scripts/check-availability-approval.mjs`:360/390/768/1440px, 가로 넘침,44px 컨트롤, 접근성 이름, 모달 포커스·Tab·Escape·뒤로가기, 기존 요청/승인/반려 및 권한 회귀를 확인했다. 푸시 클릭은 서버가 반환한 현재 계정 알림만 열며, 로그인 전 클릭은 메모리에서 기다린 뒤 이어진다.
 - 같은 메이드 근무일 화면의390px 권한 안내 전/후를 비교했다. 카드·버튼 위치와 목적 화면은 유지하고 안내 문구만 기기별 연결 방법으로 바꿨다. 대표 PNG: `availability-notification-before-device-push-settings-390.png`, `availability-notification-device-push-settings-390.png`.
 - 정적 workspace/PWA·OpenAPI 계약 검사와 기존 전체 연결 회귀(`check-live-connections`)를 통과했다. 서버 정책은63개 알림 family를 push 대상으로 확대하는 별도 백엔드 변경이며, 이 화면 검사만으로 운영 worker/기기 수신 완료를 주장하지 않는다. PC OS 알림 센터·Android/iOS 실제 표시·권한 허용은 실기기 확인 전이다.
+
+## 2026-11-06 엘리베이터 기준 배정·350호 정정
+
+- 흐름: 청소 관리 → 오늘/내일 자동 배정 → 엘리베이터·층 기준 묶음/요금 차이 확인 → 담당 편집 → 기존 저장·통보. 운영 요약 카드에 기존 표와 같은 실제 엘리베이터 값을 표시한다. 값이 없는 기존 통보는 `위치 미기재`로 남긴다.
+- 환경: 로컬 `http://127.0.0.1:4177`, Chromium151/Playwright. Browser plugin not available. API fixture의 요청은 전부 가로채 실제 업무 쓰기 0건.
+- 통과: 360/390/768/1440px 가로 넘침 없음, 페이지 제목/본문/오류 overlay 없음, 콘솔 warning/error 없음, 기준 툴팁·키보드 Enter/Escape·포커스 복귀, 기존 담당 유지·되돌리기, 추가 모달 뒤로가기.
+- 운영 UI fixture 통과: A/C 엘리베이터와 미기재 표시, 요금 차이/목표 충족·초과·0원 카드, 부분 실패 성공 보존·동일 키 재시도·추가 통보, 착수 후 변경 차단, 350호 중복 Preview/수동 배정 차단. 기존 카드/담당 선택/저장 버튼 목적 유지.
+- 계산 회귀: 556/639=C와 623=A 분리, 구역별 인원 배분, 요금 목표 유지, 같은 층 우선, 미기재 추정 금지, 기존 중복·고정 담당 방어. 서버 합성 26객실/8명은 구역 혼합0·요금 차이≤30,000·층 이동합≤8을 검증.
+- 운영 데이터 정정은 사용자 별도 승인 후 실시: 350호 이전 미배정 target 및 원본 의무만 감사 이력과 함께 취소, 최신 target 전체 행 유지. 재조회한 실제 preview snapshot에 350호1건 확인. 예약/기존 이력/수당/스키마 변경 없음.
+- 대표 화면: `QA/screenshots/assignment-elevator-rule-{390,1440}.png`, `assignment-elevator-{390,1440}.png`, `assignment-elevator-live-{390,1440}.png`. 이전 요금 균형 화면과 같은 카드 구조를 비교했다.
+- 한계: 실제 메이드 담당 저장·통보는 하지 않았으며 전체 DB/서버·화면 배포는 아직 미실행. 운영 적용 후 별도 결과를 기록한다.
