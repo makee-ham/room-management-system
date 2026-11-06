@@ -11,7 +11,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const snapshotPath = resolve(root, 'contracts/backend-openapi.json');
 const generatedPath = resolve(root, 'src/api/generated/room-management-api.ts');
 const manifestPath = resolve(root, 'contracts/backend-openapi.manifest.json');
-const backendSourceCommit = '00668f84e572efb9657ab42b3fed0e0bc83e1320';
+const backendSourceCommit = 'aa87c9713203ba50dcdb8823ce9585824b4183fb';
 
 const snapshotBytes = await readFile(snapshotPath);
 const document = JSON.parse(snapshotBytes.toString('utf8'));
@@ -25,7 +25,7 @@ const manifest = {
   schemaVersion: 1,
   backendRepository: 'https://github.com/wrongstory/room-management-system-backend',
   backendSourceCommit,
-  backendSourceCommand: 'production OpenAPI readback 2026-11-06; identical to main source excluding server URL',
+  backendSourceCommand: 'backend PR #592 source export 2026-11-06; availability notifications pending production rollout',
   backendSourcePath: 'supabase/functions/_shared/openapi.ts',
   openapiVersion: document.openapi,
   apiVersion: document.info.version,

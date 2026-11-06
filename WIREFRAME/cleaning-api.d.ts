@@ -688,7 +688,7 @@ export type Notification = {
   roomId: string | null;
   cleaningTargetId: string | null;
   deepLink: {
-  kind: "cleaningTarget" | "assignmentRequest" | "submission" | "complaintCase" | "payrollCycle" | "payrollProfile";
+  kind: "cleaningTarget" | "assignmentRequest" | "submission" | "complaintCase" | "payrollCycle" | "payrollProfile" | "availabilityRequest";
   entityId: string;
 } | null;
   groupId: string | null;
