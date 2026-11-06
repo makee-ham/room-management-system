@@ -2313,7 +2313,7 @@ for (const contract of [
   "function detailHeader(title,subtitle='')",
   "${subtitle?`<p>${subtitle}</p>`:''}",
   'roomSummaryCards()',
-  "['occupied','투숙 중','neutral'],['vacant','공실','neutral'],['cleaning','청소 미완료','amber'],['blocked','운영 제한','red']",
+  "['occupied','투숙 중','neutral'],['vacant','공실','green'],['cleaning','청소 미완료','amber'],['blocked','운영 제한','red']",
   "detailHeader(`${active?.maid||'김민지1'} ${active?.type||'컴플레인'}`)",
   '.today-summary .metric-card { min-height:96px;',
 ]) {
