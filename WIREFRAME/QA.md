@@ -3115,3 +3115,12 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium으로 검
 - 운영 읽기 전용 확인: 현재 OpenAPI 0.6.0/161 paths의 가격표 GET/PUT과 의존 schema를 `contracts/cleaning-prices.openapi.json`에 발췌해 원문 비교 PASS. 운영 origin PUT preflight 204·정확 origin·PUT 허용, 익명 가격표 조회 401/no-store PASS. 최신 개발 브랜치의 전체 161/174 snapshot과 발췌 내용의 일치도 검사하며, 이 기능의 발췌 검사를 계약 CI에 추가했다.
 - 대표 PNG: `QA/screenshots/cleaning-prices-{before,after}-more-{390,1440}.png`, `cleaning-prices-list-{390,1440}.png`, `cleaning-prices-confirm-{390,1440}.png`.
 - 한계: 실운영 가격 변경·새 청소 생성에 따른 서버 금액 snapshot/기존 정산 보존의 실데이터 UAT, 실기기 Safari/Android, 서버 DB 동시 트랜잭션은 미실행이다. 운영 계정/가격/청소/정산을 테스트용으로 변경하지 않았다. 프런트 요청이 가격 변경 한 경로만 사용하는 것을 검증했으며 서버 보존 정책은 배포 계약과 별도로 실제 사용자 확인이 필요하다.
+
+## 2026-11-06 · 청소 가격표 운영 배포 완료
+
+- 개발 PR305와 운영 PR306을 각각 필수 API contract CI 통과 후 squash 병합했다. 운영 main은 `0e580ca06567365f0ee1b956ed4a744a767ae262`이며 미해결 review thread는 없었다. main API contract run42136156194와 GitHub Pages run42136156144도 PASS다.
+- 기존 Vercel production 프로젝트의 배포 `dpl_AcmL4t34vRAVMwepveLCWL3epgQd`가 Ready이며 `https://room-management-system-prod.vercel.app`에 연결됐다. 배포 URL은 `https://room-management-system-prod-ngy8me3hh.vercel.app`이다.
+- 운영 HTML·SW·build-info·runtime-config가 해당 main에서 만든 artifact와 byte 일치한다. HTML SHA256 `22a881cf840cd4dcd97e50fd0c273bc31a91e6afeef61ed4347f990a6eba2ba2`, SW `2026-11-06-1`. 기존 운영 API·featureFlags·local 로그인 저장 정책을 유지했다. 환경 파일·Vercel 로컬 메타데이터·QA 이미지의 운영 URL은 404다.
+- 배포본 Playwright smoke: 관리자6개·메이드4개 주요 화면, 360/390/768/1440px 가로 넘침·페이지 예외·console warning/error 0건 PASS. runtime은 데모로 가로채 운영 업무 데이터에 접근하지 않았다.
+- 배포 HTML과 로컬 검증본의 일치를 확인한 뒤 같은 가격표 브라우저 시나리오를 배포 origin에서 재실행했다. 인상·인하·0원·범위·CAS·오류·응답 불명확 재시도·역할 차단·키보드·모달·Back·접근성 이름 PASS, 합성 저장20회, 예상 밖 요청·console warning/error·페이지 예외0건. 대표 화면은 위 가격표 PNG와 동일하며 호스팅 재검사 출력은 임시 경로에만 보관했다.
+- 운영 OpenAPI 가격표 계약·production PUT preflight·익명 조회401/no-store를 다시 읽기 확인했다. 실제 가격 변경·새 청소 생성·정산 쓰기는 실행하지 않았으며 실기기 Safari/Android와 실제 계정 쓰기 UAT는 위 한계를 유지한다. 이 기록은 문서만 갱신하며 운영 앱을 재배포하지 않는다.
