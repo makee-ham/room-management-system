@@ -1,5 +1,16 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-11-06 · 중복 객실 차단·호수 우선 배정
+
+- 운영 DB 읽기 조회에서 350호의 서로 다른 과거 퇴실 청소 target 2건이 모두 미배정으로 남은 것을 확인했다. 담당·수행 회차가 없는 상태였으며 운영 업무 쓰기는 하지 않았다. 실제 target ID는 증거 문서에 저장하지 않는다.
+- 사용자 확정 순서: 전체 숫자 호수 거리 → 같은 엘리베이터 → 가까운 층 → 요금 균형. 고정 층수 제한 없음. 기존 담당 보존, 중복 청소 이력의 자동 삭제·취소 없음.
+- `scripts/check-assignment-floor.mjs`: 네 단계의 각 우선순위, 117·118 / 349·350 / 755·756 묶음, 동일 객실 신규 중복·고정 객실 중복 차단, 근무 가능·데모 마감·3/4자리 호수 검증 PASS.
+- `scripts/check-cleaning-assignment-continuity.mjs`: 일부 저장 실패·동일 키 재시도·최신 영향도·추가 배정·진행 중 변경 차단 회귀 PASS. 과거 서버가 350호 두 건을 제안하는 응답을 합성해 둘 다 미배정으로 남기는 것과 수동 두 번째 담당 선택 거부, 해당 구간 서버 쓰기 0건 PASS.
+- Browser plugin not available → Playwright Chromium 151.0.7922.34. 로컬 4177 포트, 업무 API 요청은 합성 fixture. 360/390/768/1440px 가로 넘침 없음, 툴팁 접근성 연결·Enter/Escape·포커스 복귀·모달 Back·본문/페이지 식별·콘솔 warning/error 0건 PASS. 운영 고객/PIN/사진 원문은 사용하지 않았다.
+- 같은 관리자·내일 배정·데모 날짜·390/1440px 변경 전후 툴팁 비교: `QA/screenshots/assignment-room-priority-before-{390,1440}.png`, `assignment-room-priority-{390,1440}.png`. 중복 합성 화면: `QA/screenshots/assignment-room-conflict-{390,1440}.png`. 기존 카드/표/담당 선택/저장 목적은 유지한다.
+- `node scripts/check-workspace.mjs`, `npm run contract:check`, `git diff --check` PASS. FINAL_UX_AUDIT 원문 해시 유지. 서비스워커 `2026-11-06-3`.
+- 한계: 운영 계정 저장·통보, 실기기, 설치 PWA 갱신, 여러 관리자 동시 명령의 새 DB 제약은 검증/구현하지 않았다. 서버는 Preview 순수 계산 변경으로 migration 없음. 운영 배포는 별도 릴리스 검증 후 기록한다.
+
 ## 2026-11-06 · 오늘 요약 공실 초록색
 
 - 흐름: 관리자 오늘 객실 요약 → 초록색 공실 숫자·왼쪽 강조선 → Enter/클릭 → 같은 날짜의 공실 목록. 기존 공유 렌더러의 공실 tone만 `neutral`에서 `green`으로 바꿨다. 집계·점유 판정·청소/운영 상태·레이아웃·버튼 목적·API는 변경하지 않았다.
