@@ -325,7 +325,7 @@ for (const contract of [
   '같은 엘리베이터, 같은 층·가까운 층과 호수',
   '메이드별 배정 요약',
   'maxAssigned=Math.max(...results.map(result=>result.assigned))',
-  'results.filter(result=>result.assigned===maxAssigned).sort((left,right)=>left.roomDistanceTotal-right.roomDistanceTotal||left.zoneRankTotal-right.zoneRankTotal||left.floorDistanceTotal-right.floorDistanceTotal||left.payGap-right.payGap||left.payDeviation-right.payDeviation',
+  'results.filter(result=>result.assigned===maxAssigned).sort((left,right)=>left.payExcess-right.payExcess||left.roomDistanceTotal-right.roomDistanceTotal||left.zoneRankTotal-right.zoneRankTotal||left.floorDistanceTotal-right.floorDistanceTotal||left.payGap-right.payGap||left.payDeviation-right.payDeviation',
   'assignmentTargetRate(item)',
   'assignmentPricingSnapshot(item)',
   'rateSnapshot:snapshot.rate',
