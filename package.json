@@ -8,7 +8,7 @@
   },
   "scripts": {
     "contract:generate": "node scripts/generate-backend-client.mjs",
-    "contract:check": "node scripts/check-backend-contract.mjs && node scripts/generate-cleaning-client.mjs --source contracts/backend-openapi.json --check",
+    "contract:check": "node scripts/check-backend-contract.mjs && node scripts/generate-cleaning-client.mjs --source contracts/backend-openapi.json --check && node scripts/check-cleaning-price-contract.mjs",
     "contract:diff": "node scripts/check-backend-breaking-diff.mjs",
     "contract:test-diff": "node scripts/test-backend-breaking-diff.mjs"
   },

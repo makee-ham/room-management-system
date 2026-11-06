@@ -1,0 +1,777 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "청소 가격표 운영 API 발췌",
+    "version": "0.6.0",
+    "description": "2026-11-06 운영 OpenAPI의 가격표 조회·수정 계약. 전체 계약 갱신과 별도로 이 기능에 사용하는 경로만 원문 보존."
+  },
+  "servers": [
+    {
+      "url": "."
+    }
+  ],
+  "paths": {
+    "/v1/room-types": {
+      "get": {
+        "tags": [
+          "Rooms"
+        ],
+        "operationId": "listRoomTypes",
+        "summary": "객실 타입 카탈로그 조회",
+        "description": "비밀번호 변경을 완료한 active business admin 전용입니다. 비활성 타입도 기존 객실 참조 현황을 위해 포함하지만 신규 객실 기준정보 선택에는 사용할 수 없습니다.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-roles": [
+          "admin"
+        ],
+        "responses": {
+          "200": {
+            "description": "객실 타입 카탈로그",
+            "headers": {
+              "Cache-Control": {
+                "description": "인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다.",
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomTypeCatalogEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "description": "인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다.",
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/room-types/{roomTypeId}/cleaning-fee": {
+      "put": {
+        "tags": [
+          "Rooms"
+        ],
+        "operationId": "setRoomTypeCleaningFee",
+        "summary": "객실 타입별 기본 청소 단가 변경",
+        "description": "#577 개발 후보. 변경 후 카탈로그 단가로 생성하는 일반 청소에만 적용. 이미 생성된 미래 청소·진행 청소·확정 수당·재청소 승계금액은 변경하지 않습니다. 금액은 정수 원화이며 폭탄방 동액 보너스 합계의 DB integer 범위를 보호합니다. 현재 타입 version과 적용범위 확인이 필요합니다. 성공·재전송 뒤 GET /v1/room-types를 다시 조회하세요.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-required-roles": [
+          "admin"
+        ],
+        "parameters": [
+          {
+            "name": "roomTypeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9._:-]{8,128}$"
+            },
+            "description": "사용자 동작 한 번마다 생성합니다. 네트워크 오류로 **같은 요청 본문을 재시도할 때만 같은 값**을 재사용하고, 다른 본문에는 새 값을 사용합니다. `crypto.randomUUID()`를 권장합니다."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "baseCleaningFee",
+                  "expectedVersion",
+                  "confirmFutureTargetsOnly"
+                ],
+                "properties": {
+                  "baseCleaningFee": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1073741823
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740990
+                  },
+                  "confirmFutureTargetsOnly": {
+                    "type": "boolean",
+                    "const": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "확정 결과 또는 동일 요청의 기존 receipt. 현재 목록을 다시 조회합니다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "roomType"
+                  ],
+                  "properties": {
+                    "roomType": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "roomTypeId",
+                        "baseCleaningFee",
+                        "version",
+                        "effectiveFor"
+                      ],
+                      "properties": {
+                        "roomTypeId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "baseCleaningFee": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 1073741823
+                        },
+                        "version": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        "effectiveFor": {
+                          "type": "string",
+                          "const": "NEW_TARGETS_ONLY"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "description": "인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다.",
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "로그인 응답의 accessToken만 입력합니다. `Bearer ` 접두사는 Swagger UI가 자동으로 붙이며 토큰을 저장하거나 공유하지 않습니다."
+      }
+    },
+    "schemas": {
+      "RoomTypeCatalogEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoomTypeCatalogItem"
+            }
+          }
+        }
+      },
+      "RoomTypeCatalogItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "code",
+          "displayName",
+          "baseCleaningFee",
+          "baseOccupancy",
+          "maxOccupancy",
+          "active",
+          "version",
+          "roomCount"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "description": "불변 타입 코드"
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "description": "현재 표시명"
+          },
+          "baseCleaningFee": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "원 단위 기본 청소비"
+          },
+          "baseOccupancy": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "기준 인원. 이를 넘겨도 예약 가능하며 프런트 강조 기준으로만 사용합니다."
+          },
+          "maxOccupancy": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "이 객실 유형에 허용되는 예약 총 인원 상한입니다."
+          },
+          "active": {
+            "type": "boolean",
+            "description": "신규 객실 기준정보 선택 가능 여부"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "실제 객실 타입 변경 시 증가하는 버전"
+          },
+          "roomCount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "현재 참조 객실 수"
+          }
+        }
+      },
+      "ErrorEnvelope": {
+        "type": "object",
+        "required": [
+          "error",
+          "requestId"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "$ref": "#/components/schemas/ErrorCode"
+              },
+              "message": {
+                "type": "string",
+                "description": "현재 요청을 위한 한국어 안내입니다. 장기적인 프론트 분기는 error.code를 사용합니다."
+              }
+            }
+          },
+          "requestId": {
+            "type": "string",
+            "description": "운영 문의·로그 추적용 요청 ID입니다. 인증정보 대신 이 값을 전달합니다."
+          }
+        }
+      },
+      "ErrorCode": {
+        "type": "string",
+        "description": "프론트 분기용 안정적 코드입니다. 사용자 표시 문구는 message가 아니라 이 코드 기준으로 관리합니다.",
+        "enum": [
+          "VALIDATION_ERROR",
+          "INVALID_ROOM_ISSUE_REPORT",
+          "ROOM_ISSUE_EVIDENCE_INVALID",
+          "ROOM_ISSUE_REPORT_ACCESS_REQUIRED",
+          "INVALID_PHONE",
+          "REQUEST_TOO_LARGE",
+          "MISSING_ACCESS_TOKEN",
+          "INVALID_ACCESS_TOKEN",
+          "PROFILE_NOT_FOUND",
+          "ACCOUNT_INACTIVE",
+          "ACCOUNT_EXECUTION_LIFECYCLE_REQUIRED",
+          "ATTEMPT_ACCESS_REQUIRED",
+          "ATTEMPT_NOT_FOUND",
+          "ATTEMPT_VERSION_CONFLICT",
+          "ASSIGNMENT_NOT_NOTIFIED",
+          "ATTEMPT_INVALID_TRANSITION",
+          "MAID_ALREADY_IN_PROGRESS",
+          "ATTEMPT_COMMAND_FAILED",
+          "CAPABILITY_ACCESS_REQUIRED",
+          "LIMITED_DISCOVERY_LIMIT_EXCEEDED",
+          "LIMITED_SESSION_LIMIT_EXCEEDED",
+          "PHOTO_RETENTION_DELETE_PREPARED",
+          "ACCOUNT_VERSION_CONFLICT",
+          "CLEANING_WINDOW_NOT_EXPIRED",
+          "ASSIGNMENT_SCHEDULE_INVALID",
+          "ROLLOVER_NOT_ALLOWED",
+          "INVALID_ATTEMPT_COMMAND",
+          "ATTEMPT_ACTIVATION_NOT_ALLOWED",
+          "CLEANING_SERVICE_DATE_NOT_DUE",
+          "CLEANING_SERVICE_DATE_EXPIRED",
+          "CLEANING_WINDOW_NOT_OPEN",
+          "CLEANING_WINDOW_EXPIRED",
+          "CHECKOUT_NOT_MATERIALIZED",
+          "RECLEAN_MAID_IMMUTABLE",
+          "PREVIOUS_ROOM_WORKFLOW_ACTIVE",
+          "SESSION_REVOKED",
+          "AUTH_CONTEXT_UNAVAILABLE",
+          "INVALID_CREDENTIALS",
+          "ACCOUNT_LOCKED",
+          "LOGIN_RATE_LIMITED",
+          "LOGIN_CLIENT_ID_UNAVAILABLE",
+          "LOGIN_RATE_LIMIT_UNAVAILABLE",
+          "ACTIVITY_LOG_UNAVAILABLE",
+          "AUTH_LOOKUP_FAILED",
+          "LOGIN_STATE_UPDATE_FAILED",
+          "INVALID_CURRENT_PASSWORD",
+          "AUTH_PASSWORD_CHANGE_FAILED",
+          "PASSWORD_STATE_INCONSISTENT",
+          "PASSWORD_STATE_UPDATE_FAILED",
+          "PASSWORD_CHANGE_RECEIPT_FAILED",
+          "PASSWORD_CHANGE_IN_PROGRESS",
+          "PASSWORD_CHANGE_SESSION_MISMATCH",
+          "PASSWORD_VERIFICATION_RATE_LIMITED",
+          "PASSWORD_VERIFICATION_RATE_LIMIT_UNAVAILABLE",
+          "PASSWORD_VERIFICATION_SESSION_REVOKE_FAILED",
+          "PASSWORD_RESET_STATE_UPDATE_FAILED",
+          "PASSWORD_CHANGE_REQUIRED",
+          "ACCOUNT_MANAGER_REQUIRED",
+          "ADMIN_REQUIRED",
+          "ASSIGNMENT_ACCESS_REQUIRED",
+          "ASSIGNMENT_INSTRUCTION_INVALID",
+          "DEVELOPER_REQUIRED",
+          "DEVELOPER_PROJECTION_FAILED",
+          "DATABASE_UNREACHABLE",
+          "MIGRATION_DRIFT",
+          "RLS_CONFIGURATION_INVALID",
+          "SCHEDULER_NOT_CONFIGURED",
+          "SCHEDULER_ACTOR_INVALID",
+          "SCHEDULER_DEGRADED",
+          "SCHEDULER_HEARTBEAT_FAILED",
+          "DIAGNOSTIC_TIMEOUT",
+          "DIAGNOSTICS_RATE_LIMITED",
+          "ACCOUNT_NOT_FOUND",
+          "DEVELOPER_ACCOUNT_PROTECTED",
+          "LAST_ACTIVE_ADMIN_REQUIRED",
+          "ACCOUNT_MUST_BE_INACTIVE",
+          "DEPARTED_ACCOUNT_IMMUTABLE",
+          "IDEMPOTENCY_KEY_REUSED",
+          "RESERVED_IDEMPOTENCY_KEY",
+          "DEACTIVATION_MUST_BE_FINISHED",
+          "PHONE_ALREADY_REGISTERED",
+          "LOGIN_ID_CONFLICT",
+          "PHONE_REQUIRED_FOR_RESET",
+          "AUTH_USER_CREATE_FAILED",
+          "AUTH_USER_UPDATE_FAILED",
+          "AUTH_PASSWORD_RESET_FAILED",
+          "ACCOUNT_AUTH_STATE_INCONSISTENT",
+          "ACCOUNT_COMMAND_FAILED",
+          "FORBIDDEN",
+          "MAID_REQUIRED",
+          "AVAILABILITY_ACCESS_REQUIRED",
+          "ACTIVE_MAID_REQUIRED",
+          "CLEANING_TARGET_NOT_FOUND",
+          "ASSIGNMENT_VERSION_CONFLICT",
+          "ASSIGNMENT_TARGET_STATE_INVALID",
+          "ASSIGNMENT_SEQUENCE_CONFLICT",
+          "ASSIGNMENT_NOT_FOUND",
+          "ASSIGNMENT_IMPACT_CHANGED",
+          "ASSIGNMENT_DRAFT_STALE_SCHEDULE",
+          "ASSIGNMENT_AVAILABILITY_REQUIRED",
+          "ASSIGNMENT_AVAILABILITY_STALE",
+          "ASSIGNMENT_MAID_UNAVAILABLE",
+          "ASSIGNMENT_WINDOW_EXPIRED",
+          "ASSIGNMENT_COMMIT_NOT_ALLOWED",
+          "ASSIGNMENT_COMMAND_FAILED",
+          "ASSIGNMENT_PREVIEW_DATE_NOT_ALLOWED",
+          "ASSIGNMENT_DURATION_POLICY_RETIRED",
+          "ASSIGNMENT_PREVIEW_LIMIT_EXCEEDED",
+          "ASSIGNMENT_PREVIEW_FAILED",
+          "INVALID_ASSIGNMENT_DURATION_POLICY",
+          "ASSIGNMENT_DURATION_POLICY_VERSION_CONFLICT",
+          "ACTIVE_ADMIN_REQUIRED",
+          "AVAILABILITY_APPROVAL_REQUIRED",
+          "AVAILABILITY_WEEK_OUT_OF_RANGE",
+          "PAST_AVAILABILITY_DATE_NOT_ALLOWED",
+          "CHANGE_REQUEST_BEFORE_DEADLINE",
+          "STALE_VERSION",
+          "PENDING_CHANGE_REQUEST_EXISTS",
+          "INVALID_TRANSITION",
+          "AVAILABILITY_NOT_FOUND",
+          "CHANGE_REQUEST_NOT_FOUND",
+          "WEEK_START_MUST_BE_MONDAY",
+          "AVAILABILITY_DATES_MUST_BE_UNIQUE",
+          "AVAILABILITY_DATE_OUTSIDE_WEEK",
+          "AVAILABILITY_COMMAND_FAILED",
+          "INVALID_GUEST_NAME",
+          "INVALID_GUEST_COUNT",
+          "INVALID_RESERVATION_SCHEDULE",
+          "STANDARD_RESERVATION_REQUIRES_END",
+          "RESERVATION_TYPE_IMMUTABLE",
+          "RESERVATION_END_IMMUTABLE",
+          "BOOKABILITY_RANGE_TOO_LARGE",
+          "INVALID_ROOM_TYPE_FILTER",
+          "EXCLUDE_RESERVATION_NOT_FOUND",
+          "EXCLUDE_RESERVATION_NOT_ELIGIBLE",
+          "INVALID_RESERVATION_RANGE",
+          "RESERVATION_RANGE_TOO_LARGE",
+          "INVALID_RESERVATION_CURSOR",
+          "RESERVATION_CURSOR_NOT_CONFIGURED",
+          "INVALID_MOVE_EFFECTIVE_AT",
+          "RESERVATION_OVERLAP",
+          "TARGET_ROOM_OVERLAP",
+          "TARGET_ROOM_BLOCKED",
+          "TARGET_ROOM_NOT_READY",
+          "PIN_LEASE_ACTIVE",
+          "OPEN_ENDED_STAY_REQUIRES_END",
+          "ROOM_ALLOCATION_BLOCKED",
+          "RESERVATION_NOT_FOUND",
+          "CLEANING_REQUEST_NOT_FOUND",
+          "CLEANING_TEMPLATE_NOT_CONFIGURED",
+          "INVALID_CLEANING_TEMPLATE",
+          "INVALID_CLEANING_TEMPLATE_SLOTS",
+          "CLEANING_TEMPLATE_VERSION_CONFLICT",
+          "CLEANING_TEMPLATE_COMMAND_FAILED",
+          "INVALID_MANUAL_CLEANING_REQUEST",
+          "ACTIVE_STAY_RESERVATION_REQUIRED",
+          "STAYOVER_ACCESS_WINDOW_INVALID",
+          "VACANT_ROOM_REQUIRED",
+          "RESERVATION_ROOM_MISMATCH",
+          "NOT_MANUAL_CLEANING_REQUEST",
+          "REPLAN_REQUIRED",
+          "SCHEDULE_LOCKED",
+          "CONFLICT",
+          "RESERVATION_COMMAND_FAILED",
+          "RESERVATION_PII_KEY_INVALID",
+          "RESERVATION_PII_KEYRING_INVALID",
+          "RESERVATION_PII_DECRYPT_FAILED",
+          "COMPLAINT_ACCESS_REQUIRED",
+          "COMPLAINT_MAID_MISMATCH",
+          "COMPLAINT_NOT_FOUND",
+          "INVALID_COMPLAINT_CATEGORY",
+          "INVALID_COMPLAINT_FINDING",
+          "INVALID_COMPLAINT_PENALTY",
+          "INVALID_REWORK_DECISION",
+          "INVALID_COMPLAINT_RESPONSE",
+          "COMPLAINT_APPEAL_REASON_REQUIRED",
+          "COMPLAINT_APPEAL_REASON_FORBIDDEN",
+          "COMPLAINT_PERIOD_INVALID",
+          "COMPLAINT_PAGE_LIMIT_INVALID",
+          "INVALID_COMPLAINT_CURSOR",
+          "INVALID_COMPLAINT_REWORK",
+          "COMPLAINT_COMPENSATION_AMOUNT_INVALID",
+          "COMPLAINT_SOURCE_NOT_APPROVED",
+          "COMPLAINT_RESPONSE_REQUIRED",
+          "COMPLAINT_APPEAL_UNRESOLVED",
+          "COMPLAINT_RESPONSE_ALREADY_RECORDED",
+          "COMPLAINT_DECISION_REQUIRED",
+          "COMPLAINT_REWORK_MAID_UNAVAILABLE",
+          "COMPLAINT_REWORK_WINDOW_UNAVAILABLE",
+          "COMPLAINT_REWORK_NOT_CONFIRMED",
+          "COMPLAINT_REWORK_ALREADY_MATERIALIZED",
+          "COMPLAINT_REWORK_DECISION_STALE",
+          "COMPLAINT_REWORK_PRESTART_FROZEN",
+          "RECLEAN_TEMPLATE_NOT_CONFIGURED",
+          "COMPLAINT_INVALID_TRANSITION",
+          "COMPLAINT_COMMAND_FAILED",
+          "INVALID_INSPECTION_CURSOR",
+          "INSPECTION_CURSOR_NOT_CONFIGURED",
+          "INSPECTION_PAGE_LIMIT_INVALID",
+          "INSPECTION_RESPONSE_TOO_LARGE",
+          "INVALID_WORK_HISTORY_QUERY",
+          "INVALID_WORK_HISTORY_CURSOR",
+          "WORK_HISTORY_ACCESS_REQUIRED",
+          "WORK_HISTORY_MAID_SCOPE_REQUIRED",
+          "WORK_HISTORY_MAID_NOT_FOUND",
+          "WORK_HISTORY_QUERY_FAILED",
+          "INVALID_ROOM_OPERATION_QUERY",
+          "INVALID_ROOM_OPERATION_CURSOR",
+          "ROOM_OPERATION_CURSOR_NOT_CONFIGURED",
+          "ROOM_OPERATION_PAGE_LIMIT_INVALID",
+          "ROOM_OPERATION_RESPONSE_TOO_LARGE",
+          "NOTIFICATION_ACCESS_REQUIRED",
+          "NOTIFICATION_NOT_FOUND",
+          "INVALID_NOTIFICATION_CURSOR",
+          "NOTIFICATION_CURSOR_NOT_CONFIGURED",
+          "NOTIFICATION_RESPONSE_TOO_LARGE",
+          "NOTIFICATION_QUERY_FAILED",
+          "PAYROLL_ACCESS_REQUIRED",
+          "PAYROLL_MAID_NOT_FOUND",
+          "PAYROLL_WEEK_MUST_START_MONDAY",
+          "PAYROLL_PAGE_LIMIT_INVALID",
+          "PAYROLL_PAGE_KIND_INVALID",
+          "PAYROLL_CURSOR_INVALID",
+          "PAYROLL_CURSOR_NOT_CONFIGURED",
+          "PAYROLL_RESPONSE_TOO_LARGE",
+          "INVALID_EXPECTED_VERSION",
+          "PAYROLL_WEEK_NOT_CLOSED",
+          "PAYROLL_CYCLE_NOT_OPEN",
+          "NO_PAYROLL_AMOUNT",
+          "PAYROLL_NONPOSITIVE_REQUIRES_CARRY",
+          "PAYROLL_POSITIVE_REQUIRES_START",
+          "PAYROLL_CYCLE_ECONOMICALLY_FROZEN",
+          "PAYROLL_SOURCE_PAYMENT_UNCERTAIN",
+          "PAYROLL_SOURCE_ALREADY_REVERSED",
+          "PAYROLL_ROOT_ENTITLEMENT_NEGATIVE",
+          "STALE_ADJUSTMENT_VERSION",
+          "PAYROLL_LATE_EARNING_ALREADY_CARRIED",
+          "PAYROLL_EARNING_NOT_LATE",
+          "PAYROLL_LATE_CARRY_TARGET_FROZEN",
+          "PAYROLL_EARLIER_CARRY_PENDING",
+          "PAYROLL_PRIOR_LATE_EARNING_PENDING",
+          "PAYROLL_SOURCE_NOT_FOUND",
+          "PAYROLL_ADJUSTMENT_INVALID",
+          "PAYROLL_PAYMENT_ATTEMPT_NOT_FOUND",
+          "PAYROLL_PAYMENT_ATTEMPT_TERMINAL",
+          "PAYROLL_PAYMENT_TRANSITION_INVALID",
+          "PAYROLL_PAYMENT_REFERENCE_ALREADY_USED",
+          "PAYROLL_PAYMENT_REFERENCE_INVALID",
+          "PAYROLL_PAYMENT_METHOD_INVALID",
+          "PAYROLL_PAYMENT_REASON_INVALID",
+          "PAYROLL_PAYMENT_REOPEN_REASON_INVALID",
+          "PAYROLL_PAYMENT_RESULT_AMOUNT_MISMATCH",
+          "PAYROLL_COMMAND_FAILED",
+          "ROOM_NOT_FOUND",
+          "ROOM_TYPE_NOT_FOUND",
+          "ROOM_TYPE_CAPACITY_INVALID",
+          "ROOM_TYPE_CAPACITY_ACTIVE_RESERVATION_CONFLICT",
+          "ROOM_TYPE_CAPACITY_PREVIEW_STALE",
+          "ROOM_TYPE_VERSION_CONFLICT",
+          "ROOM_NUMBER_ALREADY_EXISTS",
+          "ROOM_TYPE_INACTIVE",
+          "ROOM_INACTIVE",
+          "ROOM_ALREADY_INACTIVE",
+          "ROOM_DEACTIVATION_BLOCKED",
+          "ROOM_DEACTIVATION_PREVIEW_STALE",
+          "ROOM_VERSION_CONFLICT",
+          "GUEST_COUNT_EXCEEDS_ROOM_TYPE_CAPACITY",
+          "ROOM_OPERATION_NOT_FOUND",
+          "INVALID_ROOM_PIN",
+          "INVALID_PIN_TRANSFER_REQUEST",
+          "ROOM_PIN_TRANSFER_NOT_CONFIGURED",
+          "ROOM_PIN_TRANSFER_STALE",
+          "ROOM_PIN_TRANSFER_BUSY",
+          "ROOM_PIN_IMPORT_SOURCE_UNAVAILABLE",
+          "ROOM_PIN_TRANSFER_FAILED",
+          "INVALID_PIN_BOOTSTRAP_LIMIT",
+          "INVALID_PIN_BOOTSTRAP",
+          "ROOM_PIN_BOOTSTRAP_CONFIG_INVALID",
+          "ROOM_PIN_BOOTSTRAP_FAILED",
+          "ROOM_PIN_KEY_UNAVAILABLE",
+          "ROOM_PIN_CRYPTO_CONFIG_INVALID",
+          "ROOM_PIN_DECRYPT_FAILED",
+          "ROOM_PIN_COMMAND_FAILED",
+          "STALE_PIN_VERSION",
+          "ROOM_NUMBER_CHANGED",
+          "ROOM_PIN_REISSUE_REQUIRED",
+          "ROOM_PIN_MISMATCH_UNRESOLVED",
+          "INVALID_PIN_CHANGE_REASON",
+          "PIN_CHANGE_IN_PROGRESS_REQUIRED",
+          "PIN_CHANGE_IN_PROGRESS",
+          "PIN_CHANGE_LEASE_EXPIRED",
+          "PIN_CHANGE_LEASE_NOT_RESOLVABLE",
+          "PIN_REVEAL_AUTHORIZATION_CHANGED",
+          "GENERATED_PIN_REVEAL_NOT_ALLOWED",
+          "GENERATED_PIN_CONFIRMATION_NOT_ALLOWED",
+          "ROOM_PIN_UNCONFIGURED",
+          "ROOM_PIN_SHEET_OPERATOR_REQUIRED",
+          "ROOM_PIN_SHEET_NOT_CONFIGURED",
+          "ROOM_PIN_SHEET_OPERATION_FAILED",
+          "ROOM_PIN_SHEET_RESPONSE_TOO_LARGE",
+          "ROOM_PIN_SHEET_FULL_RESYNC_STALE",
+          "ROOM_PIN_SHEET_WORKER_BUSY",
+          "ROOM_PIN_SHEET_FULL_RESYNC_PENDING",
+          "ROOM_PIN_SHEET_ROOM_MASTER_INVALID",
+          "PIN_ACCESS_LEASE_REQUIRED",
+          "PIN_ENTITLEMENT_REQUIRED",
+          "PIN_ACCESS_REQUIRED",
+          "SENSITIVE_TEXT_NOT_ALLOWED",
+          "PIN_MATERIAL_NOT_ALLOWED",
+          "ROOM_TYPE_CLEANING_FEE_INVALID",
+          "ROOM_TYPE_CLEANING_FEE_RESPONSE_INVALID",
+          "ROOM_COMMAND_FAILED",
+          "ORIGIN_NOT_ALLOWED",
+          "ROUTE_NOT_FOUND",
+          "RUNTIME_NOT_CONFIGURED",
+          "INTERNAL_SERVER_ERROR",
+          "INVALID_PHOTO_BINARY",
+          "INVALID_POST_APPROVAL_ROOM_ISSUE",
+          "PHOTO_BODY_TIMEOUT",
+          "PHOTO_DECODER_UNAVAILABLE",
+          "PHOTO_DECODE_LIMIT_EXCEEDED",
+          "PHOTO_MEDIA_TYPE_UNSUPPORTED",
+          "PHOTO_PROVIDER_IDENTITY_CONFLICT",
+          "PHOTO_STORAGE_QUOTA_EXCEEDED",
+          "PHOTO_STORAGE_QUOTA_UNAVAILABLE",
+          "PHOTO_TOO_LARGE",
+          "PHOTO_UPLOAD_ADMISSION_EXPIRED",
+          "PHOTO_UPLOAD_FENCE_CONFLICT",
+          "PHOTO_UPLOAD_LIMIT_EXCEEDED",
+          "PHOTO_UPLOAD_RATE_LIMITED",
+          "PHOTO_UPLOAD_TIME_INVALID",
+          "POST_APPROVAL_ROOM_ISSUE_ACCESS_REQUIRED",
+          "POST_APPROVAL_ROOM_ISSUE_BODY_TOO_LARGE",
+          "POST_APPROVAL_ROOM_ISSUE_COMMAND_FAILED",
+          "POST_APPROVAL_ROOM_ISSUE_DRAFT_CONFLICT",
+          "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_COMMAND_FAILED",
+          "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_CONFLICT",
+          "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_INVALID",
+          "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_PROJECTION_INVALID",
+          "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_RETRY_REQUIRED",
+          "POST_APPROVAL_ROOM_ISSUE_MEDIA_PURGED",
+          "POST_APPROVAL_ROOM_ISSUE_MEDIA_TYPE_INVALID",
+          "POST_APPROVAL_ROOM_ISSUE_PROJECTION_INVALID",
+          "POST_APPROVAL_ROOM_ISSUE_REPORT_SEALED",
+          "POST_APPROVAL_ROOM_ISSUE_SOURCE_UNAVAILABLE",
+          "POST_APPROVAL_ROOM_ISSUE_UPLOAD_NOT_ACCEPTED",
+          "ROOM_READY_CORRECTION_INVALID_INPUT",
+          "ROOM_READY_CONFIRMATION_REQUIRED",
+          "ROOM_READY_EARNING_ACKNOWLEDGEMENT_REQUIRED",
+          "ROOM_READY_CANDLE_CONFIRMATION_REQUIRED",
+          "ROOM_READY_PREVIEW_STALE",
+          "ROOM_READY_CORRECTION_BLOCKED",
+          "ROOM_READY_CORRECTION_LIMIT_EXCEEDED",
+          "ROOM_READY_CORRECTION_REQUIRED",
+          "ROOM_READY_CORRECTION_RESPONSE_INVALID",
+          "CLEANING_DUE_REPLAN_REQUIRED"
+        ]
+      }
+    }
+  }
+}
