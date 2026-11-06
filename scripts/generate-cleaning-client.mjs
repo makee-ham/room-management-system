@@ -15,8 +15,8 @@ function assert(ok,copy){if(!ok)throw new Error(copy);}
 export function verifyCleaningContract(doc){
   const paths=doc.paths||{},schemas=doc.components?.schemas||{};
   assert(doc.info?.version==='0.6.0','Expected production API version 0.6.0.');
-  assert(Object.keys(paths).length===154,'Expected 154 paths.');
-  assert(Object.values(paths).reduce((n,p)=>n+Object.keys(p).filter(k=>methods.includes(k)).length,0)===166,'Expected 166 operations.');
+  assert(Object.keys(paths).length===161,'Expected 161 paths.');
+  assert(Object.values(paths).reduce((n,p)=>n+Object.keys(p).filter(k=>methods.includes(k)).length,0)===174,'Expected 174 operations.');
   const server=new URL(doc.servers?.[0]?.url||'invalid',canonicalOpenApi).href.replace(/\/+$/u,'');
   assert(server===api||!production&&server==='https://example.supabase.co/functions/v1/api','OpenAPI server URL differs from the documented production API/source export.');
   const request=schemas.PublishCleaningTemplateRequest,response=schemas.PublishedCleaningTemplate;
@@ -118,4 +118,4 @@ Object.keys(schemas).filter(name=>/^(PayrollRemittance|PayrollWork|PayrollAdjust
 for(const name of needed){assert(schemas[name],`Missing schema ${name}`);output+=`export type ${name} = ${type(schemas[name])};\n\n`;}
 if(checkOnly)assert(await readFile(resolve(root,'WIREFRAME/cleaning-api.d.ts'),'utf8')===output,'Generated client types differ. Regenerate using the same OpenAPI source.');
 else await writeFile(resolve(root,'WIREFRAME/cleaning-api.d.ts'),output);
-console.log(`[ok] ${production?'Deployed OpenAPI':'Source OpenAPI'}: 154 paths / 166 operations; planning dates, PIN transfer, photo uploads, remittance batch and operational contracts verified. ${checkOnly?'Checked without writes.':'Client types regenerated.'}`);
+console.log(`[ok] ${production?'Deployed OpenAPI':'Source OpenAPI'}: 161 paths / 174 operations; planning dates, PIN transfer, photo uploads, remittance batch and operational contracts verified. ${checkOnly?'Checked without writes.':'Client types regenerated.'}`);

@@ -26,8 +26,8 @@ for (const [path, pathItem] of Object.entries(document.paths)) {
 
 assert(document.openapi === '3.1.1', `Unexpected OpenAPI version: ${document.openapi}`);
 assert(document.info.version === '0.6.0', `Unexpected API version: ${document.info.version}`);
-assert(Object.keys(document.paths).length === 154, 'Backend path inventory changed; refresh and review the snapshot.');
-assert(operations.length === 166, 'Backend operation inventory changed; refresh and review the snapshot.');
+assert(Object.keys(document.paths).length === 161, 'Backend path inventory changed; refresh and review the snapshot.');
+assert(operations.length === 174, 'Backend operation inventory changed; refresh and review the snapshot.');
 assert(document.servers?.length === 1 && document.servers[0].url === '.', 'Snapshot must contain only the non-secret example server.');
 assert(!snapshotBytes.toString('utf8').includes('aodikrxcczbogjpsjwjt'), 'Production project ref must not be committed in the generated contract snapshot.');
 
@@ -102,6 +102,7 @@ const allowedWithoutIdempotency = new Set([
   "previewReservationBookability",
   "previewReservationRoomMove",
   "previewRoomPinImport",
+  "previewRoomReadyCorrection",
   "revealRoomPin",
   "runDeveloperDiagnostics",
   "syncOfflineCompletion"
@@ -148,6 +149,8 @@ assertExactOperationSet(casOperations, [
   "retireWebPushSubscription",
   "reversePayrollSource",
   "setPayrollRemittanceMarker",
+  "setRoomFixedMemo",
+  "setRoomTypeCleaningFee",
   "startComplaintReview",
   "startPayrollCycle",
   "submitAvailability"
@@ -212,7 +215,7 @@ const visitProperties = (value, location = '#') => {
 };
 visitProperties(document.components?.schemas);
 
-assert(manifest.backendSourceCommit === '68990a876ef3ebd490106a9ef4dd7f6880896e7a', 'Backend source commit identity changed without regeneration review.');
+assert(manifest.backendSourceCommit === '00668f84e572efb9657ab42b3fed0e0bc83e1320', 'Backend source commit identity changed without regeneration review.');
 assert(manifest.snapshotSha256 === sha256(snapshotBytes), 'OpenAPI snapshot hash does not match the manifest.');
 assert(manifest.generatedSha256 === sha256(generated), 'Generated TypeScript hash does not match the manifest.');
 assert(manifest.pathCount === Object.keys(document.paths).length && manifest.operationCount === operations.length, 'Manifest inventory is stale.');

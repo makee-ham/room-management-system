@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "backendRepository": "https://github.com/wrongstory/room-management-system-backend",
-  "backendSourceCommit": "68990a876ef3ebd490106a9ef4dd7f6880896e7a",
-  "backendSourceCommand": "release candidate source export (PR 557 / 126 source migrations; not deployed)",
+  "backendSourceCommit": "00668f84e572efb9657ab42b3fed0e0bc83e1320",
+  "backendSourceCommand": "production OpenAPI readback 2026-11-06; identical to main source excluding server URL",
   "backendSourcePath": "supabase/functions/_shared/openapi.ts",
   "openapiVersion": "3.1.1",
   "apiVersion": "0.6.0",
-  "pathCount": 154,
-  "operationCount": 166,
-  "snapshotSha256": "8d0234a909f5a5a83942a3c812bb51efb4e49525556a66faaac4726f9a4dd92c",
+  "pathCount": 161,
+  "operationCount": 174,
+  "snapshotSha256": "0848658350782f8f4ea0e6ae8874e6615a7121f6daac6dd5a31762eb67d93b9f",
   "generatedWith": "openapi-typescript@7.13.0",
-  "generatedSha256": "1220dadb41c80f4a0c5d78664a557b2c98bda409ae6598558b78aefc202f410b"
+  "generatedSha256": "a393686e5002624f288ec11262f396267c035a9450e2a38d8da819367faeb1a3"
 }

@@ -3106,3 +3106,12 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium으로 검
 - 통합 릴리스가 기능과 수정본을 포함하므로 PR557 hotfix의 추가 push·전체 DB 재실행은 하지 않았다. 이번에 승인받은 추가 실행은 0회이며, 이전 실패 두 번은 그대로 실패 기록이다. 새로운 입력에 사용할 포괄 실행 권한으로 넘기지 않는다.
 - 운영 읽기 확인: migration history124건, API55 ACTIVE, health200/ok, 공개 OpenAPI154경로이며 새 승인 필요 오류는 아직 없다. 운영 DB/API는 이번 기능의 배포 완료 상태가 아니다. 통합 릴리스의 운영 이력 대조·정확 적용 목록 확정과 승인된 배포가 먼저 필요하다. 기존 두 migration만의 hotfix 계획을 통합 릴리스 전체 적용으로 확대하지 않았다.
 - 프런트 PR302는 배포 후보 draft로 유지한다. 백엔드 운영 배포 후 실제 계약/provenance를 갱신하고 프런트 보호 병합·배포·운영 smoke를 이어가야 한다. 이번 확인은 소스·CI·운영 읽기만 수행했으며 UI·업무 데이터·DB·API·Vercel 배포를 변경하지 않았다. 기존 합성 UI 회귀와 실기기/실사용 미확인 한계는 위 기록을 따른다.
+
+## 2026-11-06 이번 주 승인 기능 운영 배포 사전 확인
+
+- 사용자에게 백엔드 배포 완료와 PR 병합·프런트 운영 배포 지시를 받았다. 읽기 확인에서 운영 API57 ACTIVE, history150건과 `current_week_availability_approval`/`availability_guard_unused_parameter` 적용을 확인했다. DB 적용·reset·백엔드 배포는 이번 작업에서 실행하지 않았다.
+- 운영 OpenAPI161경로/174operation은 backend main `00668f84e572efb9657ab42b3fed0e0bc83e1320`의 명세와 서버 URL 외에 동일하다. 공개 명세를 가져와 서버를 `.`으로 정규화하고 snapshot·TypeScript·청소 타입·source provenance를 갱신했다.
+- 계약 목록은161/174, CAS36, cursor20으로 대조했다. 새 READY 미리보기의 멱등 키 예외와 고정 메모/타입 단가 CAS 두 개를 정확한 operation ID로 검사한다. 기존 ErrorCode 보존 및14개 추가, 감사/객실 이벤트의 `room.ready_corrected` 추가 두 곳, 최초 가능일 요청 nullable ID/version0 여섯 변경을 검토했다. 이벤트 표시의 기존 escaped 값/객실 상태 변경 fallback을 확인했고 일반 breaking 검사 기준은 유지했다.
+- `contract:check`, `contract:test-diff`, main 대비 `contract:diff` PASS. 정확한 이전·이후 snapshot 해시의1069개 변경만 검토 기록으로 묶었다. workspace·PWA·diff 검사 PASS.
+- Browser plugin not available: 기존 Playwright로 가능일 회귀를 실행했다. 이번 주 변경 요청·대기 중 기존 값 보존·승인·반려·최초 제출·중복 방지·메이드 승인 차단·충돌·다음 주 직접 제출·360/390/768/1440px·뒤로가기·키보드·모달·콘솔 PASS. 모바일 메이드 대기 화면과 관리자 현재/요청 비교·승인/반려 화면도 시각 확인했다. API는 합성 응답이며 실제 업무 데이터는 변경하지 않았다. UI 원문은 이전에 검증한 후보와 동일하고 기존 대표 PNG를 보존했다.
+- 운영 Vercel은 확인 시 main `b2edb126`/SW `2026-11-02-4`였다. 이번 후보 SW `2026-11-02-5`를 main 보호 병합 후 배포한다. 현재 운영 runtime 설정과 featureFlags를 그대로 보존하며 배포 후 HTML/SW/build-info/설정 및 호스팅 화면을 검증한다. 이 사전 확인 기록 자체는 프런트 운영 배포 완료를 뜻하지 않는다. 실제 메이드·관리자 계정의 실사용 승인 UAT는 별도다.

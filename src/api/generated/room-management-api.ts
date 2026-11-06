@@ -4,6 +4,46 @@
  */
 
 export interface paths {
+    "/v1/rooms/{roomId}/ready-correction/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 객실 준비 완료 변경 영향 조회 (미배포 후보)
+         * @description 읽기 전용 5분 미리보기입니다. 청소 취소·중단, 운영 차단·이슈 해제, 촛불 회수 영향과 별도 수당 확인을 팝업으로 안내하세요. 예약·실제 점유는 일괄 종료하지 않으며 차단되면 기존 예약 취소/체크아웃 화면으로 안내합니다. canApply=false이면 확정 금지. 비밀번호 변경을 완료한 활성 업무 관리자와 유효한 세션만 허용합니다. #532 source 계약이며 현재 운영 제공을 뜻하지 않습니다. 성공 후 객실·선택 날짜 projection·배정/진행·예약·bookability를 재조회하세요.
+         */
+        post: operations["previewRoomReadyCorrection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/rooms/{roomId}/ready-correction": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 확인한 객실 상태를 실제 준비 완료로 변경 (미배포 후보)
+         * @description 미리보기의 정확한 fingerprint/version/evaluatedAt/expiresAt을 다시 보내 명시 확인한 범위만 원자 변경합니다. 현장 완료·미승인 제출 취소는 새 수당 미적립 별도 동의가 필요하므로 먼저 검수 승인하도록 권고하세요. 과거 이력·사진·기존 확정 수당을 삭제하지 않으며 예약/실제 점유·PIN은 변경하지 않습니다. 같은 key/본문 재시도는 만료 검사보다 완료 receipt를 먼저 반환합니다. stale이면 최신 영향으로 다시 확인해야 합니다. 비밀번호 변경을 완료한 활성 업무 관리자와 유효한 세션만 허용합니다. #532 source 계약이며 현재 운영 제공을 뜻하지 않습니다. 성공 후 객실·선택 날짜 projection·배정/진행·예약·bookability를 재조회하세요.
+         */
+        post: operations["applyRoomReadyCorrection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/cleaning-history/submissions/{sourceSubmissionId}/supplemental-room-issues/source": {
         parameters: {
             query?: never;
@@ -576,6 +616,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/attempts/{attemptId}/photo-slots/{slotId}/upload-batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 같은 사진 묶음의 두 업로드 원자 예약
+         * @description 정확히 두 개의 서로 다른 item/key를 하나의 transaction에서 예약합니다. 두 binary 업로드는 기존 photos/{photoItemId}/upload에 같은 item key와 원래 collection revision으로 전송합니다. 최대 두 전송만 허용하며 일반 20장/선택 10장·item CAS·권한·quota는 유지합니다. 예약은 사진 저장/제출 성공이 아닙니다. 실패/응답 유실은 동일 key/입력으로만 재시도합니다. 새 binary/멀티파트 형식이나 사진 삭제 권한은 추가하지 않습니다.
+         */
+        post: operations["admitAttemptPhotoCollectionBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/attempts/{attemptId}/photo-slots/{slotId}/photos/{photoItemId}/upload": {
         parameters: {
             query?: never;
@@ -648,6 +708,26 @@ export interface paths {
          * @description 비밀번호 변경을 완료한 active business admin 또는 본인의 현재 유효 회차에 속한 active maid만 허용합니다. developer와 upload_only/deactivation_pending/과거 인계 회차의 원본 읽기는 금지합니다. provider bytes를 bounded download/SHA 검증한 뒤 응답 첫 byte 전에 session/ownership/보존 만료를 다시 확인합니다. redirect/Range/공개 URL은 지원하지 않으며 Cache-Control:no-store, nosniff, 서버 고정 filename만 반환합니다. 새 사진의 불변 날짜·유형·호실·순번 이름은 UTF-8 filename*로 제공하고 legacy는 photo.jpg/webp를 유지합니다. client가 파일명을 지정할 수 없습니다.
          */
         get: operations["getPhotoContent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/photos/{photoId}/thumbnail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 동일 사진 권한의 비공개 목록 미리보기
+         * @description 개발 후보입니다. 원본 content와 같은 active admin/본인 현재 회차 maid·live session·보존 조건을 전후 재검증합니다. 기존 Drive 객체의 자동 미리보기만 서버에서 읽으며 새 객체/보존 clock/공개 URL/캐시를 만들지 않습니다. 원본을 매번 decode하지 않습니다. 미리보기 미생성·checksum 부재·지원하지 않는 provider 응답은 PHOTO_THUMBNAIL_UNAVAILABLE(503)이며 클라이언트가 기존 content를 별도 요청할 수 있습니다. 원본 자동 전송·업로드 재시도·Range·query는 지원하지 않습니다.
+         */
+        get: operations["getPhotoThumbnail"];
         put?: never;
         post?: never;
         delete?: never;
@@ -874,6 +954,26 @@ export interface paths {
          * @description admin 또는 maid의 Supabase Auth 비밀번호를 서버 내부 namespace의 임시값으로 초기화하고 `mustChangePassword=true`로 전환합니다. 외부 Auth 성공 뒤 password-specific private effect version을 확인한 후에만 충돌한 개인 비밀번호 변경 receipt를 supersede하므로 Auth 실패가 복구 원장을 허위 완료하지 않습니다. 전체 휴대전화 번호나 임시 내부 변환값은 응답하지 않습니다. developer는 본인 비밀번호 변경 API만 사용합니다.
          */
         post: operations["resetAccountPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/developer/reset/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 초기화 후보 영향 읽기 전용 조회
+         * @description active developer/session을 수집 전후 재검증합니다. 한 statement snapshot에서 테이블별 최대 10,001행의 독립 건수와 역할별 행 후보·실제 FK 참조 영향을 집계합니다. diagnosticComplete는 inventory 수집 완전성뿐이며 rowImpact는 별도 수집 완전성/지원 FK 결과를 표시합니다. 동일 건수의 행 교체·내용 drift·논리 JSON 참조·삭제 순서·실행 승인·복구는 증명하지 않습니다. 후보 건수는 확정 삭제 건수가 아니며 실행은 항상 false입니다. 신규 migration과 API 배포 전에는 운영 사용 불가입니다.
+         */
+        get: operations["getDeveloperResetPreview"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2726,6 +2826,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/room-types/{roomTypeId}/cleaning-fee": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 객실 타입별 기본 청소 단가 변경
+         * @description #577 개발 후보. 변경 후 카탈로그 단가로 생성하는 일반 청소에만 적용. 이미 생성된 미래 청소·진행 청소·확정 수당·재청소 승계금액은 변경하지 않습니다. 금액은 정수 원화이며 폭탄방 동액 보너스 합계의 DB integer 범위를 보호합니다. 현재 타입 version과 적용범위 확인이 필요합니다. 성공·재전송 뒤 GET /v1/room-types를 다시 조회하세요.
+         */
+        put: operations["setRoomTypeCleaningFee"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/room-types": {
         parameters: {
             query?: never;
@@ -2799,6 +2919,30 @@ export interface paths {
          */
         get: operations["listRoomEvents"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/rooms/{roomId}/fixed-memo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 객실 고정 메모 조회
+         * @description #551 개발 후보·운영 미반영. 관리자 수정/현재 통보 배정 메이드 조회. 500 UTF-16자, null은 비우기, 독립 메모 버전 CAS. 개인정보·PIN·링크 금지. 자동 배정 없음.
+         */
+        get: operations["getRoomFixedMemo"];
+        /**
+         * 객실 고정 메모 수정·비우기
+         * @description #551 개발 후보·운영 미반영. 관리자 수정/현재 통보 배정 메이드 조회. 500 UTF-16자, null은 비우기, 독립 메모 버전 CAS. 개인정보·PIN·링크 금지. 자동 배정 없음.
+         */
+        put: operations["setRoomFixedMemo"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3139,6 +3283,95 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        RoomReadyPreviewRequest: {
+            /** @constant */
+            targetStatus: "READY";
+            /** @constant */
+            reasonCode: "ADMIN_ROOM_READY_CORRECTION";
+        };
+        RoomReadyCorrectionRequest: {
+            /** @constant */
+            targetStatus: "READY";
+            /** @constant */
+            reasonCode: "ADMIN_ROOM_READY_CORRECTION";
+            expectedRoomVersion: number;
+            impactFingerprint: string;
+            /**
+             * Format: date-time
+             * @description 초·UTC offset을 포함한 실제 달력의 RFC 3339 시각. 소수 초는 최대 6자리.
+             */
+            evaluatedAt: string;
+            /**
+             * Format: date-time
+             * @description 초·UTC offset을 포함한 실제 달력의 RFC 3339 시각. 소수 초는 최대 6자리.
+             */
+            expiresAt: string;
+            /** @constant */
+            confirmed: true;
+            /** @description 시작·현장 완료·미승인 제출을 취소하면 새 수당이 적립되지 않는다는 별도 확인. 기존 확정 수당은 유지. 먼저 검수 승인을 권고합니다. */
+            acknowledgeNoNewEarnings: boolean;
+            /** @description 현재 촛불이 남아 있으면 실제 회수 확인 true 필수. 물리적 회수를 자동 실행하지 않습니다. */
+            confirmPhysicalCandleRemoval: boolean;
+        };
+        RoomReadyPreview: {
+            /** Format: uuid */
+            roomId: string;
+            /** @constant */
+            targetStatus: "READY";
+            roomStateVersion: number;
+            canApply: boolean;
+            blockingReasons: ("ROOM_INACTIVE" | "ROOM_TYPE_INACTIVE" | "DATA_UNCONFIRMED" | "OCCUPIED" | "RESERVATION_CURRENT" | "CHECKOUT_NOT_COMPLETED" | "UNSUPPORTED_CLEANING_CHAIN" | "PHOTO_UPLOAD_IN_PROGRESS" | "ASSIGNMENT_CHANGE_PENDING" | "LIMIT_EXCEEDED")[];
+            /** @constant */
+            requiresConfirmation: true;
+            requiresEarningAcknowledgement: boolean;
+            effects: {
+                cleaningTargets: {
+                    /** Format: uuid */
+                    cleaningTargetId: string;
+                    /** Format: uuid */
+                    assignmentId: string | null;
+                    /** Format: uuid */
+                    attemptId: string | null;
+                    /** @enum {string|null} */
+                    attemptStatus: null | "scheduled" | "in_progress" | "field_completed" | "upload_pending" | "submitted" | "approved" | "rejected" | "interrupted" | "superseded";
+                    hasSubmission: boolean;
+                    fieldCompleted: boolean;
+                }[];
+                operationBlockIds: string[];
+                roomIssueIds: string[];
+                candleCount: number;
+                /** @enum {string|null} */
+                displayStatusOverride: null | "BLOCKED" | "OCCUPIED" | "ARRIVAL_PENDING" | "RESERVATION_PRESENT" | "CLEANING_REQUIRED" | "READY";
+            };
+            warnings: ("CANCEL_WITHOUT_NEW_EARNINGS" | "APPROVE_BEFORE_CANCEL_TO_PRESERVE_EARNINGS" | "PHYSICAL_CANDLE_REMOVAL_REQUIRED")[];
+            impactFingerprint: string;
+            /**
+             * Format: date-time
+             * @description 초·UTC offset을 포함한 실제 달력의 RFC 3339 시각. 소수 초는 최대 6자리.
+             */
+            evaluatedAt: string;
+            /**
+             * Format: date-time
+             * @description 초·UTC offset을 포함한 실제 달력의 RFC 3339 시각. 소수 초는 최대 6자리.
+             */
+            expiresAt: string;
+        };
+        RoomReadyCorrectionResult: {
+            /** Format: uuid */
+            roomId: string;
+            /** @constant */
+            targetStatus: "READY";
+            roomStateVersion: number;
+            /**
+             * Format: date-time
+             * @description 초·UTC offset을 포함한 실제 달력의 RFC 3339 시각. 소수 초는 최대 6자리.
+             */
+            recordedAt: string;
+            cancelledCleaningTargetIds: string[];
+            releasedOperationBlockIds: string[];
+            resolvedRoomIssueIds: string[];
+            candlesCleared: boolean;
+        };
         PayrollRemittanceBatch: {
             /** Format: date */
             weekStart: string;
@@ -3730,6 +3963,19 @@ export interface components {
              */
             mediaAvailability: "available" | "purged" | "unavailable";
         };
+        PhotoUploadBatchAdmission: {
+            /** Format: uuid */
+            batchId: string;
+            /** @constant */
+            maximumConcurrentTransfers: 2;
+            items: {
+                /** Format: uuid */
+                photoItemId: string;
+                /** Format: date-time */
+                expiresAt: string;
+                quotaWarning: boolean;
+            }[];
+        };
         PhotoCollectionDeleteResponse: {
             /** Format: uuid */
             attemptId: string;
@@ -4146,7 +4392,7 @@ export interface components {
          * @description 프론트 분기용 안정적 코드입니다. 사용자 표시 문구는 message가 아니라 이 코드 기준으로 관리합니다.
          * @enum {string}
          */
-        ErrorCode: "VALIDATION_ERROR" | "INVALID_ROOM_ISSUE_REPORT" | "ROOM_ISSUE_EVIDENCE_INVALID" | "ROOM_ISSUE_REPORT_ACCESS_REQUIRED" | "INVALID_PHONE" | "REQUEST_TOO_LARGE" | "MISSING_ACCESS_TOKEN" | "INVALID_ACCESS_TOKEN" | "PROFILE_NOT_FOUND" | "ACCOUNT_INACTIVE" | "ACCOUNT_EXECUTION_LIFECYCLE_REQUIRED" | "ATTEMPT_ACCESS_REQUIRED" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_VERSION_CONFLICT" | "ASSIGNMENT_NOT_NOTIFIED" | "ATTEMPT_INVALID_TRANSITION" | "MAID_ALREADY_IN_PROGRESS" | "ATTEMPT_COMMAND_FAILED" | "CAPABILITY_ACCESS_REQUIRED" | "LIMITED_DISCOVERY_LIMIT_EXCEEDED" | "LIMITED_SESSION_LIMIT_EXCEEDED" | "PHOTO_RETENTION_DELETE_PREPARED" | "ACCOUNT_VERSION_CONFLICT" | "CLEANING_WINDOW_NOT_EXPIRED" | "ASSIGNMENT_SCHEDULE_INVALID" | "ROLLOVER_NOT_ALLOWED" | "INVALID_ATTEMPT_COMMAND" | "ATTEMPT_ACTIVATION_NOT_ALLOWED" | "CLEANING_SERVICE_DATE_NOT_DUE" | "CLEANING_SERVICE_DATE_EXPIRED" | "CLEANING_WINDOW_NOT_OPEN" | "CLEANING_WINDOW_EXPIRED" | "CHECKOUT_NOT_MATERIALIZED" | "RECLEAN_MAID_IMMUTABLE" | "PREVIOUS_ROOM_WORKFLOW_ACTIVE" | "SESSION_REVOKED" | "AUTH_CONTEXT_UNAVAILABLE" | "INVALID_CREDENTIALS" | "ACCOUNT_LOCKED" | "LOGIN_RATE_LIMITED" | "LOGIN_CLIENT_ID_UNAVAILABLE" | "LOGIN_RATE_LIMIT_UNAVAILABLE" | "ACTIVITY_LOG_UNAVAILABLE" | "AUTH_LOOKUP_FAILED" | "LOGIN_STATE_UPDATE_FAILED" | "INVALID_CURRENT_PASSWORD" | "AUTH_PASSWORD_CHANGE_FAILED" | "PASSWORD_STATE_INCONSISTENT" | "PASSWORD_STATE_UPDATE_FAILED" | "PASSWORD_CHANGE_RECEIPT_FAILED" | "PASSWORD_CHANGE_IN_PROGRESS" | "PASSWORD_CHANGE_SESSION_MISMATCH" | "PASSWORD_VERIFICATION_RATE_LIMITED" | "PASSWORD_VERIFICATION_RATE_LIMIT_UNAVAILABLE" | "PASSWORD_VERIFICATION_SESSION_REVOKE_FAILED" | "PASSWORD_RESET_STATE_UPDATE_FAILED" | "PASSWORD_CHANGE_REQUIRED" | "ACCOUNT_MANAGER_REQUIRED" | "ADMIN_REQUIRED" | "ASSIGNMENT_ACCESS_REQUIRED" | "DEVELOPER_REQUIRED" | "DEVELOPER_PROJECTION_FAILED" | "DATABASE_UNREACHABLE" | "MIGRATION_DRIFT" | "RLS_CONFIGURATION_INVALID" | "SCHEDULER_NOT_CONFIGURED" | "SCHEDULER_ACTOR_INVALID" | "SCHEDULER_DEGRADED" | "SCHEDULER_HEARTBEAT_FAILED" | "DIAGNOSTIC_TIMEOUT" | "DIAGNOSTICS_RATE_LIMITED" | "ACCOUNT_NOT_FOUND" | "DEVELOPER_ACCOUNT_PROTECTED" | "LAST_ACTIVE_ADMIN_REQUIRED" | "ACCOUNT_MUST_BE_INACTIVE" | "DEPARTED_ACCOUNT_IMMUTABLE" | "IDEMPOTENCY_KEY_REUSED" | "RESERVED_IDEMPOTENCY_KEY" | "DEACTIVATION_MUST_BE_FINISHED" | "PHONE_ALREADY_REGISTERED" | "LOGIN_ID_CONFLICT" | "PHONE_REQUIRED_FOR_RESET" | "AUTH_USER_CREATE_FAILED" | "AUTH_USER_UPDATE_FAILED" | "AUTH_PASSWORD_RESET_FAILED" | "ACCOUNT_AUTH_STATE_INCONSISTENT" | "ACCOUNT_COMMAND_FAILED" | "FORBIDDEN" | "MAID_REQUIRED" | "AVAILABILITY_ACCESS_REQUIRED" | "ACTIVE_MAID_REQUIRED" | "CLEANING_TARGET_NOT_FOUND" | "ASSIGNMENT_VERSION_CONFLICT" | "ASSIGNMENT_TARGET_STATE_INVALID" | "ASSIGNMENT_SEQUENCE_CONFLICT" | "ASSIGNMENT_NOT_FOUND" | "ASSIGNMENT_IMPACT_CHANGED" | "ASSIGNMENT_DRAFT_STALE_SCHEDULE" | "ASSIGNMENT_AVAILABILITY_REQUIRED" | "ASSIGNMENT_AVAILABILITY_STALE" | "ASSIGNMENT_MAID_UNAVAILABLE" | "ASSIGNMENT_WINDOW_EXPIRED" | "ASSIGNMENT_COMMIT_NOT_ALLOWED" | "ASSIGNMENT_COMMAND_FAILED" | "ASSIGNMENT_PREVIEW_DATE_NOT_ALLOWED" | "ASSIGNMENT_DURATION_POLICY_RETIRED" | "ASSIGNMENT_PREVIEW_LIMIT_EXCEEDED" | "ASSIGNMENT_PREVIEW_FAILED" | "INVALID_ASSIGNMENT_DURATION_POLICY" | "ASSIGNMENT_DURATION_POLICY_VERSION_CONFLICT" | "ACTIVE_ADMIN_REQUIRED" | "AVAILABILITY_APPROVAL_REQUIRED" | "AVAILABILITY_WEEK_OUT_OF_RANGE" | "PAST_AVAILABILITY_DATE_NOT_ALLOWED" | "CHANGE_REQUEST_BEFORE_DEADLINE" | "STALE_VERSION" | "PENDING_CHANGE_REQUEST_EXISTS" | "INVALID_TRANSITION" | "AVAILABILITY_NOT_FOUND" | "CHANGE_REQUEST_NOT_FOUND" | "WEEK_START_MUST_BE_MONDAY" | "AVAILABILITY_DATES_MUST_BE_UNIQUE" | "AVAILABILITY_DATE_OUTSIDE_WEEK" | "AVAILABILITY_COMMAND_FAILED" | "INVALID_GUEST_NAME" | "INVALID_GUEST_COUNT" | "INVALID_RESERVATION_SCHEDULE" | "STANDARD_RESERVATION_REQUIRES_END" | "RESERVATION_TYPE_IMMUTABLE" | "RESERVATION_END_IMMUTABLE" | "BOOKABILITY_RANGE_TOO_LARGE" | "INVALID_ROOM_TYPE_FILTER" | "EXCLUDE_RESERVATION_NOT_FOUND" | "EXCLUDE_RESERVATION_NOT_ELIGIBLE" | "INVALID_RESERVATION_RANGE" | "RESERVATION_RANGE_TOO_LARGE" | "INVALID_RESERVATION_CURSOR" | "RESERVATION_CURSOR_NOT_CONFIGURED" | "INVALID_MOVE_EFFECTIVE_AT" | "RESERVATION_OVERLAP" | "TARGET_ROOM_OVERLAP" | "TARGET_ROOM_BLOCKED" | "TARGET_ROOM_NOT_READY" | "PIN_LEASE_ACTIVE" | "OPEN_ENDED_STAY_REQUIRES_END" | "ROOM_ALLOCATION_BLOCKED" | "RESERVATION_NOT_FOUND" | "CLEANING_REQUEST_NOT_FOUND" | "CLEANING_TEMPLATE_NOT_CONFIGURED" | "INVALID_CLEANING_TEMPLATE" | "INVALID_CLEANING_TEMPLATE_SLOTS" | "CLEANING_TEMPLATE_VERSION_CONFLICT" | "CLEANING_TEMPLATE_COMMAND_FAILED" | "INVALID_MANUAL_CLEANING_REQUEST" | "ACTIVE_STAY_RESERVATION_REQUIRED" | "STAYOVER_ACCESS_WINDOW_INVALID" | "VACANT_ROOM_REQUIRED" | "RESERVATION_ROOM_MISMATCH" | "NOT_MANUAL_CLEANING_REQUEST" | "REPLAN_REQUIRED" | "SCHEDULE_LOCKED" | "CONFLICT" | "RESERVATION_COMMAND_FAILED" | "RESERVATION_PII_KEY_INVALID" | "RESERVATION_PII_KEYRING_INVALID" | "RESERVATION_PII_DECRYPT_FAILED" | "COMPLAINT_ACCESS_REQUIRED" | "COMPLAINT_MAID_MISMATCH" | "COMPLAINT_NOT_FOUND" | "INVALID_COMPLAINT_CATEGORY" | "INVALID_COMPLAINT_FINDING" | "INVALID_COMPLAINT_PENALTY" | "INVALID_REWORK_DECISION" | "INVALID_COMPLAINT_RESPONSE" | "COMPLAINT_APPEAL_REASON_REQUIRED" | "COMPLAINT_APPEAL_REASON_FORBIDDEN" | "COMPLAINT_PERIOD_INVALID" | "COMPLAINT_PAGE_LIMIT_INVALID" | "INVALID_COMPLAINT_CURSOR" | "INVALID_COMPLAINT_REWORK" | "COMPLAINT_COMPENSATION_AMOUNT_INVALID" | "COMPLAINT_SOURCE_NOT_APPROVED" | "COMPLAINT_RESPONSE_REQUIRED" | "COMPLAINT_APPEAL_UNRESOLVED" | "COMPLAINT_RESPONSE_ALREADY_RECORDED" | "COMPLAINT_DECISION_REQUIRED" | "COMPLAINT_REWORK_MAID_UNAVAILABLE" | "COMPLAINT_REWORK_WINDOW_UNAVAILABLE" | "COMPLAINT_REWORK_NOT_CONFIRMED" | "COMPLAINT_REWORK_ALREADY_MATERIALIZED" | "COMPLAINT_REWORK_DECISION_STALE" | "COMPLAINT_REWORK_PRESTART_FROZEN" | "RECLEAN_TEMPLATE_NOT_CONFIGURED" | "COMPLAINT_INVALID_TRANSITION" | "COMPLAINT_COMMAND_FAILED" | "INVALID_INSPECTION_CURSOR" | "INSPECTION_CURSOR_NOT_CONFIGURED" | "INSPECTION_PAGE_LIMIT_INVALID" | "INSPECTION_RESPONSE_TOO_LARGE" | "INVALID_WORK_HISTORY_QUERY" | "INVALID_WORK_HISTORY_CURSOR" | "WORK_HISTORY_ACCESS_REQUIRED" | "WORK_HISTORY_MAID_SCOPE_REQUIRED" | "WORK_HISTORY_MAID_NOT_FOUND" | "WORK_HISTORY_QUERY_FAILED" | "INVALID_ROOM_OPERATION_QUERY" | "INVALID_ROOM_OPERATION_CURSOR" | "ROOM_OPERATION_CURSOR_NOT_CONFIGURED" | "ROOM_OPERATION_PAGE_LIMIT_INVALID" | "ROOM_OPERATION_RESPONSE_TOO_LARGE" | "NOTIFICATION_ACCESS_REQUIRED" | "NOTIFICATION_NOT_FOUND" | "INVALID_NOTIFICATION_CURSOR" | "NOTIFICATION_CURSOR_NOT_CONFIGURED" | "NOTIFICATION_RESPONSE_TOO_LARGE" | "NOTIFICATION_QUERY_FAILED" | "PAYROLL_ACCESS_REQUIRED" | "PAYROLL_MAID_NOT_FOUND" | "PAYROLL_WEEK_MUST_START_MONDAY" | "PAYROLL_PAGE_LIMIT_INVALID" | "PAYROLL_PAGE_KIND_INVALID" | "PAYROLL_CURSOR_INVALID" | "PAYROLL_CURSOR_NOT_CONFIGURED" | "PAYROLL_RESPONSE_TOO_LARGE" | "INVALID_EXPECTED_VERSION" | "PAYROLL_WEEK_NOT_CLOSED" | "PAYROLL_CYCLE_NOT_OPEN" | "NO_PAYROLL_AMOUNT" | "PAYROLL_NONPOSITIVE_REQUIRES_CARRY" | "PAYROLL_POSITIVE_REQUIRES_START" | "PAYROLL_CYCLE_ECONOMICALLY_FROZEN" | "PAYROLL_SOURCE_PAYMENT_UNCERTAIN" | "PAYROLL_SOURCE_ALREADY_REVERSED" | "PAYROLL_ROOT_ENTITLEMENT_NEGATIVE" | "STALE_ADJUSTMENT_VERSION" | "PAYROLL_LATE_EARNING_ALREADY_CARRIED" | "PAYROLL_EARNING_NOT_LATE" | "PAYROLL_LATE_CARRY_TARGET_FROZEN" | "PAYROLL_EARLIER_CARRY_PENDING" | "PAYROLL_PRIOR_LATE_EARNING_PENDING" | "PAYROLL_SOURCE_NOT_FOUND" | "PAYROLL_ADJUSTMENT_INVALID" | "PAYROLL_PAYMENT_ATTEMPT_NOT_FOUND" | "PAYROLL_PAYMENT_ATTEMPT_TERMINAL" | "PAYROLL_PAYMENT_TRANSITION_INVALID" | "PAYROLL_PAYMENT_REFERENCE_ALREADY_USED" | "PAYROLL_PAYMENT_REFERENCE_INVALID" | "PAYROLL_PAYMENT_METHOD_INVALID" | "PAYROLL_PAYMENT_REASON_INVALID" | "PAYROLL_PAYMENT_REOPEN_REASON_INVALID" | "PAYROLL_PAYMENT_RESULT_AMOUNT_MISMATCH" | "PAYROLL_COMMAND_FAILED" | "ROOM_NOT_FOUND" | "ROOM_TYPE_NOT_FOUND" | "ROOM_TYPE_CAPACITY_INVALID" | "ROOM_TYPE_CAPACITY_ACTIVE_RESERVATION_CONFLICT" | "ROOM_TYPE_CAPACITY_PREVIEW_STALE" | "ROOM_TYPE_VERSION_CONFLICT" | "ROOM_NUMBER_ALREADY_EXISTS" | "ROOM_TYPE_INACTIVE" | "ROOM_INACTIVE" | "ROOM_ALREADY_INACTIVE" | "ROOM_DEACTIVATION_BLOCKED" | "ROOM_DEACTIVATION_PREVIEW_STALE" | "ROOM_VERSION_CONFLICT" | "GUEST_COUNT_EXCEEDS_ROOM_TYPE_CAPACITY" | "ROOM_OPERATION_NOT_FOUND" | "INVALID_ROOM_PIN" | "INVALID_PIN_TRANSFER_REQUEST" | "ROOM_PIN_TRANSFER_NOT_CONFIGURED" | "ROOM_PIN_TRANSFER_STALE" | "ROOM_PIN_TRANSFER_BUSY" | "ROOM_PIN_IMPORT_SOURCE_UNAVAILABLE" | "ROOM_PIN_TRANSFER_FAILED" | "INVALID_PIN_BOOTSTRAP_LIMIT" | "INVALID_PIN_BOOTSTRAP" | "ROOM_PIN_BOOTSTRAP_CONFIG_INVALID" | "ROOM_PIN_BOOTSTRAP_FAILED" | "ROOM_PIN_KEY_UNAVAILABLE" | "ROOM_PIN_CRYPTO_CONFIG_INVALID" | "ROOM_PIN_DECRYPT_FAILED" | "ROOM_PIN_COMMAND_FAILED" | "STALE_PIN_VERSION" | "ROOM_NUMBER_CHANGED" | "ROOM_PIN_REISSUE_REQUIRED" | "ROOM_PIN_MISMATCH_UNRESOLVED" | "INVALID_PIN_CHANGE_REASON" | "PIN_CHANGE_IN_PROGRESS_REQUIRED" | "PIN_CHANGE_IN_PROGRESS" | "PIN_CHANGE_LEASE_EXPIRED" | "PIN_CHANGE_LEASE_NOT_RESOLVABLE" | "PIN_REVEAL_AUTHORIZATION_CHANGED" | "GENERATED_PIN_REVEAL_NOT_ALLOWED" | "GENERATED_PIN_CONFIRMATION_NOT_ALLOWED" | "ROOM_PIN_UNCONFIGURED" | "ROOM_PIN_SHEET_OPERATOR_REQUIRED" | "ROOM_PIN_SHEET_NOT_CONFIGURED" | "ROOM_PIN_SHEET_OPERATION_FAILED" | "ROOM_PIN_SHEET_RESPONSE_TOO_LARGE" | "ROOM_PIN_SHEET_FULL_RESYNC_STALE" | "ROOM_PIN_SHEET_WORKER_BUSY" | "ROOM_PIN_SHEET_FULL_RESYNC_PENDING" | "ROOM_PIN_SHEET_ROOM_MASTER_INVALID" | "PIN_ACCESS_LEASE_REQUIRED" | "PIN_ENTITLEMENT_REQUIRED" | "PIN_ACCESS_REQUIRED" | "SENSITIVE_TEXT_NOT_ALLOWED" | "PIN_MATERIAL_NOT_ALLOWED" | "ROOM_COMMAND_FAILED" | "ORIGIN_NOT_ALLOWED" | "ROUTE_NOT_FOUND" | "RUNTIME_NOT_CONFIGURED" | "INTERNAL_SERVER_ERROR" | "INVALID_PHOTO_BINARY" | "INVALID_POST_APPROVAL_ROOM_ISSUE" | "PHOTO_BODY_TIMEOUT" | "PHOTO_DECODER_UNAVAILABLE" | "PHOTO_DECODE_LIMIT_EXCEEDED" | "PHOTO_MEDIA_TYPE_UNSUPPORTED" | "PHOTO_PROVIDER_IDENTITY_CONFLICT" | "PHOTO_STORAGE_QUOTA_EXCEEDED" | "PHOTO_STORAGE_QUOTA_UNAVAILABLE" | "PHOTO_TOO_LARGE" | "PHOTO_UPLOAD_ADMISSION_EXPIRED" | "PHOTO_UPLOAD_FENCE_CONFLICT" | "PHOTO_UPLOAD_LIMIT_EXCEEDED" | "PHOTO_UPLOAD_RATE_LIMITED" | "PHOTO_UPLOAD_TIME_INVALID" | "POST_APPROVAL_ROOM_ISSUE_ACCESS_REQUIRED" | "POST_APPROVAL_ROOM_ISSUE_BODY_TOO_LARGE" | "POST_APPROVAL_ROOM_ISSUE_COMMAND_FAILED" | "POST_APPROVAL_ROOM_ISSUE_DRAFT_CONFLICT" | "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_COMMAND_FAILED" | "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_CONFLICT" | "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_INVALID" | "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_PROJECTION_INVALID" | "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_RETRY_REQUIRED" | "POST_APPROVAL_ROOM_ISSUE_MEDIA_PURGED" | "POST_APPROVAL_ROOM_ISSUE_MEDIA_TYPE_INVALID" | "POST_APPROVAL_ROOM_ISSUE_PROJECTION_INVALID" | "POST_APPROVAL_ROOM_ISSUE_REPORT_SEALED" | "POST_APPROVAL_ROOM_ISSUE_SOURCE_UNAVAILABLE" | "POST_APPROVAL_ROOM_ISSUE_UPLOAD_NOT_ACCEPTED";
+        ErrorCode: "VALIDATION_ERROR" | "INVALID_ROOM_ISSUE_REPORT" | "ROOM_ISSUE_EVIDENCE_INVALID" | "ROOM_ISSUE_REPORT_ACCESS_REQUIRED" | "INVALID_PHONE" | "REQUEST_TOO_LARGE" | "MISSING_ACCESS_TOKEN" | "INVALID_ACCESS_TOKEN" | "PROFILE_NOT_FOUND" | "ACCOUNT_INACTIVE" | "ACCOUNT_EXECUTION_LIFECYCLE_REQUIRED" | "ATTEMPT_ACCESS_REQUIRED" | "ATTEMPT_NOT_FOUND" | "ATTEMPT_VERSION_CONFLICT" | "ASSIGNMENT_NOT_NOTIFIED" | "ATTEMPT_INVALID_TRANSITION" | "MAID_ALREADY_IN_PROGRESS" | "ATTEMPT_COMMAND_FAILED" | "CAPABILITY_ACCESS_REQUIRED" | "LIMITED_DISCOVERY_LIMIT_EXCEEDED" | "LIMITED_SESSION_LIMIT_EXCEEDED" | "PHOTO_RETENTION_DELETE_PREPARED" | "ACCOUNT_VERSION_CONFLICT" | "CLEANING_WINDOW_NOT_EXPIRED" | "ASSIGNMENT_SCHEDULE_INVALID" | "ROLLOVER_NOT_ALLOWED" | "INVALID_ATTEMPT_COMMAND" | "ATTEMPT_ACTIVATION_NOT_ALLOWED" | "CLEANING_SERVICE_DATE_NOT_DUE" | "CLEANING_SERVICE_DATE_EXPIRED" | "CLEANING_WINDOW_NOT_OPEN" | "CLEANING_WINDOW_EXPIRED" | "CHECKOUT_NOT_MATERIALIZED" | "RECLEAN_MAID_IMMUTABLE" | "PREVIOUS_ROOM_WORKFLOW_ACTIVE" | "SESSION_REVOKED" | "AUTH_CONTEXT_UNAVAILABLE" | "INVALID_CREDENTIALS" | "ACCOUNT_LOCKED" | "LOGIN_RATE_LIMITED" | "LOGIN_CLIENT_ID_UNAVAILABLE" | "LOGIN_RATE_LIMIT_UNAVAILABLE" | "ACTIVITY_LOG_UNAVAILABLE" | "AUTH_LOOKUP_FAILED" | "LOGIN_STATE_UPDATE_FAILED" | "INVALID_CURRENT_PASSWORD" | "AUTH_PASSWORD_CHANGE_FAILED" | "PASSWORD_STATE_INCONSISTENT" | "PASSWORD_STATE_UPDATE_FAILED" | "PASSWORD_CHANGE_RECEIPT_FAILED" | "PASSWORD_CHANGE_IN_PROGRESS" | "PASSWORD_CHANGE_SESSION_MISMATCH" | "PASSWORD_VERIFICATION_RATE_LIMITED" | "PASSWORD_VERIFICATION_RATE_LIMIT_UNAVAILABLE" | "PASSWORD_VERIFICATION_SESSION_REVOKE_FAILED" | "PASSWORD_RESET_STATE_UPDATE_FAILED" | "PASSWORD_CHANGE_REQUIRED" | "ACCOUNT_MANAGER_REQUIRED" | "ADMIN_REQUIRED" | "ASSIGNMENT_ACCESS_REQUIRED" | "ASSIGNMENT_INSTRUCTION_INVALID" | "DEVELOPER_REQUIRED" | "DEVELOPER_PROJECTION_FAILED" | "DATABASE_UNREACHABLE" | "MIGRATION_DRIFT" | "RLS_CONFIGURATION_INVALID" | "SCHEDULER_NOT_CONFIGURED" | "SCHEDULER_ACTOR_INVALID" | "SCHEDULER_DEGRADED" | "SCHEDULER_HEARTBEAT_FAILED" | "DIAGNOSTIC_TIMEOUT" | "DIAGNOSTICS_RATE_LIMITED" | "ACCOUNT_NOT_FOUND" | "DEVELOPER_ACCOUNT_PROTECTED" | "LAST_ACTIVE_ADMIN_REQUIRED" | "ACCOUNT_MUST_BE_INACTIVE" | "DEPARTED_ACCOUNT_IMMUTABLE" | "IDEMPOTENCY_KEY_REUSED" | "RESERVED_IDEMPOTENCY_KEY" | "DEACTIVATION_MUST_BE_FINISHED" | "PHONE_ALREADY_REGISTERED" | "LOGIN_ID_CONFLICT" | "PHONE_REQUIRED_FOR_RESET" | "AUTH_USER_CREATE_FAILED" | "AUTH_USER_UPDATE_FAILED" | "AUTH_PASSWORD_RESET_FAILED" | "ACCOUNT_AUTH_STATE_INCONSISTENT" | "ACCOUNT_COMMAND_FAILED" | "FORBIDDEN" | "MAID_REQUIRED" | "AVAILABILITY_ACCESS_REQUIRED" | "ACTIVE_MAID_REQUIRED" | "CLEANING_TARGET_NOT_FOUND" | "ASSIGNMENT_VERSION_CONFLICT" | "ASSIGNMENT_TARGET_STATE_INVALID" | "ASSIGNMENT_SEQUENCE_CONFLICT" | "ASSIGNMENT_NOT_FOUND" | "ASSIGNMENT_IMPACT_CHANGED" | "ASSIGNMENT_DRAFT_STALE_SCHEDULE" | "ASSIGNMENT_AVAILABILITY_REQUIRED" | "ASSIGNMENT_AVAILABILITY_STALE" | "ASSIGNMENT_MAID_UNAVAILABLE" | "ASSIGNMENT_WINDOW_EXPIRED" | "ASSIGNMENT_COMMIT_NOT_ALLOWED" | "ASSIGNMENT_COMMAND_FAILED" | "ASSIGNMENT_PREVIEW_DATE_NOT_ALLOWED" | "ASSIGNMENT_DURATION_POLICY_RETIRED" | "ASSIGNMENT_PREVIEW_LIMIT_EXCEEDED" | "ASSIGNMENT_PREVIEW_FAILED" | "INVALID_ASSIGNMENT_DURATION_POLICY" | "ASSIGNMENT_DURATION_POLICY_VERSION_CONFLICT" | "ACTIVE_ADMIN_REQUIRED" | "AVAILABILITY_APPROVAL_REQUIRED" | "AVAILABILITY_WEEK_OUT_OF_RANGE" | "PAST_AVAILABILITY_DATE_NOT_ALLOWED" | "CHANGE_REQUEST_BEFORE_DEADLINE" | "STALE_VERSION" | "PENDING_CHANGE_REQUEST_EXISTS" | "INVALID_TRANSITION" | "AVAILABILITY_NOT_FOUND" | "CHANGE_REQUEST_NOT_FOUND" | "WEEK_START_MUST_BE_MONDAY" | "AVAILABILITY_DATES_MUST_BE_UNIQUE" | "AVAILABILITY_DATE_OUTSIDE_WEEK" | "AVAILABILITY_COMMAND_FAILED" | "INVALID_GUEST_NAME" | "INVALID_GUEST_COUNT" | "INVALID_RESERVATION_SCHEDULE" | "STANDARD_RESERVATION_REQUIRES_END" | "RESERVATION_TYPE_IMMUTABLE" | "RESERVATION_END_IMMUTABLE" | "BOOKABILITY_RANGE_TOO_LARGE" | "INVALID_ROOM_TYPE_FILTER" | "EXCLUDE_RESERVATION_NOT_FOUND" | "EXCLUDE_RESERVATION_NOT_ELIGIBLE" | "INVALID_RESERVATION_RANGE" | "RESERVATION_RANGE_TOO_LARGE" | "INVALID_RESERVATION_CURSOR" | "RESERVATION_CURSOR_NOT_CONFIGURED" | "INVALID_MOVE_EFFECTIVE_AT" | "RESERVATION_OVERLAP" | "TARGET_ROOM_OVERLAP" | "TARGET_ROOM_BLOCKED" | "TARGET_ROOM_NOT_READY" | "PIN_LEASE_ACTIVE" | "OPEN_ENDED_STAY_REQUIRES_END" | "ROOM_ALLOCATION_BLOCKED" | "RESERVATION_NOT_FOUND" | "CLEANING_REQUEST_NOT_FOUND" | "CLEANING_TEMPLATE_NOT_CONFIGURED" | "INVALID_CLEANING_TEMPLATE" | "INVALID_CLEANING_TEMPLATE_SLOTS" | "CLEANING_TEMPLATE_VERSION_CONFLICT" | "CLEANING_TEMPLATE_COMMAND_FAILED" | "INVALID_MANUAL_CLEANING_REQUEST" | "ACTIVE_STAY_RESERVATION_REQUIRED" | "STAYOVER_ACCESS_WINDOW_INVALID" | "VACANT_ROOM_REQUIRED" | "RESERVATION_ROOM_MISMATCH" | "NOT_MANUAL_CLEANING_REQUEST" | "REPLAN_REQUIRED" | "SCHEDULE_LOCKED" | "CONFLICT" | "RESERVATION_COMMAND_FAILED" | "RESERVATION_PII_KEY_INVALID" | "RESERVATION_PII_KEYRING_INVALID" | "RESERVATION_PII_DECRYPT_FAILED" | "COMPLAINT_ACCESS_REQUIRED" | "COMPLAINT_MAID_MISMATCH" | "COMPLAINT_NOT_FOUND" | "INVALID_COMPLAINT_CATEGORY" | "INVALID_COMPLAINT_FINDING" | "INVALID_COMPLAINT_PENALTY" | "INVALID_REWORK_DECISION" | "INVALID_COMPLAINT_RESPONSE" | "COMPLAINT_APPEAL_REASON_REQUIRED" | "COMPLAINT_APPEAL_REASON_FORBIDDEN" | "COMPLAINT_PERIOD_INVALID" | "COMPLAINT_PAGE_LIMIT_INVALID" | "INVALID_COMPLAINT_CURSOR" | "INVALID_COMPLAINT_REWORK" | "COMPLAINT_COMPENSATION_AMOUNT_INVALID" | "COMPLAINT_SOURCE_NOT_APPROVED" | "COMPLAINT_RESPONSE_REQUIRED" | "COMPLAINT_APPEAL_UNRESOLVED" | "COMPLAINT_RESPONSE_ALREADY_RECORDED" | "COMPLAINT_DECISION_REQUIRED" | "COMPLAINT_REWORK_MAID_UNAVAILABLE" | "COMPLAINT_REWORK_WINDOW_UNAVAILABLE" | "COMPLAINT_REWORK_NOT_CONFIRMED" | "COMPLAINT_REWORK_ALREADY_MATERIALIZED" | "COMPLAINT_REWORK_DECISION_STALE" | "COMPLAINT_REWORK_PRESTART_FROZEN" | "RECLEAN_TEMPLATE_NOT_CONFIGURED" | "COMPLAINT_INVALID_TRANSITION" | "COMPLAINT_COMMAND_FAILED" | "INVALID_INSPECTION_CURSOR" | "INSPECTION_CURSOR_NOT_CONFIGURED" | "INSPECTION_PAGE_LIMIT_INVALID" | "INSPECTION_RESPONSE_TOO_LARGE" | "INVALID_WORK_HISTORY_QUERY" | "INVALID_WORK_HISTORY_CURSOR" | "WORK_HISTORY_ACCESS_REQUIRED" | "WORK_HISTORY_MAID_SCOPE_REQUIRED" | "WORK_HISTORY_MAID_NOT_FOUND" | "WORK_HISTORY_QUERY_FAILED" | "INVALID_ROOM_OPERATION_QUERY" | "INVALID_ROOM_OPERATION_CURSOR" | "ROOM_OPERATION_CURSOR_NOT_CONFIGURED" | "ROOM_OPERATION_PAGE_LIMIT_INVALID" | "ROOM_OPERATION_RESPONSE_TOO_LARGE" | "NOTIFICATION_ACCESS_REQUIRED" | "NOTIFICATION_NOT_FOUND" | "INVALID_NOTIFICATION_CURSOR" | "NOTIFICATION_CURSOR_NOT_CONFIGURED" | "NOTIFICATION_RESPONSE_TOO_LARGE" | "NOTIFICATION_QUERY_FAILED" | "PAYROLL_ACCESS_REQUIRED" | "PAYROLL_MAID_NOT_FOUND" | "PAYROLL_WEEK_MUST_START_MONDAY" | "PAYROLL_PAGE_LIMIT_INVALID" | "PAYROLL_PAGE_KIND_INVALID" | "PAYROLL_CURSOR_INVALID" | "PAYROLL_CURSOR_NOT_CONFIGURED" | "PAYROLL_RESPONSE_TOO_LARGE" | "INVALID_EXPECTED_VERSION" | "PAYROLL_WEEK_NOT_CLOSED" | "PAYROLL_CYCLE_NOT_OPEN" | "NO_PAYROLL_AMOUNT" | "PAYROLL_NONPOSITIVE_REQUIRES_CARRY" | "PAYROLL_POSITIVE_REQUIRES_START" | "PAYROLL_CYCLE_ECONOMICALLY_FROZEN" | "PAYROLL_SOURCE_PAYMENT_UNCERTAIN" | "PAYROLL_SOURCE_ALREADY_REVERSED" | "PAYROLL_ROOT_ENTITLEMENT_NEGATIVE" | "STALE_ADJUSTMENT_VERSION" | "PAYROLL_LATE_EARNING_ALREADY_CARRIED" | "PAYROLL_EARNING_NOT_LATE" | "PAYROLL_LATE_CARRY_TARGET_FROZEN" | "PAYROLL_EARLIER_CARRY_PENDING" | "PAYROLL_PRIOR_LATE_EARNING_PENDING" | "PAYROLL_SOURCE_NOT_FOUND" | "PAYROLL_ADJUSTMENT_INVALID" | "PAYROLL_PAYMENT_ATTEMPT_NOT_FOUND" | "PAYROLL_PAYMENT_ATTEMPT_TERMINAL" | "PAYROLL_PAYMENT_TRANSITION_INVALID" | "PAYROLL_PAYMENT_REFERENCE_ALREADY_USED" | "PAYROLL_PAYMENT_REFERENCE_INVALID" | "PAYROLL_PAYMENT_METHOD_INVALID" | "PAYROLL_PAYMENT_REASON_INVALID" | "PAYROLL_PAYMENT_REOPEN_REASON_INVALID" | "PAYROLL_PAYMENT_RESULT_AMOUNT_MISMATCH" | "PAYROLL_COMMAND_FAILED" | "ROOM_NOT_FOUND" | "ROOM_TYPE_NOT_FOUND" | "ROOM_TYPE_CAPACITY_INVALID" | "ROOM_TYPE_CAPACITY_ACTIVE_RESERVATION_CONFLICT" | "ROOM_TYPE_CAPACITY_PREVIEW_STALE" | "ROOM_TYPE_VERSION_CONFLICT" | "ROOM_NUMBER_ALREADY_EXISTS" | "ROOM_TYPE_INACTIVE" | "ROOM_INACTIVE" | "ROOM_ALREADY_INACTIVE" | "ROOM_DEACTIVATION_BLOCKED" | "ROOM_DEACTIVATION_PREVIEW_STALE" | "ROOM_VERSION_CONFLICT" | "GUEST_COUNT_EXCEEDS_ROOM_TYPE_CAPACITY" | "ROOM_OPERATION_NOT_FOUND" | "INVALID_ROOM_PIN" | "INVALID_PIN_TRANSFER_REQUEST" | "ROOM_PIN_TRANSFER_NOT_CONFIGURED" | "ROOM_PIN_TRANSFER_STALE" | "ROOM_PIN_TRANSFER_BUSY" | "ROOM_PIN_IMPORT_SOURCE_UNAVAILABLE" | "ROOM_PIN_TRANSFER_FAILED" | "INVALID_PIN_BOOTSTRAP_LIMIT" | "INVALID_PIN_BOOTSTRAP" | "ROOM_PIN_BOOTSTRAP_CONFIG_INVALID" | "ROOM_PIN_BOOTSTRAP_FAILED" | "ROOM_PIN_KEY_UNAVAILABLE" | "ROOM_PIN_CRYPTO_CONFIG_INVALID" | "ROOM_PIN_DECRYPT_FAILED" | "ROOM_PIN_COMMAND_FAILED" | "STALE_PIN_VERSION" | "ROOM_NUMBER_CHANGED" | "ROOM_PIN_REISSUE_REQUIRED" | "ROOM_PIN_MISMATCH_UNRESOLVED" | "INVALID_PIN_CHANGE_REASON" | "PIN_CHANGE_IN_PROGRESS_REQUIRED" | "PIN_CHANGE_IN_PROGRESS" | "PIN_CHANGE_LEASE_EXPIRED" | "PIN_CHANGE_LEASE_NOT_RESOLVABLE" | "PIN_REVEAL_AUTHORIZATION_CHANGED" | "GENERATED_PIN_REVEAL_NOT_ALLOWED" | "GENERATED_PIN_CONFIRMATION_NOT_ALLOWED" | "ROOM_PIN_UNCONFIGURED" | "ROOM_PIN_SHEET_OPERATOR_REQUIRED" | "ROOM_PIN_SHEET_NOT_CONFIGURED" | "ROOM_PIN_SHEET_OPERATION_FAILED" | "ROOM_PIN_SHEET_RESPONSE_TOO_LARGE" | "ROOM_PIN_SHEET_FULL_RESYNC_STALE" | "ROOM_PIN_SHEET_WORKER_BUSY" | "ROOM_PIN_SHEET_FULL_RESYNC_PENDING" | "ROOM_PIN_SHEET_ROOM_MASTER_INVALID" | "PIN_ACCESS_LEASE_REQUIRED" | "PIN_ENTITLEMENT_REQUIRED" | "PIN_ACCESS_REQUIRED" | "SENSITIVE_TEXT_NOT_ALLOWED" | "PIN_MATERIAL_NOT_ALLOWED" | "ROOM_TYPE_CLEANING_FEE_INVALID" | "ROOM_TYPE_CLEANING_FEE_RESPONSE_INVALID" | "ROOM_COMMAND_FAILED" | "ORIGIN_NOT_ALLOWED" | "ROUTE_NOT_FOUND" | "RUNTIME_NOT_CONFIGURED" | "INTERNAL_SERVER_ERROR" | "INVALID_PHOTO_BINARY" | "INVALID_POST_APPROVAL_ROOM_ISSUE" | "PHOTO_BODY_TIMEOUT" | "PHOTO_DECODER_UNAVAILABLE" | "PHOTO_DECODE_LIMIT_EXCEEDED" | "PHOTO_MEDIA_TYPE_UNSUPPORTED" | "PHOTO_PROVIDER_IDENTITY_CONFLICT" | "PHOTO_STORAGE_QUOTA_EXCEEDED" | "PHOTO_STORAGE_QUOTA_UNAVAILABLE" | "PHOTO_TOO_LARGE" | "PHOTO_UPLOAD_ADMISSION_EXPIRED" | "PHOTO_UPLOAD_FENCE_CONFLICT" | "PHOTO_UPLOAD_LIMIT_EXCEEDED" | "PHOTO_UPLOAD_RATE_LIMITED" | "PHOTO_UPLOAD_TIME_INVALID" | "POST_APPROVAL_ROOM_ISSUE_ACCESS_REQUIRED" | "POST_APPROVAL_ROOM_ISSUE_BODY_TOO_LARGE" | "POST_APPROVAL_ROOM_ISSUE_COMMAND_FAILED" | "POST_APPROVAL_ROOM_ISSUE_DRAFT_CONFLICT" | "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_COMMAND_FAILED" | "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_CONFLICT" | "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_INVALID" | "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_PROJECTION_INVALID" | "POST_APPROVAL_ROOM_ISSUE_EVIDENCE_RETRY_REQUIRED" | "POST_APPROVAL_ROOM_ISSUE_MEDIA_PURGED" | "POST_APPROVAL_ROOM_ISSUE_MEDIA_TYPE_INVALID" | "POST_APPROVAL_ROOM_ISSUE_PROJECTION_INVALID" | "POST_APPROVAL_ROOM_ISSUE_REPORT_SEALED" | "POST_APPROVAL_ROOM_ISSUE_SOURCE_UNAVAILABLE" | "POST_APPROVAL_ROOM_ISSUE_UPLOAD_NOT_ACCEPTED" | "ROOM_READY_CORRECTION_INVALID_INPUT" | "ROOM_READY_CONFIRMATION_REQUIRED" | "ROOM_READY_EARNING_ACKNOWLEDGEMENT_REQUIRED" | "ROOM_READY_CANDLE_CONFIRMATION_REQUIRED" | "ROOM_READY_PREVIEW_STALE" | "ROOM_READY_CORRECTION_BLOCKED" | "ROOM_READY_CORRECTION_LIMIT_EXCEEDED" | "ROOM_READY_CORRECTION_REQUIRED" | "ROOM_READY_CORRECTION_RESPONSE_INVALID" | "CLEANING_DUE_REPLAN_REQUIRED";
         RoomChangeConflict: {
             reloadResources: ("reservation" | "sourceRoom" | "targetRoom" | "roomMovePreview")[];
             latestVersions: {
@@ -4276,7 +4522,7 @@ export interface components {
          * @description 운영 콘솔에 노출할 수 있도록 서버에서 고정한 감사 이벤트 allowlist
          * @enum {string}
          */
-        DeveloperAuditEventType: "account.bootstrap_developer_created" | "account.bootstrap_admin_created" | "account.created" | "account.role_changed" | "account.status_changed" | "account.unlocked" | "account.password_reset_requested" | "account.password_changed" | "availability.submitted" | "availability.change_requested" | "availability.change_decided" | "assignment.draft_saved" | "assignment.notified" | "assignment.prestart_changed" | "assignment.prestart_unassigned" | "assignment.cancellation_requested" | "assignment.cancellation_decided" | "assignment.unavailability_cancelled" | "assignment.attempt_activated" | "assignment.rolled_over" | "assignment.duration_policy_confirmed" | "cleaning_template.published" | "cleaning.attempt_started" | "cleaning.field_completed" | "cleaning.finish_current_allowed" | "cleaning.upload_only_allowed" | "cleaning.interrupted_handover" | "cleaning.scheduled_expired" | "cleaning.offline_event_resolved" | "photo.upload_accepted" | "photo.collection_item_deleted" | "reservation.created" | "reservation.changed" | "reservation.room_moved" | "reservation.cancelled" | "reservation.manual_checkout" | "reservation.scheduled_check_in" | "reservation.scheduled_checkout" | "reservation.guest_name_retention_purged" | "checkout.presence_reported" | "checkout.presence_decided" | "cleaning.manual_request.created" | "cleaning.manual_request.cancelled" | "room.master_data_changed" | "room.create_block" | "room.release_block" | "room.set_candle_count" | "room.report_issue" | "room.resolve_issue" | "room.record_pin_sync" | "room.occupancy_corrected" | "room.display_status_overridden" | "room.pin_change_prepared" | "room.pin_change_confirmed" | "room.pin_mismatch_resolved" | "room.pin_generated" | "room.generated_pin_confirmed" | "room_pin_sheet.full_resync_requested" | "room_pin_sheet.full_resync_succeeded" | "submission.bomb_reported" | "submission.created" | "inspection.bomb_decided" | "inspection.approved" | "inspection.rejected" | "complaint.rework_materialized" | "compensation.earned" | "payroll.adjustment_recorded" | "payroll.adjustment_reversed" | "payroll.offset_settled" | "payroll.late_earning_carried" | "payroll.payment_started" | "payroll.payment_check_recorded" | "payroll.payment_paid" | "payroll.payment_reopened";
+        DeveloperAuditEventType: "account.bootstrap_developer_created" | "account.bootstrap_admin_created" | "account.created" | "account.role_changed" | "account.status_changed" | "account.unlocked" | "account.password_reset_requested" | "account.password_changed" | "availability.submitted" | "availability.change_requested" | "availability.change_decided" | "assignment.draft_saved" | "assignment.notified" | "assignment.prestart_changed" | "assignment.prestart_unassigned" | "assignment.cancellation_requested" | "assignment.cancellation_decided" | "assignment.unavailability_cancelled" | "assignment.attempt_activated" | "assignment.rolled_over" | "assignment.duration_policy_confirmed" | "cleaning_template.published" | "cleaning.attempt_started" | "cleaning.field_completed" | "cleaning.finish_current_allowed" | "cleaning.upload_only_allowed" | "cleaning.interrupted_handover" | "cleaning.scheduled_expired" | "cleaning.offline_event_resolved" | "photo.upload_accepted" | "photo.collection_item_deleted" | "reservation.created" | "reservation.changed" | "reservation.room_moved" | "reservation.cancelled" | "reservation.manual_checkout" | "reservation.scheduled_check_in" | "reservation.scheduled_checkout" | "reservation.guest_name_retention_purged" | "checkout.presence_reported" | "checkout.presence_decided" | "cleaning.manual_request.created" | "cleaning.manual_request.cancelled" | "room.master_data_changed" | "room.create_block" | "room.release_block" | "room.set_candle_count" | "room.report_issue" | "room.resolve_issue" | "room.record_pin_sync" | "room.occupancy_corrected" | "room.display_status_overridden" | "room.ready_corrected" | "room.pin_change_prepared" | "room.pin_change_confirmed" | "room.pin_mismatch_resolved" | "room.pin_generated" | "room.generated_pin_confirmed" | "room_pin_sheet.full_resync_requested" | "room_pin_sheet.full_resync_succeeded" | "submission.bomb_reported" | "submission.created" | "inspection.bomb_decided" | "inspection.approved" | "inspection.rejected" | "complaint.rework_materialized" | "compensation.earned" | "payroll.adjustment_recorded" | "payroll.adjustment_reversed" | "payroll.offset_settled" | "payroll.late_earning_carried" | "payroll.payment_started" | "payroll.payment_check_recorded" | "payroll.payment_paid" | "payroll.payment_reopened";
         DeveloperRuntimeStatus: {
             /** @constant */
             adapter: "supabase-edge";
@@ -4293,6 +4539,20 @@ export interface components {
                 version: string;
             };
             source: {
+                /**
+                 * @description Bundled backend source release (no v prefix).
+                 * @example 1.0.0
+                 */
+                releaseVersion: string;
+                /**
+                 * @description Bundled OpenAPI info.version, not the release.
+                 * @example 0.6.0
+                 */
+                apiSchemaVersion: string;
+                /**
+                 * @deprecated
+                 * @description Compatibility alias of apiSchemaVersion.
+                 */
                 apiVersion: string;
                 /** @description 원격 적용 시각과 무관한 Git migration의 안정적인 name */
                 expectedMigration: string;
@@ -4769,6 +5029,10 @@ export interface components {
                 /** @enum {string} */
                 paymentMethod?: "bank_transfer";
                 occupied?: boolean;
+                cancelledCleaningCount?: number;
+                releasedOperationBlockCount?: number;
+                resolvedRoomIssueCount?: number;
+                candlesCleared?: boolean;
                 /** @description 표시 분류 override 값. null은 override 해제를 뜻하며 실제 점유·예약·readiness·bookability를 변경하지 않습니다. */
                 displayStatusOverride?: components["schemas"]["RoomPrimaryDisplayStatus"] | null;
                 roomStateVersion?: number;
@@ -4863,6 +5127,8 @@ export interface components {
             expectedAssignmentVersion: number;
             /** @enum {string} */
             reasonCode: "MAID_UNAVAILABLE" | "SCHEDULE_CHANGED" | "SEQUENCE_CHANGED" | "OPERATIONAL_CHANGE";
+            /** @description #534 미배포 후보. 선택 작업 요청사항. 원문 최대 500 UTF-16 code units이며 앞뒤 공백을 제거합니다. 생략은 같은 청소 대상의 직전 배정 메모 유지, null/공백만 입력은 지우기입니다. 수량·호실·줄바꿈을 허용하고 개인정보·PIN·인증정보 입력은 금지합니다. 내용 변경은 새 요청 키를 사용합니다. */
+            instructionMemo?: string | null;
             /**
              * Format: date
              * @description 오늘/내일 배정 탭에서 선택한 KST 계획일. 과거 업무 담당 변경 시 반드시 전달. 생략은 기존 통보 계획일/원 날짜 호환이며 생성일·통보일이 아님.
@@ -5268,6 +5534,8 @@ export interface components {
             effectiveAt: string;
             /** Format: date-time */
             recordedAt: string;
+            /** @description #534 미배포 후보. 해당 assignment revision에 저장된 작업 요청사항. 메모 없음·legacy receipt 부재는 null이며 현재 다른 배정으로 보충하지 않습니다. 사진 보존기한과 분리해 작업 이력으로 남습니다. 메모가 청소 종류·사진 필수조건·수당을 변경하지 않습니다. */
+            instructionMemo: string | null;
         };
         /** @description 배정 당시 서비스 날짜·접근 가능 시각·마감 시각을 보존하는 revision projection입니다. 전화번호, 고객명, PIN, provider 식별자는 포함하지 않습니다. */
         Assignment: {
@@ -5307,6 +5575,8 @@ export interface components {
             endedAt: string | null;
             /** Format: date-time */
             createdAt: string;
+            /** @description #534 미배포 후보. 해당 assignment revision에 저장된 작업 요청사항. 메모 없음·legacy receipt 부재는 null이며 현재 다른 배정으로 보충하지 않습니다. 사진 보존기한과 분리해 작업 이력으로 남습니다. 메모가 청소 종류·사진 필수조건·수당을 변경하지 않습니다. */
+            instructionMemo: string | null;
         };
         /** @description 불변 계획 snapshot과 통보 당시 알려진 실제 사실입니다. 예약 없는 요청·종료 미정의 시각은 null로 유지하며 고객명·연락처·PIN·내부 lineage ID를 노출하지 않습니다. */
         AssignmentScheduleSnapshot: {
@@ -5396,6 +5666,8 @@ export interface components {
              * @enum {string|null}
              */
             cancelReasonCode: "NOT_MANUAL_CLEANING_REQUEST" | "CLEANING_REQUEST_CANCEL_CONFLICT" | "ASSIGNMENT_NOT_CURRENT" | "ADMIN_REQUIRED" | "CAPABILITY_UNAVAILABLE" | null;
+            /** @description #534 미배포 후보. 해당 assignment revision에 저장된 작업 요청사항. 메모 없음·legacy receipt 부재는 null이며 현재 다른 배정으로 보충하지 않습니다. 사진 보존기한과 분리해 작업 이력으로 남습니다. 메모가 청소 종류·사진 필수조건·수당을 변경하지 않습니다. */
+            instructionMemo: string | null;
             /** Format: uuid */
             assignmentId: string;
             /** Format: uuid */
@@ -5449,6 +5721,8 @@ export interface components {
             createdAt: string;
         };
         AssignmentDraftRequest: {
+            /** @description #534 미배포 후보. 선택 작업 요청사항. 원문 최대 500 UTF-16 code units이며 앞뒤 공백을 제거합니다. 생략은 같은 청소 대상의 직전 배정 메모 유지, null/공백만 입력은 지우기입니다. 수량·호실·줄바꿈을 허용하고 개인정보·PIN·인증정보 입력은 금지합니다. 내용 변경은 새 요청 키를 사용합니다. */
+            instructionMemo?: string | null;
             /** Format: uuid */
             cleaningTargetId: string;
             /** Format: uuid */
@@ -5485,6 +5759,8 @@ export interface components {
              * @enum {string|null}
              */
             cancelReasonCode: "NOT_MANUAL_CLEANING_REQUEST" | "CLEANING_REQUEST_CANCEL_CONFLICT" | "ASSIGNMENT_NOT_CURRENT" | "ADMIN_REQUIRED" | "CAPABILITY_UNAVAILABLE" | null;
+            /** @description #534 미배포 후보. 해당 assignment revision에 저장된 작업 요청사항. 메모 없음·legacy receipt 부재는 null이며 현재 다른 배정으로 보충하지 않습니다. 사진 보존기한과 분리해 작업 이력으로 남습니다. 메모가 청소 종류·사진 필수조건·수당을 변경하지 않습니다. */
+            instructionMemo: string | null;
             /** Format: uuid */
             assignmentId: string;
             /** Format: uuid */
@@ -5535,6 +5811,8 @@ export interface components {
              * @enum {string|null}
              */
             cancelReasonCode: "NOT_MANUAL_CLEANING_REQUEST" | "CLEANING_REQUEST_CANCEL_CONFLICT" | "ASSIGNMENT_NOT_CURRENT" | "ADMIN_REQUIRED" | "CAPABILITY_UNAVAILABLE" | null;
+            /** @description #534 미배포 후보. 해당 assignment revision에 저장된 작업 요청사항. 메모 없음·legacy receipt 부재는 null이며 현재 다른 배정으로 보충하지 않습니다. 사진 보존기한과 분리해 작업 이력으로 남습니다. 메모가 청소 종류·사진 필수조건·수당을 변경하지 않습니다. */
+            instructionMemo: string | null;
             /** Format: uuid */
             assignmentId: string;
             /** Format: uuid */
@@ -6293,6 +6571,119 @@ export interface components {
         RoomTypeCatalogEnvelope: {
             items: components["schemas"]["RoomTypeCatalogItem"][];
         };
+        DeveloperResetCandidateImpact: {
+            relations: number;
+            observedRows: number;
+            exact: boolean;
+        };
+        DeveloperResetRowImpact: {
+            available: boolean;
+            diagnosticComplete: boolean;
+            referencesValid: boolean;
+            candidateCounts: {
+                preserve: number;
+                roomBaseline: number;
+                resetCandidate: number;
+                templateSource: number;
+                photoHold: number;
+                unresolved: number;
+            } | null;
+            authAccounts: {
+                observedRows: number;
+                preserve: number;
+                resetCandidate: number;
+                unresolved: number;
+            } | null;
+            preservedToRemoved: number | null;
+            missingTargets: number | null;
+            partialNulls: number | null;
+            unresolvedTargets: number | null;
+            unsupportedForeignKeys: number | null;
+            blockers: string[];
+        };
+        DeveloperOperationGates: {
+            /** @enum {string} */
+            lifecycle: "UNKNOWN" | "PROVISIONING" | "STARTED";
+            /** @enum {string} */
+            maintenance: "UNKNOWN" | "OPEN" | "REQUESTED";
+            policyConfigured: boolean;
+            controlVersion: string | null;
+            unfinishedAdmissions: number;
+            expiredUnfinishedAdmissions: number;
+            unresolvedPasswordChanges: number;
+            preparedPasswordResets: number;
+            /** @enum {string} */
+            coverage: "NOT_INTEGRATED";
+            /** @enum {string} */
+            recentReauthentication: "NOT_EVALUATED";
+            /** @enum {boolean} */
+            executionEnabled: false;
+            blockers: string[];
+        } | null;
+        /** @description 모든 template 상태의 내용·slot 및 명시 역사 참조 수집. diagnosticComplete는 수집 완전성이고 복구/새 게시/초기화 승인이 아니다. 두 source 후보는 draft/retired 상태 처리나 제외를 결정하지 않는다. */
+        DeveloperResetTemplateEvidence: {
+            available: boolean;
+            diagnosticComplete: boolean;
+            /** @enum {boolean} */
+            executionEnabled: false;
+            templateCount: number | null;
+            slotCount: number | null;
+            contentFingerprintsCollected: number | null;
+            historicallyUnreadable: number | null;
+            registrationShapeInvalid: number | null;
+            unsupportedPublicationPaths: number | null;
+            slotProjectionMismatches: number | null;
+            missingCreators: number | null;
+            exhaustedVersions: number | null;
+            statusCounts: {
+                draft: number;
+                published: number;
+                retired: number;
+            } | null;
+            referenceCounts: {
+                edges: number;
+                absent: number;
+                malformed: number;
+                detached: number;
+                matched: number;
+            } | null;
+            selectionAlternatives: {
+                /** @enum {string} */
+                scope: "currentPublished" | "allVersions";
+                selected: number;
+                excludedDraft: number;
+                excludedRetired: number;
+                /** @enum {boolean} */
+                statusPolicyDecided: false;
+            }[] | null;
+            blockers: string[];
+        };
+        DeveloperResetPreview: {
+            /** @enum {boolean} */
+            readOnly: true;
+            diagnosticComplete: boolean;
+            /** @enum {boolean} */
+            executionEnabled: false;
+            /** Format: date-time */
+            capturedAt: string;
+            snapshotId: string;
+            relationCount: number;
+            missingRelations: number;
+            unknownRelations: number;
+            unsupportedRelations: number;
+            truncatedRelations: number;
+            candidateImpact: {
+                preserve: components["schemas"]["DeveloperResetCandidateImpact"];
+                mixed: components["schemas"]["DeveloperResetCandidateImpact"];
+                reseed: components["schemas"]["DeveloperResetCandidateImpact"];
+                clear: components["schemas"]["DeveloperResetCandidateImpact"];
+                review: components["schemas"]["DeveloperResetCandidateImpact"];
+            };
+            rowImpact: components["schemas"]["DeveloperResetRowImpact"];
+            operationGates: components["schemas"]["DeveloperOperationGates"];
+            templateEvidence: components["schemas"]["DeveloperResetTemplateEvidence"];
+            blockers: string[];
+        };
         DeveloperRoomCatalogSummary: {
             total: number;
             active: number;
@@ -6410,7 +6801,31 @@ export interface components {
             /** Format: date-time */
             effectiveAt: string;
         };
+        RoomFixedMemo: {
+            /** Format: uuid */
+            roomId: string;
+            memo: string | null;
+            version: number;
+            /** Format: date-time */
+            updatedAt: string | null;
+        };
+        /** @description 실제 입실 처리 상태. 예약 일정상 occupied와 독립. LIVE에서만 제공하며 과거·미래 날짜 조회는 null. 지연 등록을 실제 입실/청소 승인으로 간주하지 않음. */
+        RoomArrival: {
+            /** @enum {string} */
+            status: "NONE" | "SCHEDULED" | "CHECKIN_PENDING" | "CHECKED_IN" | "ROOM_MOVE_PENDING";
+            /** @description 선택한 미입실 예약의 현재 입실 준비. 미래 일자·실제 입실 후·예약 없음은 null. */
+            checkInReady: boolean | null;
+            reasonCodes: ("OCCUPIED" | "RESERVATION_CURRENT" | "CLEANING_REQUIRED" | "CANDLE_PRESENT" | "OPERATION_BLOCKED" | "ROOM_ISSUE_BLOCKED" | "DATA_UNCONFIRMED" | "PIN_MISMATCH" | "CHECKOUT_NOT_COMPLETED" | "ROOM_INACTIVE")[] | null;
+            /** Format: date-time */
+            actualCheckInAt: string | null;
+            /**
+             * Format: date-time
+             * @description 예약을 서버에 실제 등록한 시각. displayCheckInAt과 별도로 보존.
+             */
+            recordedAt: string | null;
+        };
         RoomProjection: {
+            arrival: components["schemas"]["RoomArrival"] | null;
             /**
              * Format: uuid
              * @description 불변 객실 ID
@@ -6674,8 +7089,13 @@ export interface components {
         /** @enum {string} */
         RoomEventCategory: "room_configuration" | "room_block" | "room_issue" | "room_candle" | "room_pin" | "occupancy";
         /** @enum {string} */
-        RoomEventType: "room.master_data_changed" | "room.create_block" | "room.release_block" | "room.set_candle_count" | "room.report_issue" | "room.resolve_issue" | "room.record_pin_sync" | "room.pin_change_prepared" | "room.pin_change_confirmed" | "room.pin_mismatch_resolved" | "scheduled_check_in" | "manual_checkout" | "scheduled_checkout" | "occupancy_resumed" | "occupancy_correction";
+        RoomEventType: "room.ready_corrected" | "room.master_data_changed" | "room.create_block" | "room.release_block" | "room.set_candle_count" | "room.report_issue" | "room.resolve_issue" | "room.record_pin_sync" | "room.pin_change_prepared" | "room.pin_change_confirmed" | "room.pin_mismatch_resolved" | "scheduled_check_in" | "manual_checkout" | "scheduled_checkout" | "occupancy_resumed" | "occupancy_correction";
         RoomEventSummary: {
+            roomStateVersion?: number;
+            cancelledCleaningCount?: number;
+            releasedOperationBlockCount?: number;
+            resolvedRoomIssueCount?: number;
+            candlesCleared?: boolean;
             /** Format: uuid */
             roomTypeId?: string;
             /** @enum {string|null} */
@@ -7537,6 +7957,206 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    previewRoomReadyCorrection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roomId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoomReadyPreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description 변경 영향. 차단 상태도 200/canApply=false로 안내합니다. */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        preview: components["schemas"]["RoomReadyPreview"];
+                    };
+                };
+            };
+            /** @description 안전한 error.code·message·requestId만 반환합니다. 상태 변경 시 미리보기부터 다시 확인하며 내부 DB 오류는 노출하지 않습니다. */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안전한 error.code·message·requestId만 반환합니다. 상태 변경 시 미리보기부터 다시 확인하며 내부 DB 오류는 노출하지 않습니다. */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안전한 error.code·message·requestId만 반환합니다. 상태 변경 시 미리보기부터 다시 확인하며 내부 DB 오류는 노출하지 않습니다. */
+            403: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안전한 error.code·message·requestId만 반환합니다. 상태 변경 시 미리보기부터 다시 확인하며 내부 DB 오류는 노출하지 않습니다. */
+            404: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안전한 error.code·message·requestId만 반환합니다. 상태 변경 시 미리보기부터 다시 확인하며 내부 DB 오류는 노출하지 않습니다. */
+            409: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안전한 error.code·message·requestId만 반환합니다. 상태 변경 시 미리보기부터 다시 확인하며 내부 DB 오류는 노출하지 않습니다. */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안전한 error.code·message·requestId만 반환합니다. 상태 변경 시 미리보기부터 다시 확인하며 내부 DB 오류는 노출하지 않습니다. */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    applyRoomReadyCorrection: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                roomId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoomReadyCorrectionRequest"];
+            };
+        };
+        responses: {
+            /** @description 확인한 변경 결과 또는 같은 요청의 완료 receipt */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        correction: components["schemas"]["RoomReadyCorrectionResult"];
+                    };
+                };
+            };
+            /** @description 안전한 error.code·message·requestId만 반환합니다. 상태 변경 시 미리보기부터 다시 확인하며 내부 DB 오류는 노출하지 않습니다. */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안전한 error.code·message·requestId만 반환합니다. 상태 변경 시 미리보기부터 다시 확인하며 내부 DB 오류는 노출하지 않습니다. */
+            401: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안전한 error.code·message·requestId만 반환합니다. 상태 변경 시 미리보기부터 다시 확인하며 내부 DB 오류는 노출하지 않습니다. */
+            403: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안전한 error.code·message·requestId만 반환합니다. 상태 변경 시 미리보기부터 다시 확인하며 내부 DB 오류는 노출하지 않습니다. */
+            404: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안전한 error.code·message·requestId만 반환합니다. 상태 변경 시 미리보기부터 다시 확인하며 내부 DB 오류는 노출하지 않습니다. */
+            409: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안전한 error.code·message·requestId만 반환합니다. 상태 변경 시 미리보기부터 다시 확인하며 내부 DB 오류는 노출하지 않습니다. */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안전한 error.code·message·requestId만 반환합니다. 상태 변경 시 미리보기부터 다시 확인하며 내부 DB 오류는 노출하지 않습니다. */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     getPostApprovalRoomIssueSource: {
         parameters: {
             query?: never;
@@ -11020,6 +11640,141 @@ export interface operations {
             };
         };
     };
+    admitAttemptPhotoCollectionBatch: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description 사용자 동작 한 번마다 생성합니다. 네트워크 오류로 **같은 요청 본문을 재시도할 때만 같은 값**을 재사용하고, 다른 본문에는 새 값을 사용합니다. `crypto.randomUUID()`를 권장합니다. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                attemptId: string;
+                slotId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uuid */
+                    assignmentId: string;
+                    assignmentRevision: number;
+                    expectedCollectionRevision: number;
+                    items: {
+                        /** Format: uuid */
+                        photoItemId: string;
+                        expectedItemRevision: number;
+                        idempotencyKey: string;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description 최신 DB 권한과 상태를 검증한 안전한 결과. Drive ID·locator·OAuth·원문 hash는 반환하지 않습니다. */
+            200: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    /** @description 인증된 성공 응답의 요청별 고정 단계 duration(ms). photo_total은 인증 후 서비스 범위이며 전체 사용자 대기시간이 아닙니다. 사용자/파일/Drive ID·URL·비밀정보는 포함하지 않습니다. */
+                    "Server-Timing"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhotoUploadBatchAdmission"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 상태·version 충돌. provider 삭제 permit 이후 보호 링크 경합은 PHOTO_RETENTION_DELETE_PREPARED로 반환합니다. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     uploadAttemptPhotoCollectionItem: {
         parameters: {
             query: {
@@ -11423,6 +12178,126 @@ export interface operations {
                 content: {
                     "image/jpeg": string;
                     "image/webp": string;
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 상태·version 충돌. provider 삭제 permit 이후 보호 링크 경합은 PHOTO_RETENTION_DELETE_PREPARED로 반환합니다. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    getPhotoThumbnail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                photoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 최대64KiB/가로세로512px JPEG 미리보기. 실제 provider 생성 여부와 성능은 운영 검증 전입니다. */
+            200: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "Content-Disposition"?: "inline; filename=\"thumbnail.jpg\"";
+                    /** @description 고정 숫자 구간만 반환; URL/locator/token 없음 */
+                    "Server-Timing"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
                 };
             };
             /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
@@ -12321,6 +13196,77 @@ export interface operations {
                 };
             };
             /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    getDeveloperResetPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 읽기 전용 후보 영향 */
+            200: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        preview: components["schemas"]["DeveloperResetPreview"];
+                    };
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             503: {
                 headers: {
                     /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
@@ -20856,6 +21802,114 @@ export interface operations {
             };
         };
     };
+    setRoomTypeCleaningFee: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description 사용자 동작 한 번마다 생성합니다. 네트워크 오류로 **같은 요청 본문을 재시도할 때만 같은 값**을 재사용하고, 다른 본문에는 새 값을 사용합니다. `crypto.randomUUID()`를 권장합니다. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                roomTypeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    baseCleaningFee: number;
+                    expectedVersion: number;
+                    /** @constant */
+                    confirmFutureTargetsOnly: true;
+                };
+            };
+        };
+        responses: {
+            /** @description 확정 결과 또는 동일 요청의 기존 receipt. 현재 목록을 다시 조회합니다. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        roomType: {
+                            /** Format: uuid */
+                            roomTypeId: string;
+                            baseCleaningFee: number;
+                            version: number;
+                            /** @constant */
+                            effectiveFor: "NEW_TARGETS_ONLY";
+                        };
+                    };
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     listRoomTypes: {
         parameters: {
             query?: never;
@@ -21145,6 +22199,200 @@ export interface operations {
                 };
             };
             /** @description 공통 인증 조회 불가 시 AUTH_CONTEXT_UNAVAILABLE. 401과 구분하며 자동 로그아웃하지 않고 재시도합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    getRoomFixedMemo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 불변 객실 ID */
+                roomId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 객실 고정 메모 */
+            200: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        fixedMemo: components["schemas"]["RoomFixedMemo"];
+                    };
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            503: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    setRoomFixedMemo: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description 사용자 동작 한 번마다 생성합니다. 네트워크 오류로 **같은 요청 본문을 재시도할 때만 같은 값**을 재사용하고, 다른 본문에는 새 값을 사용합니다. `crypto.randomUUID()`를 권장합니다. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                /** @description 불변 객실 ID */
+                roomId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    memo: string | null;
+                    expectedVersion: number;
+                };
+            };
+        };
+        responses: {
+            /** @description 객실 고정 메모 */
+            200: {
+                headers: {
+                    /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        fixedMemo: components["schemas"]["RoomFixedMemo"];
+                    };
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description 안정적인 `error.code`로 분기합니다. 화면 문구는 `message`를 그대로 계약으로 고정하지 말고 프론트에서 code 기준으로 관리합니다. */
             503: {
                 headers: {
                     /** @description 인증·개인정보 응답은 브라우저나 중간 캐시에 저장하지 않습니다. */
