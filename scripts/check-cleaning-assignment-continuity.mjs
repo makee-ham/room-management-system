@@ -55,6 +55,23 @@ try{
   const draftsBefore=draftAttempts.length;await row(ids.target5).locator('select').selectOption(ids.maid1);await settled();assert.equal(draftAttempts.length,draftsBefore);assert.equal(assignments.some(item=>item.cleaningTargetId===ids.target5),false);assert.equal(await page.locator('#cleaning-manual-draft-sequence').count(),0);await click('cleaning-save-notify');await settled();assert(assignments.some(item=>item.cleaningTargetId===ids.target5&&item.notifiedAt));passed.push('순서 입력 없이 인라인 담당 선택 · 저장 전 서버 변경 없음');
   const changesBefore=requests.filter(item=>item.path.endsWith('/change')).length;await row(ids.target1).locator('select').selectOption(ids.maid2);await settled();assert.equal(requests.filter(item=>item.path.endsWith('/change')).length,changesBefore);await click('cleaning-save-notify');await settled();assert.equal(assignments.find(item=>item.cleaningTargetId===ids.target1).maidProfileId,ids.maid2);assert.equal(requests.filter(item=>item.path.includes('/notifications')&&item.method==='POST').length,0);assert(backendNotificationCount>0);passed.push('미시작 담당 변경 CAS · 저장·통보 전 서버 변경 없음');
   attemptStatus='in_progress';const changePostsBefore=requests.filter(item=>item.path.endsWith('/change')).length;await row(ids.target1).locator('select').selectOption(ids.maid1);await click('cleaning-save-notify');await page.getByText('수행 상태·인계 관리',{exact:true}).waitFor();assert.equal(requests.filter(item=>item.path.endsWith('/change')).length,changePostsBefore);passed.push('진행 중 작업 직접 변경 차단');
-  await page.keyboard.press('Escape');for(const width of [360,390,768,1440]){await page.setViewportSize({width,height:1000});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${width}px horizontal overflow`);}assert.equal(/청소 순서|업무 순서|[0-9]+번째/.test(await page.locator('main').innerText()),false);assert.deepEqual(pageErrors,[]);assert.deepEqual(consoleProblems,[]);passed.push('4개 화면 폭 · 순서 UI 없음 · 콘솔 오류 없음');
+  await page.keyboard.press('Escape');
+  // Reproduce two different overdue cleaning targets for one physical room.
+  assignments=[assignment(ids.target1,ids.maid1,1,{notified:true,id:ids.assignment1})];previewRound=0;attemptStatus='scheduled';
+  Object.assign(targetMeta.get(ids.target3),{roomId:ids.room2,roomNumber:'350'});
+  await page.evaluate(()=>window.__assignmentQA.setup());await settled();
+  const writesBeforeDuplicate=requests.filter(item=>item.method==='POST'&&item.path!=='/v1/assignments/preview').length;
+  await click('cleaning-preview');await settled();
+  assert.equal((await page.evaluate(()=>window.__assignmentQA.get())).preview.proposedAssignments.length,0,'old server duplicate preview is rejected');
+  assert.equal(await row(ids.target2).locator('select').inputValue(),'');assert.equal(await row(ids.target3).locator('select').inputValue(),'');
+  assert(await page.getByText(/같은 객실의 다른 청소 건과 겹칩니다/).first().isVisible());
+  assert.equal(requests.filter(item=>item.method==='POST'&&item.path!=='/v1/assignments/preview').length,writesBeforeDuplicate);
+  await row(ids.target2).locator('select').selectOption(ids.maid1);await settled();
+  await row(ids.target3).locator('select').selectOption(ids.maid2);await settled();
+  assert.equal(await row(ids.target2).locator('select').inputValue(),ids.maid1);assert.equal(await row(ids.target3).locator('select').inputValue(),'','manual duplicate cannot enter the draft');
+  assert.equal(requests.filter(item=>item.method==='POST'&&item.path!=='/v1/assignments/preview').length,writesBeforeDuplicate);
+  for(const width of [390,1440]){await page.setViewportSize({width,height:1000});await page.screenshot({path:resolve(`WIREFRAME/QA/screenshots/assignment-room-conflict-${width}.png`),fullPage:true});}
+  passed.push('350호 서로 다른 청소 대상의 중복 Preview·수동 배정 차단 · 서버 쓰기 0건');
+  for(const width of [360,390,768,1440]){await page.setViewportSize({width,height:1000});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${width}px horizontal overflow`);}assert.equal(/청소 순서|업무 순서|[0-9]+번째/.test(await page.locator('main').innerText()),false);assert.deepEqual(pageErrors,[]);assert.deepEqual(consoleProblems,[]);passed.push('4개 화면 폭 · 순서 UI 없음 · 콘솔 오류 없음');
   passed.forEach(item=>console.log(`[ok] ${item}`));console.log(`Environment: Chromium ${await browser.version()} via Playwright; Browser plugin unavailable. All API writes were intercepted by local fixtures.`);
 }catch(error){console.error('requests',requests);console.error('page errors',pageErrors);console.error('console problems',consoleProblems);await page.screenshot({path:'/tmp/cleaning-assignment-continuity-failure.png',fullPage:true});throw error;}finally{await browser.close();}

@@ -15,20 +15,26 @@ const item=(room,extra={})=>({id:room,room,type:'standard',elevatorSnapshot:'A',
 const maids=[{id:'a'},{id:'b'}],target=item('199');
 const run=()=>trial(maids,[target],()=>0.5);
 loads={a:[item('120')],b:[item('201')]};
-assert.equal(run().plan['199'],'a','same floor wins over smaller raw room-number gap');
-assert.equal(run().floorDistanceTotal,0);
-assert.equal(proximity(target,[item('201'),item('120')]).roomDistance,79,'distance belongs to the chosen floor/room pair');
+assert.equal(run().plan['199'],'b','full room-number gap wins over floor');
+assert.equal(run().floorDistanceTotal,1);
+assert.equal(proximity(target,[item('201'),item('120')]).roomDistance,2,'floor and elevator metrics belong to the nearest room');
 loads={a:[item('120',{rateSnapshot:200})],b:[item('201')]};
-assert.equal(run().plan['199'],'b','fee balance remains primary');
+assert.equal(run().plan['199'],'b','room proximity stays ahead of fee balance');
 loads={a:[item('120',{elevatorSnapshot:'B'})],b:[item('201')]};
-assert.equal(run().plan['199'],'b','elevator priority remains ahead of floor');
+assert.equal(run().plan['199'],'b','room proximity stays ahead of elevator');
 loads={a:[item('120')],b:[item('201')]};
 assert.equal(trial([maids[1]],[target],()=>0.5).plan['199'],'b','only eligible maids are candidates');
 assert.equal(trial(maids,[item('199',{accessStart:'17:55',requestDue:'18:00'})],()=>0.5).skipped,1,'demo time-window constraint remains');
 assert.equal(proximity(item('1001'),[item('999')]).floorDistance,1,'four-digit rooms use all digits before the last two');
 assert.equal(proximity(item('10'),[item('9')]).floorDistance,0,'legacy room numbers keep room-distance fallback');
 assert.equal(proximity(target,[]).floorDistance,0,'empty route has no invented floor movement');
-console.log('[ok] floor/room pairing, fee/elevator precedence, eligibility, demo deadlines and room-number boundaries');
+loads={a:[item('198',{elevatorSnapshot:'B'})],b:[item('200',{rateSnapshot:900})]};assert.equal(run().plan['199'],'b','elevator breaks a room-distance tie before floor/fees');
+loads={a:[item('198',{rateSnapshot:900})],b:[item('200')]};assert.equal(run().plan['199'],'a','floor breaks a room/elevator tie before fees');
+loads={a:[item('198',{rateSnapshot:900})],b:[item('198')]};assert.equal(run().plan['199'],'b','fees break equal location scores');
+loads={a:[],b:[]};assert.equal(trial(maids,[item('350'),item('350',{id:'second'})],()=>0.5).assigned,0,'duplicate physical rooms are blocked');
+loads={a:[item('350')],b:[]};assert.equal(trial(maids,[item('350',{id:'second'})],()=>0.5).assigned,0,'fixed room cannot be assigned again');
+loads={a:[],b:[],c:[]};const clustered=trial([...maids,{id:'c'}],[117,118,349,350,755,756].map(n=>item(String(n))),()=>0.5);for(const [a,b] of [['117','118'],['349','350'],['755','756']])assert.equal(clustered.plan[a],clustered.plan[b]);
+console.log('[ok] room/elevator/floor/fee precedence, cluster seeds, duplicate/fixed room guards, eligibility, demo deadlines and boundaries');
 
 const {chromium}=createRequire(import.meta.url)('playwright'),origin=process.env.RMS_QA_ORIGIN||'http://127.0.0.1:4177';
 const browser=await chromium.launch({headless:true}),context=await browser.newContext({viewport:{width:390,height:900},locale:'ko-KR',serviceWorkers:'block',reducedMotion:'reduce'}),page=await context.newPage(),errors=[],external=[];
@@ -53,11 +59,11 @@ try{
   const trigger=page.getByRole('button',{name:'랜덤 배정 기준 사용 안내',exact:true}),tip=page.locator('#info-tip-random-assignment-rule');
   for(const width of [360,390,768,1440]){
     await page.setViewportSize({width,height:900});await page.waitForTimeout(230);await trigger.scrollIntoViewIfNeeded();await trigger.click();await tip.waitFor({state:'visible'});
-    assert.match(await tip.innerText(),/같은 층·가까운 층/);
+    assert.match(await tip.innerText(),/가까운 호수 → 같은 엘리베이터 → 가까운 층 → 요금 균형/);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`overflow at ${width}`);
     assert(await tip.evaluate(e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&e.scrollWidth<=e.clientWidth+1;}),'tooltip fits viewport');
     assert.equal(await trigger.getAttribute('aria-describedby'),'info-tip-random-assignment-rule');
-    if([390,1440].includes(width))await page.screenshot({path:`WIREFRAME/QA/screenshots/assignment-floor-${width}.png`});
+    if([390,1440].includes(width))await page.screenshot({path:`WIREFRAME/QA/screenshots/assignment-room-priority-${width}.png`});
     await page.keyboard.press('Escape');await tip.waitFor({state:'hidden'});assert(await trigger.evaluate(e=>document.activeElement===e));
     await page.keyboard.press('Enter');await tip.waitFor({state:'visible'});await page.keyboard.press('Escape');
     assert((await page.locator('#main-content').innerText()).length>100);
