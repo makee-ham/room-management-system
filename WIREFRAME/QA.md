@@ -1,5 +1,16 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-11-06 · 원 퇴실일과 현재 청소일 분리
+
+- 사용자 결정: 과거 퇴실 객실도11월7일 업무로 배정·통보했으면 현재 청소일은11월7일이다. 운영 DB 읽기에서 현재 통보26건 모두 `private.assignment_requested_planning_date`가 `2026-11-07`이며, 원본 `service_date`/target 날짜와 별도 보존됨을 확인했다. DB 데이터 정정·migration·예약/퇴실 이력 변경은 없다.
+- 원인: 관리자 표가 `배정일 / 원 업무일`을 같이 표시했고 메이드 카드·읽기전용 판단·알림 이동은 과거 `serviceDate`/`availableFrom`을 사용했다. 실제 운영 카드의 `planningDate`를 공통 표시 모델에서 우선 사용하고 구 API의 필드 생략만 기존 `serviceDate`로 호환한다. API 원본을 덮거나 조회한 탭 날짜로 통보 배정일을 추측하지 않는다.
+- 현재 카드/상세에는 `청소일 2026-11-07`, 과거 시각부터 접근 가능한 객실에는 `시작 가능 청소일 당일`을 표시한다. 실제·예정 퇴실일은 별도 이력 문구로 보존한다. 메이드의 당일 업무를 원 퇴실일 때문에 과거 작업으로 잠그지 않으며, 미래에는 `청소 예정`을 표시한다. 알림은 실제 계획일로 이동하고 수행 없는 관리자 상세 조회는 불필요한 lifecycle403을 만들지 않는다. 기존 카드·배정/메모/시작 버튼 목적은 유지한다. SW `2026-11-06-13`.
+- 신규 `check-cleaning-planned-date.mjs`: 수정 전 관리자 날짜 혼동·관리자/메이드 알림 과거일 이동·당일 메이드 청소시작 누락4가지 재현. 수정 후10/8 퇴실→11/6 배정→11/7 청소, LA 브라우저/KST 날짜 경계, 미래 수행 없음·알림 이동·11/7 시작CAS, 원본 날짜 보존·과거/승인 읽기전용 PASS. 모든 API 요청은 합성 fixture이며 실제 작업 시작0회.
+- 기존 `check-assignment-instruction-memo`, `check-cleaning-assignment-continuity`, `check-live-connections`, `check-assignment-planning-day` PASS. 메모 저장/통보·동시착수거절·권한·부분실패/동일키재시도·내일요금·모달/Back·기존 알림 목적화면을 확인했다. workspace/OpenAPI/생성client/contract diff 및 `git diff --check` PASS.
+- Browser plugin not available → 기존 Playwright Chromium151, 로컬4189.360/390/768/1440px 가로넘침 없음, 페이지식별/본문·키보드 Enter/포커스·접근성이름·모달/Back·앱 warning/error/pageerror0건. 같은 역할·시나리오·뷰포트 전후를 비교했다.
+- 대표 PNG: `QA/screenshots/cleaning-date-admin-{before,after}-{390,1440}.png`, `cleaning-date-maid-active-{before,after}-390.png`, `cleaning-date-maid-planned-after-390.png`. 원본/수정본의 카드·버튼 구조를 유지하고 청소일·당일 수행만 보정했다.
+- 한계: 실제 운영26건의 날짜는 읽기로 확인했으며, 운영 날짜 전환 worker·실계정 청소시작·메이드 실기기 수신·Safari/Android는 미실행이다. 운영 배포 완료는 후속 기록으로 구분한다.
+
 ## 2026-11-06 · 통보 후 수행 생성 전 작업 메모 저장 오류
 
 - 재현: 관리자 청소 관리 → 내일 배정의 과거 업무일 객실 → 통보 완료·`attemptStatus=null` → 메모 입력 → 저장·통보. 이전 main에서는 관리자 `GET /v1/attempts/lifecycle-impact`가403 `ATTEMPT_ACCESS_REQUIRED`를 반환하여 메모 POST 전에 중단됐다. 사용자 화면과 같은 문구를 합성 API로 재현했고 수정 전 회귀 assertion은 실패했다.
