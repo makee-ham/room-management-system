@@ -1,5 +1,15 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-11-06 · 요금 균형 수정 운영 배포 확인
+
+- 서버 개발 #601/운영 [#603](https://github.com/wrongstory/room-management-system-backend/pull/603), 화면 개발 #318/운영 [#319](https://github.com/makee-ham/room-management-system/pull/319)을 required checks 통과 후 보호 병합했다. 운영 서버 main `07aa21f6091d112922a8eeffec2a96b1a193868b`, 화면 main `1bb66fc1045712d3f8f52bd405b77819f4afaaab`이다.
+- 사용자가 승인한 실제 격리 DB 검증은 [CI 42153728323](https://github.com/wrongstory/room-management-system-backend/actions/runs/42153728323) attempt 1회다. application·fresh·전체 SQL/upgrade·호환 경고·날짜 경계·경합·cleanup·증거 저장 PASS. proof `cc4a9aab11fecec989971fd46fbe208d006bf48b7f4af0fa3760ba7350e37063`. 앞선 #602는 잘못된 hotfix 이름으로 준비 단계에서 종료되어 모든 DB 단계가 skipped였고 실제 DB 실행은 0회였다.
+- [main CI 42158155087](https://github.com/wrongstory/room-management-system-backend/actions/runs/42158155087)이 같은 입력과 원 실행 attempt 1을 재사용했다. main application/migration PASS, 추가 DB 재구축 0회. 운영 migration은 0건이며 history는 전후 150건/마지막 `20261104211056`으로 동일하다.
+- 해당 main의 api만 배포하여 API 59 ACTIVE/release 1.0.3/태그 v1.0.3을 확인했다. health 200, OpenAPI 161경로 exact main 일치, 익명 배정/가격표 조회 401, 다운로드 릴리스 모듈의 동일 변환 후 소스 일치 PASS. 다른 4개 Function version/번들 해시는 유지된다.
+- Vercel deployment `dpl_DoxXprmADVS5fmJKuP3NEGcjqfna`, SW `2026-11-06-8`. 운영 `index.html` SHA256 `e7f3db577e36cb4e7def9d951379eb2d443aa0e8f6e5547067991705a82aa1c0`; index/sw/build-info/runtime-config 4개가 exact main 산출물과 바이트 일치한다. 기존 운영 설정과 모든 feature flag를 유지했고 비공개 개발 파일·QA는 호스팅되지 않는다.
+- Browser plugin unavailable → Playwright Chromium 151.0.7922.34. 운영 호스팅의 runtime만 데모로 가로채 관리자 6개·메이드 4개 메뉴를 검사했다. 360/390/768/1440px 가로 넘침·페이지 예외·console warning/error 0건. 별도 실제 익명 로그인과 새 서비스워커 등록/캐시에 요금 목표·균형 요약 함수 포함 PASS.
+- 새 자동 배정의 요금 목표·연속 묶음·기존 담당/중복 보존·수동 합계·0원/누락·저장 재시도 검증과 대표 PNG는 아래 개발 QA 절을 따른다. 운영 배정 저장·통보, 실데이터 동시 명령과 실기기 기존 PWA 갱신은 수행하지 않았다. 기존 저장 담당은 자동 재배정하지 않는다.
+
 ## 2026-11-06 · 1객실 요금 이내 균형 목표
 
 - 사용자 후속 결정: 최대 배정 수·기존 담당·재청소 귀속·중복 차단을 유지하면서 최고·최저 총요금 격차의 1객실 요금 목표 초과분을 먼저 줄인다. 목표 이내에서는 가까운 호수 → 같은 엘리베이터 → 가까운 층 → 요금 격차·편차다. 고정 층수 제한 없음.
