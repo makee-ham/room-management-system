@@ -10,18 +10,18 @@ let loads={};
 const core=source.slice(source.indexOf('      function assignmentPricingSnapshot('),source.indexOf('      function createRandomAssignment('));
 assert(core.includes('function assignmentProximity('));
 const sandbox={state:{assignments:{}},ROOMS:[],ROOM_TYPES:{standard:{rate:100,minutes:10}},orderedAssignmentsForMaid:id=>loads[id]||[],timeMinutes:value=>{const [h,m]=value.split(':').map(Number);return h*60+m;}};
-const {proximity,trial}=vm.runInNewContext(core+';({proximity:assignmentProximity,trial:randomAssignmentTrial})',sandbox);
+const {proximity,trial,elevatorTrials}=vm.runInNewContext(core+';({proximity:assignmentProximity,trial:randomAssignmentTrial,elevatorTrials:assignmentElevatorTrials})',sandbox);
 const item=(room,extra={})=>({id:room,room,type:'standard',elevatorSnapshot:'A',rateSnapshot:100,minutesSnapshot:10,...extra});
 const maids=[{id:'a'},{id:'b'}],target=item('199');
 const run=()=>trial(maids,[target],()=>0.5);
 loads={a:[item('120')],b:[item('201')]};
-assert.equal(run().plan['199'],'b','full room-number gap wins over floor');
-assert.equal(run().floorDistanceTotal,1);
-assert.equal(proximity(target,[item('201'),item('120')]).roomDistance,2,'floor and elevator metrics belong to the nearest room');
+assert.equal(run().plan['199'],'a','same floor wins over numeric room gap');
+assert.equal(run().floorDistanceTotal,0);
+assert.equal(proximity(target,[item('201'),item('120')]).roomDistance,79,'same-floor room is nearer within an elevator');
 loads={a:[item('120',{rateSnapshot:200})],b:[item('201')]};
-assert.equal(run().plan['199'],'b','room proximity stays ahead of fee balance');
+assert.equal(run().plan['199'],'a','same floor wins inside fee tolerance');
 loads={a:[item('120',{elevatorSnapshot:'B'})],b:[item('201')]};
-assert.equal(run().plan['199'],'b','room proximity stays ahead of elevator');
+assert.equal(run().plan['199'],'b','same elevator wins over numeric room gap');
 loads={a:[item('120')],b:[item('201')]};
 assert.equal(trial([maids[1]],[target],()=>0.5).plan['199'],'b','only eligible maids are candidates');
 assert.equal(trial(maids,[item('199',{accessStart:'17:55',requestDue:'18:00'})],()=>0.5).skipped,1,'demo time-window constraint remains');
@@ -41,7 +41,11 @@ const balance=vm.runInNewContext(balanceSource+';assignmentFeeBalanceMarkup',{mo
 assert.match(balance([{roomKey:'101',maidId:'a',fee:20000},{roomKey:'102',maidId:'a',fee:20000},{roomKey:'350',fee:900000},{roomKey:'350',fee:900000}],['a','b']),/총요금 차이 40000원 · 목표 20000원 이내 · 목표 초과/,'duplicate blocked fees cannot inflate the limit');
 assert.match(balance([{maidId:'a',fee:null}],['a','b']),/확인 불가/,'missing API fee is not zero');
 assert.match(balance([{maidId:'a',fee:20000,blocked:true},{maidId:'b',fee:20000}],['a','b']),/총요금 차이 0원/,'manual resolution of an old blocked preview counts actual ownership');
-console.log('[ok] one-room fee tolerance, contiguous boundaries, room/elevator/floor/fee precedence, cluster seeds, duplicate/fixed room guards, eligibility, demo deadlines and boundaries');
+loads={a:[],b:[],c:[]};
+const elevatorRooms=[item('556',{elevatorSnapshot:'C'}),item('639',{elevatorSnapshot:'C'}),item('623',{elevatorSnapshot:'A'}),item('720',{elevatorSnapshot:'A'}),item('657',{elevatorSnapshot:'B'}),item('662',{elevatorSnapshot:'B'})];
+const zoned=elevatorTrials([...maids,{id:'c'}],elevatorRooms,()=>0.5).sort((a,b)=>a.payExcess-b.payExcess||a.zoneRankTotal-b.zoneRankTotal||a.floorDistanceTotal-b.floorDistanceTotal)[0];
+assert.equal(zoned.assigned,6);assert.equal(zoned.payGap,0);assert.equal(zoned.zoneRankTotal,0);assert.equal(zoned.plan['556'],zoned.plan['639']);assert.notEqual(zoned.plan['556'],zoned.plan['623']);
+console.log('[ok] one-room fee tolerance, contiguous boundaries, elevator/floor/room/fee precedence, cluster seeds, duplicate/fixed room guards, eligibility, demo deadlines and boundaries');
 
 const {chromium}=createRequire(import.meta.url)('playwright'),origin=process.env.RMS_QA_ORIGIN||'http://127.0.0.1:4177';
 const browser=await chromium.launch({headless:true}),context=await browser.newContext({viewport:{width:390,height:900},locale:'ko-KR',serviceWorkers:'block',reducedMotion:'reduce'}),page=await context.newPage(),errors=[],external=[];
@@ -66,11 +70,11 @@ try{
   const trigger=page.getByRole('button',{name:'랜덤 배정 기준 사용 안내',exact:true}),tip=page.locator('#info-tip-random-assignment-rule');
   for(const width of [360,390,768,1440]){
     await page.setViewportSize({width,height:900});await page.waitForTimeout(230);await trigger.scrollIntoViewIfNeeded();await trigger.click();await tip.waitFor({state:'visible'});
-    assert.match(await tip.innerText(),/가장 비싼 객실 1건 요금 이내/);
+    assert.match(await tip.innerText(),/가장 비싼 객실 1건 요금 이내/);assert.match(await tip.innerText(),/같은 엘리베이터 → 가까운 층 → 가까운 호수/);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`overflow at ${width}`);
     assert(await tip.evaluate(e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&e.scrollWidth<=e.clientWidth+1;}),'tooltip fits viewport');
     assert.equal(await trigger.getAttribute('aria-describedby'),'info-tip-random-assignment-rule');
-    if([390,1440].includes(width))await page.screenshot({path:`WIREFRAME/QA/screenshots/assignment-fee-balance-rule-${width}.png`});
+    if([390,1440].includes(width))await page.screenshot({path:`WIREFRAME/QA/screenshots/assignment-elevator-rule-${width}.png`});
     await page.keyboard.press('Escape');await tip.waitFor({state:'hidden'});assert(await trigger.evaluate(e=>document.activeElement===e));
     await page.keyboard.press('Enter');await tip.waitFor({state:'visible'});await page.keyboard.press('Escape');
     assert((await page.locator('#main-content').innerText()).length>100);
@@ -82,7 +86,7 @@ try{
   for(const [id,row] of Object.entries(before))if(row.maidId)assert.deepEqual(after[id],row,'fixed assignment remains unchanged');
   assert(Object.values(after).some(row=>row.maidId&&row.status==='draft'));
   await page.locator('[data-assignment-fee-balance]').waitFor();assert.match(await page.locator('[data-assignment-fee-balance]').innerText(),/총요금 차이.*목표/);
-  for(const width of [390,1440]){await page.setViewportSize({width,height:900});await page.locator('[data-assignment-fee-balance]').scrollIntoViewIfNeeded();await page.screenshot({path:`WIREFRAME/QA/screenshots/assignment-fee-balance-${width}.png`});}
+  for(const width of [390,1440]){await page.setViewportSize({width,height:900});await page.locator('[data-assignment-fee-balance]').scrollIntoViewIfNeeded();await page.screenshot({path:`WIREFRAME/QA/screenshots/assignment-elevator-${width}.png`});}
   await action('undo-random-assignment').click();await action('random-assignments').waitFor();
   const restored=await page.evaluate(()=>__floorAssignments());
   for(const [id,row] of Object.entries(before))assert.deepEqual(restored[id],row,'undo restores previous assignment');
