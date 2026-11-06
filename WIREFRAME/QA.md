@@ -1,5 +1,17 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-11-06 · 오늘 요약 공실 초록색
+
+- 흐름: 관리자 오늘 객실 요약 → 초록색 공실 숫자·왼쪽 강조선 → Enter/클릭 → 같은 날짜의 공실 목록. 기존 공유 렌더러의 공실 tone만 `neutral`에서 `green`으로 바꿨다. 집계·점유 판정·청소/운영 상태·레이아웃·버튼 목적·API는 변경하지 않았다.
+- 환경: Browser plugin not available → 기존 Playwright Chromium 151, 로컬 `http://127.0.0.1:4197`. 의존성을 추가하지 않았고 업무 API는 합성 fixture로 격리했다.
+- 기존 `scripts/check-room-state-axes.mjs`의 임시 사본에 공실 실제 CSS 색·44px/접근성 이름·Enter 후 공실 목록/필터 포커스 확인을 추가해 실행했다. 360/390/768/1440px에서 페이지 식별·본문·오류 overlay 부재·가로 넘침 없음·키보드·모달/Escape·Back·예약/전체 상세 목적지 PASS. 독립 집계·조건 필터·미확인값·부분 조회 실패·날짜/세션 경합도 PASS. 앱 console warning/error·페이지 예외·예상 밖 요청 0건.
+- 동일 합성 객실·날짜·역할의 변경 전/후 화면을 390/1440px로 비교했다. 대표 PNG: `QA/screenshots/vacant-green-before-390.png`, `vacant-green-after-390.png`, `vacant-green-before-1440.png`, `vacant-green-after-1440.png`. 숫자와 왼쪽 선 외 화면 구조는 같다.
+- 데모에는 점유 미확정 객실이 있어 공실 요약이 기존처럼 `확인 필요`로 잠긴다. 처음 추가한 데모 클릭 검사는 이 잠금 때문에 timeout했으며, 잠금을 유지하는지 확인하도록 검증 시나리오를 바로잡았다. 운영 합성 응답의 확정 공실 3개는 기존 목록으로 이동한다.
+- 기존 `scripts/check-deployed-visual.mjs` 임시 사본을 로컬에서 실행해 관리자 6개·메이드 4개 메뉴와 4개 너비, 데모 공실 초록색/미확인 잠금, 콘솔·페이지 예외 0건을 확인했다.
+- 정적 검사의 기존 회색 공실 기대값을 요청한 초록색으로 갱신했다. `node scripts/check-workspace.mjs`(PWA 포함), `npm run contract:check`, `npm run contract:test-diff`, dev 기준 `npm run contract:diff`, `git diff --check` PASS. 새 테스트 파일이나 의존성은 추가하지 않았다.
+- 한계: 실제 운영 계정의 업무 쓰기·실기기 Safari/Android·기존 설치 PWA 업데이트는 검사하지 않았다. 서비스워커 `2026-11-06-1`; 운영 배포 결과와 source SHA는 릴리스 PR에서 확인한다.
+
+
 ## 2026-11-02 · 공실 배지 제거
 
 검증 흐름: 관리자 객실 현황 → 과거/오늘/미래 날짜 카드 → 현재 운영 상태 → 전체 상세. 배지에만 적용하며 공실 집계·필터·현재 상태 텍스트를 유지한다.
