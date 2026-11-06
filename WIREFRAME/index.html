@@ -2151,6 +2151,12 @@
     .live-operation-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:14px; }
     .live-operation-grid .btn { min-height:48px; justify-content:flex-start; }
     .live-dev-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .live-rate-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(130px,180px) auto; align-items:end; gap:14px; padding:16px 0; border-bottom:1px solid var(--line); }
+    .live-rate-row .field { margin:0; }
+    .live-rate-row .input-control { width:100%; min-height:44px; }
+    .live-rate-row .btn { min-height:44px; }
+    .live-rate-row .meta { margin:6px 0 0; }
+    @media (max-width:600px) { .live-rate-row { grid-template-columns:minmax(0,1fr) auto; } .live-rate-row > div:first-child { grid-column:1/-1; } }
     .live-developer-room-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
     .live-developer-room-form { display:grid; gap:14px; margin-top:16px; }
     .live-developer-room-form .field { margin:0; }
@@ -3551,7 +3557,7 @@
           throw error;
         }
       }
-      async function mutationApiRequest(path,{method='POST',body=null,rawBody=null,contentType=null,idempotencyKey:suppliedIdempotencyKey=null,keepModalOnUncertain=false,...options}={}){
+      async function mutationApiRequest(path,{method='POST',body=null,rawBody=null,contentType=null,idempotencyKey:suppliedIdempotencyKey=null,keepModalOnUncertain=false,validateResult=null,...options}={}){
         const generation=LIVE_RUNTIME.authGeneration,profileId=state.remote.auth.user?.profileId;
         if(path==='/v1/cleaning-templates')body=normalizeCleaningTemplateRequest(body);
         const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value;
@@ -3560,7 +3566,7 @@
         if(uncertainLiveMutation&&uncertainLiveMutation.signature!==signature)throw new ApiRequestError('previous request unconfirmed',{status:409,code:'PREVIOUS_REQUEST_UNCONFIRMED'});
         if(!uncertainLiveMutation&&/^\/v1\/assignments\/(?:drafts|commit|[^/]+\/(?:change|unassign))$/.test(path))guardLivePlanningDay();
         let idempotencyKey=LIVE_IDEMPOTENCY_KEYS.get(signature);if(!idempotencyKey){if(LIVE_IDEMPOTENCY_KEYS.size>=50)LIVE_IDEMPOTENCY_KEYS.delete(LIVE_IDEMPOTENCY_KEYS.keys().next().value);idempotencyKey=suppliedIdempotencyKey||crypto.randomUUID();LIVE_IDEMPOTENCY_KEYS.set(signature,idempotencyKey);}
-        try{const result=await apiRequest(path,{...options,method,body,rawBody,contentType,idempotencyKey});if(generation!==LIVE_RUNTIME.authGeneration)throw new ApiRequestError('session changed',{status:409,code:'SESSION_CHANGED'});LIVE_IDEMPOTENCY_KEYS.delete(signature);if(uncertainLiveMutation?.signature===signature)uncertainLiveMutation=null;return result;}
+        try{const result=await apiRequest(path,{...options,method,body,rawBody,contentType,idempotencyKey});if(generation!==LIVE_RUNTIME.authGeneration)throw new ApiRequestError('session changed',{status:409,code:'SESSION_CHANGED'});if(validateResult)validateResult(result.data);LIVE_IDEMPOTENCY_KEYS.delete(signature);if(uncertainLiveMutation?.signature===signature)uncertainLiveMutation=null;return result;}
         catch(error){if(generation!==LIVE_RUNTIME.authGeneration)throw error;const status=Number(error?.status)||0;if(status>=400&&status<500&&![408,425,429].includes(status)){LIVE_IDEMPOTENCY_KEYS.delete(signature);if(uncertainLiveMutation?.signature===signature)uncertainLiveMutation=null;}else{uncertainLiveMutation={path,method,body:rawBody===null?JSON.parse(JSON.stringify(body)):null,rawBody,contentType,signature,generation,profileId};if(!keepModalOnUncertain)closeModal();queueMicrotask(()=>render());}throw error;}
       }
       async function loadLiveAccounts({quiet=false}={}){
@@ -4874,7 +4880,7 @@
         if(actor?.role==='maid'&&state.remote.complaints.showList)return `${detailHeader('컴플레인·벌점','내 청소와 연결된 최근 31일 서버 기록')}${renderLiveComplaints()}`;
         const installAction=LIVE_RUNTIME.updateWaiting?button('새 버전 적용','apply-app-update','primary'):button(LIVE_RUNTIME.installed?'설치됨':'앱 설치','install-app','outline',LIVE_RUNTIME.installed?'disabled':'');
         const pushAction=pushActive?button('푸시 해제','retire-live-push','outline'):button('알림 연결','notification-permission','outline',state.remote.push.busy?'disabled':'');
-        return `<div class="view-stack">${maidNotice}<div class="settings-grid">${actor?.role==='admin'?`${settingCard('alert','오프라인 완료 확인','',button('기록 보기','live-quarantines','outline'))}` :''}${settingCard('user','계정·로그인',`${esc(actor?.displayName||'계정')} · ${esc(LIVE_ROLE_LABELS[actor?.role]||'역할 확인')} · ${sessionLabel}`,`${button('상태 보기','account-status','outline')}${button('비밀번호 변경','open-password-change','soft')}`)}${settingCard('download','앱 설치',LIVE_RUNTIME.updateWaiting?'새 앱 버전 적용 대기':pwaInstallLabel(),installAction)}${settingCard('bell','브라우저 알림',browserNotificationLabel(),pushAction)}${settingCard('alert','컴플레인·벌점','',button('기록 보기','go-complaints','outline'))}${settingCard('sync','운영 연결',`마지막 확인 ${esc(liveTimeLabel(state.remote.accounts.lastSuccessAt||state.remote.rooms.lastSuccessAt||state.remote.payroll.lastSuccessAt))}`,button('다시 연결','refresh-live-all','outline'))}</div></div>`;
+        return `<div class="view-stack">${maidNotice}<div class="settings-grid">${actor?.role==='admin'?`${settingCard('wallet','청소 가격표','',button('가격표 수정','rates','outline'))}${settingCard('alert','오프라인 완료 확인','',button('기록 보기','live-quarantines','outline'))}` :''}${settingCard('user','계정·로그인',`${esc(actor?.displayName||'계정')} · ${esc(LIVE_ROLE_LABELS[actor?.role]||'역할 확인')} · ${sessionLabel}`,`${button('상태 보기','account-status','outline')}${button('비밀번호 변경','open-password-change','soft')}`)}${settingCard('download','앱 설치',LIVE_RUNTIME.updateWaiting?'새 앱 버전 적용 대기':pwaInstallLabel(),installAction)}${settingCard('bell','브라우저 알림',browserNotificationLabel(),pushAction)}${settingCard('alert','컴플레인·벌점','',button('기록 보기','go-complaints','outline'))}${settingCard('sync','운영 연결',`마지막 확인 ${esc(liveTimeLabel(state.remote.accounts.lastSuccessAt||state.remote.rooms.lastSuccessAt||state.remote.payroll.lastSuccessAt))}`,button('다시 연결','refresh-live-all','outline'))}</div></div>`;
       }
 
 
@@ -5172,7 +5178,7 @@
       }
       function rawCloseModal({restoreFocus=false,restoreScroll=true}={}) {
         const root=document.getElementById('modal-root'),wasPin=!!root?.querySelector('.pin-sheet'),trigger=modalTrigger;
-        liveRoomOperationsEditor=null;liveRoomExport=null;
+        liveRoomOperationsEditor=null;liveRoomExport=null;liveRatesEditor=null;
         if(root)root.innerHTML='';restoreModalViewport({restore:restoreScroll});setModalBackgroundLocked(false);
         if(restoreFocus)trigger?.focus?.({preventScroll:true});modalTrigger=null;if(wasPin){pinCardTrigger=null;activePinModalSessionId=null;}
       }
@@ -5433,6 +5439,7 @@
       }
 
       async function confirmUncertainLiveMutation(){
+        if(isLiveRatePath(uncertainLiveMutation?.path)){await openLiveRates();return;}
         const command=uncertainLiveMutation;if(!command||command.busy||command.generation!==LIVE_RUNTIME.authGeneration||command.profileId!==state.remote.auth.user?.profileId)return;
         command.busy=true;render();try{const result=await mutationApiRequest(command.path,{method:command.method,body:command.body,rawBody:command.rawBody??null,contentType:command.contentType||null});if(command.generation!==LIVE_RUNTIME.authGeneration)return;if(/^\/v1\/assignments\//.test(command.path)&&Object.hasOwn(command.body||{},'instructionMemo')){verifyAssignmentInstruction(result.data,command.body);const assignment=result.data?.assignment||result.data;cleaningState().instructionEdits.delete(assignment.cleaningTargetId);cleaningState().manualEdits?.delete(assignment.cleaningTargetId);if(command.path.endsWith('/drafts'))cleaningState().draftSaveResults.set(assignment.cleaningTargetId,{status:'success'});}if(/^\/v1\/(assignments|assignment-change-requests|attempts|inspections)/.test(command.path))invalidateLiveCleaningReadModels();await loadLiveViewData(currentView(),{force:true});const uploadedSlot=command.path.match(/\/photo-slots\/([^/]+)\/photos\/[^/]+\/upload/);if(uploadedSlot)cleaningState().uploadStates.delete(uploadedSlot[1]);if(cleaningActor()&&/^\/v1\/(assignments|assignment-change-requests|attempts|inspections|notifications)/.test(command.path))cleaningState().lastReceipt={label:'동일 명령 결과 확인',replayed:true,at:new Date().toISOString()};toast('동일한 요청 키와 내용으로 서버 결과를 확인했습니다.');}catch(error){if(command.generation!==LIVE_RUNTIME.authGeneration)return;if(error.status===409||error.code==='ASSIGNMENT_INSTRUCTION_UNCONFIRMED')await loadLiveViewData(currentView(),{force:true});toast(`${apiErrorCopy(error)}${error.requestId?` · 문의 번호 ${error.requestId}`:''}`,'error');}finally{command.busy=false;render();}
       }
@@ -9149,8 +9156,104 @@
       }
 
       function openActionRates(trigger=document.activeElement) {
+        if(liveMode()){void openLiveRates(trigger);return;}
         showModal({title:'객실 타입 청소요금·예상시간',subtitle:'청소요금은 객실현황(26.08) 8월 시트 정본이며 예상시간만 데모입니다.',large:true,trigger,body:`<div class="rail-list">${Object.entries(ROOM_TYPES).map(([key,type])=>`<div class="rail-row"><strong>${esc(type.name)}</strong><span>${money(type.rate)} · 8월 시트 · 예상 ${type.minutes}분(데모)</span></div>`).join('')}</div><div class="notice notice-info" style="margin:12px 0 0">새 작업은 시트 청소요금을 스냅샷으로 고정합니다. 기존 확정 이력은 당시 기록을 보존합니다.</div>`});
       }
+
+      const LIVE_RATE_MAX=1073741823;
+      const LIVE_RATE_SCOPE='변경 후 새로 생성되는 일반 청소부터 적용됩니다. 이미 생성된 미래 청소·진행 청소·확정 수당·주급은 바뀌지 않습니다.';
+      let liveRatesEditor=null,liveRatesSaving=false;
+      function isLiveRatePath(path){return /^\/v1\/room-types\/[^/]+\/cleaning-fee$/.test(path||'');}
+      function liveRateValue(value){
+        const text=String(value??'').trim();
+        if(!/^(?:\d+|\d{1,3}(?:,\d{3})+)$/.test(text))return null;
+        const amount=Number(text.replaceAll(',',''));
+        return Number.isSafeInteger(amount)&&amount>=0&&amount<=LIVE_RATE_MAX?amount:null;
+      }
+      function liveRateEditable(type){return type?.active===true&&Number.isSafeInteger(type.baseCleaningFee)&&type.baseCleaningFee>=0&&type.baseCleaningFee<=LIVE_RATE_MAX&&Number.isSafeInteger(type.version)&&type.version>=1&&type.version<Number.MAX_SAFE_INTEGER;}
+      function liveRatesCurrent(editor){return editor===liveRatesEditor&&editor.generation===LIVE_RUNTIME.authGeneration&&liveRoleAllowed('admin');}
+      function liveRateError(error){
+        if(error?.status===400)return '금액은 0~1,073,741,823원의 정수로 입력하고 적용 범위를 확인해 주세요.';
+        if(error?.status===404)return '객실 타입을 찾을 수 없습니다. 가격표를 다시 불러와 주세요.';
+        if(error?.status===409)return '다른 변경이 먼저 반영됐습니다. 최신 가격과 입력한 금액을 비교한 뒤 다시 확인해 주세요.';
+        if(!error?.status||error.status>=500||[408,425,429].includes(error.status))return '저장 결과를 확인하지 못했습니다. 새 변경을 멈추고 같은 요청으로 결과를 확인해 주세요.';
+        return apiErrorCopy(error,'가격을 저장하지 못했습니다.');
+      }
+      function renderLiveRates(){
+        const editor=liveRatesEditor;if(!editor||!liveRatesCurrent(editor)||!document.querySelector('[data-live-rates]'))return;
+        const notice=editor.message?`<p class="notice notice-${editor.error?'warning':'info'}" role="${editor.error?'alert':'status'}">${esc(editor.message)}</p>`:'';
+        let body='',confirm={};
+        if(editor.request){
+          const request=editor.request,type=editor.items.find(item=>item.id===request.id),retry=editor.uncertain;
+          body=`<h3>${esc(type?.displayName||request.name||'객실 타입')}</h3><div class="rail-list"><div class="rail-row"><strong>변경 전</strong><span>${Number.isSafeInteger(request.previous)?money(request.previous):'조회 필요'}</span></div><div class="rail-row"><strong>변경 후</strong><span>${money(request.body.baseCleaningFee)}</span></div></div><p class="notice notice-info">${LIVE_RATE_SCOPE}</p>${retry?'<p class="meta">이전 요청의 금액과 확인 내용을 그대로 재전송합니다. 결과 확인 후 최신 가격표를 다시 불러옵니다.</p>':`<label class="choice"><input id="live-rate-confirm-scope" type="checkbox" ${editor.confirmed?'checked':''} ${editor.busy?'disabled':''}><span>기존 청소·확정 수당은 유지하고 새 청소에만 적용함을 확인했습니다.</span></label>`}`;
+          confirm={confirmLabel:editor.busy?'저장 결과 확인 중':retry?'같은 요청 결과 확인':'가격 저장',confirmAction:'live-rates-save',confirmExtra:editor.busy||(!retry&&!editor.confirmed)?'disabled':'',secondaryLabel:retry?'':'금액 다시 입력',secondaryAction:'live-rates-edit',secondaryExtra:editor.busy?'disabled':''};
+        }else if(editor.status==='loading')body='<p role="status">청소 가격표를 불러오는 중입니다.</p>';
+        else if(editor.status==='error')body=`<p>청소 가격표를 불러오지 못했습니다. 입력한 금액은 유지됩니다.</p>${button('다시 불러오기','live-rates-refresh','outline')}`;
+        else{
+          body=`<div class="rail-list live-rate-list">${editor.items.map(type=>{const editable=liveRateEditable(type)&&!editor.blocked&&!uncertainLiveMutation,amount=Number.isSafeInteger(type.baseCleaningFee)?money(type.baseCleaningFee):'API 미제공',value=editor.drafts.get(type.id)??(Number.isSafeInteger(type.baseCleaningFee)?String(type.baseCleaningFee):'');return `<div class="live-rate-row"><div><strong>${esc(type.displayName)}</strong><p class="meta">현재 ${amount}${type.active?'':' · 비활성'}</p></div><div class="field"><label for="live-rate-${esc(type.id)}">변경할 금액 · 원</label><input id="live-rate-${esc(type.id)}" class="input-control" type="text" inputmode="numeric" maxlength="14" autocomplete="off" data-rate-id="${esc(type.id)}" value="${esc(value)}" aria-label="${esc(type.displayName)} 변경할 청소 금액" ${editable?'':'disabled'}></div>${button('변경 확인','live-rates-review','outline',`data-id="${esc(type.id)}" aria-label="${esc(type.displayName)} 가격 변경 확인" ${editable?'':'disabled'}`)}</div>`;}).join('')||'<p>등록된 객실 타입이 없습니다.</p>'}</div><p class="meta">0원도 저장할 수 있습니다. 원 단위 정수로 입력해 주세요.</p><p class="notice notice-info">${LIVE_RATE_SCOPE}</p>${button('가격표 새로고침','live-rates-refresh','outline')}`;
+        }
+        replaceModal({title:'청소 가격표',large:true,body:`<div data-live-rates>${notice}${body}</div>`,closeLabel:'닫기',...confirm});
+      }
+      async function readLiveRates(editor){
+        if(!liveRatesCurrent(editor)||editor.busy||editor.status==='loading')return;
+        editor.status='loading';renderLiveRates();
+        try{
+          const {data,requestId}=await apiRequest('/v1/room-types');if(!liveRatesCurrent(editor))return;
+          if(!Array.isArray(data?.items)||data.items.some(item=>!item||typeof item.id!=='string'||typeof item.displayName!=='string')||new Set(data.items.map(item=>item.id)).size!==data.items.length)throw new ApiRequestError('invalid price list',{status:502,code:'INVALID_RESPONSE'});
+          editor.items=data.items;editor.status='ready';editor.loadedAt=Date.now();
+          state.remote.roomTypes={...state.remote.roomTypes,status:'ready',items:data.items,error:null,requestId,lastSuccessAt:new Date().toISOString()};
+        }catch(error){if(!liveRatesCurrent(editor))return;editor.status='error';editor.error=true;editor.message=editor.message||apiErrorCopy(error,'가격표를 불러오지 못했습니다.');}
+        renderLiveRates();
+      }
+      async function openLiveRates(trigger=document.activeElement){
+        if(!liveRoleAllowed('admin'))return;
+        if(liveRatesSaving){toast('앞선 가격 저장 결과를 확인하고 있습니다.');return;}
+        const pending=uncertainLiveMutation;
+        const editor=liveRatesEditor={generation:LIVE_RUNTIME.authGeneration,status:'idle',items:[],drafts:new Map(),request:null,confirmed:false,busy:false,blocked:false,error:false,message:'',loadedAt:0};
+        if(pending&&isLiveRatePath(pending.path)){editor.request={path:pending.path,id:decodeURIComponent(pending.path.split('/')[3]),body:{...pending.body}};editor.uncertain=true;editor.error=true;editor.message=liveRateError({status:0});}
+        showModal({title:'청소 가격표',large:true,trigger,closeLabel:'닫기',body:'<div data-live-rates><p role="status">청소 가격표를 불러오는 중입니다.</p></div>'});
+        await readLiveRates(editor);
+      }
+      async function reviewLiveRate(id){
+        const editor=liveRatesEditor;if(!editor||!liveRatesCurrent(editor)||editor.busy||editor.blocked||editor.request||uncertainLiveMutation)return;
+        if(!navigator.onLine){toast('오프라인에서는 가격을 변경할 수 없습니다. 연결 후 다시 시도해 주세요.','error');return;}
+        const input=document.getElementById(`live-rate-${id}`),amount=liveRateValue(input?.value);if(input)editor.drafts.set(id,input.value);
+        if(amount===null){toast('금액을 0~1,073,741,823원의 정수로 입력해 주세요.','error');input?.setAttribute('aria-invalid','true');input?.focus();return;}
+        if(editor.status!=='ready'||Date.now()-editor.loadedAt>=LIVE_READ_FRESH_MS){editor.message='최신 가격표를 다시 불러왔습니다. 입력 금액을 비교한 뒤 변경을 다시 확인해 주세요.';await readLiveRates(editor);return;}
+        const type=editor.items.find(item=>item.id===id);if(!liveRateEditable(type))return;
+        editor.request={id,name:type.displayName,previous:type.baseCleaningFee,path:`/v1/room-types/${encodeURIComponent(id)}/cleaning-fee`,body:{baseCleaningFee:amount,expectedVersion:type.version,confirmFutureTargetsOnly:true}};editor.confirmed=false;editor.uncertain=false;editor.error=false;editor.message='';renderLiveRates();
+      }
+      async function saveLiveRate(){
+        const editor=liveRatesEditor,request=editor?.request;
+        if(!editor||!liveRatesCurrent(editor)||!request||editor.busy||liveRatesSaving||(!editor.uncertain&&!editor.confirmed))return;
+        if(!navigator.onLine){toast('오프라인에서는 가격을 저장할 수 없습니다. 연결 후 다시 시도해 주세요.','error');return;}
+        editor.busy=true;liveRatesSaving=true;editor.message='';renderLiveRates();
+        try{
+          await mutationApiRequest(request.path,{method:'PUT',body:request.body,keepModalOnUncertain:true,validateResult:data=>{const result=data?.roomType;if(result?.roomTypeId!==request.id||result.baseCleaningFee!==request.body.baseCleaningFee||!Number.isSafeInteger(result.version)||result.version<request.body.expectedVersion||result.effectiveFor!=='NEW_TARGETS_ONLY')throw new ApiRequestError('invalid price receipt',{status:502,code:'INVALID_RESPONSE'});}});
+          if(editor.generation!==LIVE_RUNTIME.authGeneration)return;
+          state.remote.roomTypes.lastSuccessAt=null;
+          if(!liveRatesCurrent(editor))return;
+          editor.drafts.delete(request.id);editor.request=null;editor.uncertain=false;editor.confirmed=false;editor.error=false;editor.message='가격 저장을 확인했습니다. 현재 가격표를 다시 불러옵니다.';
+        }catch(error){
+          if(!liveRatesCurrent(editor))return;
+          if(error.status===401){endLiveSession({error});render();return;}
+          if(error.code==='PASSWORD_CHANGE_REQUIRED'){rawCloseModal();await refreshLiveActor();return;}
+          editor.error=true;editor.message=liveRateError(error);editor.uncertain=!!uncertainLiveMutation&&uncertainLiveMutation.path===request.path;
+          if(!editor.uncertain){editor.request=null;editor.confirmed=false;editor.blocked=[401,403].includes(error.status);}
+        }finally{
+          liveRatesSaving=false;
+          if(liveRatesCurrent(editor)){editor.busy=false;if(!editor.request){editor.status='idle';await readLiveRates(editor);}else renderLiveRates();}
+        }
+      }
+
+      document.addEventListener('input',event=>{
+        const input=event.target,editor=liveRatesEditor;
+        if(input.matches?.('[data-rate-id]')&&editor&&liveRatesCurrent(editor)&&!editor.busy&&!editor.request){editor.drafts.set(input.dataset.rateId,input.value);input.removeAttribute('aria-invalid');}
+      });
+      document.addEventListener('change',event=>{
+        const editor=liveRatesEditor;if(event.target.id!=='live-rate-confirm-scope'||!editor||!liveRatesCurrent(editor)||editor.busy)return;
+        editor.confirmed=event.target.checked;const save=document.querySelector('[data-action="live-rates-save"]');if(save)save.disabled=!editor.confirmed;
+      });
 
       function liveIsoToInput(value){if(!value)return '';try{const parts=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(value)).map(part=>[part.type,part.value]));return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;}catch{return '';}}
       function liveKstInputToIso(value){return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)?`${value}:00+09:00`:'';}
@@ -11046,6 +11149,7 @@
       productionCleaningActions.forEach(action=>rebuiltActions.add(action));
       const mutationActionLocks=new Set(),mutationActions=new Set(['complete-checkout-inspection','confirm-checkout-inspection','toggle-room-cleaning','confirm-room-cleaning-on','confirm-room-cleaning-off','save-reservation-v2','confirm-reservation-room-move','submit-cleaning-v2','confirm-approve-v2','confirm-reject-v2','confirm-toggle-payment','mark-payment-check','confirm-payment-open-v2','confirm-finish-payment']);
       ['live-availability-week','availability-week','current-availability-day','request-current-availability','decide-current-availability'].forEach(action=>rebuiltActions.add(action));
+      ['live-rates-refresh','live-rates-review','live-rates-save','live-rates-edit'].forEach(action=>rebuiltActions.add(action));
       ['request-current-availability','decide-current-availability'].forEach(action=>mutationActions.add(action));
       const deprecatedStateActions=new Set(['retry-photo','field-complete','submit-cleaning','approve-inspection','reject-inspection','confirm-approve','confirm-reject','recover-candle','confirm-candle','save-reservation','show-pin','hide-pin','resolve-conflict','confirm-conflict','deactivate-maid','confirm-deactivate','start-payment','confirm-payment','finish-payment','payment-check','payment-open','rule-complaint','confirm-ruling','close-complaint','correct-complaint','publish-template','change-availability','confirm-off-active']);
       deprecatedStateActions.forEach(action=>rebuiltActions.add(action));
@@ -11080,6 +11184,14 @@
         if(a==='backdrop-close'&&e.target!==el)return;
         if(a==='calendar-backdrop'&&e.target!==el)return;
         e.preventDefault();e.stopImmediatePropagation();
+        if(a.startsWith('live-rates-')){
+          const editor=liveRatesEditor;if(!editor||!liveRatesCurrent(editor)||editor.busy||el.disabled)return;
+          if(a==='live-rates-refresh'&&!editor.request){editor.message='';editor.error=false;void readLiveRates(editor);}
+          if(a==='live-rates-review')void reviewLiveRate(id);
+          if(a==='live-rates-save')void saveLiveRate();
+          if(a==='live-rates-edit'&&!editor.uncertain){editor.request=null;editor.confirmed=false;renderLiveRates();}
+          return;
+        }
         if(a.startsWith('live-post-')){
           if(!cleaningActor()||el.disabled)return;
           if(a==='live-post-refresh')void loadLivePostOperations(id);
