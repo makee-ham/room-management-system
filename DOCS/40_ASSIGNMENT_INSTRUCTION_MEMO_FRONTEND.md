@@ -2,6 +2,10 @@
 
 기준: 2026-11-02 사용자 요청, 프런트 [#292](https://github.com/makee-ham/room-management-system/issues/292), 기존 API 인계 [#270](https://github.com/makee-ham/room-management-system/issues/270), 백엔드 [#539](https://github.com/wrongstory/room-management-system-backend/pull/539).
 
+## 2026-11-06 통보 후 수행 생성 전 저장 수정
+
+현재 통보 배정에 `attemptStatus=null`이 명시된 경우 수행 회차가 없으므로 관리자 lifecycle 조회를 저장의 선행 조건으로 두지 않는다. 기존 `POST /v1/assignments/{cleaningTargetId}/change`가 관리자 권한·현재 배정·버전·착수 여부를 재검증한다. 수행이 있거나 상태 필드가 누락된 경우 기존 lifecycle 조회를 유지하며403을 성공으로 취급하지 않는다. 메모 작성 → 저장·통보라는 기존 흐름과 시작한 작업의 수정 금지는 유지한다. 실제 운영 RPC의 수행 없음403 조건을 읽기 확인하고 같은 조건의 수정 전 실패/수정 후 성공, 동시 착수 거절·입력 보존을 합성 회귀로 확인했다. 자세한 범위와 한계는 `WIREFRAME/QA.md`를 따른다.
+
 ## 2026-11-06 운영 활성화 수정
 
 - 원인: 운영 DB/API 배포 후에도 프런트 `assignmentInstructionMemo=false`가 유지돼 기존 입력란이 `메모 저장 준비 중 · API 미제공`으로 잠겨 있었다.

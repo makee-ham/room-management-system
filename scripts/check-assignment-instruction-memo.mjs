@@ -9,14 +9,14 @@ const origin=process.env.RMS_QA_ORIGIN||'http://127.0.0.1:4187',api='https://aod
 const source=await readFile(process.env.RMS_QA_HTML||resolve('WIREFRAME/index.html'),'utf8');
 const date=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const uuid=n=>`10000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
-const maid=uuid(1),otherMaid=uuid(2),targets=[uuid(10),uuid(11),uuid(12)],accounts=[{profileId:maid,displayName:'메이드 A · 데모',role:'maid',status:'active'},{profileId:otherMaid,displayName:'메이드 B · 데모',role:'maid',status:'active'}];
+const admin=uuid(3),maid=uuid(1),otherMaid=uuid(2),targets=[uuid(10),uuid(11),uuid(12)],accounts=[{profileId:maid,displayName:'메이드 A · 데모',role:'maid',status:'active'},{profileId:otherMaid,displayName:'메이드 B · 데모',role:'maid',status:'active'}];
 const room=(n,index)=>({id:uuid(30+index),roomNumber:n,roomTypeCode:'premium',roomTypeName:'프리미어 더블 로프트',elevatorZone:'A',dataStatus:'verified',stateVersion:1,occupied:false,cleaningRequired:true,candleCount:0,pinSyncStatus:'verified',allocationBlocked:false,allocationReady:false,reasonCodes:['CLEANING_REQUIRED']});
 const rooms=['117','135','142'].map(room);
 const target=index=>({cleaningTargetId:targets[index],roomId:rooms[index].id,roomNumber:rooms[index].roomNumber,roomTypeCode:'premium',roomTypeName:'프리미어 더블 로프트',elevatorZone:'A',feeSnapshot:20000,cleaningKind:'checkout',sourceKind:'scheduled_checkout',serviceDate:date,effectiveServiceDate:date,availableFrom:`${date}T11:00:00+09:00`,dueAt:null,targetAssignmentVersion:1,rolloverCount:0,instructionMemo:null});
 let omitMemo=false,sequence=100,role='admin',assignments=[],unassigned=[],requests=[],receipts=new Map(),force=null,lose=false;
 function reset(){assignments=[{...target(0),assignmentId:uuid(sequence++),maidProfileId:maid,maidDisplayName:accounts[0].displayName,revision:1,sequenceNumber:1,isCurrent:true,targetStatus:'notified',attemptStatus:'scheduled',notifiedAt:`${date}T09:00:00+09:00`,instructionMemo:'기존 요청 · 데모'}];unassigned=[target(1),target(2)];requests=[];receipts.clear();force=null;lose=false;}
 function attempt(a){return {attemptId:uuid(60+targets.indexOf(a.cleaningTargetId)),assignmentId:a.assignmentId,assignmentRevision:a.revision,cleaningTargetId:a.cleaningTargetId,maidProfileId:a.maidProfileId,executionVersion:1,status:a.attemptStatus||'scheduled',instructionMemo:a.instructionMemo};}
-const injected=`window.__memoQA={setup:async (role,enabled=true)=>{LIVE_RUNTIME.mode='live';LIVE_RUNTIME.status='ready';LIVE_RUNTIME.config=normalizeRuntimeConfig({apiBaseUrl:'${api}',supabaseUrl:'https://aodikrxcczbogjpsjwjt.supabase.co',supabasePublishableKey:'sb_publishable_abcdefghijklmnopqrstuvwxyz1234',sessionPersistence:'session',featureFlags:{assignmentInstructionMemo:enabled,assignmentPlanningDate:true,optionalCleaningWorkflow:true}});state.remote=initialRemoteState();state.remote.auth={...state.remote.auth,status:'authenticated',user:{profileId:'${maid}',displayName:'QA 계정 · 데모',role,mustChangePassword:false},session:{accessToken:'qa-memo-token',refreshToken:'qa-refresh',expiresAt:Date.now()+3600000}};state.remote.accounts={...state.remote.accounts,status:'ready',items:${JSON.stringify(accounts)},lastSuccessAt:new Date().toISOString()};state.remote.rooms={...state.remote.rooms,status:'ready',items:${JSON.stringify(rooms)}};state.role=role;state.liveView=role==='admin'?'cleaning':'my';state.cleaningTab='assignment-today';syncAuthState(state);await loadLiveCleaning();render();},refresh:async()=>{await loadLiveCleaning();render();},save:typeof saveLiveInstruction==='function'?saveLiveInstruction:null,rebase:typeof rebaseLiveInstruction==='function'?rebaseLiveInstruction:null,edit:typeof captureLiveInstruction==='function'?captureLiveInstruction:null,identity:liveAssignmentDraftIdentity,patch:typeof liveInstructionPatch==='function'?liveInstructionPatch:null,rows:liveAssignmentRows,resetDate:resetLiveCleaningDate,get:()=>({busy:cleaningState().busy,status:cleaningState().status,edits:(cleaningState().instructionEdits?.size||0),error:cleaningState().error?.code,uncertain:!!uncertainLiveMutation}),rerender:()=>render()};`;
+const injected=`window.__memoQA={setup:async (role,enabled=true)=>{LIVE_RUNTIME.mode='live';LIVE_RUNTIME.status='ready';LIVE_RUNTIME.config=normalizeRuntimeConfig({apiBaseUrl:'${api}',supabaseUrl:'https://aodikrxcczbogjpsjwjt.supabase.co',supabasePublishableKey:'sb_publishable_abcdefghijklmnopqrstuvwxyz1234',sessionPersistence:'session',featureFlags:{assignmentInstructionMemo:enabled,assignmentPlanningDate:true,optionalCleaningWorkflow:true}});state.remote=initialRemoteState();state.remote.auth={...state.remote.auth,status:'authenticated',user:{profileId:role==='admin'?'${admin}':'${maid}',displayName:'QA 계정 · 데모',role,mustChangePassword:false},session:{accessToken:'qa-memo-token',refreshToken:'qa-refresh',expiresAt:Date.now()+3600000}};state.remote.accounts={...state.remote.accounts,status:'ready',items:${JSON.stringify(accounts)},lastSuccessAt:new Date().toISOString()};state.remote.rooms={...state.remote.rooms,status:'ready',items:${JSON.stringify(rooms)}};state.role=role;state.liveView=role==='admin'?'cleaning':'my';state.cleaningTab='assignment-today';syncAuthState(state);await loadLiveCleaning();render();},refresh:async()=>{await loadLiveCleaning();render();},save:typeof saveLiveInstruction==='function'?saveLiveInstruction:null,rebase:typeof rebaseLiveInstruction==='function'?rebaseLiveInstruction:null,edit:typeof captureLiveInstruction==='function'?captureLiveInstruction:null,identity:liveAssignmentDraftIdentity,patch:typeof liveInstructionPatch==='function'?liveInstructionPatch:null,rows:liveAssignmentRows,resetDate:resetLiveCleaningDate,get:()=>({busy:cleaningState().busy,status:cleaningState().status,edits:(cleaningState().instructionEdits?.size||0),error:cleaningState().error?.code,uncertain:!!uncertainLiveMutation}),rerender:()=>render()};`;
 const html=source.replace('\n      void bootApplication();',injected);
 const browser=await chromium.launch({headless:true,...(process.env.RMS_QA_BROWSER_CHANNEL?{channel:process.env.RMS_QA_BROWSER_CHANNEL}:{})});
 const context=await browser.newContext({viewport:{width:390,height:900},serviceWorkers:'block'}),page=await context.newPage();page.setDefaultTimeout(10000);
@@ -30,28 +30,33 @@ await page.route(api+'/**',async r=>{
  if(method==='POST'){
   assert(key,'mutation needs idempotency key');
   if(receipts.has(key)){const saved=receipts.get(key);assert.equal(saved.path,path);assert.deepEqual(saved.body,body);return json(r,saved.data,200,{'idempotency-replayed':'true'});}
-  if(force){const failure=force;force=null;if(failure===409){const current=assignments.find(a=>a.isCurrent);current.instructionMemo='다른 관리자 최신 메모';current.targetAssignmentVersion++;}return json(r,{error:{code:failure===409?'ASSIGNMENT_VERSION_CONFLICT':'ASSIGNMENT_INSTRUCTION_INVALID',message:'SAFE ERROR'}},failure);}
+  if(force){const failure=force;force=null;if(failure===409){const current=assignments.find(a=>a.isCurrent);current.instructionMemo='다른 관리자 최신 메모';current.targetAssignmentVersion++;}return json(r,{error:{code:typeof failure==='string'?failure:failure===409?'ASSIGNMENT_VERSION_CONFLICT':'ASSIGNMENT_INSTRUCTION_INVALID',message:'SAFE ERROR'}},typeof failure==='string'?409:failure);}
   let data;
   if(path==='/v1/assignments/drafts'||path.endsWith('/change')){
    const id=body.cleaningTargetId||path.split('/')[3],old=assignments.find(a=>a.isCurrent&&a.cleaningTargetId===id),base=old||unassigned.find(a=>a.cleaningTargetId===id);
    assert(base);assert.equal(body.expectedAssignmentVersion,base.targetAssignmentVersion);if(old&&path.endsWith('/change'))assert.equal(body.expectedCurrentAssignmentId,old.assignmentId);
-   const next={...base,assignmentId:uuid(sequence++),maidProfileId:body.maidProfileId,maidDisplayName:accounts.find(a=>a.profileId===body.maidProfileId).displayName,sequenceNumber:body.sequenceNumber,revision:(old?.revision||0)+1,targetAssignmentVersion:base.targetAssignmentVersion+1,isCurrent:true,targetStatus:old?.notifiedAt?'notified':'draft_assigned',attemptStatus:'scheduled',notifiedAt:old?.notifiedAt||null,instructionMemo:Object.hasOwn(body,'instructionMemo')?body.instructionMemo:base.instructionMemo??null};
+   const next={...base,assignmentId:uuid(sequence++),maidProfileId:body.maidProfileId,maidDisplayName:accounts.find(a=>a.profileId===body.maidProfileId).displayName,sequenceNumber:body.sequenceNumber,revision:(old?.revision||0)+1,targetAssignmentVersion:base.targetAssignmentVersion+1,isCurrent:true,targetStatus:old?.notifiedAt?'notified':'draft_assigned',attemptStatus:old?.attemptStatus??null,notifiedAt:old?.notifiedAt||null,instructionMemo:Object.hasOwn(body,'instructionMemo')?body.instructionMemo:base.instructionMemo??null};
    if(old)old.isCurrent=false;assignments.push(next);unassigned=unassigned.filter(t=>t.cleaningTargetId!==id);data=path.endsWith('/drafts')?{assignment:next}:next;
   }else if(path==='/v1/assignments/commit'){for(const item of body.items){const a=assignments.find(a=>a.isCurrent&&a.cleaningTargetId===item.cleaningTargetId);assert.equal(a.targetAssignmentVersion,item.expectedAssignmentVersion);a.notifiedAt=`${date}T09:00:00+09:00`;a.targetStatus='notified';}data={assignments:assignments.filter(a=>a.isCurrent)};}
   else throw new Error('Unexpected mutation '+path);
   receipts.set(key,{path,body,data:structuredClone(data)});if(lose){lose=false;return r.abort('failed');}if(omitMemo){omitMemo=false;data=structuredClone(data);delete (data.assignment||data).instructionMemo;}return json(r,data);
  }
- if(path==='/v1/assignments')return json(r,{assignments:role==='maid'?assignments.filter(a=>a.isCurrent&&a.notifiedAt&&a.maidProfileId===maid):assignments});
+ if(path==='/v1/assignments')return json(r,{assignments:role==='maid'?assignments.filter(a=>a.isCurrent&&a.notifiedAt&&a.maidProfileId===maid):assignments.map(a=>({...a,planningDate:url.searchParams.get('serviceDate')}))});
  if(path==='/v1/assignments/commit-impact')return json(r,{impact:{serviceDate:date,impactFingerprint:'a'.repeat(64),committableDrafts:assignments.filter(a=>a.isCurrent&&!a.notifiedAt).map(a=>({...a,expectedAvailabilityVersion:1})),blockedDrafts:[],remainingUnassignedTargets:unassigned}});
  if(path.endsWith('/history'))return json(r,{assignments:assignments.filter(a=>a.cleaningTargetId===path.split('/')[3])});
  if(path==='/v1/accounts')return json(r,{accounts});
- if(path==='/v1/availability/candidates')return json(r,{candidates:accounts.map(a=>({maidProfileId:a.profileId,displayName:a.displayName,workDate:date,availabilityVersion:1}))});
+ if(path==='/v1/availability/candidates')return json(r,{candidates:accounts.map(a=>({maidProfileId:a.profileId,displayName:a.displayName,workDate:url.searchParams.get('workDate'),availabilityVersion:1}))});
  if(path==='/v1/availability')return json(r,{availability:accounts.map(a=>({maidProfileId:a.profileId,weekStart:url.searchParams.get('weekStart'),current:true,status:'submitted',days:[]}))});
  if(path==='/v1/assignment-change-requests')return json(r,{requests:[],nextCursor:null});
  if(path==='/v1/inspections')return json(r,{submissions:[],nextCursor:null});
  if(path==='/v1/notifications')return json(r,{notifications:[],nextCursor:null});
  if(path==='/v1/checkout-incidents')return json(r,{items:[],nextCursor:null});
- if(path==='/v1/attempts/lifecycle-impact'||path==='/v1/attempts/current'){const a=assignments.find(a=>a.assignmentId===url.searchParams.get('assignmentId'));return json(r,{attempt:a?attempt(a):null});}
+ if(path==='/v1/attempts/lifecycle-impact'||path==='/v1/attempts/current'){
+  const a=assignments.find(a=>a.assignmentId===url.searchParams.get('assignmentId')&&a.isCurrent&&a.notifiedAt),adminRead=path.endsWith('/lifecycle-impact');
+  assert.equal(role,adminRead?'admin':'maid','attempt endpoint must match actor role');
+  if(!a||(!adminRead&&a.maidProfileId!==maid)||(adminRead&&a.attemptStatus===null))return json(r,{error:{code:'ATTEMPT_ACCESS_REQUIRED',message:'SAFE ERROR'}},403);
+  return json(r,{attempt:a.attemptStatus===null?null:attempt(a)});
+ }
  if(path.endsWith('/photo-slots')){const a=assignments.find(a=>a.isCurrent&&attempt(a).attemptId===path.split('/')[3]);return json(r,{attemptId:attempt(a).attemptId,assignmentId:a.assignmentId,assignmentRevision:a.revision,slots:[]});}
  if(path.endsWith('/submissions'))return json(r,{submissions:[]});
  if(path==='/v1/rooms/candles')return json(r,{items:[],nextCursor:null});
@@ -76,6 +81,30 @@ try{
  }
  reset();await setup('admin',false);assert(await field(0).isDisabled());await page.evaluate(id=>__memoQA.save(id),targets[0]);assert.equal(requests.filter(r=>r.method==='POST').length,0);assert((await page.locator('body').innerText()).includes('API 미제공'));
  await page.setViewportSize({width:390,height:900});await row(0).scrollIntoViewIfNeeded();await page.screenshot({path:resolve(evidence,'assignment-memo-unavailable-390.png')});
+ // A notified assignment can have no attempt until the maid starts it. Tomorrow's
+ // backlog preserves an older service date; it must still accept an admin memo.
+ reset();assignments[0].attemptStatus=null;
+ assignments[0].serviceDate='2026-10-08';assignments[0].originalServiceDate='2026-10-08';
+ await setup();await page.locator('[data-action="cleaning-tab"][data-tab="assignment-tomorrow"]').click();await settled();
+ await field(0).fill('장기 · 데모');const beforeSave=requests.length;await save(0).click();await settled();
+ await positionRow();await page.screenshot({path:resolve(evidence,'assignment-memo-no-attempt-'+(process.env.RMS_QA_PHASE||'after')+'-390.png')});
+ assert.equal(assignments.find(a=>a.isCurrent).instructionMemo,'장기 · 데모','notified assignment without attempt must save');
+ assert.equal(requests.slice(beforeSave).filter(r=>r.path==='/v1/attempts/lifecycle-impact').length,0);
+ assert.equal(requests.slice(beforeSave).filter(r=>r.method==='POST').length,1);
+ assert((await row(0).innerText()).includes('담당자에게 전달됨'));
+ for(const width of [360,390,768,1440]){await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);}
+ await positionRow();await page.screenshot({path:resolve(evidence,'assignment-memo-no-attempt-after-1440.png')});
+ await setup('maid');assert((await page.locator('body').innerText()).includes('장기 · 데모'));assert.equal(await page.locator('[data-action="cleaning-instruction-save"]').count(),0);
+ await setup();await page.locator('[data-action="cleaning-tab"][data-tab="assignment-tomorrow"]').click();await settled();
+ // If execution starts after this card was read, the command's server guard wins.
+ await field(0).fill('경합 중 입력 유지 · 데모');force='ASSIGNMENT_ALREADY_STARTED';await save(0).click();await settled();
+ assert.equal(await page.evaluate(()=>__memoQA.get().error),'ASSIGNMENT_ALREADY_STARTED');
+ assert.equal(await field(0).inputValue(),'경합 중 입력 유지 · 데모');assert.equal(assignments.find(a=>a.isCurrent).instructionMemo,'장기 · 데모');
+ // A real lifecycle permission denial must never be treated as an absent attempt.
+ reset();await setup();assignments[0].attemptStatus=null;await field(0).fill('권한 오류 입력 유지 · 데모');
+ const deniedAt=requests.length;await save(0).click();await settled();assert.equal(await page.evaluate(()=>__memoQA.get().error),'ATTEMPT_ACCESS_REQUIRED');
+ assert.equal(requests.slice(deniedAt).filter(r=>r.method==='POST').length,0);assert.equal(await field(0).inputValue(),'권한 오류 입력 유지 · 데모');
+ reset();await page.setViewportSize({width:390,height:900});
  await setup();assert.match(await page.title(),/CASTLE THE ART/);assert.equal(await field(0).inputValue(),'기존 요청 · 데모');assert(await save(0).isDisabled());
  const memo='쓰레기만 치워주세요\n수건 5. 물 캡슐 2.';
  await field(0).fill(memo);assert.equal(await field(0).evaluate(e=>document.activeElement===e),true);assert.equal(await row(0).locator('[data-memo-count]').innerText(),String(memo.length));await page.locator('[data-action="cleaning-save-notify"]').click();await settled();assert.equal(assignments.find(a=>a.isCurrent).instructionMemo,memo);assert(await save(0).isDisabled());assert((await row(0).innerText()).includes('담당자에게 전달됨'));
@@ -130,5 +159,5 @@ try{
  for(const width of [360,390,768,1440]){await demo.setViewportSize({width,height:900});assert.equal(await demo.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);}
  await demo.locator('[data-action="logout"]:visible').first().click();await demo.locator('#login-id').fill('maid1');await demo.locator('#login-password').fill('maid1234');await demo.locator('#login-form').press('Enter');await demo.locator('[data-action="logout"]:visible').first().waitFor();assert((await demo.locator('body').innerText()).includes('메이드 전달 확인 · 데모'));assert.equal(await demo.locator('[data-action="demo-instruction-save"]').count(),0);
  await demoContext.close();assert.deepEqual(errors,[]);assert.deepEqual(consoleProblems,[]);
- console.log('PASS: per-target memo, omit/clear, draft/notify, 400/409, ambiguous replay, 500 UTF-16, safe rendering, history/Back, roles, started lock, 4 widths, keyboard/focus, missing-field refusal, demo save/read, no persistence or console errors');
+ console.log('PASS: notified/no-attempt tomorrow backlog, start race refusal, permission denial, role-specific endpoints, per-target memo, omit/clear, draft/notify, 400/409, ambiguous replay, 500 UTF-16, safe rendering, history/Back, roles, started lock, 4 widths, keyboard/focus, missing-field refusal, demo save/read, no persistence or console errors');
 }finally{await browser.close();}
