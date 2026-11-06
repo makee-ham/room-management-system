@@ -321,11 +321,11 @@ if (maidIds.length !== 9 || new Set(maidIds).size !== 9) {
 for (const contract of [
   'random-assignments',
   'undo-random-assignment',
-  '가까운 호수 우선',
+  '같은 엘리베이터 우선',
   '같은 엘리베이터, 같은 층·가까운 층과 호수',
   '메이드별 배정 요약',
   'maxAssigned=Math.max(...results.map(result=>result.assigned))',
-  'results.filter(result=>result.assigned===maxAssigned).sort((left,right)=>left.payExcess-right.payExcess||left.roomDistanceTotal-right.roomDistanceTotal||left.zoneRankTotal-right.zoneRankTotal||left.floorDistanceTotal-right.floorDistanceTotal||left.payGap-right.payGap||left.payDeviation-right.payDeviation',
+  'results.filter(result=>result.assigned===maxAssigned).sort((left,right)=>left.payExcess-right.payExcess||left.zoneRankTotal-right.zoneRankTotal||left.floorDistanceTotal-right.floorDistanceTotal||left.roomDistanceTotal-right.roomDistanceTotal||left.payGap-right.payGap||left.payDeviation-right.payDeviation',
   'assignmentTargetRate(item)',
   'assignmentPricingSnapshot(item)',
   'rateSnapshot:snapshot.rate',
