@@ -12,6 +12,14 @@
 - `node scripts/check-workspace.mjs`, `npm run contract:check`, `npm run contract:test-diff`, dev기준 `npm run contract:diff`, `git diff --check` PASS. 최종 UX 감사 원문 해시 유지.
 - 한계: 실제 운영 계정의 업무 메모 저장/통보·실기기 수신·iOS/Android 설치앱 갱신은 미실행. 운영 업무를 테스트 문구로 변경하지 않았다. 운영 배포 신원과 공개 artifact 확인은 아래 배포 기록에 추가한다.
 
+### 운영 배포 확인
+
+- 개발 PR328·운영 PR329를 필수 API contract 검사 성공·미해결 review thread0 확인 후 squash 병합했다. 운영 main `de486567eb8cf95eea32a2eb8faab3d3109ba5e0`; main API contract run42180074753 및 Pages run42180074623 PASS.
+- 기존 Vercel production `dpl_B9qRH4homFw8F58Ju6AQY3TW8Pa8` READY, `https://room-management-system-prod.vercel.app/` 연결 완료. deployment URL은 `https://room-management-system-prod-cnkuqrxqh.vercel.app`이다.
+- 공개 `index.html/sw.js/build-info.json/runtime-config.json` 4개가 main artifact와 byte 일치한다. HTML SHA256 `ea290d2b5de5577f4f1993a84bb308c8a08971fdedf327c1d3947e5277a4fc22`, SW `2026-11-06-11`. 운영 runtime은 메모만 false→true이며 API·local 세션·다른 feature flag 모두 동일하다. 배포파일26개에 환경파일/CLI메타데이터/QA는 없고 해당 공개 경로404를 확인했다.
+- 실제 익명 로그인, runtime 메모ON, 새 SW의5개 shell cache/runtime 비캐시,4개너비·콘솔0 PASS. 운영 호스팅의 runtime만 데모로 교체한 관리자6/메이드4개 메뉴·4개너비·콘솔0도 PASS. 이는 실제 운영 계정 저장·통보 UAT가 아니다.
+- 이 배포 증거는 dev 문서에만 기록한다. 위 운영 main의 HTML·배포를 문서 기록 때문에 다시 변경하지 않는다. 기존 사용자 미추적 스크린샷은 보존했다.
+
 ## 2026-11-06 · 요금 균형 수정 운영 배포 확인
 
 - 서버 개발 #601/운영 [#603](https://github.com/wrongstory/room-management-system-backend/pull/603), 화면 개발 #318/운영 [#319](https://github.com/makee-ham/room-management-system/pull/319)을 required checks 통과 후 보호 병합했다. 운영 서버 main `07aa21f6091d112922a8eeffec2a96b1a193868b`, 화면 main `1bb66fc1045712d3f8f52bd405b77819f4afaaab`이다.
