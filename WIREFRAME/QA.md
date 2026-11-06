@@ -3100,3 +3100,18 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium으로 검
 - 운영 API health200 및 production Origin CORS PASS. Python 로컬 CA 저장소 문제로 최초 urllib 확인은 실패했고, TLS 검증을 끄지 않고 Node fetch로 재확인해 통과했다.
 - 배포본 Playwright smoke: 관리자6개/메이드4개 메뉴와360/390/768/1440px의 가로 넘침·페이지 예외·console warning/error0건 PASS. runtime을 데모로 가로채 실제 운영 업무 데이터는 접근·변경하지 않았다. 배포 HTML은 승인 요청/승인/반려 합성 회귀를 통과한 후보와 동일하다. 실제 계정의 승인 실사용 UAT와 실기기 Safari/Android는 미실행이다.
 - 개발 정본에도 운영 계약과 이 배포 기록을 반영한다. 이 기록 PR은 UI·운영 설정·배포물을 다시 변경하지 않는다.
+
+## 2026-11-06 · 업무 관리자 청소 가격표 수정 (#303)
+
+- 사용자 최종 선택: 기존 운영 API대로 업무 관리자(`admin`)만 수정한다. 개발자·메이드·비밀번호 변경 전 계정은 버튼과 직접 handler 진입을 차단한다. 실제 가격을 임의 변경하지 않았다.
+- 환경: `http://127.0.0.1:4185/index.html`, Playwright Core와 기존 Chromium 151.0.7922.34, 360/390/768/1440px, 브라우저 America/New_York·표시 KST. Browser plugin not available. 저장소 의존성을 추가하지 않고 기존 설치 브라우저를 사용했다.
+- 검증 흐름: 관리자 더보기 → 가격표 수정 → 타입별 금액 입력 → 변경 전후/비소급 범위 확인 → 명시 체크 → 가격 저장 → 현재 가격표 재조회. 기존 계정 상태 버튼 목적지와 데모 읽기 전용 가격표도 유지했다.
+- `check-cleaning-prices.mjs`: 인상·인하·0원·동일금액·최대값, 빈 값/음수/소수/지수/잘못된 쉼표/범위 초과 거부, 정확한 PUT 본문·CAS·Idempotency-Key, 이중 클릭 단일 명령, 409 이후 입력 보존/최신 가격/새 확인·키, 성공 후 조회 실패와 재시도, 네트워크 응답 소실 뒤 같은 키 재전송, 과거 receipt 뒤 더 최신 GET 가격 표시, 잘못된 receipt와 503 보류, 닫기/재진입 후 같은 요청 결과 확인을 통과했다.
+- 400/401/403/404와 비밀번호 변경 필요를 구분하고 서버 오류 message를 그대로 표시하지 않는다. 목록 실패·빈 목록·잘못된 envelope·가격 미제공은 0원과 구분한다. 오프라인 저장 요청 0건, 조회/저장 중 모달 닫기·역할/세션 변경 후 늦은 응답이 이전 화면을 복원하지 않는 것을 확인했다.
+- 네 너비에서 URL·제목·의미 있는 본문·오류 overlay 없음, 가로 넘침 없음, 입력/주 버튼 최소 44px·접근성 이름, Enter·Tab/Shift+Tab 포커스 가두기, Escape·브라우저 Back·가격표 버튼 초점 복귀를 통과했다. 앱 console warning/error·page exception·예상 밖 API 요청 0건. API 쓰기는 모두 합성 fixture로 가로챘다.
+- 같은 역할·fixture·390/1440px의 변경 전(`e2ba020`) 더보기와 변경 후 더보기/가격표/확인 모달 PNG를 비교했다. 새 가격표 항목만 추가하고 기존 목록 형태·버튼 목적지는 유지했다. 모바일 긴 타입명·본문 스크롤·고정 하단 버튼을 직접 확인했다.
+- 기존 `check-live-connections.mjs` 전체 회귀를 출력 경로만 임시 위치로 바꾼 사본으로 실행: 개발자 객실 카탈로그/정원 preview/CAS/추가/비활성, 관리자 운영 이슈/차단/촛불·내보내기·알림·메이드 권한과 네 너비·모달/키보드/Back PASS. 기존 스크린샷은 덮어쓰지 않았다.
+- `node scripts/check-workspace.mjs`, `npm run contract:check`, `npm run contract:test-diff`, `CONTRACT_BASE_REF=origin/dev npm run contract:diff`, `git diff --check` PASS. 최종 UX 감사 원문 hash는 유지했다.
+- 운영 읽기 전용 확인: 현재 OpenAPI 0.6.0/161 paths의 가격표 GET/PUT과 의존 schema를 `contracts/cleaning-prices.openapi.json`에 발췌해 원문 비교 PASS. 운영 origin PUT preflight 204·정확 origin·PUT 허용, 익명 가격표 조회 401/no-store PASS. 최신 개발 브랜치의 전체 161/174 snapshot과 발췌 내용의 일치도 검사하며, 이 기능의 발췌 검사를 계약 CI에 추가했다.
+- 대표 PNG: `QA/screenshots/cleaning-prices-{before,after}-more-{390,1440}.png`, `cleaning-prices-list-{390,1440}.png`, `cleaning-prices-confirm-{390,1440}.png`.
+- 한계: 실운영 가격 변경·새 청소 생성에 따른 서버 금액 snapshot/기존 정산 보존의 실데이터 UAT, 실기기 Safari/Android, 서버 DB 동시 트랜잭션은 미실행이다. 운영 계정/가격/청소/정산을 테스트용으로 변경하지 않았다. 프런트 요청이 가격 변경 한 경로만 사용하는 것을 검증했으며 서버 보존 정책은 배포 계약과 별도로 실제 사용자 확인이 필요하다.
