@@ -3142,3 +3142,14 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium으로 검
 - 운영 읽기 전용 확인: 현재 OpenAPI 0.6.0/161 paths의 가격표 GET/PUT과 의존 schema를 `contracts/cleaning-prices.openapi.json`에 발췌해 원문 비교 PASS. 운영 origin PUT preflight 204·정확 origin·PUT 허용, 익명 가격표 조회 401/no-store PASS. 최신 개발 브랜치의 전체 161/174 snapshot과 발췌 내용의 일치도 검사하며, 이 기능의 발췌 검사를 계약 CI에 추가했다.
 - 대표 PNG: `QA/screenshots/cleaning-prices-{before,after}-more-{390,1440}.png`, `cleaning-prices-list-{390,1440}.png`, `cleaning-prices-confirm-{390,1440}.png`.
 - 한계: 실운영 가격 변경·새 청소 생성에 따른 서버 금액 snapshot/기존 정산 보존의 실데이터 UAT, 실기기 Safari/Android, 서버 DB 동시 트랜잭션은 미실행이다. 운영 계정/가격/청소/정산을 테스트용으로 변경하지 않았다. 프런트 요청이 가격 변경 한 경로만 사용하는 것을 검증했으며 서버 보존 정책은 배포 계약과 별도로 실제 사용자 확인이 필요하다.
+
+## 2026-11-06 근무 가능일 변경 알림 연결
+
+- 원인: 운영 backend의 요청·결정 명령에 availability 알림 생성이 없었다. 백엔드 PR #592가 요청→관리자, 승인·반려→요청한 메이드의 typed inbox/outbox 및 `availabilityRequest` 링크를 추가한다. 이 프런트 기록만으로 서버 적용·실기기 발송 성공을 주장하지 않는다.
+- 알림함을 열 때 최신 목록을 다시 조회하고 앱 복귀 시 알림 배지를 갱신한다. 요청 처리 뒤 관리자 알림의 `resolvedAt`을 확인하여 처리 필요 필터에서 제외한다. 조회 경합과 계정 변경 뒤 늦은 응답을 무시한다.
+- 알림 클릭은 서버의 역할·소유권 범위로 요청을 다시 확인한다. 이번 주 대기 요청은 기존 관리자 주간 근무표의 승인 버튼으로 이동한다. 메이드 결정 결과·과거 요청은 해당 요청의 읽기 전용 이력을 표시한다. 다른 메이드의 요청은 차단한다. 알림 모달을 닫은 이력 복원이 끝난 뒤 이동하여 Back과 포커스가 앞 화면으로 되돌아가는 경합을 막았다.
+- `scripts/check-availability-approval.mjs` PASS: 기존 승인 정책 회귀 + 관리자 요청/메이드 승인·반려 알림, 처리 완료 필터, 현재 주차 이동·버튼 포커스, 과거 요청·다른 메이드 차단, 360/390/768/1440px·가로 넘침·44px 컨트롤·접근성 이름·키보드·모달·뒤로가기·콘솔. 합성 API만 사용했다.
+- 기존 `check-live-connections.mjs` 회귀 PASS: 알림 pagination/대상·날짜·요청·주급 링크, 역할 차단, 객실·카탈로그·취소/주급 등 기존 연결, 네 너비·모달 키보드/Back/포커스. 출력만 임시 경로로 바꾼 사본을 실행해 기존 스크린샷은 보존했다.
+- API 계약은 백엔드 `aa87c9713203ba50dcdb8823ce9585824b4183fb` 소스에 고정했다. 기존 6종 링크를 보존하고 새 kind의 두 response enum 확장만 정확한 전후 문서 해시로 검토했다. 운영 배포 전 소스 계약이다.
+- 변경 전/후 같은 390px 알림 화면 비교: `QA/screenshots/availability-notification-before-admin-request-390.png` ↔ `QA/screenshots/availability-notification-admin-request-390.png`, `QA/screenshots/availability-notification-before-maid-rejected-390.png` ↔ `QA/screenshots/availability-notification-maid-rejected-390.png`. 기존 모달·필터·카드·관련 화면 버튼 위치를 유지했다. 승인 화면: `QA/screenshots/availability-notification-maid-approved-390.png`.
+- Browser plugin unavailable: 기존 Playwright를 사용했다. 실제 운영 계정 요청·승인·반려 쓰기, 기기 push 수신, backend migration 실행은 이 QA에서 하지 않았다.

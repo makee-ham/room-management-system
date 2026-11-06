@@ -2167,6 +2167,17 @@
         "POST /v1/rooms/{roomId}/pin/reveal response 500 application/json.error.code: enum became incompatible for response",
         "POST /v1/rooms/{roomId}/pin/reveal response 503 application/json.error.code: enum became incompatible for response"
       ]
+    },
+    {
+      "issue": "https://github.com/wrongstory/room-management-system-backend/pull/592",
+      "backendRelease": "https://github.com/wrongstory/room-management-system-backend/pull/592",
+      "reason": "사용자가 요청한 이번 주 가능일 변경 알림을 위해 availabilityRequest 응답 링크를 추가한다. 프런트가 새 kind를 소유권 재검증·이번 주 승인 화면·과거 요청 이력으로 처리하며 합성 관리자/메이드 회귀를 통과했다. 기존 여섯 kind를 보존하며 정확한 두 응답 enum 확장만 이 문서 해시에 한정해 검토한다. 운영 반영 전 소스 계약이다.",
+      "baseSha256": "0848658350782f8f4ea0e6ae8874e6615a7121f6daac6dd5a31762eb67d93b9f",
+      "currentSha256": "83e60e1019a49c72b82c3ce719839c85c02442673b5cc7a32f4fd60ffddd208a",
+      "changes": [
+        "GET /v1/notifications response 200 application/json.notifications[].deepLink.oneOf[0].kind: enum became incompatible for response",
+        "POST /v1/notifications/{notificationId}/read response 200 application/json.notification.deepLink.oneOf[0].kind: enum became incompatible for response"
+      ]
     }
   ]
 }

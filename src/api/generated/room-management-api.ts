@@ -7402,7 +7402,7 @@ export interface components {
             cleaningTargetId: string | null;
             deepLink: {
                 /** @enum {string} */
-                kind: "cleaningTarget" | "assignmentRequest" | "submission" | "complaintCase" | "payrollCycle" | "payrollProfile";
+                kind: "cleaningTarget" | "assignmentRequest" | "submission" | "complaintCase" | "payrollCycle" | "payrollProfile" | "availabilityRequest";
                 /** Format: uuid */
                 entityId: string;
             } | null;
