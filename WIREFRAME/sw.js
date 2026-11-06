@@ -1,6 +1,6 @@
 "use strict";
 
-const SW_VERSION = "2026-11-06-12";
+const SW_VERSION = "2026-11-06-13";
 const CACHE_PREFIX = "castle-the-art-shell-";
 const CACHE_NAME = `${CACHE_PREFIX}${SW_VERSION}`;
 const APP_DOCUMENT_URL = new URL("./index.html", self.location.href);
