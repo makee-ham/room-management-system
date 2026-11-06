@@ -1,6 +1,6 @@
 "use strict";
 
-const SW_VERSION = "2026-11-06-6";
+const SW_VERSION = "2026-11-06-7";
 const CACHE_PREFIX = "castle-the-art-shell-";
 const CACHE_NAME = `${CACHE_PREFIX}${SW_VERSION}`;
 const APP_DOCUMENT_URL = new URL("./index.html", self.location.href);
@@ -141,6 +141,74 @@ async function networkFirstNavigation(request) {
   return response;
 }
 
+const PUSH_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const PUSH_LINK_KINDS = new Set(["cleaningTarget", "assignmentRequest", "submission", "complaintCase", "payrollCycle", "payrollProfile", "availabilityRequest"]);
+const PUSH_SEEN_TTL = 24 * 60 * 60 * 1000;
+const PUSH_SEEN_LIMIT = 1000;
+
+// Only a stable notification ID and receipt time are persisted, never payloads.
+function openPushReceiptStore() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open("castle-art-push-receipts", 1);
+    request.onupgradeneeded = () => {
+      const store = request.result.createObjectStore("receipts", { keyPath: "id" });
+      store.createIndex("receivedAt", "receivedAt");
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+async function claimPushReceipt(id) {
+  let db;
+  try {
+    db = await openPushReceiptStore();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction("receipts", "readwrite"), store = tx.objectStore("receipts");
+      const now = Date.now();
+      let claimed = false;
+      const lookup = store.get(id);
+      lookup.onsuccess = () => {
+        if (!lookup.result || lookup.result.receivedAt <= now - PUSH_SEEN_TTL) {
+          store.put({ id, receivedAt: now });
+          claimed = true;
+        }
+        // Newest first: keep at most 1000 receipts within the last 24 hours.
+        let kept = 0;
+        store.index("receivedAt").openCursor(null, "prev").onsuccess = (event) => {
+          const cursor = event.target.result;
+          if (!cursor) return;
+          if (cursor.value.receivedAt <= now - PUSH_SEEN_TTL || kept >= PUSH_SEEN_LIMIT) cursor.delete();
+          else kept += 1;
+          cursor.continue();
+        };
+      };
+      tx.oncomplete = () => resolve(claimed);
+      tx.onabort = tx.onerror = () => reject(tx.error);
+    });
+  } catch {
+    // Storage can be disabled. The stable browser tag still replaces duplicates.
+    const visible = await self.registration.getNotifications?.({ tag: id }).catch(() => []);
+    return !visible?.length;
+  } finally { db?.close(); }
+}
+async function releasePushReceipt(id) {
+  let db;
+  try {
+    db = await openPushReceiptStore();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction("receipts", "readwrite");
+      tx.objectStore("receipts").delete(id);
+      tx.oncomplete = resolve;
+      tx.onabort = tx.onerror = () => reject(tx.error);
+    });
+  } catch {} finally { db?.close(); }
+}
+function typedNotificationUrl(id) {
+  const url = new URL(ROUTE_URLS.more);
+  url.searchParams.set("notice", id.toLowerCase());
+  return url.href;
+}
+
 function readPushPayload(data) {
   if (!data) return { kind: "action_required", route: "more" };
 
@@ -156,6 +224,12 @@ function readPushPayload(data) {
   }
 
   const keys = Object.keys(value);
+  if (value.payloadVersion === 1 && PUSH_UUID.test(value.notificationId) &&
+      value.deepLink && PUSH_LINK_KINDS.has(value.deepLink.kind) && PUSH_UUID.test(value.deepLink.entityId) &&
+      keys.every((key) => ["payloadVersion", "notificationId", "title", "body", "deepLink"].includes(key)) &&
+      Object.keys(value.deepLink).every((key) => ["kind", "entityId"].includes(key))) {
+    return { kind: "action_required", route: "more", notificationId: value.notificationId.toLowerCase() };
+  }
   if (keys.some((key) => key !== "kind" && key !== "route")) {
     return { kind: "action_required", route: "more" };
   }
@@ -171,6 +245,8 @@ function safeNotificationUrl(value) {
   try {
     const url = new URL(value, self.location.href);
     if (url.origin !== self.location.origin) return ROUTE_URLS.more;
+    const id = url.searchParams.get("notice");
+    if (id && PUSH_UUID.test(id) && url.href === typedNotificationUrl(id)) return url.href;
     if (!SAFE_NOTIFICATION_URLS.has(url.href)) return ROUTE_URLS.more;
     if (isSensitiveUrl(url)) return ROUTE_URLS.more;
     return url.href;
@@ -232,16 +308,24 @@ self.addEventListener("message", (event) => {
 self.addEventListener("push", (event) => {
   const payload = readPushPayload(event.data);
   const copy = PUSH_COPY[payload.kind];
-  const targetUrl = ROUTE_URLS[payload.route];
-
-  event.waitUntil(self.registration.showNotification(copy.title, {
-    body: copy.body,
-    tag: copy.tag,
-    icon: new URL("./icons/icon-192.png", self.location.href).href,
-    badge: new URL("./icons/icon-192.png", self.location.href).href,
-    data: { url: targetUrl },
-    renotify: false
-  }));
+  const id = payload.notificationId;
+  event.waitUntil((async () => {
+    if (id && !await claimPushReceipt(id)) return;
+    try {
+      await self.registration.showNotification(copy.title, {
+        body: copy.body,
+        tag: id || copy.tag,
+        icon: new URL("./icons/icon-192.png", self.location.href).href,
+        badge: new URL("./icons/icon-192.png", self.location.href).href,
+        data: { url: id ? typedNotificationUrl(id) : ROUTE_URLS[payload.route] },
+        renotify: false
+      });
+    } catch (error) {
+      if (id) await releasePushReceipt(id);
+      throw error;
+    }
+    await notifyClients({ type: "PUSH_RECEIVED" });
+  })());
 });
 
 self.addEventListener("notificationclick", (event) => {
@@ -252,11 +336,12 @@ self.addEventListener("notificationclick", (event) => {
     const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
     const appWindow = windows.find((client) => {
       const url = new URL(client.url);
-      return url.origin === self.location.origin && url.pathname.startsWith(APP_ROOT_PATH);
+      return url.origin === self.location.origin && [APP_DOCUMENT_PATH, APP_ROOT_PATH].includes(url.pathname);
     });
 
     if (appWindow) {
-      if (typeof appWindow.navigate === "function") await appWindow.navigate(targetUrl);
+      const notificationId = new URL(targetUrl).searchParams.get("notice");
+      appWindow.postMessage({ type: "PUSH_NOTIFICATION_OPEN", notificationId });
       await appWindow.focus();
       return;
     }
