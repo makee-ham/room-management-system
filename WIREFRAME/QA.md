@@ -3158,3 +3158,12 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium으로 검
 - API 계약은 백엔드 `aa87c9713203ba50dcdb8823ce9585824b4183fb` 소스에 고정했다. 기존 6종 링크를 보존하고 새 kind의 두 response enum 확장만 정확한 전후 문서 해시로 검토했다. 운영 배포 전 소스 계약이다.
 - 변경 전/후 같은 390px 알림 화면 비교: `QA/screenshots/availability-notification-before-admin-request-390.png` ↔ `QA/screenshots/availability-notification-admin-request-390.png`, `QA/screenshots/availability-notification-before-maid-rejected-390.png` ↔ `QA/screenshots/availability-notification-maid-rejected-390.png`. 기존 모달·필터·카드·관련 화면 버튼 위치를 유지했다. 승인 화면: `QA/screenshots/availability-notification-maid-approved-390.png`.
 - Browser plugin unavailable: 기존 Playwright를 사용했다. 실제 운영 계정 요청·승인·반려 쓰기, 기기 push 수신, backend migration 실행은 이 QA에서 하지 않았다.
+
+
+## 2026-11-06 모든 알림의 PC·휴대폰 푸시 수신
+
+- 범위: 더보기/알림 연결 → 브라우저 허용 안내 → typed push 수신 → 알림 클릭 → 로그인 및 서버의 본인 알림 재조회 → 기존 관련 화면. API가 전송한 원문은 기기 화면에 직접 표시하지 않는다.
+- Browser plugin not available: 기존 Playwright 합성 API를 사용했다. `scripts/check-device-push.mjs`는 실제 Chromium IndexedDB에서 동시8회 동일 사건1회 표시,7종 링크, 표시 실패 뒤 재시도,24시간/1000개 상한, ID·시각만 저장, 외부 URL 차단과 기존 창 입력을 재로드하지 않는 클릭을 검증했다. 실제 push provider 호출은0회다.
+- `scripts/check-availability-approval.mjs`:360/390/768/1440px, 가로 넘침,44px 컨트롤, 접근성 이름, 모달 포커스·Tab·Escape·뒤로가기, 기존 요청/승인/반려 및 권한 회귀를 확인했다. 푸시 클릭은 서버가 반환한 현재 계정 알림만 열며, 로그인 전 클릭은 메모리에서 기다린 뒤 이어진다.
+- 같은 메이드 근무일 화면의390px 권한 안내 전/후를 비교했다. 카드·버튼 위치와 목적 화면은 유지하고 안내 문구만 기기별 연결 방법으로 바꿨다. 대표 PNG: `availability-notification-before-device-push-settings-390.png`, `availability-notification-device-push-settings-390.png`.
+- 정적 workspace/PWA·OpenAPI 계약 검사와 기존 전체 연결 회귀(`check-live-connections`)를 통과했다. 서버 정책은63개 알림 family를 push 대상으로 확대하는 별도 백엔드 변경이며, 이 화면 검사만으로 운영 worker/기기 수신 완료를 주장하지 않는다. PC OS 알림 센터·Android/iOS 실제 표시·권한 허용은 실기기 확인 전이다.
