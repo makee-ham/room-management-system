@@ -3076,3 +3076,42 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium으로 검
 - 정적 검증: `node scripts/check-workspace.mjs`, `npm run contract:check`, `npm run contract:test-diff`, `CONTRACT_BASE_REF=origin/dev npm run contract:diff`, `git diff --check` 통과. 최종 UX 감사 원문 해시는 유지했다.
 - 대표 PNG: `QA/screenshots/candle-issues-before-390.png`, `QA/screenshots/candle-issues-after-390.png`, `QA/screenshots/candle-issues-before-1440.png`, `QA/screenshots/candle-issues-after-1440.png`.
 - 한계: 실제 촛불 회수·운영 쓰기·실기기 Safari/Android·서버 동시성은 검사하지 않았다. 촛불 수량 기록·현장 확인·기존 API 계약과 권한은 그대로 사용한다. 기존 데모 전용 운영 중지 폼의 정보 구조는 변경하지 않았다.
+
+## 2026-11-02 이번 주 근무가능일 변경 승인
+
+- 사용자 결정: 메이드도 이번 주를 수정 요청할 수 있으며 관리자 승인 후 반영. 다음 주 직접 제출은 유지한다. 정본 `DOCS/16_WEEKLY_AVAILABILITY_ASSIGNMENT_POLICY.md`에 반영했으며 FINAL_UX_AUDIT 원문은 변경하지 않았다.
+- 화면: 메이드 근무 일정과 관리자 주간 근무표의 이번 주/다음 주 선택, 오늘·이후 날짜 수정, 사유 선택, 승인 대기, 현재/요청 비교, 승인·반려. 데모와 live adapter 모두 구현했다. 기존 메이드 상세·이력과 뒤로가기 목적 화면을 유지한다.
+- 검증 환경: Browser plugin not available. 기존 Playwright Chromium 151을 사용했으며 모든 API 쓰기는 합성 fixture로 가로챘다. 운영 계정·업무는 변경하지 않았다.
+- `node scripts/check-availability-approval.mjs` PASS: 다음 주 제출, 이번 주 요청, 대기 중 원본 보존, 중복 요청/메이드 승인 차단, 반려 후 기존 값, 승인 후 새 값, 배정 충돌 응답 시 원본 보존, 미제출 sourceVersion 0 요청·승인, 데모 승인·반려, 관리자 상세 버튼·뒤로가기, 키보드·모달 포커스와 Escape, 콘솔 warning/error 0. 360/390/768/1440px 가로 넘침·44px 버튼·접근성 이름 확인.
+- 기존 `check-responsive-ui.mjs`의 화면 흐름을 임시 실행본으로 검증: 41개 화면/모달 × 360/390/768/1024/1280/1440px PASS. 관리자/메이드 내비게이션, 객실·예약·청소·주급·알림, 모달 버튼 정렬, 브라우저 Back·트리거 포커스, 콘솔 및 외부 업무 요청 0. 이 회귀 실행이 갱신한 기존 사진 PNG는 원래대로 복원했다.
+- `node scripts/check-workspace.mjs`, `npm run contract:check` PASS. 기존 배포 OpenAPI snapshot은 그대로 유지하고 신규 nullable source/최초 요청 계약은 백엔드 PR에서 별도로 관리한다.
+- 같은 역할·시나리오·390/1440px의 기존 다음 주 화면과 변경 화면을 비교했다. 기존 카드와 제출/상세 목적을 유지하고 주차 선택·승인 정보를 추가했다. 대표 PNG: `QA/screenshots/availability-before-maid-next-390.png`, `availability-maid-next-390.png`, `availability-maid-current-390.png`, `availability-maid-pending-390.png`, `availability-admin-current-390.png`, `availability-demo-admin-current-390.png` (같은 접두사의 1440px도 보존).
+- 서버 의존성: [백엔드 PR #556](https://github.com/wrongstory/room-management-system-backend/pull/556). 이번 주 직접 submit 차단, 미제출자의 sourceVersion 0, 승인 시 주차·지난 날짜 재검증은 후속 migration이 필요하다. 기존 배포 API의 관리자 승인 흐름과 새 서버 계약을 혼동하지 않는다. 새 UI가 보인다는 이유로 서버의 승인 우회 차단이나 최초 요청이 이미 운영 반영됐다고 간주하지 않는다.
+- 한계: Full DB NOT RUN. 백엔드 AGENTS.md에 따라 migration 적용/DB reset·release는 별도 승인 전 실행하지 않았다. 운영 배포·실기기·실제 동시 DB 경합은 미확인이다. 백엔드 단위 테스트 5,847개, availability Edge 33개와 development manifest는 통과했으며 CI/PR 상태를 최종 인계에서 별도로 확인한다.
+- PR 통합 검증: `dev`의 객실 작업 메모·운영 상태·촛불 변경을 보존해 병합했고, 충돌은 SHA/캐시 버전 메타데이터에서 해결했다. 통합 HTML에 workspace/contract 검사와 가능일 승인 브라우저 시나리오를 다시 실행해 통과했다. 작업 메모 전용 회귀도 4개 너비, 생략/삭제, 통보 전후, 400/409, 응답 유실 재시도, 권한·잠금·Back·포커스·민감값 비영속까지 PASS다. 다른 작업의 대표 PNG는 변경하지 않았다.
+
+
+## 2026-11-02 이번 주 승인 요청 릴리스 계약 준비
+
+- 프런트 PR302는 운영 main 위에 이번 주 승인 요청 UI와 서비스워커 `2026-11-02-5`를 준비한 draft다. 운영 반영 증거가 아니다.
+- 백엔드 PR557의 로컬 후보 `68990a876ef3`에서 OpenAPI를 추출했다. 최초 요청의 `availabilityVersionId=null`/`sourceVersion=0`, 요청·결정 CAS0, 메이드 요청/관리자 결정 권한과 필수 멱등 키를 계약 검사로 확인한다.
+- `AVAILABILITY_APPROVAL_REQUIRED`가 기존 공통 오류 enum에 한 개 추가된다. 동일 enum을 참조하는1,061개 오류 응답과 최초 요청 응답6개 차이를 정확한 이전·이후 snapshot 해시에만 한정해 기록했다. 일반 breaking diff 기준은 유지한다. 기존 운영 API의 선택적 `floorDistance` 응답도 snapshot에 동기화했다.
+- 신규 계약은 배포 전 소스 후보이며, 운영 배포 후 실제 OpenAPI·main SHA·API 버전·migration 개수로 provenance를 갱신해야 한다. backend의 추가 검증 승인과 성공 증거 전에는 이 draft를 운영 배포하지 않는다.
+
+## 2026-11-03 이번 주 승인 기능의 통합 릴리스 검증 확인
+
+- 정책 재확인: 메이드가 이번 주 변경을 요청해도 즉시 반영하지 않는다. 관리자 승인 후 새 가능일을 반영하며, 승인 대기·반려 상태에서는 기존 가능일을 유지한다. 다음 주 직접 제출은 기존 계약이다.
+- 백엔드 [PR553](https://github.com/wrongstory/room-management-system-backend/pull/553)이 main `a5b3e27124d0001b13f0727a6f2dc7be9fbff490`에 병합됐다. 이번 기능의 서비스·라우트·Edge 구현, 두 migration, 주간 가능일 SQL, SQL include 보완과 경합 fixture는 로컬 hotfix 후보 `416a624`와 원문이 같다. 프런트 후보와 main의 가능일 5개 경로 및 공통 오류 enum을 제외한 참조 계약 9개도 동일하며 `AVAILABILITY_APPROVAL_REQUIRED`를 포함한다. 전체 계약은 후보154경로와 main161경로로 다르므로 후보 snapshot을 main·운영 계약으로 재표기하지 않는다.
+- 통합 입력의 실제 [Full DB run41486433759](https://github.com/wrongstory/room-management-system-backend/actions/runs/41486433759)에서 fresh/upgrade/SQL/동시 요청/정리와 proof `36ab189dcf8dbbd84d0a68007c919c47c03173d2ca47f061c516ac4d6dfb4865` 성공을 GitHub step으로 확인했다. [main run41511733992](https://github.com/wrongstory/room-management-system-backend/actions/runs/41511733992)는 application/migration PASS이고 동일 PR·입력 증거를 재사용했다. 이는 이전 hotfix 실패를 PASS로 바꾸거나 다른 입력에 proof를 재사용한 것이 아니다.
+- 통합 릴리스가 기능과 수정본을 포함하므로 PR557 hotfix의 추가 push·전체 DB 재실행은 하지 않았다. 이번에 승인받은 추가 실행은 0회이며, 이전 실패 두 번은 그대로 실패 기록이다. 새로운 입력에 사용할 포괄 실행 권한으로 넘기지 않는다.
+- 운영 읽기 확인: migration history124건, API55 ACTIVE, health200/ok, 공개 OpenAPI154경로이며 새 승인 필요 오류는 아직 없다. 운영 DB/API는 이번 기능의 배포 완료 상태가 아니다. 통합 릴리스의 운영 이력 대조·정확 적용 목록 확정과 승인된 배포가 먼저 필요하다. 기존 두 migration만의 hotfix 계획을 통합 릴리스 전체 적용으로 확대하지 않았다.
+- 프런트 PR302는 배포 후보 draft로 유지한다. 백엔드 운영 배포 후 실제 계약/provenance를 갱신하고 프런트 보호 병합·배포·운영 smoke를 이어가야 한다. 이번 확인은 소스·CI·운영 읽기만 수행했으며 UI·업무 데이터·DB·API·Vercel 배포를 변경하지 않았다. 기존 합성 UI 회귀와 실기기/실사용 미확인 한계는 위 기록을 따른다.
+
+## 2026-11-06 이번 주 승인 기능 운영 배포 사전 확인
+
+- 사용자에게 백엔드 배포 완료와 PR 병합·프런트 운영 배포 지시를 받았다. 읽기 확인에서 운영 API57 ACTIVE, history150건과 `current_week_availability_approval`/`availability_guard_unused_parameter` 적용을 확인했다. DB 적용·reset·백엔드 배포는 이번 작업에서 실행하지 않았다.
+- 운영 OpenAPI161경로/174operation은 backend main `00668f84e572efb9657ab42b3fed0e0bc83e1320`의 명세와 서버 URL 외에 동일하다. 공개 명세를 가져와 서버를 `.`으로 정규화하고 snapshot·TypeScript·청소 타입·source provenance를 갱신했다.
+- 계약 목록은161/174, CAS36, cursor20으로 대조했다. 새 READY 미리보기의 멱등 키 예외와 고정 메모/타입 단가 CAS 두 개를 정확한 operation ID로 검사한다. 기존 ErrorCode 보존 및14개 추가, 감사/객실 이벤트의 `room.ready_corrected` 추가 두 곳, 최초 가능일 요청 nullable ID/version0 여섯 변경을 검토했다. 이벤트 표시의 기존 escaped 값/객실 상태 변경 fallback을 확인했고 일반 breaking 검사 기준은 유지했다.
+- `contract:check`, `contract:test-diff`, main 대비 `contract:diff` PASS. 정확한 이전·이후 snapshot 해시의1069개 변경만 검토 기록으로 묶었다. workspace·PWA·diff 검사 PASS.
+- Browser plugin not available: 기존 Playwright로 가능일 회귀를 실행했다. 이번 주 변경 요청·대기 중 기존 값 보존·승인·반려·최초 제출·중복 방지·메이드 승인 차단·충돌·다음 주 직접 제출·360/390/768/1440px·뒤로가기·키보드·모달·콘솔 PASS. 모바일 메이드 대기 화면과 관리자 현재/요청 비교·승인/반려 화면도 시각 확인했다. API는 합성 응답이며 실제 업무 데이터는 변경하지 않았다. UI 원문은 이전에 검증한 후보와 동일하고 기존 대표 PNG를 보존했다.
+- 운영 Vercel은 확인 시 main `b2edb126`/SW `2026-11-02-4`였다. 이번 후보 SW `2026-11-02-5`를 main 보호 병합 후 배포한다. 현재 운영 runtime 설정과 featureFlags를 그대로 보존하며 배포 후 HTML/SW/build-info/설정 및 호스팅 화면을 검증한다. 이 사전 확인 기록 자체는 프런트 운영 배포 완료를 뜻하지 않는다. 실제 메이드·관리자 계정의 실사용 승인 UAT는 별도다.
