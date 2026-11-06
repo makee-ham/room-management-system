@@ -3211,3 +3211,9 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium으로 검
 - 운영 데이터 정정은 사용자 별도 승인 후 실시: 350호 이전 미배정 target 및 원본 의무만 감사 이력과 함께 취소, 최신 target 전체 행 유지. 재조회한 실제 preview snapshot에 350호1건 확인. 예약/기존 이력/수당/스키마 변경 없음.
 - 대표 화면: `QA/screenshots/assignment-elevator-rule-{390,1440}.png`, `assignment-elevator-{390,1440}.png`, `assignment-elevator-live-{390,1440}.png`. 이전 요금 균형 화면과 같은 카드 구조를 비교했다.
 - 한계: 실제 메이드 담당 저장·통보는 하지 않았으며 전체 DB/서버·화면 배포는 아직 미실행. 운영 적용 후 별도 결과를 기록한다.
+
+### 2026-11-06 내일 배정 요금 합계 보정
+
+- 과거 현장 완료(`field_completed/upload_pending/submitted`) 업무가 내일 계획의 합계와 객실 카드에 다시 포함되던 표시 문제를 수정했다. 서버와 같은 날짜·수행 상태 조건으로 계획 목록만 제외하며 원본 배정·통보 이력은 유지한다. 오늘 화면, 진행 중/미시작 작업과 날짜·상태 미제공 항목은 추정하여 제거하지 않는다.
+- `check-assignment-planning-day.mjs`와 `check-cleaning-assignment-continuity.mjs` PASS. 과거30,000원 업무 때문에32,000원으로 보이던 합계를 실제 내일 두 업무의2,000원 차이로 표시하고 이력이 남는 것을 검증했다. 기존 부분 실패/동일 키 재시도/통보/착수 차단/350호 중복 방어도 통과했다.
+- Chromium151/Playwright, 합성 API만 사용. 360/390/768/1440px 가로 넘침 및 콘솔 warning/error 없음. 대표 PNG: `QA/screenshots/assignment-tomorrow-fee-390.png`, `QA/screenshots/assignment-tomorrow-fee-1440.png`. 기존 카드와 담당 선택·저장 버튼 위치/목적은 유지했다. 서비스워커 `2026-11-06-10`.
