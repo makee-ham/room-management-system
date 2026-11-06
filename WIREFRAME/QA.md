@@ -1,5 +1,18 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-11-06 · 청소 배정 작업 메모 활성화
+
+- 원인: 운영 DB/API 배포 후에도 runtime의 `assignmentInstructionMemo=false`가 유지되어 관리자 입력이 `메모 저장 준비 중 · API 미제공`으로 잠겼다. 빌드·로컬 서버·Pages·환경 예시 기본값을 true로 변경하고 명시 false 롤백을 보존했다. HTML의 카드·버튼·목적 화면·메모 저장 명령은 바꾸지 않았다. 서비스워커 `2026-11-06-11`.
+- 실제 운영 읽기: health200, API62 ACTIVE, 메모 컬럼/마이그레이션 존재·전체152개, OpenAPI161경로/174연산의 전체 계약 일치(server URL 제외)를 확인했다. 메모 POST2개 경로의 운영 origin preflight204, 익명 배정조회401을 확인했다. Supabase 연결 도구가 Unknown tool을 반환하여 설치 CLI2.117.0의 읽기 전용 조회를 사용했다. DB/migration 변경0회.
+- 실제 artifact 빌드에서 production/preview 기본ON, 명시false OFF와 다른 runtime 설정 보존을 확인했다. 실행 중이던 로컬 서버는 Python 소스 변경 전 값을 유지해 첫 기본값 검사가 실패했으며 새 프로세스에서 ON을 재확인했다. 기존 고정 계약과 생성 client는 이미 운영과 일치하므로 재생성하지 않았다.
+- `check-assignment-instruction-memo.mjs` PASS. 생성 artifact의 실제 메모 플래그를 사용한 임시 검증 사본도 PASS: 객실별 작성/수정/명시삭제·미수정생략, 초안/통보, 본인 메이드 카드/상세·타인 메모 미표시·쓰기차단,400/409입력보존·최신값확인,응답유실 동일body/key,응답필드누락 성공거부,500 UTF-16·501거부,HTML안전표시·날짜초안폐기·착수잠금·이력/Back·스토리지비저장.
+- `check-cleaning-assignment-continuity.mjs` PASS: 부분실패·같은키재시도·추가통보·인라인담당CAS·진행변경차단·중복객실방어·내일요금회귀. 업무 API는 합성 fixture로만 처리했다.
+- Browser plugin not available → 기존 Playwright Chromium151.0.7922.34, 로컬4191. 관리자/메이드360/390/768/1440px, 페이지식별/본문, 가로넘침없음,44px·접근성이름,입력포커스·Tab/Escape·모달포커스·Back,앱console warning/error·pageerror0건 PASS. 의도한400/409/응답유실의 브라우저 네트워크 오류는 제외한다.
+- 같은 역할·날짜·합성객실·390/1440px 비교: `QA/screenshots/assignment-memo-rollout-before-{390,1440}.png` → `assignment-memo-rollout-after-{390,1440}.png`. 입력 잠금과 상태문구 외 구조·담당선택·기존버튼 목적 유지. 메이드 표시: `assignment-memo-rollout-maid-390.png`. 데모 fixture이며 운영 원문은 포함하지 않았다.
+- `node scripts/check-workspace.mjs`, `npm run contract:check`, `npm run contract:test-diff`, dev기준 `npm run contract:diff`, `git diff --check` PASS. 최종 UX 감사 원문 해시 유지.
+- 한계: 실제 운영 계정의 업무 메모 저장/통보·실기기 수신·iOS/Android 설치앱 갱신은 미실행. 운영 업무를 테스트 문구로 변경하지 않았다. 운영 배포 신원과 공개 artifact 확인은 아래 배포 기록에 추가한다.
+
+
 ## 2026-11-06 · 1객실 요금 이내 균형 목표
 
 - 사용자 후속 결정: 최대 배정 수·기존 담당·재청소 귀속·중복 차단을 유지하면서 최고·최저 총요금 격차의 1객실 요금 목표 초과분을 먼저 줄인다. 목표 이내에서는 가까운 호수 → 같은 엘리베이터 → 가까운 층 → 요금 격차·편차다. 고정 층수 제한 없음.

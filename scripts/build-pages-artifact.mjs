@@ -89,7 +89,7 @@ if (runtimeMode === "demo") {
     supabasePublishableKey: value("SUPABASE_PUBLISHABLE_KEY"),
     sessionPersistence: value("RMS_SESSION_PERSISTENCE", "session").toLowerCase(),
     deploymentChannel,
-    featureFlags: { assignmentInstructionMemo: value("RMS_ASSIGNMENT_INSTRUCTION_MEMO", "false") === "true", optionalCleaningWorkflow: true, photoUploadSnapshot: value("RMS_PHOTO_UPLOAD_SNAPSHOT", "true") === "true", assignmentPlanningDate: value("RMS_ASSIGNMENT_PLANNING_DATE", "true") === "true", roomPinExport: value("RMS_ROOM_PIN_EXPORT", "true") === "true", roomPinTransfer: value("RMS_ROOM_PIN_TRANSFER", "false") === "true", supplementalMemoOnly: value("RMS_SUPPLEMENTAL_MEMO_ONLY", "true") === "true" },
+    featureFlags: { assignmentInstructionMemo: value("RMS_ASSIGNMENT_INSTRUCTION_MEMO", "true") === "true", optionalCleaningWorkflow: true, photoUploadSnapshot: value("RMS_PHOTO_UPLOAD_SNAPSHOT", "true") === "true", assignmentPlanningDate: value("RMS_ASSIGNMENT_PLANNING_DATE", "true") === "true", roomPinExport: value("RMS_ROOM_PIN_EXPORT", "true") === "true", roomPinTransfer: value("RMS_ROOM_PIN_TRANSFER", "false") === "true", supplementalMemoOnly: value("RMS_SUPPLEMENTAL_MEMO_ONLY", "true") === "true" },
   };
   const refs = [
     projectRef(config.apiBaseUrl, "/functions/v1/api"),

@@ -2,6 +2,16 @@
 
 기준: 2026-11-02 사용자 요청, 프런트 [#292](https://github.com/makee-ham/room-management-system/issues/292), 기존 API 인계 [#270](https://github.com/makee-ham/room-management-system/issues/270), 백엔드 [#539](https://github.com/wrongstory/room-management-system-backend/pull/539).
 
+## 2026-11-06 운영 활성화 수정
+
+- 원인: 운영 DB/API 배포 후에도 프런트 `assignmentInstructionMemo=false`가 유지돼 기존 입력란이 `메모 저장 준비 중 · API 미제공`으로 잠겨 있었다.
+- 운영 API62 `ACTIVE`, health 200, OpenAPI의 메모 요청 2종·읽기 5종을 확인했다. 전체 운영 명세는 server URL을 제외하면 현재 고정 계약과 동일하므로 snapshot/client를 다시 생성하지 않는다. 명세의 `#534 미배포 후보` 설명과 아래 11월 2일 기록은 과거 상태다.
+- 설치된 CLI로 읽기 전용 조회해 `cleaning_assignments.instruction_memo`와 `assignment_instruction_memo` 적용 이력, 전체 migration 152개를 확인했다. DB 변경·migration 실행은 없다.
+- 빌드·로컬 서버·Pages·환경 예시의 기본값을 true로 변경한다. 운영 배포 artifact는 현재 공개 runtime을 읽어 메모 플래그만 true로 바꾸고 API 주소·세션 방식·다른 플래그를 보존한다. 명시 false는 롤백용으로 계속 지원한다.
+- 기존 관리자 입력/저장·통보, 메이드 본인 카드/상세, 초안·이력·CAS/동일 키 재확인·500 UTF-16 제한·착수 후 잠금은 그대로다. 새 화면이나 API를 만들지 않는다.
+- 실제 API의 두 POST 경로 CORS와 익명 조회 401, 합성 API의 관리자 작성/삭제/통보·본인 메이드 조회·충돌·실패를 확인한다. 실제 운영 업무를 테스트 문구로 변경하거나 메이드에게 테스트 통보하지 않는다. 실사용 저장·기기 수신은 이 검증에 포함하지 않는다.
+- 서비스워커 `2026-11-06-11`. 상세 실행 결과와 배포 신원은 `WIREFRAME/QA.md`를 따른다.
+
 ## 화면과 저장 범위
 
 - 기존 청소 관리 → 객실별 담당 표의 담당 선택 아래에 객실별 `작업 메모 · 선택` 입력과 저장 버튼을 둔다. 기존 5열·객실 상세·담당 선택·취소 버튼의 목적은 유지한다.
@@ -12,7 +22,7 @@
 - 입력 초안은 날짜·청소 대상·원 배정 ID/버전에 묶어 메모리에만 둔다. 새로고침·날짜 전환·로그아웃 후 초안은 복원하지 않는다. 저장 실패 시 입력을 유지하고, 409 이후에는 최신 담당/메모를 확인한 뒤 다시 저장한다. 시작한 작업은 기존 lifecycle 절차를 따른다.
 - 메모 변경은 새 요청 키, 응답 유실 재확인은 같은 body/key를 사용한다. 서버 성공 응답에 메모가 없거나 다르면 성공으로 표시하지 않고 최신 배정을 다시 읽는다. 원문을 URL·브라우저 저장소·history·알림 문구에 추가하지 않는다.
 
-## 연결 계약과 운영 차단
+## 2026-11-02 연결 계약과 운영 차단 기록
 
 백엔드 dev 병합 `46e47ed0ddb080c293fa5e02152d1683ee8b5eee`의 `docs/ASSIGNMENT_INSTRUCTION_MEMO_534.md`를 확인했다.
 
@@ -29,7 +39,7 @@
 
 `RMS_ASSIGNMENT_INSTRUCTION_MEMO=false`가 빌드·로컬 서버·Pages의 기본값이다. false에서는 기존 배정 API를 그대로 사용한다. 데모는 실제 서버/알림이 없는 메모리 시뮬레이션이다.
 
-## 활성화 후속 순서
+## 2026-11-02 활성화 후속 계획 기록
 
 1. 백엔드의 최종 통합 DB 검증, 운영 pending migration 검토·적용, API/Swagger 배포를 해당 릴리스 절차로 완료한다. 프런트 작업에서 미검증 선행 migration123~140을 한꺼번에 적용하지 않는다.
 2. 실제 운영 health/OpenAPI와 배포 SHA를 확인하고 `contracts/backend-openapi.json`, manifest, 생성 client를 정식 절차로 갱신·검증한다.
