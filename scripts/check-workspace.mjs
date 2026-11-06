@@ -321,11 +321,11 @@ if (maidIds.length !== 9 || new Set(maidIds).size !== 9) {
 for (const contract of [
   'random-assignments',
   'undo-random-assignment',
-  '총 청소요금 균형 우선',
+  '가까운 호수 우선',
   '같은 엘리베이터, 같은 층·가까운 층과 호수',
   '메이드별 배정 요약',
   'maxAssigned=Math.max(...results.map(result=>result.assigned))',
-  'results.filter(result=>result.assigned===maxAssigned).sort((left,right)=>left.payGap-right.payGap||left.payDeviation-right.payDeviation||left.zoneRankTotal-right.zoneRankTotal||left.floorDistanceTotal-right.floorDistanceTotal||left.roomDistanceTotal-right.roomDistanceTotal',
+  'results.filter(result=>result.assigned===maxAssigned).sort((left,right)=>left.roomDistanceTotal-right.roomDistanceTotal||left.zoneRankTotal-right.zoneRankTotal||left.floorDistanceTotal-right.floorDistanceTotal||left.payGap-right.payGap||left.payDeviation-right.payDeviation',
   'assignmentTargetRate(item)',
   'assignmentPricingSnapshot(item)',
   'rateSnapshot:snapshot.rate',
@@ -2313,7 +2313,7 @@ for (const contract of [
   "function detailHeader(title,subtitle='')",
   "${subtitle?`<p>${subtitle}</p>`:''}",
   'roomSummaryCards()',
-  "['occupied','투숙 중','neutral'],['vacant','공실','neutral'],['cleaning','청소 미완료','amber'],['blocked','운영 제한','red']",
+  "['occupied','투숙 중','neutral'],['vacant','공실','green'],['cleaning','청소 미완료','amber'],['blocked','운영 제한','red']",
   "detailHeader(`${active?.maid||'김민지1'} ${active?.type||'컴플레인'}`)",
   '.today-summary .metric-card { min-height:96px;',
 ]) {

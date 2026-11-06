@@ -1,5 +1,28 @@
 # 클릭형 와이어프레임 QA
 
+## 2026-11-06 · 중복 객실 차단·호수 우선 배정
+
+- 운영 DB 읽기 조회에서 350호의 서로 다른 과거 퇴실 청소 target 2건이 모두 미배정으로 남은 것을 확인했다. 담당·수행 회차가 없는 상태였으며 운영 업무 쓰기는 하지 않았다. 실제 target ID는 증거 문서에 저장하지 않는다.
+- 사용자 확정 순서: 전체 숫자 호수 거리 → 같은 엘리베이터 → 가까운 층 → 요금 균형. 고정 층수 제한 없음. 기존 담당 보존, 중복 청소 이력의 자동 삭제·취소 없음.
+- `scripts/check-assignment-floor.mjs`: 네 단계의 각 우선순위, 117·118 / 349·350 / 755·756 묶음, 동일 객실 신규 중복·고정 객실 중복 차단, 근무 가능·데모 마감·3/4자리 호수 검증 PASS.
+- `scripts/check-cleaning-assignment-continuity.mjs`: 일부 저장 실패·동일 키 재시도·최신 영향도·추가 배정·진행 중 변경 차단 회귀 PASS. 과거 서버가 350호 두 건을 제안하는 응답을 합성해 둘 다 미배정으로 남기는 것과 수동 두 번째 담당 선택 거부, 해당 구간 서버 쓰기 0건 PASS.
+- Browser plugin not available → Playwright Chromium 151.0.7922.34. 로컬 4177 포트, 업무 API 요청은 합성 fixture. 360/390/768/1440px 가로 넘침 없음, 툴팁 접근성 연결·Enter/Escape·포커스 복귀·모달 Back·본문/페이지 식별·콘솔 warning/error 0건 PASS. 운영 고객/PIN/사진 원문은 사용하지 않았다.
+- 같은 관리자·내일 배정·데모 날짜·390/1440px 변경 전후 툴팁 비교: `QA/screenshots/assignment-room-priority-before-{390,1440}.png`, `assignment-room-priority-{390,1440}.png`. 중복 합성 화면: `QA/screenshots/assignment-room-conflict-{390,1440}.png`. 기존 카드/표/담당 선택/저장 목적은 유지한다.
+- `node scripts/check-workspace.mjs`, `npm run contract:check`, `git diff --check` PASS. FINAL_UX_AUDIT 원문 해시 유지. 서비스워커 `2026-11-06-3`.
+- 한계: 운영 계정 저장·통보, 실기기, 설치 PWA 갱신, 여러 관리자 동시 명령의 새 DB 제약은 검증/구현하지 않았다. 서버는 Preview 순수 계산 변경으로 migration 없음. 운영 배포는 별도 릴리스 검증 후 기록한다.
+
+## 2026-11-06 · 오늘 요약 공실 초록색
+
+- 흐름: 관리자 오늘 객실 요약 → 초록색 공실 숫자·왼쪽 강조선 → Enter/클릭 → 같은 날짜의 공실 목록. 기존 공유 렌더러의 공실 tone만 `neutral`에서 `green`으로 바꿨다. 집계·점유 판정·청소/운영 상태·레이아웃·버튼 목적·API는 변경하지 않았다.
+- 환경: Browser plugin not available → 기존 Playwright Chromium 151, 로컬 `http://127.0.0.1:4197`. 의존성을 추가하지 않았고 업무 API는 합성 fixture로 격리했다.
+- 기존 `scripts/check-room-state-axes.mjs`의 임시 사본에 공실 실제 CSS 색·44px/접근성 이름·Enter 후 공실 목록/필터 포커스 확인을 추가해 실행했다. 360/390/768/1440px에서 페이지 식별·본문·오류 overlay 부재·가로 넘침 없음·키보드·모달/Escape·Back·예약/전체 상세 목적지 PASS. 독립 집계·조건 필터·미확인값·부분 조회 실패·날짜/세션 경합도 PASS. 앱 console warning/error·페이지 예외·예상 밖 요청 0건.
+- 동일 합성 객실·날짜·역할의 변경 전/후 화면을 390/1440px로 비교했다. 대표 PNG: `QA/screenshots/vacant-green-before-390.png`, `vacant-green-after-390.png`, `vacant-green-before-1440.png`, `vacant-green-after-1440.png`. 숫자와 왼쪽 선 외 화면 구조는 같다.
+- 데모에는 점유 미확정 객실이 있어 공실 요약이 기존처럼 `확인 필요`로 잠긴다. 처음 추가한 데모 클릭 검사는 이 잠금 때문에 timeout했으며, 잠금을 유지하는지 확인하도록 검증 시나리오를 바로잡았다. 운영 합성 응답의 확정 공실 3개는 기존 목록으로 이동한다.
+- 기존 `scripts/check-deployed-visual.mjs` 임시 사본을 로컬에서 실행해 관리자 6개·메이드 4개 메뉴와 4개 너비, 데모 공실 초록색/미확인 잠금, 콘솔·페이지 예외 0건을 확인했다.
+- 정적 검사의 기존 회색 공실 기대값을 요청한 초록색으로 갱신했다. `node scripts/check-workspace.mjs`(PWA 포함), `npm run contract:check`, `npm run contract:test-diff`, dev 기준 `npm run contract:diff`, `git diff --check` PASS. 새 테스트 파일이나 의존성은 추가하지 않았다.
+- 한계: 실제 운영 계정의 업무 쓰기·실기기 Safari/Android·기존 설치 PWA 업데이트는 검사하지 않았다. 서비스워커 `2026-11-06-2`; 운영 배포 결과와 source SHA는 릴리스 PR에서 확인한다.
+
+
 ## 2026-11-02 · 공실 배지 제거
 
 검증 흐름: 관리자 객실 현황 → 과거/오늘/미래 날짜 카드 → 현재 운영 상태 → 전체 상세. 배지에만 적용하며 공실 집계·필터·현재 상태 텍스트를 유지한다.
@@ -3115,6 +3138,15 @@ Browser 플러그인이 제공되지 않아 번들 Playwright Chromium으로 검
 - 운영 읽기 전용 확인: 현재 OpenAPI 0.6.0/161 paths의 가격표 GET/PUT과 의존 schema를 `contracts/cleaning-prices.openapi.json`에 발췌해 원문 비교 PASS. 운영 origin PUT preflight 204·정확 origin·PUT 허용, 익명 가격표 조회 401/no-store PASS. 최신 개발 브랜치의 전체 161/174 snapshot과 발췌 내용의 일치도 검사하며, 이 기능의 발췌 검사를 계약 CI에 추가했다.
 - 대표 PNG: `QA/screenshots/cleaning-prices-{before,after}-more-{390,1440}.png`, `cleaning-prices-list-{390,1440}.png`, `cleaning-prices-confirm-{390,1440}.png`.
 - 한계: 실운영 가격 변경·새 청소 생성에 따른 서버 금액 snapshot/기존 정산 보존의 실데이터 UAT, 실기기 Safari/Android, 서버 DB 동시 트랜잭션은 미실행이다. 운영 계정/가격/청소/정산을 테스트용으로 변경하지 않았다. 프런트 요청이 가격 변경 한 경로만 사용하는 것을 검증했으며 서버 보존 정책은 배포 계약과 별도로 실제 사용자 확인이 필요하다.
+
+## 2026-11-06 · 청소 가격표 운영 배포 완료
+
+- 개발 PR305와 운영 PR306을 각각 필수 API contract CI 통과 후 squash 병합했다. 운영 main은 `0e580ca06567365f0ee1b956ed4a744a767ae262`이며 미해결 review thread는 없었다. main API contract run42136156194와 GitHub Pages run42136156144도 PASS다.
+- 기존 Vercel production 프로젝트의 배포 `dpl_AcmL4t34vRAVMwepveLCWL3epgQd`가 Ready이며 `https://room-management-system-prod.vercel.app`에 연결됐다. 배포 URL은 `https://room-management-system-prod-ngy8me3hh.vercel.app`이다.
+- 운영 HTML·SW·build-info·runtime-config가 해당 main에서 만든 artifact와 byte 일치한다. HTML SHA256 `22a881cf840cd4dcd97e50fd0c273bc31a91e6afeef61ed4347f990a6eba2ba2`, SW `2026-11-06-1`. 기존 운영 API·featureFlags·local 로그인 저장 정책을 유지했다. 환경 파일·Vercel 로컬 메타데이터·QA 이미지의 운영 URL은 404다.
+- 배포본 Playwright smoke: 관리자6개·메이드4개 주요 화면, 360/390/768/1440px 가로 넘침·페이지 예외·console warning/error 0건 PASS. runtime은 데모로 가로채 운영 업무 데이터에 접근하지 않았다.
+- 배포 HTML과 로컬 검증본의 일치를 확인한 뒤 같은 가격표 브라우저 시나리오를 배포 origin에서 재실행했다. 인상·인하·0원·범위·CAS·오류·응답 불명확 재시도·역할 차단·키보드·모달·Back·접근성 이름 PASS, 합성 저장20회, 예상 밖 요청·console warning/error·페이지 예외0건. 대표 화면은 위 가격표 PNG와 동일하며 호스팅 재검사 출력은 임시 경로에만 보관했다.
+- 운영 OpenAPI 가격표 계약·production PUT preflight·익명 조회401/no-store를 다시 읽기 확인했다. 실제 가격 변경·새 청소 생성·정산 쓰기는 실행하지 않았으며 실기기 Safari/Android와 실제 계정 쓰기 UAT는 위 한계를 유지한다. 이 기록은 문서만 갱신하며 운영 앱을 재배포하지 않는다.
 
 ## 2026-11-06 근무 가능일 변경 알림 연결
 
