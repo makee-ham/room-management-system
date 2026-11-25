@@ -31,13 +31,14 @@ await page.route('**/*',async route=>{
   if(path==='/v1/assignments')return json(route,{assignments:url.searchParams.get('serviceDate')===date?assignments:[]});
   if(path==='/v1/assignment-change-requests')return json(route,{requests:[],nextCursor:null});
   if(path==='/v1/notifications')return json(route,{notifications:[],nextCursor:null});
+  if(path==='/v1/rooms/candles')return json(route,{items:assignments.map(a=>({roomId:a.roomId,count:0,roomStateVersion:1})),nextCursor:null});
   if(path==='/v1/complaints')return json(route,{complaints:[],nextCursor:null});
   if(path==='/v1/attempts/current')return json(route,{attempt:attempts[assignments.findIndex(a=>a.assignmentId===url.searchParams.get('assignmentId'))]});
   if(path.startsWith('/v1/photos/'))return route.fulfill({contentType:'image/jpeg',body:jpeg});
   const i=attempts.findIndex(a=>path.startsWith('/v1/attempts/'+a.attemptId+'/'));
   if(i>=0){
     if(path.endsWith('/photo-slots')){const response=payload(i);if(holdRead&&i===0){holdRead=false;await new Promise(resolve=>{releaseRead=resolve;});}return json(route,response);}
-    if(path.endsWith('/submissions'))return json(route,{submissions:[]});
+    if(path.endsWith('/submissions')){if(method==='POST'){assert.equal(attempts[i].status,'field_completed');writes.push({i,path});attempts[i].status='submitted';attempts[i].executionVersion++;return json(route,{submission:{id:id(200+i),attemptId:attempts[i].attemptId,status:'submitted'}});}return json(route,{submissions:[]});}
     if(path.endsWith('/start-with-lease')||path.endsWith('/complete-field-work')){assert.equal(method,'POST');writes.push({i,path});attempts[i].executionVersion++;attempts[i].status=path.endsWith('/start-with-lease')?'in_progress':'field_completed';attempts[i].startedAt=date+'T04:00:00Z';if(attempts[i].status==='field_completed')attempts[i].fieldCompletedAt=date+'T04:30:00Z';return json(route,{attempt:attempts[i]});}
     if(path.endsWith('/upload')){
       active++;maxActive=Math.max(maxActive,active);writes.push({i,path,key:request.headers()['idempotency-key']});
@@ -100,8 +101,7 @@ try{
   console.log('[ok] upload completion preserves unrelated input, cursor and draft');
 
   holdUploads=true;await gallery(0).setInputFiles(files(2));await until(()=>!!releaseUpload);
-  await page.locator(`[data-action="cleaning-complete"][data-id="${assignments[1].assignmentId}"]`).click();
-  await page.waitForFunction(()=>!__queueQA.get().busy);assert.equal(attempts[1].status,'field_completed');
+  assert.equal(await page.locator('[data-action="cleaning-complete"]').count(),0);assert.equal(attempts[1].status,'in_progress');
   await gallery(1).setInputFiles(files(2));assert.equal((await page.evaluate(()=>__queueQA.get())).queue,4);
   assert(await page.locator(`[data-action="cleaning-submit"][data-id="${assignments[0].assignmentId}"]`).isDisabled());
   assert(await page.locator(`[data-action="cleaning-submit"][data-id="${assignments[1].assignmentId}"]`).isDisabled());
@@ -122,7 +122,7 @@ try{
   await page.waitForFunction(()=>__queueQA.get().slots.reduce((n,p)=>n+p.slots[0].photoCount,0)===6);
   assert.equal(await page.locator('[data-cleaning-photo-item]').count(),6);
   assert.equal(await page.locator(`[data-action="cleaning-submit"][data-id="${assignments[1].assignmentId}"]`).isDisabled(),false);
-  console.log('[ok] another room completes; 2-room additions and navigation keep serial uploads and submission guards');
+  console.log('[ok] 2-room photo additions need no separate completion; navigation keeps serial uploads and submission guards');
 
   holdUploads=true;failFirstRoom=true;await gallery(0).setInputFiles(files(1));await until(()=>!!releaseUpload);await gallery(1).setInputFiles(files(1));
   holdUploads=false;releaseUpload();releaseUpload=null;await settled();
@@ -147,6 +147,13 @@ try{
   await page.locator(`[data-action="cleaning-maid-room-toggle"][data-id="${assignments[0].assignmentId}"]`).click();
   await page.waitForFunction(()=>document.querySelectorAll('[data-cleaning-photo-item]').length===7);
   console.log('[ok] delayed 2-photo upload keeps original assignment across date change; Back reads all saved photos');
+  await page.locator(`[data-action="cleaning-maid-room-toggle"][data-id="${assignments[1].assignmentId}"]`).click();
+  await page.locator(`[data-action="cleaning-submit"][data-id="${assignments[1].assignmentId}"]:enabled`).waitFor();
+  holdUploads=true;await gallery(0).setInputFiles(files(1));await until(()=>!!releaseUpload);
+  await page.locator(`[data-action="cleaning-submit"][data-id="${assignments[1].assignmentId}"]`).click();await page.waitForFunction(()=>!__queueQA.get().busy);
+  assert.equal(attempts[1].status,'submitted');assert.equal(writes.filter(w=>w.i===1&&w.path.endsWith('/complete-field-work')).length,1);assert.equal(writes.filter(w=>w.i===1&&w.path.endsWith('/submissions')).length,1);
+  holdUploads=false;releaseUpload();releaseUpload=null;await settled();assert.equal(maxActive,1);
+  console.log('[ok] another room submits in one click while an unrelated room uploads');
   assert.deepEqual(unexpected,[]);assert.deepEqual(errors,[]);
   console.log('[ok] 360/390/768/1440px, nonblank maid screen, no console/page errors; synthetic writes only');
 }finally{releaseUpload?.();releaseRead?.();await browser.close();}
