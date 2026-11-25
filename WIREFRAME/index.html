@@ -381,6 +381,35 @@
     .maid-room-task-body { display:grid; gap:12px; padding:0 12px 12px; border-top:1px solid var(--line); background:var(--surface-soft); }
     .maid-room-task-body[hidden] { display:none; }
     .maid-room-task-body > .card { margin:12px 0 0; box-shadow:none; }
+    .maid-work-overview .info-grid { grid-template-columns:repeat(3,minmax(0,1fr)); margin-bottom:14px; }
+    .maid-work-overview .room-list-pin-manager { grid-template-columns:minmax(0,1fr) auto; gap:16px; margin:16px 0; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:var(--surface-soft); }
+    .maid-work-overview .room-list-pin-actions { display:flex; }
+    .maid-work-overview .room-list-pin-actions .btn { min-width:96px; }
+    .maid-work-overview .room-list-pin-copy strong { overflow-wrap:anywhere; }
+    .maid-next-action { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:18px; border:1px solid #cbdce9; border-radius:12px; background:#f0f6fb; }
+    .maid-next-action h4 { margin:0; color:var(--navy); font-size:17px; }
+    .maid-next-action p { margin:6px 0 0; color:#506579; font-size:13px; line-height:1.6; }
+    .maid-next-action .btn { flex:0 0 auto; min-width:180px; min-height:48px; justify-content:center; }
+    .maid-offline-help { margin-top:8px; color:var(--muted); font-size:12px; line-height:1.65; }
+    .maid-offline-help summary { display:list-item; width:fit-content; min-height:44px; padding:12px 0; cursor:pointer; color:#315d83; font-weight:750; }
+    .maid-offline-help summary:focus-visible { outline:3px solid var(--blue); outline-offset:2px; border-radius:4px; }
+    .maid-offline-help p { max-width:70ch; margin:0 0 10px; }
+    .maid-report-actions { margin-top:18px; padding-top:16px; border-top:1px solid var(--line); }
+    .maid-report-actions h4 { margin:0 0 10px; color:var(--muted); font-size:13px; font-weight:750; }
+    .maid-report-buttons { display:flex; flex-wrap:wrap; gap:8px; }
+    .maid-report-buttons .btn { min-height:44px; justify-content:center; }
+    .maid-report-actions p { margin:8px 0 0; color:var(--muted); font-size:12px; line-height:1.5; }
+    .maid-room-task [data-cleaning-submission] .job-actions { justify-content:flex-end; }
+    .maid-room-task [data-cleaning-submission] .job-actions .btn { min-height:48px; min-width:180px; justify-content:center; }
+    @media (max-width: 600px) {
+      .maid-work-overview .info-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .maid-work-overview .info-item:last-child { grid-column:1 / -1; }
+      .maid-next-action { align-items:stretch; flex-direction:column; gap:14px; padding:14px; }
+      .maid-next-action .btn { width:100%; }
+      .maid-report-buttons { display:grid; grid-template-columns:minmax(0,1fr); }
+      .maid-report-buttons .btn { width:100%; }
+      .maid-room-task [data-cleaning-submission] .job-actions .btn { width:100%; }
+    }
     .cleaning-photo-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; width:100%; }
     .cleaning-photo-actions .btn { min-width:0; min-height:48px; }
     .live-cleaning-photo-sections { grid-template-columns:minmax(0,1fr); gap:0; }
@@ -3570,8 +3599,9 @@
         if(uncertainLiveMutation&&uncertainLiveMutation.signature!==signature)throw new ApiRequestError('previous request unconfirmed',{status:409,code:'PREVIOUS_REQUEST_UNCONFIRMED'});
         if(!uncertainLiveMutation&&/^\/v1\/assignments\/(?:drafts|commit|[^/]+\/(?:change|unassign))$/.test(path))guardLivePlanningDay();
         let idempotencyKey=LIVE_IDEMPOTENCY_KEYS.get(signature);if(!idempotencyKey){if(LIVE_IDEMPOTENCY_KEYS.size>=50)LIVE_IDEMPOTENCY_KEYS.delete(LIVE_IDEMPOTENCY_KEYS.keys().next().value);idempotencyKey=suppliedIdempotencyKey||crypto.randomUUID();LIVE_IDEMPOTENCY_KEYS.set(signature,idempotencyKey);}
-        try{const result=await apiRequest(path,{...options,method,body,rawBody,contentType,idempotencyKey});if(generation!==LIVE_RUNTIME.authGeneration)throw new ApiRequestError('session changed',{status:409,code:'SESSION_CHANGED'});if(validateResult)validateResult(result.data);LIVE_IDEMPOTENCY_KEYS.delete(signature);if(uncertainLiveMutation?.signature===signature)uncertainLiveMutation=null;return result;}
-        catch(error){if(generation!==LIVE_RUNTIME.authGeneration)throw error;const status=Number(error?.status)||0;if(status>=400&&status<500&&![408,425,429].includes(status)){LIVE_IDEMPOTENCY_KEYS.delete(signature);if(uncertainLiveMutation?.signature===signature)uncertainLiveMutation=null;}else{uncertainLiveMutation={path,method,body:rawBody===null?JSON.parse(JSON.stringify(body)):null,rawBody,contentType,signature,generation,profileId};if(!keepModalOnUncertain)closeModal();queueMicrotask(()=>render());}throw error;}
+        const requestedAt=uncertainLiveMutation?.requestedAt??Date.now();
+        try{const result=await apiRequest(path,{...options,method,body,rawBody,contentType,idempotencyKey});if(generation!==LIVE_RUNTIME.authGeneration)throw new ApiRequestError('session changed',{status:409,code:'SESSION_CHANGED'});if(validateResult)validateResult(result.data);if(/^\/v1\/attempts\/[^/]+\/start-with-lease$/.test(path))rememberLiveWorkLease(result.data,requestedAt);LIVE_IDEMPOTENCY_KEYS.delete(signature);if(uncertainLiveMutation?.signature===signature)uncertainLiveMutation=null;return result;}
+        catch(error){if(generation!==LIVE_RUNTIME.authGeneration)throw error;const status=Number(error?.status)||0;if(status>=400&&status<500&&![408,425,429].includes(status)){LIVE_IDEMPOTENCY_KEYS.delete(signature);if(uncertainLiveMutation?.signature===signature)uncertainLiveMutation=null;}else{uncertainLiveMutation={path,method,body:rawBody===null?JSON.parse(JSON.stringify(body)):null,rawBody,contentType,signature,generation,profileId,requestedAt};if(!keepModalOnUncertain)closeModal();queueMicrotask(()=>render());}throw error;}
       }
       async function loadLiveAccounts({quiet=false}={}){
         if(!['developer','admin'].includes(state.remote.auth.user?.role))return;
@@ -10333,10 +10363,37 @@
           return renderLiveMaidTaskShell(assignment,label,details);
         }
         if(!attempt||read&&read.detailStatus!=='ready')return renderLiveMaidTaskShell(assignment,statusLabel,'<p role="status">'+(read?.summaryStatus==='ready'&&!attempt?(liveAssignmentCleaningDate(assignment)>liveKstIsoDate()?'청소일이 되면 시작할 수 있습니다.':'통보된 배정의 현재 수행 작업이 없습니다.'):'업무 상세 불러오는 중')+'</p>');
-        const submission=cleaningCurrentSubmission(attempt.attemptId),slotsReady=cleaningRequiredSlotsReady(attempt.attemptId),lease=slice.leases.get(attempt.attemptId),disabled=slice.busy||slice.status!=='ready'||liveAttemptPhotoPending(attempt.attemptId)||LIVE_OFFLINE_COMPLETIONS.has(attempt.attemptId),actual=attempt.startedAt&&attempt.fieldCompletedAt?Math.max(0,Math.round((Date.parse(attempt.fieldCompletedAt)-Date.parse(attempt.startedAt))/60000)):null,pinManager=renderLiveMaidPinManager(assignment),expanded=slice.expandedMaidAssignments.has(assignment.assignmentId),bodyId=`maid-room-task-${assignment.assignmentId}`;
-        const status=statusBadge(CLEANING_STATUS_LABELS[attempt.status]||attempt.status,attempt.status==='approved'?'green':attempt.status==='rejected'?'red':'blue');
-        const details=`<article class="card cleaning-workflow-row" data-cleaning-assignment="${esc(assignment.assignmentId)}"><div class="mobile-section-title"><div><h3>업무 정보</h3><p>${esc(assignment.maidDisplayName)}</p></div>${status}</div><div class="info-grid"><div class="info-item"><span>청소 유형</span><strong>${esc(liveCleaningKindLabel(assignment.cleaningKind))}</strong></div><div class="info-item"><span>베딩 수</span><strong>${esc(assignmentBeddingLabel(assignment))}</strong></div><div class="info-item"><span>시작 가능</span><strong>${esc(liveAssignmentStartLabel(assignment))}</strong></div><div class="info-item"><span>업무 마감</span><strong>${esc(assignment.dueAt?liveKstDateTimeLabel(assignment.dueAt):'미설정')}</strong></div><div class="info-item"><span>실제 현장 시간</span><strong>${actual===null?'완료 후 표시':`${actual}분`}</strong></div></div>${liveAssignmentScheduleMarkup(assignment)}${assignmentInstructionMarkup(assignment.instructionMemo)}${pinManager}${lease?`<div class="notice notice-info"><div><strong>오프라인 완료 준비됨</strong><br>서버 만료 ${esc(liveKstDateTimeLabel(lease.expiresAt))}</div></div>`:''}<div class="live-operation-grid">${button('청소 시작','cleaning-start','primary',`data-id="${esc(assignment.assignmentId)}" ${disabled||attempt.status!=='scheduled'?'disabled':''}`)}${button('오프라인 대비 시작','cleaning-start-lease','outline',`data-id="${esc(assignment.assignmentId)}" ${disabled||attempt.status!=='scheduled'?'disabled':''}`)}${button('고객 미퇴실 신고','cleaning-report-review','outline',`data-id="${esc(assignment.assignmentId)}" ${disabled||!['scheduled','in_progress'].includes(attempt.status)?'disabled':''}`)}${button('폭탄방 신고','cleaning-bomb-review','outline',`data-id="${esc(assignment.assignmentId)}" ${disabled||!liveCleaningBombPhotoIds(attempt.attemptId).length?'disabled':''}`)}${button('담당 취소 요청','cleaning-cancel-request-review','outline',`data-id="${esc(assignment.assignmentId)}" ${disabled||attempt.status!=='scheduled'?'disabled':''}`)}</div></article>${renderCleaningPhotoSlots(assignment,attempt)}<section class="card cleaning-workflow-row" data-cleaning-submission="${esc(attempt.attemptId)}"><div class="mobile-section-title"><div><h3>청소 제출</h3></div>${submission?statusBadge(`${CLEANING_SUBMISSION_STATUS_LABELS[submission.status]||submission.status}`,submission.status==='approved'?'green':submission.status==='rejected'?'red':'blue'):statusBadge('미제출','amber')}</div><div class="field"><label for="cleaning-candles-${esc(attempt.attemptId)}">${submission?'제출 당시 촛불 수량':'확인한 촛불 수량'}</label><input id="cleaning-candles-${esc(attempt.attemptId)}" class="input-control" type="number" min="0" step="1" value="${esc(submission?submission.candleCount:cleaningState().candleDrafts?.get(attempt.attemptId)??0)}" ${disabled||!['field_completed','upload_pending','rejected'].includes(attempt.status)?'disabled':''}></div>${!slotsReady?'<p class="room-action-reason">청소 사진을 1장 이상 등록하세요.</p>':''}<div class="job-actions">${button('현장 청소 완료','cleaning-complete','outline',`data-id="${esc(assignment.assignmentId)}" ${disabled||attempt.status!=='in_progress'?'disabled':''}`)}${button('검수 요청 제출','cleaning-submit','primary',`data-id="${esc(assignment.assignmentId)}" ${disabled||!slotsReady||!['field_completed','upload_pending','rejected'].includes(attempt.status)?'disabled':''}`)}</div></section><div data-maid-post-operations="${esc(assignment.assignmentId)}">${submission?renderLiveHistoryOperations(submission):''}</div>`;
+        const submission=cleaningCurrentSubmission(attempt.attemptId),slotsReady=cleaningRequiredSlotsReady(attempt.attemptId),disabled=slice.busy||slice.status!=='ready'||liveAttemptPhotoPending(attempt.attemptId)||LIVE_OFFLINE_COMPLETIONS.has(attempt.attemptId),actual=attempt.startedAt&&attempt.fieldCompletedAt?Math.max(0,Math.round((Date.parse(attempt.fieldCompletedAt)-Date.parse(attempt.startedAt))/60000)):null;
+        const details=`<article class="card cleaning-workflow-row maid-work-overview" data-cleaning-assignment="${esc(assignment.assignmentId)}">
+          <div class="mobile-section-title"><div><h3>업무 정보</h3><p>${esc(assignment.maidDisplayName)}</p></div></div>
+          <div class="info-grid"><div class="info-item"><span>시작 가능</span><strong>${esc(liveAssignmentStartLabel(assignment))}</strong></div><div class="info-item"><span>업무 마감</span><strong>${esc(assignment.dueAt?liveKstDateTimeLabel(assignment.dueAt):'미설정')}</strong></div><div class="info-item"><span>실제 현장 시간</span><strong>${actual===null?'완료 후 표시':`${actual}분`}</strong></div></div>
+          ${liveAssignmentScheduleMarkup(assignment)}${renderLiveMaidPinManager(assignment)}${renderMaidCleaningActions(assignment,attempt,disabled)}
+        </article>${renderCleaningPhotoSlots(assignment,attempt)}
+        <section class="card cleaning-workflow-row" data-cleaning-submission="${esc(attempt.attemptId)}">
+          <div class="mobile-section-title"><div><h3>청소 제출</h3><p>현장 완료 후 사진과 촛불 수량을 확인해 주세요.</p></div>${submission?statusBadge(`${CLEANING_SUBMISSION_STATUS_LABELS[submission.status]||submission.status}`,submission.status==='approved'?'green':submission.status==='rejected'?'red':'blue'):statusBadge('미제출','amber')}</div>
+          <div class="field"><label for="cleaning-candles-${esc(attempt.attemptId)}">${submission?'제출 당시 촛불 수량':'확인한 촛불 수량'}</label><input id="cleaning-candles-${esc(attempt.attemptId)}" class="input-control" type="number" min="0" step="1" value="${esc(submission?submission.candleCount:cleaningState().candleDrafts?.get(attempt.attemptId)??0)}" ${disabled||!['field_completed','upload_pending','rejected'].includes(attempt.status)?'disabled':''}></div>
+          ${!slotsReady?'<p class="room-action-reason">청소 사진을 1장 이상 등록하세요.</p>':''}<div class="job-actions">${button('검수 요청 제출','cleaning-submit','primary',`data-id="${esc(assignment.assignmentId)}" ${disabled||!slotsReady||!['field_completed','upload_pending','rejected'].includes(attempt.status)?'disabled':''}`)}</div>
+        </section><div data-maid-post-operations="${esc(assignment.assignmentId)}">${submission?renderLiveHistoryOperations(submission):''}</div>`;
         return renderLiveMaidTaskShell(assignment,CLEANING_STATUS_LABELS[attempt.status]||attempt.status,details);
+      }
+      function renderMaidCleaningActions(assignment,attempt,disabled){
+        const id=esc(assignment.assignmentId),lease=cleaningState().leases.get(attempt.attemptId),pending=LIVE_OFFLINE_COMPLETIONS.has(attempt.attemptId),leaseActive=!!lease&&Date.now()+lease.serverOffsetMs<Date.parse(lease.expiresAt),hasBombPhotos=liveCleaningBombPhotoIds(attempt.attemptId).length>0;
+        const copy=pending?['완료 기록 전송 대기','연결되면 자동으로 전송합니다. 화면을 닫거나 새로고침하지 마세요.']:({
+          scheduled:['청소를 시작해 주세요','객실 상태와 작업 메모를 확인한 뒤 시작하세요.'],
+          in_progress:['청소 진행 중','청소를 마치면 현장 완료를 눌러 주세요. 사진 등록과 검수 제출은 이어서 진행할 수 있습니다.'],
+          field_completed:['현장 청소 완료','아래에서 사진과 촛불 수량을 확인하고 검수를 요청하세요.'],
+          upload_pending:['사진 등록을 마쳐 주세요','사진 전송이 끝나면 아래에서 검수를 요청하세요.'],
+          rejected:['제출 내용을 보완해 주세요','반려 내용을 확인하고 사진을 보완한 뒤 다시 제출하세요.'],
+          submitted:['검수 대기 중','제출이 완료되었습니다. 관리자가 청소 결과를 확인합니다.']
+        }[attempt.status]||[CLEANING_STATUS_LABELS[attempt.status]||attempt.status,'현재 청소 상태를 확인하세요.']);
+        const primary=attempt.status==='scheduled'?button('청소 시작','cleaning-start','primary',`data-id="${id}" ${disabled?'disabled':''}`):attempt.status==='in_progress'?button('현장 청소 완료','cleaning-complete','primary',`data-id="${id}" ${disabled?'disabled':''}`):'';
+        const offlineHelp=['scheduled','in_progress'].includes(attempt.status)?`<details class="maid-offline-help"><summary>${leaseActive?'통신 끊김 대비 중 · 안내':lease?'통신 대비 시간이 지났습니다 · 안내':'통신이 끊겨도 완료할 수 있나요?'}</summary><p>${lease?`<strong>${leaseActive?'오프라인 완료 준비됨':'통신 대비 시간 만료'}</strong> · ${esc(liveKstDateTimeLabel(lease.expiresAt))}까지<br>`:''}${lease&&!leaseActive?'통신 대비 시간이 지났습니다. 인터넷에 연결한 상태에서 완료해 주세요.':attempt.status==='in_progress'&&!lease?'이 화면에는 통신 대비 기록이 없습니다. 인터넷에 연결한 상태에서 완료해 주세요.':'시작할 때 인터넷이 연결되어 있으면 자동으로 준비됩니다. 시작 후 2시간 안에는 연결이 끊겨도 완료 시각을 임시 기록하고, 다시 연결되면 전송합니다.'}</p><p>임시 기록은 이 화면을 닫거나 새로고침하면 사라질 수 있습니다. 사진 전송과 검수 제출에는 인터넷 연결이 필요합니다.</p></details>`:'';
+        return `<div class="maid-next-action"><div><h4>${esc(copy[0])}</h4><p>${esc(copy[1])}</p></div>${primary}</div>${offlineHelp}
+          <section class="maid-report-actions" aria-label="문제 신고 및 담당 변경"><h4>문제 신고·담당 변경</h4><div class="maid-report-buttons">
+          ${button('고객 미퇴실 신고','cleaning-report-review','outline',`data-id="${id}" ${disabled||!['scheduled','in_progress'].includes(attempt.status)?'disabled':''}`)}
+          ${button('폭탄방 신고','cleaning-bomb-review','outline',`data-id="${id}" aria-describedby="bomb-help-${id}" ${disabled||!hasBombPhotos?'disabled':''}`)}
+          ${button('담당 취소 요청','cleaning-cancel-request-review','outline',`data-id="${id}" ${disabled||attempt.status!=='scheduled'?'disabled':''}`)}</div>
+          <p data-maid-report-help id="bomb-help-${id}">${hasBombPhotos?'등록한 증빙 사진으로 폭탄방을 신고할 수 있습니다.':'폭탄방 신고는 증빙 사진을 먼저 등록해 주세요.'}${attempt.status!=='scheduled'?' 담당 취소는 청소 시작 전에 요청할 수 있습니다.':''}</p></section>`;
       }
       function renderLiveMaidTaskShell(assignment,label,details){
         const scheduleBadges=liveAssignmentScheduleBadges(assignment),expanded=cleaningState().expandedMaidAssignments.has(assignment.assignmentId),bodyId='maid-room-task-'+assignment.assignmentId,status=statusBadge(label,label===CLEANING_STATUS_LABELS.approved?'green':label===CLEANING_STATUS_LABELS.rejected?'red':'blue');
@@ -10816,10 +10873,18 @@
         await runLiveCleaningMutation({path:`/v1/assignment-change-requests/${encodeURIComponent(requestId)}/decision`,body:{expectedCurrentAssignmentId:assignment.assignmentId,expectedAssignmentVersion:assignment.targetAssignmentVersion,reasonCode:decision==='approved'?'APPROVED':'REJECTED',decision},label:`담당 취소 요청 ${decision==='approved'?'승인':'거절'}`});
       }
       function liveExecutionContext(assignmentId){const assignment=cleaningState().assignments.find(item=>item.assignmentId===assignmentId),attempt=assignment&&cleaningAttemptForAssignment(assignment);if(!assignment||!attempt)throw new ApiRequestError('attempt missing',{status:409,code:'ATTEMPT_VERSION_CONFLICT'});return {assignment,attempt,body:cleaningExecutionBody(assignment,attempt)};}
+      function rememberLiveWorkLease(data,requestedAt){
+        const lease=data?.lease,serverTime=Date.parse(data?.serverTime);
+        if(!lease?.attemptId||!Number.isFinite(serverTime))return;
+        cleaningState().leases.set(lease.attemptId,{...lease,serverOffsetMs:Math.round(serverTime-requestedAt)});
+      }
       async function executeLiveAttempt(assignmentId,kind){
         if(!cleaningActor('maid'))return;let context;try{context=liveExecutionContext(assignmentId);}catch(error){cleaningState().error=error;render();return;}
-        if(kind==='complete'&&cleaningState().leases.has(context.attempt.attemptId)){await recordLiveOfflineCompletion(context);return;}
-        const suffix=kind==='start-lease'?'start-with-lease':kind==='start'?'start':'complete-field-work',label=kind==='start-lease'?'오프라인 대비 청소 시작':kind==='start'?'청소 시작':'현장 청소 완료',data=await runLiveCleaningMutation({path:`/v1/attempts/${encodeURIComponent(context.attempt.attemptId)}/${suffix}`,body:context.body,label});if(data?.lease){cleaningState().leases.set(context.attempt.attemptId,{...data.lease,serverOffsetMs:Math.round(Date.parse(data.serverTime)-Date.now())});render();}
+        const lease=cleaningState().leases.get(context.attempt.attemptId);
+        if(kind==='complete'&&lease&&(!navigator.onLine||Date.now()+lease.serverOffsetMs<Date.parse(lease.expiresAt))){await recordLiveOfflineCompletion(context);return;}
+        const suffix=kind==='start'?'start-with-lease':'complete-field-work',label=kind==='start'?'청소 시작':'현장 청소 완료';
+        const data=await runLiveCleaningMutation({path:`/v1/attempts/${encodeURIComponent(context.attempt.attemptId)}/${suffix}`,body:context.body,label});
+        if(data&&kind==='complete'){cleaningState().leases.delete(context.attempt.attemptId);render();}
       }
       function reviewLiveCheckoutReport(assignmentId,trigger=document.activeElement){if(!cleaningActor('maid'))return;showModal({title:'고객 미퇴실을 신고할까요?',subtitle:'서버가 동일 객실의 수행과 미해결 사건을 검사합니다.',trigger,body:'<div class="notice notice-warning">신고가 접수되면 관리자가 사건을 처리할 때까지 관련 상태 전이가 거부될 수 있습니다.</div>',confirmLabel:'미퇴실 신고',confirmAction:'cleaning-report-save',confirmVariant:'danger',confirmExtra:`data-id="${esc(assignmentId)}"`});}
       async function saveLiveCheckoutReport(assignmentId){let context;try{context=liveExecutionContext(assignmentId);}catch(error){cleaningState().error=error;render();return;}clearLivePinReveal();await runLiveCleaningMutation({path:`/v1/attempts/${encodeURIComponent(context.attempt.attemptId)}/checkout-not-completed`,body:context.body,label:'고객 미퇴실 신고'});}
@@ -10871,6 +10936,7 @@
           const selector=next.id?`#${CSS.escape(next.id)}`:next.dataset.cleaningUpload!==undefined?`[data-cleaning-upload][data-slot="${CSS.escape(next.dataset.slot)}"][data-upload-source="${CSS.escape(next.dataset.uploadSource)}"]`:`[data-action="${CSS.escape(next.dataset.action)}"]${next.dataset.photoItem?`[data-photo-item="${CSS.escape(next.dataset.photoItem)}"]`:''}`;
           const current=target.querySelector(selector);if(current)current.disabled=next.disabled;
         }
+        const reportHelp=target.querySelector('[data-maid-report-help]'),nextReportHelp=template.content.querySelector('[data-maid-report-help]');if(reportHelp&&nextReportHelp)reportHelp.textContent=nextReportHelp.textContent;
         const selector='[data-cleaning-submission] .room-action-reason',current=target.querySelector(selector),next=template.content.querySelector(selector);
         if(current&&!next)current.remove();else if(!current&&next)target.querySelector('[data-cleaning-submission] .job-actions')?.before(next.cloneNode(true));
       }
@@ -11211,7 +11277,6 @@
         else if(action==='cleaning-change-request-approve')void decideLiveAssignmentRequest(id,'approved');
         else if(action==='cleaning-change-request-reject')void decideLiveAssignmentRequest(id,'rejected');
         else if(action==='cleaning-start')void executeLiveAttempt(id,'start');
-        else if(action==='cleaning-start-lease')void executeLiveAttempt(id,'start-lease');
         else if(action==='cleaning-complete')void executeLiveAttempt(id,'complete');
         else if(action==='cleaning-report-review')reviewLiveCheckoutReport(id,el);
         else if(action==='cleaning-report-save')void saveLiveCheckoutReport(id);
@@ -11275,7 +11340,7 @@
       ['random-assignments','undo-random-assignment'].forEach(action=>rebuiltActions.add(action));
       ['resolve-conflict-v2','confirm-conflict-v2','deactivate-maid-v2','confirm-start-deactivation-v2','complete-deactivation-v2','admin-pay-week','export-rooms-xlsx','room-issue-photo','choose-room-issue-files','remove-room-issue-photo','save-room-issue','bomb-room-photo','choose-bomb-room-files','remove-bomb-room-photo','add-demo-bomb-room-photos','save-bomb-room-report','approve-bomb-room','reject-bomb-room','confirm-approve-bomb-room','confirm-reject-bomb-room'].forEach(action=>rebuiltActions.add(action));
       ['confirm-uncertain-live-mutation','cleaning-refresh','cleaning-template-edit','cleaning-template-publish','cleaning-start','cleaning-complete','cleaning-report-review','cleaning-report','cleaning-retry','cleaning-manual','cleaning-incident-open','cleaning-decision-save'].forEach(action=>rebuiltActions.add(action));
-      const productionCleaningActions=new Set(['cleaning-instruction-save','cleaning-instruction-rebase','cleaning-assignment-manage','cleaning-unavailable-review','cleaning-template-edit','cleaning-template-publish','cleaning-maid-room-toggle','cleaning-maid-detail-retry','cleaning-photo-preview-retry','cleaning-refresh','cleaning-preview','cleaning-save-draft','cleaning-save-all-drafts','cleaning-manual-draft-review','cleaning-manual-draft-save','cleaning-commit-impact','cleaning-commit','cleaning-history','cleaning-change-review','cleaning-change-save','cleaning-unassign-review','cleaning-unassign-save','cleaning-change-request-approve','cleaning-change-request-reject','cleaning-start','cleaning-start-lease','cleaning-complete','cleaning-report-review','cleaning-report-save','cleaning-cancel-request-review','cleaning-cancel-request-save','cleaning-bomb-review','cleaning-bomb-save','cleaning-issue-save','cleaning-photo-delete','cleaning-submit','cleaning-lifecycle-review','cleaning-lifecycle-save','cleaning-inspection-open','cleaning-inspection-approve','cleaning-inspection-reject-review','cleaning-inspection-reject','cleaning-inspection-bomb-approve','cleaning-inspection-bomb-reject']);
+      const productionCleaningActions=new Set(['cleaning-instruction-save','cleaning-instruction-rebase','cleaning-assignment-manage','cleaning-unavailable-review','cleaning-template-edit','cleaning-template-publish','cleaning-maid-room-toggle','cleaning-maid-detail-retry','cleaning-photo-preview-retry','cleaning-refresh','cleaning-preview','cleaning-save-draft','cleaning-save-all-drafts','cleaning-manual-draft-review','cleaning-manual-draft-save','cleaning-commit-impact','cleaning-commit','cleaning-history','cleaning-change-review','cleaning-change-save','cleaning-unassign-review','cleaning-unassign-save','cleaning-change-request-approve','cleaning-change-request-reject','cleaning-start','cleaning-complete','cleaning-report-review','cleaning-report-save','cleaning-cancel-request-review','cleaning-cancel-request-save','cleaning-bomb-review','cleaning-bomb-save','cleaning-issue-save','cleaning-photo-delete','cleaning-submit','cleaning-lifecycle-review','cleaning-lifecycle-save','cleaning-inspection-open','cleaning-inspection-approve','cleaning-inspection-reject-review','cleaning-inspection-reject','cleaning-inspection-bomb-approve','cleaning-inspection-bomb-reject']);
       productionCleaningActions.forEach(action=>rebuiltActions.add(action));
       const mutationActionLocks=new Set(),mutationActions=new Set(['complete-checkout-inspection','confirm-checkout-inspection','toggle-room-cleaning','confirm-room-cleaning-on','confirm-room-cleaning-off','save-reservation-v2','confirm-reservation-room-move','submit-cleaning-v2','confirm-approve-v2','confirm-reject-v2','confirm-toggle-payment','mark-payment-check','confirm-payment-open-v2','confirm-finish-payment']);
       ['live-availability-week','availability-week','current-availability-day','request-current-availability','decide-current-availability'].forEach(action=>rebuiltActions.add(action));

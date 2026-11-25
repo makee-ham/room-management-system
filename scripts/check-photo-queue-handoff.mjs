@@ -38,7 +38,7 @@ await page.route('**/*',async route=>{
   if(i>=0){
     if(path.endsWith('/photo-slots')){const response=payload(i);if(holdRead&&i===0){holdRead=false;await new Promise(resolve=>{releaseRead=resolve;});}return json(route,response);}
     if(path.endsWith('/submissions'))return json(route,{submissions:[]});
-    if(path.endsWith('/start')||path.endsWith('/complete-field-work')){assert.equal(method,'POST');writes.push({i,path});attempts[i].executionVersion++;attempts[i].status=path.endsWith('/start')?'in_progress':'field_completed';attempts[i].startedAt=date+'T04:00:00Z';if(attempts[i].status==='field_completed')attempts[i].fieldCompletedAt=date+'T04:30:00Z';return json(route,{attempt:attempts[i]});}
+    if(path.endsWith('/start-with-lease')||path.endsWith('/complete-field-work')){assert.equal(method,'POST');writes.push({i,path});attempts[i].executionVersion++;attempts[i].status=path.endsWith('/start-with-lease')?'in_progress':'field_completed';attempts[i].startedAt=date+'T04:00:00Z';if(attempts[i].status==='field_completed')attempts[i].fieldCompletedAt=date+'T04:30:00Z';return json(route,{attempt:attempts[i]});}
     if(path.endsWith('/upload')){
       active++;maxActive=Math.max(maxActive,active);writes.push({i,path,key:request.headers()['idempotency-key']});
       if(holdUploads)await new Promise(resolve=>{releaseUpload=resolve;});
