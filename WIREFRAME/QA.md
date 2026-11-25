@@ -1,5 +1,16 @@
 # 클릭형 와이어프레임 QA
 
+
+## 2026-11-25 · 메이드 청소 시작 통합과 화면 정리
+
+- 사용자 흐름: 내 업무에서 본인 객실을 펼치고 `청소 시작` → `현장 청소 완료` → 사진·촛불 확인 후 `검수 요청 제출`로 진행한다. 시작 버튼은 하나이며 기존 `start-with-lease` 계약으로 온라인 시작과 통신 대비를 함께 준비한다. 다른 신고·취소의 목적/권한/CAS는 유지한다.
+- 작업 메모·청소 유형·베딩의 중복 표시를 줄이고 PIN 버튼을 축소했다. 다음 동작을 강조하고 문제 신고·담당 변경을 분리했다. 증빙 사진이 없는 폭탄방 신고에는 이유를 표시한다. 통신 안내는 키보드로 열 수 있으며 2시간 유효 범위·화면 종료/새로고침 시 임시 기록 소실·사진/검수 온라인 필요를 설명한다.
+- 시작 응답 유실 후 동일 키 재시도에서도 통신 대비를 복원한다. 최초 요청 시각을 메모리에 유지해 재시도 시 서버/클라이언트 시각 보정을 다시 잡지 않는다. 2시간이 지난 뒤 온라인 완료와 재진입으로 임시 준비가 사라진 경우의 온라인 완료는 기존 완료 API를 사용한다. 사진·PIN·완료 이벤트의 영속 저장을 추가하지 않았다. SW `2026-11-25-1`.
+- PASS: `RMS_QA_SCOPE=maid-actions node scripts/check-cleaning-workflow.mjs`의 단일 시작·409·동일 키 응답 복원·오프라인 완료/재연결 전송·2시간 만료/재진입·사진 업로드/삭제·중복 제출 방지·신고 모달/포커스·키보드 안내·360/390/768/1440px 넘침/44px/접근성 이름·console/pageerror 0. `check-lazy-cleaning`, `check-photo-queue-handoff`, `check-cleaning-planned-date`도 PASS. 전체 workflow 스크립트는 변경 전/후 모두 오래된 관리자 홈 fixture의 `filter-rooms=occupied` 조회 중 비활성에서 중단돼 전체 PASS로 기록하지 않는다. `maid-actions` 범위는 그 무관한 관리자 시나리오를 제외하고 실제 시작/완료/사진/제출을 모두 실행한다.
+- PASS: `check-workspace`, `contract:check`, `contract:test-diff`, `contract:diff`, `git diff --check`. Browser 연결 확장은 사용 불가, cloud 브라우저는 로컬 서버 연결 실패. 로컬 Playwright + Chromium158로 합성 API만 사용했으며 실제 업무 시작/완료/운영 DB 쓰기는 0회다.
+- 대표 PNG: `QA/screenshots/maid-actions-{before,after,progress}-{390,1440}.png`. 같은 역할·시나리오·폭으로 버튼 개수, 주 동작 우선순위, PIN 크기, 신고 영역 분리, 모바일 줄바꿈을 대조했다. 캡처는 임시 알림을 정리한 업무 정보 카드이며 실객실 정보가 아니다.
+- 한계: 실기기 Safari/Android, 실제 계정 통신 중단, 운영 배포는 미실행이다. 현재 Vercel 연결이 없어 코드 반영과 운영 배포를 구분한다.
+
 ## 2026-11-06 · 원 퇴실일과 현재 청소일 분리
 
 - 사용자 결정: 과거 퇴실 객실도11월7일 업무로 배정·통보했으면 현재 청소일은11월7일이다. 운영 DB 읽기에서 현재 통보26건 모두 `private.assignment_requested_planning_date`가 `2026-11-07`이며, 원본 `service_date`/target 날짜와 별도 보존됨을 확인했다. DB 데이터 정정·migration·예약/퇴실 이력 변경은 없다.

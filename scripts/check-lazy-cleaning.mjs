@@ -66,7 +66,7 @@ async function fixture(html,{delays=false}={}){
         return json(route,payload(i));
       }
       if(path.endsWith('/submissions'))return json(route,{submissions:i===2?[submission]:[]});
-      if(path.endsWith('/start')){assert.equal(method,'POST');attempts[i].status='in_progress';attempts[i].executionVersion++;attempts[i].startedAt=date+'T04:00:00Z';return json(route,{attempt:attempts[i]});}
+      if(path.endsWith('/start-with-lease')){assert.equal(method,'POST');attempts[i].status='in_progress';attempts[i].executionVersion++;attempts[i].startedAt=date+'T04:00:00Z';return json(route,{attempt:attempts[i]});}
     }
     unexpected.push(method+' '+path);return json(route,{error:{code:'QA_UNEXPECTED'}},400);
   });
