@@ -43,7 +43,7 @@ await page.route('**/*',async r=>{
  if(path==='/v1/attempts/lifecycle-impact'){assert.equal(role,'admin');return json(r,attempt?{attempt}:{error:{code:'ATTEMPT_ACCESS_REQUIRED'}},attempt?200:403);}
  if(path.endsWith('/photo-slots'))return json(r,{attemptId:attempt.attemptId,assignmentId:assignment.assignmentId,assignmentRevision:1,slots:[]});
  if(path.endsWith('/submissions'))return json(r,{submissions:[]});
- if(path.endsWith('/start')){assert.equal(method,'POST');assert.equal(role,'maid');assert.equal(now,'2026-11-07');assert(req.headers()['idempotency-key']);assert.equal(body.expectedAssignmentId,assignment.assignmentId);attempt={...attempt,status:'in_progress',executionVersion:2,startedAt:'2026-11-07T11:00:00+09:00'};return json(r,{attempt});}
+ if(path.endsWith('/start-with-lease')){assert.equal(method,'POST');assert.equal(role,'maid');assert.equal(now,'2026-11-07');assert(req.headers()['idempotency-key']);assert.equal(body.expectedAssignmentId,assignment.assignmentId);attempt={...attempt,status:'in_progress',executionVersion:2,startedAt:'2026-11-07T11:00:00+09:00'};return json(r,{attempt});}
  if(path==='/v1/cleaning-history')return json(r,{items:[],nextCursor:null});
  throw new Error('Unexpected '+method+' '+path);
 });
