@@ -387,6 +387,7 @@
     .maid-work-overview .room-list-pin-actions .btn { min-width:96px; }
     .maid-work-overview .room-list-pin-copy strong { overflow-wrap:anywhere; }
     .maid-next-action { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:18px; border:1px solid #cbdce9; border-radius:12px; background:#f0f6fb; }
+    [data-cleaning-submission] .mobile-section-title > .badge { flex:0 0 auto; white-space:nowrap; }
     .maid-next-action h4 { margin:0; color:var(--navy); font-size:17px; }
     .maid-next-action p { margin:6px 0 0; color:#506579; font-size:13px; line-height:1.6; }
     .maid-next-action .btn { flex:0 0 auto; min-width:180px; min-height:48px; justify-content:center; }
@@ -9905,7 +9906,7 @@
         const slice=cleaningState(),attempt=slice.attempts.get(assignment.assignmentId),blocked=slice.blockedTargets.has(assignment.cleaningTargetId),status=blocked?'관리자 확인 대기':({scheduled:'시작 대기',in_progress:'청소 중',field_completed:'현장 완료',interrupted:'중단됨',superseded:'이전 업무 종료',submitted:'제출 완료',approved:'검수 완료'}[attempt?.status]||'수행 상태 확인 대기');
         const actual=attempt?.startedAt&&attempt?.fieldCompletedAt?Math.max(0,Math.round((Date.parse(attempt.fieldCompletedAt)-Date.parse(attempt.startedAt))/60000)):null;
         const disabled=slice.busy||!!slice.pending||blocked||slice.status!=='ready';
-        return `<article class="card cleaning-workflow-row" data-cleaning-assignment="${esc(assignment.assignmentId)}"><div class="mobile-section-title"><h3>${esc(assignment.roomNumber||'객실 정보 없음')}${assignment.roomNumber?'호':''}</h3><span class="badge-row">${blocked?icon('alert','icon-sm'):icon('briefcase','icon-sm')}${statusBadge(status,blocked?'amber':'blue')}</span></div><div class="info-grid"><div class="info-item"><span>청소 시작 가능</span><strong>${esc(liveAssignmentStartLabel(assignment))}</strong></div><div class="info-item"><span>업무 마감</span><strong>${esc(assignment.dueAt?liveKstDateTimeLabel(assignment.dueAt):'미설정')}</strong></div>${state.role==='admin'?`<div class="info-item"><span>담당</span><strong>${esc(assignment.maidDisplayName)}</strong></div>`:''}${actual!==null?`<div class="info-item"><span>이번 작업 실제 청소시간</span><strong>${actual}분</strong></div>`:''}</div><p class="audit-note">표시된 시각은 시작 가능 시각과 업무 마감입니다. 종료 예상시각은 계산하지 않습니다.</p>${state.role==='maid'?`<div class="live-operation-grid">${button('청소 시작','cleaning-start','primary',`data-id="${esc(assignment.assignmentId)}" ${disabled||attempt?.status!=='scheduled'?'disabled':''}`)}${button('현장 청소 완료','cleaning-complete','outline',`data-id="${esc(assignment.assignmentId)}" ${disabled||attempt?.status!=='in_progress'?'disabled':''}`)}${button('고객이 아직 객실에 있음','cleaning-report-review','outline',`data-id="${esc(assignment.assignmentId)}" ${disabled||!['scheduled','in_progress'].includes(attempt?.status)?'disabled':''}`)}<button class="btn btn-outline" disabled>${blocked?'PIN 접근 · 관리자 확인 대기':'PIN 접근 · 연동 준비 중'}</button><button class="btn btn-outline" disabled>${blocked?'사진 제출 · 관리자 확인 대기':'사진 제출 · 연동 준비 중'}</button></div>${blocked?'<p class="room-action-reason">관리자 확인이 끝난 뒤 최신 배정 상태를 다시 불러와 주세요.</p>':''}`:''}</article>`;
+        return `<article class="card cleaning-workflow-row" data-cleaning-assignment="${esc(assignment.assignmentId)}"><div class="mobile-section-title"><h3>${esc(assignment.roomNumber||'객실 정보 없음')}${assignment.roomNumber?'호':''}</h3><span class="badge-row">${blocked?icon('alert','icon-sm'):icon('briefcase','icon-sm')}${statusBadge(status,blocked?'amber':'blue')}</span></div><div class="info-grid"><div class="info-item"><span>청소 시작 가능</span><strong>${esc(liveAssignmentStartLabel(assignment))}</strong></div><div class="info-item"><span>업무 마감</span><strong>${esc(assignment.dueAt?liveKstDateTimeLabel(assignment.dueAt):'미설정')}</strong></div>${state.role==='admin'?`<div class="info-item"><span>담당</span><strong>${esc(assignment.maidDisplayName)}</strong></div>`:''}${actual!==null?`<div class="info-item"><span>이번 작업 실제 청소시간</span><strong>${actual}분</strong></div>`:''}</div><p class="audit-note">표시된 시각은 시작 가능 시각과 업무 마감입니다. 종료 예상시각은 계산하지 않습니다.</p>${state.role==='maid'?`<div class="live-operation-grid">${button('청소 시작','cleaning-start','primary',`data-id="${esc(assignment.assignmentId)}" ${disabled||attempt?.status!=='scheduled'?'disabled':''}`)}${button('고객이 아직 객실에 있음','cleaning-report-review','outline',`data-id="${esc(assignment.assignmentId)}" ${disabled||!['scheduled','in_progress'].includes(attempt?.status)?'disabled':''}`)}<button class="btn btn-outline" disabled>${blocked?'PIN 접근 · 관리자 확인 대기':'PIN 접근 · 연동 준비 중'}</button><button class="btn btn-outline" disabled>${blocked?'사진 제출 · 관리자 확인 대기':'사진 제출 · 연동 준비 중'}</button></div>${blocked?'<p class="room-action-reason">관리자 확인이 끝난 뒤 최신 배정 상태를 다시 불러와 주세요.</p>':''}`:''}</article>`;
       }
 
       function validateCleaningSlots(slots,type){
@@ -10370,24 +10371,24 @@
           ${liveAssignmentScheduleMarkup(assignment)}${renderLiveMaidPinManager(assignment)}${renderMaidCleaningActions(assignment,attempt,disabled)}
         </article>${renderCleaningPhotoSlots(assignment,attempt)}
         <section class="card cleaning-workflow-row" data-cleaning-submission="${esc(attempt.attemptId)}">
-          <div class="mobile-section-title"><div><h3>청소 제출</h3><p>현장 완료 후 사진과 촛불 수량을 확인해 주세요.</p></div>${submission?statusBadge(`${CLEANING_SUBMISSION_STATUS_LABELS[submission.status]||submission.status}`,submission.status==='approved'?'green':submission.status==='rejected'?'red':'blue'):statusBadge('미제출','amber')}</div>
-          <div class="field"><label for="cleaning-candles-${esc(attempt.attemptId)}">${submission?'제출 당시 촛불 수량':'확인한 촛불 수량'}</label><input id="cleaning-candles-${esc(attempt.attemptId)}" class="input-control" type="number" min="0" step="1" value="${esc(submission?submission.candleCount:cleaningState().candleDrafts?.get(attempt.attemptId)??0)}" ${disabled||!['field_completed','upload_pending','rejected'].includes(attempt.status)?'disabled':''}></div>
-          ${!slotsReady?'<p class="room-action-reason">청소 사진을 1장 이상 등록하세요.</p>':''}<div class="job-actions">${button('검수 요청 제출','cleaning-submit','primary',`data-id="${esc(assignment.assignmentId)}" ${disabled||!slotsReady||!['field_completed','upload_pending','rejected'].includes(attempt.status)?'disabled':''}`)}</div>
+          <div class="mobile-section-title"><div><h3>청소 제출</h3><p>사진과 촛불 수량을 확인한 뒤 제출하면 청소가 완료됩니다.</p></div>${submission?statusBadge(`${CLEANING_SUBMISSION_STATUS_LABELS[submission.status]||submission.status}`,submission.status==='approved'?'green':submission.status==='rejected'?'red':'blue'):statusBadge('미제출','amber')}</div>
+          <div class="field"><label for="cleaning-candles-${esc(attempt.attemptId)}">${submission?'제출 당시 촛불 수량':'확인한 촛불 수량'}</label><input id="cleaning-candles-${esc(attempt.attemptId)}" class="input-control" type="number" min="0" step="1" value="${esc(submission?submission.candleCount:cleaningState().candleDrafts?.get(attempt.attemptId)??0)}" ${disabled||!['in_progress','field_completed','upload_pending','rejected'].includes(attempt.status)?'disabled':''}></div>
+          ${!slotsReady?'<p class="room-action-reason">청소 사진을 1장 이상 등록하세요.</p>':''}<div class="job-actions">${button('검수 요청 제출','cleaning-submit','primary',`data-id="${esc(assignment.assignmentId)}" ${disabled||!slotsReady||!['in_progress','field_completed','upload_pending','rejected'].includes(attempt.status)?'disabled':''}`)}</div>
         </section><div data-maid-post-operations="${esc(assignment.assignmentId)}">${submission?renderLiveHistoryOperations(submission):''}</div>`;
         return renderLiveMaidTaskShell(assignment,CLEANING_STATUS_LABELS[attempt.status]||attempt.status,details);
       }
       function renderMaidCleaningActions(assignment,attempt,disabled){
-        const id=esc(assignment.assignmentId),lease=cleaningState().leases.get(attempt.attemptId),pending=LIVE_OFFLINE_COMPLETIONS.has(attempt.attemptId),leaseActive=!!lease&&Date.now()+lease.serverOffsetMs<Date.parse(lease.expiresAt),hasBombPhotos=liveCleaningBombPhotoIds(attempt.attemptId).length>0;
+        const id=esc(assignment.assignmentId),pending=LIVE_OFFLINE_COMPLETIONS.has(attempt.attemptId),hasBombPhotos=liveCleaningBombPhotoIds(attempt.attemptId).length>0;
         const copy=pending?['완료 기록 전송 대기','연결되면 자동으로 전송합니다. 화면을 닫거나 새로고침하지 마세요.']:({
           scheduled:['청소를 시작해 주세요','객실 상태와 작업 메모를 확인한 뒤 시작하세요.'],
-          in_progress:['청소 진행 중','청소를 마치면 현장 완료를 눌러 주세요. 사진 등록과 검수 제출은 이어서 진행할 수 있습니다.'],
-          field_completed:['현장 청소 완료','아래에서 사진과 촛불 수량을 확인하고 검수를 요청하세요.'],
+          in_progress:['청소 진행 중','사진과 촛불 수량을 확인한 뒤 아래의 검수 요청 제출을 눌러 마무리하세요.'],
+          field_completed:['검수 요청을 마무리해 주세요','청소 완료는 기록되었습니다. 아래에서 사진과 촛불 수량을 확인하고 제출하세요.'],
           upload_pending:['사진 등록을 마쳐 주세요','사진 전송이 끝나면 아래에서 검수를 요청하세요.'],
           rejected:['제출 내용을 보완해 주세요','반려 내용을 확인하고 사진을 보완한 뒤 다시 제출하세요.'],
           submitted:['검수 대기 중','제출이 완료되었습니다. 관리자가 청소 결과를 확인합니다.']
         }[attempt.status]||[CLEANING_STATUS_LABELS[attempt.status]||attempt.status,'현재 청소 상태를 확인하세요.']);
-        const primary=attempt.status==='scheduled'?button('청소 시작','cleaning-start','primary',`data-id="${id}" ${disabled?'disabled':''}`):attempt.status==='in_progress'?button('현장 청소 완료','cleaning-complete','primary',`data-id="${id}" ${disabled?'disabled':''}`):'';
-        const offlineHelp=['scheduled','in_progress'].includes(attempt.status)?`<details class="maid-offline-help"><summary>${leaseActive?'통신 끊김 대비 중 · 안내':lease?'통신 대비 시간이 지났습니다 · 안내':'통신이 끊겨도 완료할 수 있나요?'}</summary><p>${lease?`<strong>${leaseActive?'오프라인 완료 준비됨':'통신 대비 시간 만료'}</strong> · ${esc(liveKstDateTimeLabel(lease.expiresAt))}까지<br>`:''}${lease&&!leaseActive?'통신 대비 시간이 지났습니다. 인터넷에 연결한 상태에서 완료해 주세요.':attempt.status==='in_progress'&&!lease?'이 화면에는 통신 대비 기록이 없습니다. 인터넷에 연결한 상태에서 완료해 주세요.':'시작할 때 인터넷이 연결되어 있으면 자동으로 준비됩니다. 시작 후 2시간 안에는 연결이 끊겨도 완료 시각을 임시 기록하고, 다시 연결되면 전송합니다.'}</p><p>임시 기록은 이 화면을 닫거나 새로고침하면 사라질 수 있습니다. 사진 전송과 검수 제출에는 인터넷 연결이 필요합니다.</p></details>`:'';
+        const primary=attempt.status==='scheduled'?button('청소 시작','cleaning-start','primary',`data-id="${id}" ${disabled?'disabled':''}`):'';
+        const offlineHelp=['scheduled','in_progress','field_completed','upload_pending','rejected'].includes(attempt.status)?'<details class="maid-offline-help"><summary>사진 전송·제출 안내</summary><p>사진 전송과 검수 제출에는 인터넷 연결이 필요합니다. 사진 등록과 촛불 수량 확인을 마치면 검수 요청 제출 한 번으로 청소 완료까지 처리합니다.</p><p>전송 중에는 화면을 닫거나 새로고침하지 마세요. 연결이 끊기면 다시 연결한 뒤 전송 상태를 확인하고 제출해 주세요.</p></details>':'';
         return `<div class="maid-next-action"><div><h4>${esc(copy[0])}</h4><p>${esc(copy[1])}</p></div>${primary}</div>${offlineHelp}
           <section class="maid-report-actions" aria-label="문제 신고 및 담당 변경"><h4>문제 신고·담당 변경</h4><div class="maid-report-buttons">
           ${button('고객 미퇴실 신고','cleaning-report-review','outline',`data-id="${id}" ${disabled||!['scheduled','in_progress'].includes(attempt.status)?'disabled':''}`)}
@@ -10893,7 +10894,9 @@
       function reviewLiveBombReport(assignmentId,trigger=document.activeElement){let context;try{context=liveExecutionContext(assignmentId);}catch(error){cleaningState().error=error;render();return;}const photos=liveCleaningBombPhotoIds(context.attempt.attemptId);if(!photos.length)return;showModal({title:'폭탄방 신고',subtitle:`증빙 사진 ${photos.length}장`,trigger,body:'<div class="field"><label for="cleaning-bomb-memo">검수 메모</label><textarea id="cleaning-bomb-memo" class="input-control" maxlength="500" required></textarea></div>',confirmLabel:'폭탄방 신고',confirmAction:'cleaning-bomb-save',confirmExtra:`data-id="${esc(assignmentId)}"`});}
       async function saveLiveBombReport(assignmentId){let context;try{context=liveExecutionContext(assignmentId);}catch(error){cleaningState().error=error;render();return;}const memo=document.getElementById('cleaning-bomb-memo')?.value.trim()||'',evidencePhotoIds=liveCleaningBombPhotoIds(context.attempt.attemptId);if(!memo||!evidencePhotoIds.length){toast('메모와 검증된 증빙 사진을 확인하세요.','error');return;}await runLiveCleaningMutation({path:`/v1/attempts/${encodeURIComponent(context.attempt.attemptId)}/bomb-room-reports`,body:{evidencePhotoIds,memo},label:'폭탄방 신고'});}
       async function submitLiveCleaning(assignmentId,confirmation=null){
-        let context;try{context=liveExecutionContext(assignmentId);}catch(error){cleaningState().error=error;render();return;}if(!cleaningRequiredSlotsReady(context.attempt.attemptId)){cleaningState().error=new ApiRequestError('required photos missing',{status:422,code:'VALIDATION_ERROR',serverMessage:'필수 사진 슬롯을 모두 업로드해 주세요.'});render();return;}
+        if(!cleaningActor('maid')||cleaningState().busy||uncertainLiveMutation)return;
+        if(!navigator.onLine){toast('인터넷에 연결한 뒤 검수 요청을 제출해 주세요.','error');return;}
+        let context;try{context=liveExecutionContext(assignmentId);}catch(error){cleaningState().error=error;render();return;}if(!['in_progress','field_completed','upload_pending','rejected'].includes(context.attempt.status)||liveMaidAssignmentReadOnly(context.assignment,context.attempt))return;if(!cleaningRequiredSlotsReady(context.attempt.attemptId)){cleaningState().error=new ApiRequestError('required photos missing',{status:422,code:'VALIDATION_ERROR',serverMessage:'필수 사진 슬롯을 모두 업로드해 주세요.'});render();return;}
         if(liveAttemptPhotoPending(context.attempt.attemptId)){toast('사진 전송과 저장 확인 후 제출할 수 있습니다.','error');return;}
         const current=cleaningCurrentSubmission(context.attempt.attemptId),input=document.getElementById(`cleaning-candles-${context.attempt.attemptId}`),candleCount=confirmation?.count??Number(input?.value);if(!Number.isSafeInteger(candleCount)||candleCount<0||candleCount>2147483647){toast('촛불 수량을 0 이상의 정수로 입력하세요.','error');return;}
         const generation=LIVE_RUNTIME.authGeneration;
@@ -10905,6 +10908,18 @@
           if(candleCount<candle.count&&!confirmation){showModal({title:'촛불을 회수했나요?',body:`<p>${candle.count}개 → ${candleCount}개</p>`,confirmLabel:'회수 확인·제출',confirmAction:'cleaning-submit-confirm',confirmExtra:`data-id="${esc(assignmentId)}" data-count="${candleCount}" data-version="${candle.roomStateVersion}"`});return false;}
           // Submission snapshots do not update the shared room candle ledger on the server.
           if(candleCount!==candle.count)await mutationApiRequest('/v1/rooms/'+encodeURIComponent(context.assignment.roomId)+'/candles',{body:{count:candleCount,expectedRoomVersion:candle.roomStateVersion,reasonCode:'CANDLE_ADJUSTED',physicallyVerified:!!confirmation}});
+          if(generation!==LIVE_RUNTIME.authGeneration)return false;
+          // Keep the server's completion/submission contracts, but finish both under one UI lock.
+          // Only a confirmed completion may proceed; retries after a partial success skip this step.
+          if(context.attempt.status==='in_progress'){
+            const {data}=await mutationApiRequest(`/v1/attempts/${encodeURIComponent(context.attempt.attemptId)}/complete-field-work`,{body:context.body,validateResult:result=>{
+              const completed=result?.attempt;
+              if(completed?.attemptId!==context.attempt.attemptId||completed.assignmentId!==context.assignment.assignmentId||completed.assignmentRevision!==context.assignment.revision||completed.status!=='field_completed'||!Number.isSafeInteger(completed.executionVersion)||completed.executionVersion<=context.attempt.executionVersion||!Number.isFinite(Date.parse(completed.fieldCompletedAt)))throw new ApiRequestError('completion response invalid',{status:502,code:'INVALID_RESPONSE'});
+            }});
+            if(generation!==LIVE_RUNTIME.authGeneration)return false;
+            cleaningState().attempts.set(context.assignment.assignmentId,data.attempt);
+            cleaningState().leases.delete(context.attempt.attemptId);
+          }
           return true;
         }});
       }
